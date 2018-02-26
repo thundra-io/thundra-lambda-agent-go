@@ -1,0 +1,16 @@
+service: ThundraGo
+
+provider:
+  name: aws
+  runtime: go1.x
+  region: us-west-2
+  memorySize: 1024 # optional, in MB, default is 1024
+  timeout: 6 # optional, in seconds, default is 6
+
+package:
+ include:
+   - ./handleRequest
+
+functions:
+  handleRequest:
+    handler: handleRequest
