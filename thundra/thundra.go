@@ -7,18 +7,27 @@ import (
 	"reflect"
 	"fmt"
 	"ThundraGo/thundra/plugins"
+	"github.com/aws/aws-lambda-go/lambda/messages"
 )
 
-type Thundra struct {
+type thundra struct {
 	pluginDictionary map[string]plugins.Plugin
 	plugins          []plugins.Plugin
 }
 
-//TODO Should be singleton
-func New(pluginNames []string) *Thundra {
-	th := new(Thundra)
-	th.pluginDictionary = make(map[string]plugins.Plugin)
+var instance *thundra
 
+func GetInstance(pluginNames []string) *thundra{
+	if instance == nil{
+		instance = createNew(pluginNames)
+	}
+	return instance
+}
+
+func createNew(pluginNames []string) *thundra{
+	th := new(thundra)
+	//TODO remove pluginDictionary to out
+	th.pluginDictionary = make(map[string]plugins.Plugin)
 	th.pluginDictionary["trace"] = &plugins.Trace{}
 
 	for _, pN := range pluginNames {
@@ -28,12 +37,12 @@ func New(pluginNames []string) *Thundra {
 	return th
 }
 
-func (th *Thundra) addPlugin(pluginName string) {
+func (th *thundra) addPlugin(pluginName string) {
 	plugin := th.pluginDictionary[pluginName]
 	th.plugins = append(th.plugins, plugin)
 }
 
-func (th *Thundra) executePreHooks(ctx context.Context, request json.RawMessage) {
+func (th *thundra) executePreHooks(ctx context.Context, request json.RawMessage) {
 	var wg sync.WaitGroup
 	wg.Add(len(th.plugins))
 	for _, plugin := range th.plugins {
@@ -42,7 +51,7 @@ func (th *Thundra) executePreHooks(ctx context.Context, request json.RawMessage)
 	wg.Wait()
 }
 
-func (th *Thundra) executePostHooks(ctx context.Context, request json.RawMessage, response interface{}, error interface{}) {
+func (th *thundra) executePostHooks(ctx context.Context, request json.RawMessage, response interface{}, error interface{}) {
 	var wg sync.WaitGroup
 	wg.Add(len(th.plugins))
 	for _, plugin := range th.plugins {
@@ -51,9 +60,17 @@ func (th *Thundra) executePostHooks(ctx context.Context, request json.RawMessage
 	wg.Wait()
 }
 
+func (th *thundra) onError(ctx context.Context, request json.RawMessage, panic *messages.InvokeResponse_Error) {
+	fmt.Println("Error Occured")
+	fmt.Println("ctx: ",ctx)
+	fmt.Println("request: ",request)
+	fmt.Println("panic" ,*panic)
+	fmt.Println("errbitt")
+}
+
 type ThundraLambdaHandler func(context.Context, json.RawMessage) (interface{}, error)
 
-func WrapLambdaHandler(handler interface{}, thundra *Thundra) ThundraLambdaHandler {
+func WrapLambdaHandler(handler interface{}, thundra *thundra) ThundraLambdaHandler {
 
 	handlerType := reflect.TypeOf(handler)
 	handlerValue := reflect.ValueOf(handler)
@@ -61,7 +78,19 @@ func WrapLambdaHandler(handler interface{}, thundra *Thundra) ThundraLambdaHandl
 	takesContext, _ := validateArguments(handlerType)
 
 	return func(ctx context.Context, payload json.RawMessage) (interface{}, error) {
-
+		defer func() {
+			if err := recover(); err != nil {
+				panicInfo := GetPanicInfo(err)
+				responseError := &messages.InvokeResponse_Error{
+					Message:    panicInfo.Message,
+					Type:       getErrorType(err),
+					StackTrace: panicInfo.StackTrace,
+					ShouldExit: true,
+				}
+				thundra.onError(ctx,payload,responseError)
+				panic(err)
+			}
+		}()
 		var args []reflect.Value
 		if takesContext {
 			args = append(args, reflect.ValueOf(ctx))
@@ -77,7 +106,7 @@ func WrapLambdaHandler(handler interface{}, thundra *Thundra) ThundraLambdaHandl
 			args = append(args, newEvent.Elem())
 		}
 
-		thundra.executePreHooks(ctx,payload)
+		thundra.executePreHooks(ctx, payload)
 		response := handlerValue.Call(args)
 
 		var err error
@@ -91,7 +120,7 @@ func WrapLambdaHandler(handler interface{}, thundra *Thundra) ThundraLambdaHandl
 			val = response[0].Interface()
 		}
 
-		thundra.executePostHooks(ctx,payload,val, err)
+		thundra.executePostHooks(ctx, payload, val, err)
 
 		return val, err
 	}
@@ -114,3 +143,10 @@ func validateArguments(handler reflect.Type) (bool, error) {
 	return handlerTakesContext, nil
 }
 
+func getErrorType(err interface{}) string {
+	errorType := reflect.TypeOf(err)
+	if errorType.Kind() == reflect.Ptr {
+		return errorType.Elem().Name()
+	}
+	return errorType.Name()
+}

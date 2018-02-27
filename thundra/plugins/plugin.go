@@ -20,4 +20,4 @@ func ParseTimeFormat(t time.Time) time.Time {
 	return date
 }
 
-const timeFormat = "2006-01-02 15:04:05.000 -07:00"
+const timeFormat = "2006-01-02 15:04:05.000 -0700"
