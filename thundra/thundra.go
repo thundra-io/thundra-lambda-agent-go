@@ -53,7 +53,7 @@ func (th *Thundra) executePostHooks(ctx context.Context, request json.RawMessage
 
 type ThundraLambdaHandler func(context.Context, json.RawMessage) (interface{}, error)
 
-func Handle(handler interface{}, thundra *Thundra) ThundraLambdaHandler {
+func WrapLambdaHandler(handler interface{}, thundra *Thundra) ThundraLambdaHandler {
 
 	handlerType := reflect.TypeOf(handler)
 	handlerValue := reflect.ValueOf(handler)
@@ -97,6 +97,7 @@ func Handle(handler interface{}, thundra *Thundra) ThundraLambdaHandler {
 	}
 }
 
+//Taken from Amazon Inc
 func validateArguments(handler reflect.Type) (bool, error) {
 	handlerTakesContext := false
 	if handler.NumIn() > 2 {
