@@ -1,4 +1,4 @@
-package main
+package thundra
 
 import (
 	"context"
@@ -6,13 +6,12 @@ import (
 	"sync"
 	"reflect"
 	"fmt"
-	"thundra-go-agent/plugins"
 	"runtime/debug"
 )
 
 type thundra struct {
-	pluginDictionary map[string]plugins.Plugin
-	plugins          []plugins.Plugin
+	pluginDictionary map[string]Plugin
+	plugins          []Plugin
 }
 
 var instance *thundra
@@ -27,8 +26,8 @@ func GetInstance(pluginNames []string) *thundra {
 func createNew(pluginNames []string) *thundra {
 	th := new(thundra)
 	//TODO remove pluginDictionary to out
-	th.pluginDictionary = make(map[string]plugins.Plugin)
-	th.pluginDictionary["trace"] = &plugins.Trace{}
+	th.pluginDictionary = make(map[string]Plugin)
+	th.pluginDictionary["trace"] = &Trace{}
 
 	for _, pN := range pluginNames {
 		th.addPlugin(pN)
@@ -60,7 +59,7 @@ func (th *thundra) executePostHooks(ctx context.Context, request json.RawMessage
 	wg.Wait()
 }
 
-func (th *thundra) onPanic(ctx context.Context, request json.RawMessage, panic *plugins.ThundraPanic) {
+func (th *thundra) onPanic(ctx context.Context, request json.RawMessage, panic *ThundraPanic) {
 	var wg sync.WaitGroup
 	wg.Add(len(th.plugins))
 	for _, plugin := range th.plugins {
@@ -81,7 +80,7 @@ func WrapLambdaHandler(handler interface{}, thundra *thundra) ThundraLambdaHandl
 	return func(ctx context.Context, payload json.RawMessage) (interface{}, error) {
 		defer func() {
 			if err := recover(); err != nil {
-				panicInfo := plugins.ThundraPanic{
+				panicInfo := ThundraPanic{
 					ErrInfo:    err.(error),
 					StackTrace: string(debug.Stack()), //fmt.Sprintf("%s: %s", err, debug.Stack()),
 					ErrType:    getErrorType(err),

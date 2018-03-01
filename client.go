@@ -1,4 +1,4 @@
-package plugins
+package thundra
 
 import (
 	"encoding/json"
