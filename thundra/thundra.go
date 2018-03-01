@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"fmt"
 	"ThundraGo/thundra/plugins"
-	"github.com/aws/aws-lambda-go/lambda/messages"
+	"runtime/debug"
 )
 
 type thundra struct {
@@ -17,14 +17,14 @@ type thundra struct {
 
 var instance *thundra
 
-func GetInstance(pluginNames []string) *thundra{
-	if instance == nil{
+func GetInstance(pluginNames []string) *thundra {
+	if instance == nil {
 		instance = createNew(pluginNames)
 	}
 	return instance
 }
 
-func createNew(pluginNames []string) *thundra{
+func createNew(pluginNames []string) *thundra {
 	th := new(thundra)
 	//TODO remove pluginDictionary to out
 	th.pluginDictionary = make(map[string]plugins.Plugin)
@@ -60,12 +60,13 @@ func (th *thundra) executePostHooks(ctx context.Context, request json.RawMessage
 	wg.Wait()
 }
 
-func (th *thundra) onError(ctx context.Context, request json.RawMessage, panic *messages.InvokeResponse_Error) {
-	fmt.Println("Error Occured")
-	fmt.Println("ctx: ",ctx)
-	fmt.Println("request: ",request)
-	fmt.Println("panic" ,*panic)
-	fmt.Println("errbitt")
+func (th *thundra) onPanic(ctx context.Context, request json.RawMessage, panic *plugins.ThundraPanic) {
+	var wg sync.WaitGroup
+	wg.Add(len(th.plugins))
+	for _, plugin := range th.plugins {
+		go plugin.OnPanic(ctx, request, panic, &wg)
+	}
+	wg.Wait()
 }
 
 type ThundraLambdaHandler func(context.Context, json.RawMessage) (interface{}, error)
@@ -80,14 +81,13 @@ func WrapLambdaHandler(handler interface{}, thundra *thundra) ThundraLambdaHandl
 	return func(ctx context.Context, payload json.RawMessage) (interface{}, error) {
 		defer func() {
 			if err := recover(); err != nil {
-				panicInfo := GetPanicInfo(err)
-				responseError := &messages.InvokeResponse_Error{
-					Message:    panicInfo.Message,
-					Type:       getErrorType(err),
-					StackTrace: panicInfo.StackTrace,
-					ShouldExit: true,
+				panicInfo := plugins.ThundraPanic{
+					ErrInfo:    err.(error),
+					StackTrace: string(debug.Stack()), //fmt.Sprintf("%s: %s", err, debug.Stack()),
+					ErrType:    getErrorType(err),
 				}
-				thundra.onError(ctx,payload,responseError)
+				fmt.Println("panicInfoErrType: ", panicInfo.ErrType)
+				thundra.onPanic(ctx, payload, &panicInfo)
 				panic(err)
 			}
 		}()
