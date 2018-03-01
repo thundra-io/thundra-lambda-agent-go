@@ -38,7 +38,7 @@ type Message struct {
 }
 
 type TraceData struct {
-	Id                 string                 `json:"uniqueId"`
+	Id                 string                 `json:"id"`
 	ApplicationName    string                 `json:"applicationName"`
 	ApplicationId      string                 `json:"applicationId"`
 	ApplicationVersion string                 `json:"applicationVersion"`
