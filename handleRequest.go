@@ -5,7 +5,6 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 	"time"
 	"ThundraGo/thundra"
-	"errors"
 )
 
 type MyEvent struct {
@@ -25,7 +24,7 @@ func HandleLambdaEvent(event MyEvent) (MyResponse, error) {
 
 func testFunc() {
 	func1()
-	panic(errors.New("Alarm Senior Alarm!"))
+	//panic(errors.New("Alarm Senior Alarm!"))
 	time.Sleep(12 * time.Millisecond)
 }
 
