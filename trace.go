@@ -7,10 +7,10 @@ import (
 	"github.com/satori/go.uuid"
 	"github.com/aws/aws-lambda-go/lambdacontext"
 	"os"
-	"fmt"
 	"encoding/json"
 	"strings"
 	"thundra-agent-go/constants"
+	"fmt"
 )
 
 type Trace struct {
@@ -18,14 +18,13 @@ type Trace struct {
 	endTime            time.Time
 	duration           time.Duration
 	errors             []string
-	thrownError        interface{}
+	thrownError        string
 	thrownErrorMessage interface{}
+	panicInfo          *ThundraPanic
 }
 
 var invocationCount uint32
 var uniqueId uuid.UUID
-
-const url = "https://collector.thundra.io/api/audit"
 
 func init() {
 	invocationCount = 0
@@ -52,7 +51,7 @@ type TraceData struct {
 	EndTime            string                 `json:"endTime"`
 	Duration           int64                  `json:"duration"`
 	Errors             []string               `json:"errors"`
-	ThrownError        interface{}            `json:"thrownError"`
+	ThrownError        string                 `json:"thrownError"`
 	ThrownErrorMessage interface{}            `json:"thrownErrorMessage"`
 	AuditInfo          map[string]interface{} `json:"auditInfo"`
 	Properties         map[string]interface{} `json:"properties"`
@@ -74,7 +73,12 @@ func (trace *Trace) OnPanic(ctx context.Context, request json.RawMessage, panic 
 	defer wg.Done()
 	trace.endTime = time.Now()
 	trace.duration = trace.endTime.Sub(trace.startTime)
-	preparePanic(trace, panic)
+	trace.panicInfo = panic
+
+	//TODO if errors !null
+	trace.thrownError = panic.ErrType
+	trace.thrownErrorMessage = panic.ErrMessage
+	trace.errors = append(trace.errors, panic.ErrType)
 
 	prepareReport(request, nil, nil, trace)
 }
@@ -87,8 +91,9 @@ func prepareReport(request interface{}, response interface{}, error interface{},
 	td := prepareTraceData(trace, error, props, ai)
 	msg := prepareMessage(trace, td)
 
-	sendReport(msg)
+	sendReport(msg, constants.AuditUrl)
 }
+
 func prepareProperties(request interface{}, response interface{}) map[string]interface{} {
 	coldStart := "true"
 	if invocationCount += 1; invocationCount != 1 {
@@ -104,27 +109,23 @@ func prepareProperties(request interface{}, response interface{}) map[string]int
 }
 
 func prepareAuditInfo(trace *Trace) map[string]interface{} {
-	return map[string]interface{}{
-		"contextName":        lambdacontext.FunctionName,
-		"id":                 uniqueId,
-		"openTime":           trace.startTime.Format(constants.TimeFormat),
-		"closeTime":          trace.endTime.Format(constants.TimeFormat),
-		"errors":             trace.errors,
-		"thrownError":        trace.thrownError,
-		"thrownErrorMessage": trace.thrownErrorMessage,
+	var auditErrors []ThundraPanic
+	var auditThrownError *ThundraPanic
+	if trace.panicInfo != nil {
+		fmt.Println("NOT NULL")
+		auditErrors = append(auditErrors, *trace.panicInfo)
+		auditThrownError = trace.panicInfo
 	}
-}
 
-func preparePanic(trace *Trace, panic *ThundraPanic) {
-	var thrownError interface{}
-	var thrownErrorMessage interface{}
-	if panic != nil {
-		trace.errors = append(trace.errors, panic.ErrType) //TODO consider this
-		thrownError = panic.ErrType
-		thrownErrorMessage = fmt.Sprintf("%v", panic.ErrInfo)
+	return map[string]interface{}{
+		"contextName": lambdacontext.FunctionName,
+		"id":          uniqueId,
+		"openTime":    trace.startTime.Format(constants.TimeFormat),
+		"closeTime":   trace.endTime.Format(constants.TimeFormat),
+		"errors":      auditErrors,
+		"thrownError": auditThrownError,
+		//"thrownErrorMessage": trace.thrownErrorMessage,
 	}
-	trace.thrownError = thrownError
-	trace.thrownErrorMessage = thrownErrorMessage
 }
 
 func prepareTraceData(trace *Trace, err interface{}, props map[string]interface{}, auditInfo map[string]interface{}) TraceData {
@@ -133,7 +134,7 @@ func prepareTraceData(trace *Trace, err interface{}, props map[string]interface{
 
 	if err != nil {
 		//TODO consider this, hint of the century consider this
-		trace.errors = append(trace.errors, fmt.Sprintf("%+v", err))
+		//trace.errors = append(trace.errors, fmt.Sprintf("%+v", err))
 	}
 
 	profile := os.Getenv("thundra_applicationProfile")

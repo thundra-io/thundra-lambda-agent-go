@@ -81,11 +81,10 @@ func WrapLambdaHandler(handler interface{}, thundra *thundra) ThundraLambdaHandl
 		defer func() {
 			if err := recover(); err != nil {
 				panicInfo := ThundraPanic{
-					ErrInfo:    err.(error),
+					ErrMessage: err.(error).Error(),
 					StackTrace: string(debug.Stack()), //fmt.Sprintf("%s: %s", err, debug.Stack()),
 					ErrType:    getErrorType(err),
 				}
-				fmt.Println("panicInfoErrType: ", panicInfo.ErrType)
 				thundra.onPanic(ctx, payload, &panicInfo)
 				panic(err)
 			}

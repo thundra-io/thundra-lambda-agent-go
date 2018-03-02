@@ -13,13 +13,7 @@ type Plugin interface {
 }
 
 type ThundraPanic struct {
-	ErrInfo    error
-	StackTrace string
-	ErrType    string
-}
-
-type ThundraError struct {
-	Error string `json:"error"`// Error stack trace
-	ErrorMessage string `json:"errorMessage"`
-	ErrorType string `json:"errorType"`
+	ErrMessage string  `json:"errorMessage"`
+	StackTrace string `json:"error"`
+	ErrType    string `json:"errorType"`
 }
