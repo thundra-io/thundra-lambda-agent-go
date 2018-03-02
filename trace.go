@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"encoding/json"
 	"strings"
+	"thundra-agent-go/constants"
 )
 
 type Trace struct {
@@ -106,8 +107,8 @@ func prepareAuditInfo(trace *Trace) map[string]interface{} {
 	return map[string]interface{}{
 		"contextName":        lambdacontext.FunctionName,
 		"id":                 uniqueId,
-		"openTime":           trace.startTime.Format(timeFormat),
-		"closeTime":          trace.endTime.Format(timeFormat),
+		"openTime":           trace.startTime.Format(constants.TimeFormat),
+		"closeTime":          trace.endTime.Format(constants.TimeFormat),
 		"errors":             trace.errors,
 		"thrownError":        trace.thrownError,
 		"thrownErrorMessage": trace.thrownErrorMessage,
@@ -150,8 +151,8 @@ func prepareTraceData(trace *Trace, err interface{}, props map[string]interface{
 		uniqueId.String(),
 		lambdacontext.FunctionName,
 		"ExecutionContext",
-		trace.startTime.Format(timeFormat),
-		trace.endTime.Format(timeFormat),
+		trace.startTime.Format(constants.TimeFormat),
+		trace.endTime.Format(constants.TimeFormat),
 		convertToMsec(trace.duration), //Convert it to msec
 		trace.errors,
 		trace.thrownError,

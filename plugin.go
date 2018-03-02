@@ -18,4 +18,8 @@ type ThundraPanic struct {
 	ErrType    string
 }
 
-const timeFormat = "2006-01-02 15:04:05.000 -0700"
+type ThundraError struct {
+	Error string `json:"error"`// Error stack trace
+	ErrorMessage string `json:"errorMessage"`
+	ErrorType string `json:"errorType"`
+}
