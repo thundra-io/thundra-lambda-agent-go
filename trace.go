@@ -18,9 +18,10 @@ type Trace struct {
 	endTime            time.Time
 	duration           time.Duration
 	errors             []string
-	thrownError        string
+	thrownError        interface{}
 	thrownErrorMessage interface{}
 	panicInfo          *ThundraPanic
+	errorInfo          *ThundraError
 }
 
 var invocationCount uint32
@@ -51,7 +52,7 @@ type TraceData struct {
 	EndTime            string                 `json:"endTime"`
 	Duration           int64                  `json:"duration"`
 	Errors             []string               `json:"errors"`
-	ThrownError        string                 `json:"thrownError"`
+	ThrownError        interface{}            `json:"thrownError"`
 	ThrownErrorMessage interface{}            `json:"thrownErrorMessage"`
 	AuditInfo          map[string]interface{} `json:"auditInfo"`
 	Properties         map[string]interface{} `json:"properties"`
@@ -62,11 +63,22 @@ func (trace *Trace) BeforeExecution(ctx context.Context, request interface{}, wg
 	trace.startTime = time.Now()
 }
 
-func (trace *Trace) AfterExecution(ctx context.Context, request interface{}, response interface{}, error interface{}, wg *sync.WaitGroup) {
+func (trace *Trace) AfterExecution(ctx context.Context, request interface{}, response interface{}, err interface{}, wg *sync.WaitGroup) {
 	defer wg.Done()
 	trace.endTime = time.Now()
 	trace.duration = trace.endTime.Sub(trace.startTime)
-	prepareReport(request, response, error, trace)
+
+	if err != nil {
+		trace.errorInfo = &ThundraError{}
+		trace.errorInfo.ErrType = getErrorType(err)
+		trace.errorInfo.ErrMessage = err.(error).Error()
+
+		trace.thrownError = trace.errorInfo.ErrType
+		trace.thrownErrorMessage = trace.errorInfo.ErrMessage
+		trace.errors = append(trace.errors, trace.errorInfo.ErrType)
+	}
+
+	prepareReport(request, response, err, trace)
 }
 
 func (trace *Trace) OnPanic(ctx context.Context, request json.RawMessage, panic *ThundraPanic, wg *sync.WaitGroup) {
@@ -75,7 +87,6 @@ func (trace *Trace) OnPanic(ctx context.Context, request json.RawMessage, panic 
 	trace.duration = trace.endTime.Sub(trace.startTime)
 	trace.panicInfo = panic
 
-	//TODO if errors !null
 	trace.thrownError = panic.ErrType
 	trace.thrownErrorMessage = panic.ErrMessage
 	trace.errors = append(trace.errors, panic.ErrType)
@@ -83,12 +94,12 @@ func (trace *Trace) OnPanic(ctx context.Context, request json.RawMessage, panic 
 	prepareReport(request, nil, nil, trace)
 }
 
-func prepareReport(request interface{}, response interface{}, error interface{}, trace *Trace) {
+func prepareReport(request interface{}, response interface{}, err interface{}, trace *Trace) {
 	uniqueId = uuid.Must(uuid.NewV4())
 
 	props := prepareProperties(request, response)
 	ai := prepareAuditInfo(trace)
-	td := prepareTraceData(trace, error, props, ai)
+	td := prepareTraceData(trace, err, props, ai)
 	msg := prepareMessage(trace, td)
 
 	sendReport(msg, constants.AuditUrl)
@@ -109,12 +120,19 @@ func prepareProperties(request interface{}, response interface{}) map[string]int
 }
 
 func prepareAuditInfo(trace *Trace) map[string]interface{} {
-	var auditErrors []ThundraPanic
-	var auditThrownError *ThundraPanic
+	var auditErrors []interface{}
+	var auditThrownError interface{}
+
 	if trace.panicInfo != nil {
-		fmt.Println("NOT NULL")
-		auditErrors = append(auditErrors, *trace.panicInfo)
-		auditThrownError = trace.panicInfo
+		fmt.Println("PANIC NOT NULL")
+		p := *trace.panicInfo
+		auditErrors = append(auditErrors, p)
+		auditThrownError = p
+	} else if trace.errorInfo != nil {
+		fmt.Println("ERROR NOT NULL")
+		e := *trace.errorInfo
+		auditErrors = append(auditErrors, e)
+		auditThrownError = e
 	}
 
 	return map[string]interface{}{
@@ -132,11 +150,6 @@ func prepareTraceData(trace *Trace, err interface{}, props map[string]interface{
 	appId := splitAppId(lambdacontext.LogStreamName)
 	ver := lambdacontext.FunctionVersion
 
-	if err != nil {
-		//TODO consider this, hint of the century consider this
-		//trace.errors = append(trace.errors, fmt.Sprintf("%+v", err))
-	}
-
 	profile := os.Getenv("thundra_applicationProfile")
 	if profile == "" {
 		profile = "default"
@@ -148,7 +161,7 @@ func prepareTraceData(trace *Trace, err interface{}, props map[string]interface{
 		appId,
 		ver,
 		profile,
-		"GO",
+		"go",
 		uniqueId.String(),
 		lambdacontext.FunctionName,
 		"ExecutionContext",
