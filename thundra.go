@@ -32,7 +32,6 @@ func createNew(pluginNames []string) *thundra {
 	for _, pN := range pluginNames {
 		th.addPlugin(pN)
 	}
-
 	return th
 }
 
@@ -68,15 +67,15 @@ func (th *thundra) onPanic(ctx context.Context, request json.RawMessage, panic *
 	wg.Wait()
 }
 
-type ThundraLambdaHandler func(context.Context, json.RawMessage) (interface{}, error)
+type thundraLambdaHandler func(context.Context, json.RawMessage) (interface{}, error)
 
-func thundraErrorHandler(e error) ThundraLambdaHandler {
+func thundraErrorHandler(e error) thundraLambdaHandler {
 	return func(ctx context.Context, event json.RawMessage) (interface{}, error) {
 		return nil, e
 	}
 }
 
-func WrapLambdaHandler(handler interface{}, thundra *thundra) ThundraLambdaHandler {
+func WrapLambdaHandler(handler interface{}, thundra *thundra) thundraLambdaHandler {
 	if handler == nil {
 		return thundraErrorHandler(fmt.Errorf("handler is nil"))
 	}
