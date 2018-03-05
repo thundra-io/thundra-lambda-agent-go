@@ -135,7 +135,6 @@ func TestWrapper(t *testing.T) {
 	for i, testCase := range testCases {
 		t.Run(fmt.Sprintf("testCase[%d] %s", i, testCase.name), func(t *testing.T) {
 			th := GetInstance([]string{})
-
 			lambdaHandler := WrapLambdaHandler(testCase.handler, th)
 			response, err := lambdaHandler.Invoke(context.TODO(), []byte(testCase.input))
 
@@ -145,6 +144,75 @@ func TestWrapper(t *testing.T) {
 				assert.NoError(t, err)
 				assert.Equal(t, testCase.expected.val, string(response))
 			}
+		})
+	}
+}
+
+func TestInvalidWrappers(t *testing.T) {
+
+	testCases := []struct {
+		name     string
+		handler  interface{}
+		expected error
+	}{
+		{
+			name:     "handler is nil",
+			expected: errors.New("handler is nil"),
+			handler:  nil,
+		},
+		{
+			name:     "handler kind struct is not func",
+			expected: errors.New("handler kind struct is not func"),
+			handler:  struct{}{},
+		},
+		{
+			name:     "handlers may not take more than two arguments",
+			expected: errors.New("handlers may not take more than two arguments, but handler takes 3"),
+			handler: func(n context.Context, x string, y string) error {
+				return nil
+			},
+		},
+		{
+			name:     "two argument handler does not context as first argument",
+			expected: errors.New("handler takes two arguments, but the first is not Context. got string"),
+			handler: func(a string, x context.Context) error {
+				return nil
+			},
+		},
+		{
+			name:     "handler may not return more than two values",
+			expected: errors.New("handler may not return more than two values"),
+			handler: func() (error, error, error) {
+				return nil, nil, nil
+			},
+		},
+		{
+			name:     "Error has to be the second value",
+			expected: errors.New("handler returns two values, but the second does not implement error"),
+			handler: func() (error, string) {
+				return nil, "thundra"
+			},
+		},
+		{
+			name:     "handler returning a single value does not implement error",
+			expected: errors.New("handler returns a single value, but it does not implement error"),
+			handler: func() string {
+				return "thundra"
+			},
+		},
+		{
+			name:     "no return value should not result in error",
+			expected: nil,
+			handler: func() {
+			},
+		},
+	}
+	for i, testCase := range testCases {
+		t.Run(fmt.Sprintf("testCase[%d] %s", i, testCase.name), func(t *testing.T) {
+			th := GetInstance([]string{})
+			lambdaHandler := WrapLambdaHandler(testCase.handler, th)
+			_, err := lambdaHandler.Invoke(context.TODO(), make([]byte, 0))
+			assert.Equal(t, testCase.expected, err)
 		})
 	}
 }

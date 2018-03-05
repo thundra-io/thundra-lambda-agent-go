@@ -70,12 +70,32 @@ func (th *thundra) onPanic(ctx context.Context, request json.RawMessage, panic *
 
 type ThundraLambdaHandler func(context.Context, json.RawMessage) (interface{}, error)
 
-func WrapLambdaHandler(handler interface{}, thundra *thundra) ThundraLambdaHandler {
+func thundraErrorHandler(e error) ThundraLambdaHandler {
+	return func(ctx context.Context, event json.RawMessage) (interface{}, error) {
+		return nil, e
+	}
+}
 
+func WrapLambdaHandler(handler interface{}, thundra *thundra) ThundraLambdaHandler {
+	if handler == nil {
+		return thundraErrorHandler(fmt.Errorf("handler is nil"))
+	}
 	handlerType := reflect.TypeOf(handler)
 	handlerValue := reflect.ValueOf(handler)
 
-	takesContext, _ := validateArguments(handlerType)
+	if handlerType.Kind() != reflect.Func {
+		return thundraErrorHandler(fmt.Errorf("handler kind %s is not %s", handlerType.Kind(), reflect.Func))
+	}
+
+	takesContext, err := validateArguments(handlerType)
+
+	if err != nil {
+		return thundraErrorHandler(err)
+	}
+
+	if err := validateReturns(handlerType); err != nil {
+		return thundraErrorHandler(err)
+	}
 
 	return func(ctx context.Context, payload json.RawMessage) (interface{}, error) {
 		defer func() {
@@ -139,6 +159,22 @@ func validateArguments(handler reflect.Type) (bool, error) {
 	}
 
 	return handlerTakesContext, nil
+}
+
+func validateReturns(handler reflect.Type) error {
+	errorType := reflect.TypeOf((*error)(nil)).Elem()
+	if handler.NumOut() > 2 {
+		return fmt.Errorf("handler may not return more than two values")
+	} else if handler.NumOut() > 1 {
+		if !handler.Out(1).Implements(errorType) {
+			return fmt.Errorf("handler returns two values, but the second does not implement error")
+		}
+	} else if handler.NumOut() == 1 {
+		if !handler.Out(0).Implements(errorType) {
+			return fmt.Errorf("handler returns a single value, but it does not implement error")
+		}
+	}
+	return nil
 }
 
 func getErrorType(err interface{}) string {
