@@ -32,7 +32,7 @@ type expected struct {
 
 func TestWrapper(t *testing.T) {
 	hello := func(s string) string {
-		return fmt.Sprintf("Hello %s!", s)
+		return fmt.Sprintf("Happy monitoring with %s!", s)
 	}
 	hellop := func(s *string) *string {
 		v := hello(*s)
@@ -47,72 +47,72 @@ func TestWrapper(t *testing.T) {
 	}{
 		{
 			input:    `"Thundra"`,
-			expected: expected{`"Hello Thundra!"`, nil},
+			expected: expected{`"Happy monitoring with Thundra!"`, nil},
 			handler: func(name string) (string, error) {
 				return hello(name), nil
 			},
 		},
 		{
 			input:    `"Thundra"`,
-			expected: expected{`"Hello Thundra!"`, nil},
+			expected: expected{`"Happy monitoring with Thundra!"`, nil},
 			handler: func(name string) (string, error) {
 				return hello(name), nil
 			},
 		},
 		{
 			input:    `"Thundra"`,
-			expected: expected{`"Hello Thundra!"`, nil},
+			expected: expected{`"Happy monitoring with Thundra!"`, nil},
 			handler: func(ctx context.Context, name string) (string, error) {
 				return hello(name), nil
 			},
 		},
 		{
 			input:    `"Thundra"`,
-			expected: expected{`"Hello Thundra!"`, nil},
+			expected: expected{`"Happy monitoring with Thundra!"`, nil},
 			handler: func(name *string) (*string, error) {
 				return hellop(name), nil
 			},
 		},
 		{
 			input:    `"Thundra"`,
-			expected: expected{`"Hello Thundra!"`, nil},
+			expected: expected{`"Happy monitoring with Thundra!"`, nil},
 			handler: func(name *string) (*string, error) {
 				return hellop(name), nil
 			},
 		},
 		{
 			input:    `"Thundra"`,
-			expected: expected{`"Hello Thundra!"`, nil},
+			expected: expected{`"Happy monitoring with Thundra!"`, nil},
 			handler: func(ctx context.Context, name *string) (*string, error) {
 				return hellop(name), nil
 			},
 		},
 		{
 			input:    `"Thundra"`,
-			expected: expected{"", errors.New("bad stuff")},
+			expected: expected{"", errors.New("thundra is dead baby, thundra is dead")},
 			handler: func() error {
-				return errors.New("bad stuff")
+				return errors.New("thundra is dead baby, thundra is dead")
 			},
 		},
 		{
 			input:    `"Thundra"`,
-			expected: expected{"", errors.New("bad stuff")},
+			expected: expected{"", errors.New("thundra is dead baby, thundra is dead")},
 			handler: func() (interface{}, error) {
-				return nil, errors.New("bad stuff")
+				return nil, errors.New("thundra is dead baby, thundra is dead")
 			},
 		},
 		{
 			input:    `"Thundra"`,
-			expected: expected{"", errors.New("bad stuff")},
+			expected: expected{"", errors.New("thundra is dead baby, thundra is dead")},
 			handler: func(e interface{}) (interface{}, error) {
-				return nil, errors.New("bad stuff")
+				return nil, errors.New("thundra is dead baby, thundra is dead")
 			},
 		},
 		{
 			input:    `"Thundra"`,
-			expected: expected{"", errors.New("bad stuff")},
+			expected: expected{"", errors.New("thundra is dead baby, thundra is dead")},
 			handler: func(ctx context.Context, e interface{}) (interface{}, error) {
-				return nil, errors.New("bad stuff")
+				return nil, errors.New("thundra is dead baby, thundra is dead")
 			},
 		},
 		{
