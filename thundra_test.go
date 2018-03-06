@@ -11,7 +11,7 @@ import (
 
 // Invoke calls the handler, and serializes the response.
 // If the underlying handler returned an error, or an error occurs during serialization, error is returned.
-func (handler ThundraLambdaHandler) Invoke(ctx context.Context, payload []byte) ([]byte, error) {
+func (handler thundraLambdaHandler) Invoke(ctx context.Context, payload []byte) ([]byte, error) {
 	response, err := handler(ctx, payload)
 	if err != nil {
 		return nil, err

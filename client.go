@@ -9,17 +9,23 @@ import (
 	"thundra-agent-go/constants"
 )
 
-func sendReport(msg Message,url string) {
+var ShouldSendAsync string
+
+func init() {
+	ShouldSendAsync = os.Getenv(constants.Thundra_Lambda_Publish_Cloudwatch_Enable)
+}
+
+func sendReport(msg Message) {
 	b, err := json.Marshal(&msg)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	if os.Getenv(constants.Thundra_Lambda_Publish_Cloudwatch_Enable) == "true"{
+	if ShouldSendAsync == "true" {
 		sendAsync(b)
-	} else{
-		sendHttpReq(b, msg.ApiKey,url)
+	} else {
+		collect(msg)
 	}
 }
 
@@ -28,13 +34,14 @@ func sendAsync(msg []byte) {
 	fmt.Println(string(msg))
 }
 
-func sendHttpReq(msg []byte, apiKey string, url string) {
-	req, _ := http.NewRequest("POST", url, bytes.NewBuffer(msg))
-	req.Header.Set("Authorization", "ApiKey "+apiKey)
+func sendHttpReq(msg []Message) {
+	b,_ := json.Marshal(&msg)
+	req, _ := http.NewRequest("POST", constants.CollectorUrl, bytes.NewBuffer(b))
+	req.Header.Set("Authorization", "ApiKey "+ApiKey)
 	req.Header.Set("Content-Type", "application/json")
 
 	fmt.Println("Sending HTTP request")
-	fmt.Println(string(msg))
+	fmt.Println(msg)
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
@@ -44,4 +51,5 @@ func sendHttpReq(msg []byte, apiKey string, url string) {
 	}
 	defer resp.Body.Close()
 	fmt.Println("response Status:", resp.Status)
+	fmt.Println("ApiKey:", ApiKey)
 }

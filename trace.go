@@ -24,12 +24,8 @@ type Trace struct {
 	errorInfo          *ThundraError
 }
 
-var invocationCount uint32
+var invocationCount uint32 = 0
 var uniqueId uuid.UUID
-
-func init() {
-	invocationCount = 0
-}
 
 type Message struct {
 	Data              TraceData `json:"data"`
@@ -78,7 +74,8 @@ func (trace *Trace) AfterExecution(ctx context.Context, request interface{}, res
 		trace.errors = append(trace.errors, trace.errorInfo.ErrType)
 	}
 
-	prepareReport(request, response, err, trace)
+	msg := prepareReport(request, response, err, trace)
+	sendReport(msg)
 }
 
 func (trace *Trace) OnPanic(ctx context.Context, request json.RawMessage, panic *ThundraPanic, wg *sync.WaitGroup) {
@@ -91,18 +88,17 @@ func (trace *Trace) OnPanic(ctx context.Context, request json.RawMessage, panic 
 	trace.thrownErrorMessage = panic.ErrMessage
 	trace.errors = append(trace.errors, panic.ErrType)
 
-	prepareReport(request, nil, nil, trace)
+	msg := prepareReport(request, nil, nil, trace)
+	sendReport(msg)
 }
 
-func prepareReport(request interface{}, response interface{}, err interface{}, trace *Trace) {
+func prepareReport(request interface{}, response interface{}, err interface{}, trace *Trace) Message {
 	uniqueId = uuid.Must(uuid.NewV4())
 
 	props := prepareProperties(request, response)
 	ai := prepareAuditInfo(trace)
 	td := prepareTraceData(trace, err, props, ai)
-	msg := prepareMessage(trace, td)
-
-	sendReport(msg, constants.AuditUrl)
+	return prepareMessage(trace, td)
 }
 
 func prepareProperties(request interface{}, response interface{}) map[string]interface{} {
@@ -186,12 +182,10 @@ func convertToMsec(duration time.Duration) int64 {
 }
 
 func prepareMessage(trace *Trace, td TraceData) Message {
-	key := os.Getenv("thundra_apiKey")
-
 	return Message{
 		td,
 		"AuditData",
-		key,
+		ApiKey,
 		"1.0",
 	}
 }

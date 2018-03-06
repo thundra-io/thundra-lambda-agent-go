@@ -7,6 +7,8 @@ import (
 	"reflect"
 	"fmt"
 	"runtime/debug"
+	"os"
+	"thundra-agent-go/constants"
 )
 
 type thundra struct {
@@ -15,6 +17,11 @@ type thundra struct {
 }
 
 var instance *thundra
+var ApiKey string
+
+func init() {
+	ApiKey = os.Getenv(constants.Thundra_Api_Key)
+}
 
 func GetInstance(pluginNames []string) *thundra {
 	if instance == nil {
@@ -56,6 +63,7 @@ func (th *thundra) executePostHooks(ctx context.Context, request json.RawMessage
 		go plugin.AfterExecution(ctx, request, response, error, &wg)
 	}
 	wg.Wait()
+	report()
 }
 
 func (th *thundra) onPanic(ctx context.Context, request json.RawMessage, panic *ThundraPanic) {
@@ -65,6 +73,7 @@ func (th *thundra) onPanic(ctx context.Context, request json.RawMessage, panic *
 		go plugin.OnPanic(ctx, request, panic, &wg)
 	}
 	wg.Wait()
+	report()
 }
 
 type thundraLambdaHandler func(context.Context, json.RawMessage) (interface{}, error)
