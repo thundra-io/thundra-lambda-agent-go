@@ -12,6 +12,23 @@ type Plugin interface {
 	OnPanic(ctx context.Context, request json.RawMessage, panic *ThundraPanic, wg *sync.WaitGroup)
 }
 
+type PluginFactory interface {
+	Create() Plugin
+}
+
+var pluginDictionary map[string]PluginFactory
+
+func discoverPlugins() {
+	pD := make(map[string]PluginFactory)
+	//TODO read plugin list from file
+	pD["trace"] = &TraceFactory{}
+	pluginDictionary = pD
+}
+
+func registerPluginFactory(pluginName string, factory PluginFactory){
+	pluginDictionary[pluginName] = factory
+}
+
 type ThundraPanic struct {
 	ErrMessage string `json:"errorMessage"`
 	StackTrace string `json:"error"`

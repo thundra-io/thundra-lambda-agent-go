@@ -24,6 +24,12 @@ type Trace struct {
 	errorInfo          *ThundraError
 }
 
+type TraceFactory struct {}
+
+func (t *TraceFactory) Create() Plugin {
+	return &Trace{}
+}
+
 var invocationCount uint32 = 0
 var uniqueId uuid.UUID
 

@@ -12,8 +12,7 @@ import (
 )
 
 type thundra struct {
-	pluginDictionary map[string]Plugin
-	plugins          []Plugin
+	plugins []Plugin
 }
 
 var instance *thundra
@@ -21,6 +20,7 @@ var ApiKey string
 
 func init() {
 	ApiKey = os.Getenv(constants.Thundra_Api_Key)
+	discoverPlugins()
 }
 
 func GetInstance(pluginNames []string) *thundra {
@@ -32,18 +32,18 @@ func GetInstance(pluginNames []string) *thundra {
 
 func createNew(pluginNames []string) *thundra {
 	th := new(thundra)
-	//TODO remove pluginDictionary to out
-	th.pluginDictionary = make(map[string]Plugin)
-	th.pluginDictionary["trace"] = &Trace{}
-
 	for _, pN := range pluginNames {
-		th.addPlugin(pN)
+		if pf := pluginDictionary[pN]; pf != nil {
+			p := pf.Create()
+			th.addPlugin(p)
+		} else {
+			fmt.Println("Invalid Plugin Name: %s ", pN)
+		}
 	}
 	return th
 }
 
-func (th *thundra) addPlugin(pluginName string) {
-	plugin := th.pluginDictionary[pluginName]
+func (th *thundra) addPlugin(plugin Plugin) {
 	th.plugins = append(th.plugins, plugin)
 }
 
