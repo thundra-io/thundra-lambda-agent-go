@@ -1,9 +1,13 @@
 package thundra
 
+import "sync"
+
 var msgQueue []Message
+var mutex = &sync.Mutex{}
 
 func collect(msg Message) {
-	//TODO mutex
+	defer mutex.Unlock()
+	mutex.Lock()
 	msgQueue = append(msgQueue, msg)
 }
 
