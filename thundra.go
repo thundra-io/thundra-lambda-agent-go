@@ -12,10 +12,10 @@ import (
 )
 
 type thundra struct {
-	plugins []Plugin
+	plugins   []Plugin
+	collector *collector
 }
 
-var instance *thundra
 var ApiKey string
 
 func init() {
@@ -23,18 +23,22 @@ func init() {
 	discoverPlugins()
 }
 
-func GetInstance(pluginNames []string) *thundra {
-	if instance == nil {
-		instance = createNew(pluginNames)
-	}
-	return instance
+func CreateNew(pluginNames []string) *thundra {
+	c := new(collector)
+	return createNewWithCollector(pluginNames, c)
 }
 
-func createNew(pluginNames []string) *thundra {
+func createNewWithCollector(pluginNames []string, collector *collector) *thundra {
 	th := new(thundra)
+	th.collector = collector
 	for _, pN := range pluginNames {
 		if pf := pluginDictionary[pN]; pf != nil {
 			p := pf.Create()
+			var i interface{} = p
+			cp, ok := i.(CollecterAwarePlugin)
+			if ok {
+				cp.SetCollector(collector)
+			}
 			th.addPlugin(p)
 		} else {
 			fmt.Println("Invalid Plugin Name: %s ", pN)
@@ -48,6 +52,7 @@ func (th *thundra) addPlugin(plugin Plugin) {
 }
 
 func (th *thundra) executePreHooks(ctx context.Context, request json.RawMessage) {
+	th.collector.clear()
 	var wg sync.WaitGroup
 	wg.Add(len(th.plugins))
 	for _, plugin := range th.plugins {
@@ -63,7 +68,8 @@ func (th *thundra) executePostHooks(ctx context.Context, request json.RawMessage
 		go plugin.AfterExecution(ctx, request, response, error, &wg)
 	}
 	wg.Wait()
-	report()
+	th.collector.report()
+	th.collector.clear()
 }
 
 func (th *thundra) onPanic(ctx context.Context, request json.RawMessage, panic *ThundraPanic) {
@@ -73,7 +79,8 @@ func (th *thundra) onPanic(ctx context.Context, request json.RawMessage, panic *
 		go plugin.OnPanic(ctx, request, panic, &wg)
 	}
 	wg.Wait()
-	report()
+	th.collector.report()
+	th.collector.clear()
 }
 
 type thundraLambdaHandler func(context.Context, json.RawMessage) (interface{}, error)
@@ -109,6 +116,7 @@ func WrapLambdaHandler(handler interface{}, thundra *thundra) thundraLambdaHandl
 		defer func() {
 			if err := recover(); err != nil {
 				panicInfo := ThundraPanic{
+					//TODO pass error
 					ErrMessage: err.(error).Error(),
 					StackTrace: string(debug.Stack()), //fmt.Sprintf("%s: %s", err, debug.Stack()),
 					ErrType:    getErrorType(err),

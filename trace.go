@@ -22,9 +22,21 @@ type Trace struct {
 	thrownErrorMessage interface{}
 	panicInfo          *ThundraPanic
 	errorInfo          *ThundraError
+	collector          *collector
 }
 
-type TraceFactory struct {}
+type TraceFactory struct{}
+
+type ThundraPanic struct {
+	ErrMessage string `json:"errorMessage"`
+	StackTrace string `json:"error"`
+	ErrType    string `json:"errorType"`
+}
+
+type ThundraError struct {
+	ErrMessage string `json:"errorMessage"`
+	ErrType    string `json:"errorType"`
+}
 
 func (t *TraceFactory) Create() Plugin {
 	return &Trace{}
@@ -81,7 +93,7 @@ func (trace *Trace) AfterExecution(ctx context.Context, request interface{}, res
 	}
 
 	msg := prepareReport(request, response, err, trace)
-	sendReport(msg)
+	sendReport(trace.collector,msg)
 }
 
 func (trace *Trace) OnPanic(ctx context.Context, request json.RawMessage, panic *ThundraPanic, wg *sync.WaitGroup) {
@@ -95,7 +107,11 @@ func (trace *Trace) OnPanic(ctx context.Context, request json.RawMessage, panic 
 	trace.errors = append(trace.errors, panic.ErrType)
 
 	msg := prepareReport(request, nil, nil, trace)
-	sendReport(msg)
+	sendReport(trace.collector,msg)
+}
+
+func (trace *Trace)SetCollector(collector *collector) {
+	trace.collector = collector
 }
 
 func prepareReport(request interface{}, response interface{}, err interface{}, trace *Trace) Message {

@@ -2,17 +2,25 @@ package thundra
 
 import "sync"
 
-var msgQueue []Message
-var mutex = &sync.Mutex{}
-
-func collect(msg Message) {
-	defer mutex.Unlock()
-	mutex.Lock()
-	msgQueue = append(msgQueue, msg)
+type collector struct{
+	msgQueue []Message
 }
 
-func report() {
+var mutex = &sync.Mutex{}
+
+func (c *collector)collect(msg Message) {
+	defer mutex.Unlock()
+	mutex.Lock()
+	c.msgQueue = append(c.msgQueue, msg)
+}
+
+func (c *collector)report() {
 	if ShouldSendAsync == "false" {
-		sendHttpReq(msgQueue)
+		sendHttpReq(c.msgQueue)
 	}
+}
+
+func (c *collector)clear(){
+	//TODO not nil
+	c.msgQueue = nil
 }

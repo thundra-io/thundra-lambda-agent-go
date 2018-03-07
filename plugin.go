@@ -12,6 +12,10 @@ type Plugin interface {
 	OnPanic(ctx context.Context, request json.RawMessage, panic *ThundraPanic, wg *sync.WaitGroup)
 }
 
+type CollecterAwarePlugin interface {
+	SetCollector(collector *collector)
+}
+
 type PluginFactory interface {
 	Create() Plugin
 }
@@ -27,15 +31,4 @@ func discoverPlugins() {
 
 func registerPluginFactory(pluginName string, factory PluginFactory){
 	pluginDictionary[pluginName] = factory
-}
-
-type ThundraPanic struct {
-	ErrMessage string `json:"errorMessage"`
-	StackTrace string `json:"error"`
-	ErrType    string `json:"errorType"`
-}
-
-type ThundraError struct {
-	ErrMessage string `json:"errorMessage"`
-	ErrType    string `json:"errorType"`
 }

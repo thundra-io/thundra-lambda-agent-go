@@ -15,27 +15,26 @@ func init() {
 	ShouldSendAsync = os.Getenv(constants.Thundra_Lambda_Publish_Cloudwatch_Enable)
 }
 
-func sendReport(msg Message) {
+func sendReport(collector *collector, msg Message) {
+	if ShouldSendAsync == "true" {
+		sendAsync(msg)
+	} else {
+		collector.collect(msg)
+	}
+}
+
+func sendAsync(msg Message) {
 	b, err := json.Marshal(&msg)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-
-	if ShouldSendAsync == "true" {
-		sendAsync(b)
-	} else {
-		collect(msg)
-	}
-}
-
-func sendAsync(msg []byte) {
 	fmt.Println("Sending ASYNC request")
-	fmt.Println(string(msg))
+	fmt.Println(string(b))
 }
 
 func sendHttpReq(msg []Message) {
-	b,_ := json.Marshal(&msg)
+	b, _ := json.Marshal(&msg)
 	req, _ := http.NewRequest("POST", constants.CollectorUrl, bytes.NewBuffer(b))
 	req.Header.Set("Authorization", "ApiKey "+ApiKey)
 	req.Header.Set("Content-Type", "application/json")
