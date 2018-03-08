@@ -15,7 +15,7 @@ func init() {
 	ShouldSendAsync = os.Getenv(constants.Thundra_Lambda_Publish_Cloudwatch_Enable)
 }
 
-func sendReport(collector *collector, msg Message) {
+func sendReport(collector Collector, msg Message) {
 	if ShouldSendAsync == "true" {
 		sendAsync(msg)
 	} else {

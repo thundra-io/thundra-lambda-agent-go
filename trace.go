@@ -22,7 +22,7 @@ type Trace struct {
 	thrownErrorMessage interface{}
 	panicInfo          *ThundraPanic
 	errorInfo          *ThundraError
-	collector          *collector
+	collector          Collector
 }
 
 type TraceFactory struct{}
@@ -110,7 +110,7 @@ func (trace *Trace) OnPanic(ctx context.Context, request json.RawMessage, panic 
 	sendReport(trace.collector,msg)
 }
 
-func (trace *Trace)SetCollector(collector *collector) {
+func (trace *Trace)SetCollector(collector Collector) {
 	trace.collector = collector
 }
 

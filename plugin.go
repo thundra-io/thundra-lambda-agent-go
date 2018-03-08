@@ -13,7 +13,7 @@ type Plugin interface {
 }
 
 type CollecterAwarePlugin interface {
-	SetCollector(collector *collector)
+	SetCollector(collector Collector)
 }
 
 type PluginFactory interface {

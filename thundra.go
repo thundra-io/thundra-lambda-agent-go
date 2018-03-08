@@ -13,7 +13,7 @@ import (
 
 type thundra struct {
 	plugins   []Plugin
-	collector *collector
+	collector Collector
 }
 
 var ApiKey string
@@ -24,11 +24,11 @@ func init() {
 }
 
 func CreateNew(pluginNames []string) *thundra {
-	c := new(collector)
+	c := new(collectorImpl)
 	return createNewWithCollector(pluginNames, c)
 }
 
-func createNewWithCollector(pluginNames []string, collector *collector) *thundra {
+func createNewWithCollector(pluginNames []string, collector Collector) *thundra {
 	th := new(thundra)
 	th.collector = collector
 	for _, pN := range pluginNames {
@@ -116,7 +116,7 @@ func WrapLambdaHandler(handler interface{}, thundra *thundra) thundraLambdaHandl
 		defer func() {
 			if err := recover(); err != nil {
 				panicInfo := ThundraPanic{
-					//TODO pass error
+					//TODO pass error only
 					ErrMessage: err.(error).Error(),
 					StackTrace: string(debug.Stack()), //fmt.Sprintf("%s: %s", err, debug.Stack()),
 					ErrType:    getErrorType(err),
