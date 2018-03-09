@@ -74,12 +74,12 @@ type TraceData struct {
 
 func (trace *Trace) BeforeExecution(ctx context.Context, request interface{}, wg *sync.WaitGroup) {
 	defer wg.Done()
-	trace.startTime = time.Now()
+	trace.startTime = time.Now().Round(time.Millisecond)
 }
 
 func (trace *Trace) AfterExecution(ctx context.Context, request interface{}, response interface{}, err interface{}, wg *sync.WaitGroup) {
 	defer wg.Done()
-	trace.endTime = time.Now()
+	trace.endTime = time.Now().Round(time.Millisecond)
 	trace.duration = trace.endTime.Sub(trace.startTime)
 
 	if err != nil {
@@ -93,7 +93,7 @@ func (trace *Trace) AfterExecution(ctx context.Context, request interface{}, res
 	}
 
 	msg := prepareReport(request, response, err, trace)
-	sendReport(trace.collector,msg)
+	sendReport(trace.collector, msg)
 }
 
 func (trace *Trace) OnPanic(ctx context.Context, request json.RawMessage, panic *ThundraPanic, wg *sync.WaitGroup) {
@@ -107,10 +107,10 @@ func (trace *Trace) OnPanic(ctx context.Context, request json.RawMessage, panic 
 	trace.errors = append(trace.errors, panic.ErrType)
 
 	msg := prepareReport(request, nil, nil, trace)
-	sendReport(trace.collector,msg)
+	sendReport(trace.collector, msg)
 }
 
-func (trace *Trace)SetCollector(collector Collector) {
+func (trace *Trace) SetCollector(collector Collector) {
 	trace.collector = collector
 }
 
@@ -120,7 +120,7 @@ func prepareReport(request interface{}, response interface{}, err interface{}, t
 	props := prepareProperties(request, response)
 	ai := prepareAuditInfo(trace)
 	td := prepareTraceData(trace, err, props, ai)
-	return prepareMessage(trace, td)
+	return prepareMessage(td)
 }
 
 func prepareProperties(request interface{}, response interface{}) map[string]interface{} {
@@ -129,11 +129,11 @@ func prepareProperties(request interface{}, response interface{}) map[string]int
 		coldStart = "false"
 	}
 	return map[string]interface{}{
-		"request":                 request,
-		"response":                response,
-		"coldStart":               coldStart,
-		"functionRegion":          os.Getenv("AWS_DEFAULT_REGION"),
-		"functionMemoryLimitInMB": lambdacontext.MemoryLimitInMB,
+		constants.AUDIT_INFO_PROPERTIES_REQUEST:               request,
+		constants.AUDIT_INFO_PROPERTIES_RESPONSE:              response,
+		constants.AUDIT_INFO_PROPERTIES_COLD_START:            coldStart,
+		constants.AUDIT_INFO_PROPERTIES_FUNCTION_REGION:       os.Getenv(constants.AWS_DEFAULT_REGION),
+		constants.AUDIT_INFO_PROPERTIES_FUNCTION_MEMORY_LIMIT: lambdacontext.MemoryLimitInMB,
 	}
 }
 
@@ -154,12 +154,12 @@ func prepareAuditInfo(trace *Trace) map[string]interface{} {
 	}
 
 	return map[string]interface{}{
-		"contextName": lambdacontext.FunctionName,
-		"id":          uniqueId,
-		"openTime":    trace.startTime.Format(constants.TimeFormat),
-		"closeTime":   trace.endTime.Format(constants.TimeFormat),
-		"errors":      auditErrors,
-		"thrownError": auditThrownError,
+		constants.AUDIT_INFO_CONTEXT_NAME: lambdacontext.FunctionName,
+		constants.AUDIT_INFO_ID:           uniqueId,
+		constants.AUDIT_INFO_OPEN_TIME:    trace.startTime.Format(constants.TIME_FORMAT),
+		constants.AUDIT_INFO_CLOSE_TIME:   trace.endTime.Format(constants.TIME_FORMAT),
+		constants.AUDIT_INFO_ERRORS:       auditErrors,
+		constants.AUDIT_INFO_THROWN_ERROR: auditThrownError,
 		//"thrownErrorMessage": trace.thrownErrorMessage,
 	}
 }
@@ -168,9 +168,9 @@ func prepareTraceData(trace *Trace, err interface{}, props map[string]interface{
 	appId := splitAppId(lambdacontext.LogStreamName)
 	ver := lambdacontext.FunctionVersion
 
-	profile := os.Getenv("thundra_applicationProfile")
+	profile := os.Getenv(constants.THUNDRA_APPLICATION_PROFILE)
 	if profile == "" {
-		profile = "default"
+		profile = constants.DEFAULT_PROFILE
 	}
 
 	return TraceData{
@@ -179,12 +179,12 @@ func prepareTraceData(trace *Trace, err interface{}, props map[string]interface{
 		appId,
 		ver,
 		profile,
-		"go",
+		constants.APPLICATION_TYPE,
 		uniqueId.String(),
 		lambdacontext.FunctionName,
-		"ExecutionContext",
-		trace.startTime.Format(constants.TimeFormat),
-		trace.endTime.Format(constants.TimeFormat),
+		constants.EXECUTION_CONTEXT,
+		trace.startTime.Format(constants.TIME_FORMAT),
+		trace.endTime.Format(constants.TIME_FORMAT),
 		convertToMsec(trace.duration), //Convert it to msec
 		trace.errors,
 		trace.thrownError,
@@ -196,18 +196,23 @@ func prepareTraceData(trace *Trace, err interface{}, props map[string]interface{
 
 func splitAppId(logStreamName string) string {
 	s := strings.Split(logStreamName, "]")
-	return s[1]
+	if len(s) > 1 {
+		return s[1]
+	} else {
+		return ""
+	}
 }
 
 func convertToMsec(duration time.Duration) int64 {
 	return int64(duration / time.Millisecond)
 }
 
-func prepareMessage(trace *Trace, td TraceData) Message {
+func prepareMessage(td TraceData) Message {
+	fmt.Println("This ->", ApiKey)
 	return Message{
 		td,
-		"AuditData",
+		constants.DATA_TYPE,
 		ApiKey,
-		"1.0",
+		constants.DATA_FORMAT_VERSION,
 	}
 }

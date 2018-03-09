@@ -26,6 +26,5 @@ func (c *collectorImpl)report() {
 }
 
 func (c *collectorImpl)clear(){
-	//TODO not nil
-	c.msgQueue = nil
+	c.msgQueue = c.msgQueue[:0]
 }

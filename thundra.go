@@ -19,7 +19,6 @@ type thundra struct {
 var ApiKey string
 
 func init() {
-	ApiKey = os.Getenv(constants.Thundra_Api_Key)
 	discoverPlugins()
 }
 
@@ -44,6 +43,7 @@ func createNewWithCollector(pluginNames []string, collector Collector) *thundra 
 			fmt.Println("Invalid Plugin Name: %s ", pN)
 		}
 	}
+	ApiKey = os.Getenv(constants.THUNDRA_API_KEY)
 	return th
 }
 

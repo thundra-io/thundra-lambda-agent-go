@@ -258,10 +258,12 @@ func TestExecutePreHooks(t *testing.T) {
 
 type MockCollector struct {
 	mock.Mock
+	msg Message
 }
 
 func (c *MockCollector) collect(msg Message) {
 	c.Called(msg)
+	c.msg = msg
 }
 
 func (c *MockCollector) report() {
@@ -276,7 +278,7 @@ func TestExecutePostHooks(t *testing.T) {
 	type response struct {
 		msg string
 	}
-
+	//TODO context.TODO()
 	ctx := *new(context.Context)
 	req := json.RawMessage{}
 	resp := response{"Thundra"}
