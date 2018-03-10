@@ -8,18 +8,37 @@ import (
 	"fmt"
 	"runtime/debug"
 	"os"
-	"thundra-agent-go/constants"
 )
 
 type thundra struct {
 	plugins   []Plugin
-	collector Collector
+	collector collector
 }
 
+//TODO addApiKey property in builder pattern
 var ApiKey string
+var pluginDictionary map[string]PluginFactory
 
 func init() {
 	discoverPlugins()
+}
+
+func discoverPlugins() {
+	pD := make(map[string]PluginFactory)
+	//TODO read Plugin list from file
+	pD["trace"] = &TraceFactory{}
+	pluginDictionary = pD
+}
+
+type Message struct {
+	Data              TraceData `json:"data"`
+	Type              string    `json:"type"`
+	ApiKey            string    `json:"apiKey"`
+	DataFormatVersion string    `json:"dataFormatVersion"`
+}
+
+func registerPluginFactory(pluginName string, factory PluginFactory){
+	pluginDictionary[pluginName] = factory
 }
 
 func CreateNew(pluginNames []string) *thundra {
@@ -27,7 +46,7 @@ func CreateNew(pluginNames []string) *thundra {
 	return createNewWithCollector(pluginNames, c)
 }
 
-func createNewWithCollector(pluginNames []string, collector Collector) *thundra {
+func createNewWithCollector(pluginNames []string, collector collector) *thundra {
 	th := new(thundra)
 	th.collector = collector
 	for _, pN := range pluginNames {
@@ -38,16 +57,16 @@ func createNewWithCollector(pluginNames []string, collector Collector) *thundra 
 			if ok {
 				cp.SetCollector(collector)
 			}
-			th.addPlugin(p)
+			th.AddPlugin(p)
 		} else {
 			fmt.Println("Invalid Plugin Name: %s ", pN)
 		}
 	}
-	ApiKey = os.Getenv(constants.THUNDRA_API_KEY)
+	ApiKey = os.Getenv(ThundraApiKey)
 	return th
 }
 
-func (th *thundra) addPlugin(plugin Plugin) {
+func (th *thundra) AddPlugin(plugin Plugin) {
 	th.plugins = append(th.plugins, plugin)
 }
 

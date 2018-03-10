@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"context"
 	"errors"
-	"github.com/stretchr/testify/assert"
 	"encoding/json"
-	"github.com/stretchr/testify/mock"
 	"sync"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 // Invoke calls the handler, and serializes the response.
@@ -245,7 +245,7 @@ func (t *MockPlugin) OnPanic(ctx context.Context, request json.RawMessage, panic
 func TestExecutePreHooks(t *testing.T) {
 	th := CreateNew([]string{})
 	mT := new(MockPlugin)
-	th.addPlugin(mT)
+	th.AddPlugin(mT)
 
 	ctx := *new(context.Context)
 	req := json.RawMessage{}
@@ -288,7 +288,7 @@ func TestExecutePostHooks(t *testing.T) {
 	c := new(MockCollector)
 	th := createNewWithCollector([]string{}, c)
 	mT := new(MockPlugin)
-	th.addPlugin(mT)
+	th.AddPlugin(mT)
 
 	mT.On("AfterExecution", ctx, req, resp, err1, mock.Anything).Return()
 	mT.On("AfterExecution", ctx, req, resp, err2, mock.Anything).Return()
@@ -314,7 +314,7 @@ func TestOnPanic(t *testing.T) {
 	c := new(MockCollector)
 	th := createNewWithCollector([]string{}, c)
 	mT := new(MockPlugin)
-	th.addPlugin(mT)
+	th.AddPlugin(mT)
 
 	mT.On("OnPanic", ctx, req, &panic, mock.Anything).Return()
 	c.On("report").Return()

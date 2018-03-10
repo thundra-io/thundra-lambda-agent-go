@@ -6,16 +6,15 @@ import (
 	"bytes"
 	"net/http"
 	"os"
-	"thundra-agent-go/constants"
 )
 
 var ShouldSendAsync string
 
 func init() {
-	ShouldSendAsync = os.Getenv(constants.THUNDRA_LAMBDA_PUBLISH_CLOUDWATCH_ENABLE)
+	ShouldSendAsync = os.Getenv(ThundraLambdaPublishCloudwatchEnable)
 }
 
-func sendReport(collector Collector, msg Message) {
+func sendReport(collector collector, msg Message) {
 	if ShouldSendAsync == "true" {
 		sendAsync(msg)
 	} else {
@@ -35,7 +34,7 @@ func sendAsync(msg Message) {
 
 func sendHttpReq(msg []Message) {
 	b, _ := json.Marshal(&msg)
-	req, _ := http.NewRequest("POST", constants.COLLECTOR_URL, bytes.NewBuffer(b))
+	req, _ := http.NewRequest("POST", collectorUrl, bytes.NewBuffer(b))
 	req.Header.Set("Authorization", "ApiKey "+ApiKey)
 	req.Header.Set("Content-Type", "application/json")
 
@@ -48,8 +47,8 @@ func sendHttpReq(msg []Message) {
 		fmt.Println("Error:", err)
 		panic(err)
 	}
-	defer resp.Body.Close()
 	fmt.Println("response Status:", resp.Status)
 	//TODO if resp.status == 401 unauthorized : ApiKey is missing
 	fmt.Println("ApiKey:", ApiKey)
+	resp.Body.Close()
 }

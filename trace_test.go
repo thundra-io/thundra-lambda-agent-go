@@ -4,26 +4,27 @@ import (
 	"testing"
 	"context"
 	"fmt"
+	"encoding/json"
+	"os"
+	"time"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"encoding/json"
 	"github.com/aws/aws-lambda-go/lambdacontext"
-	"os"
-	"thundra-agent-go/constants"
-	"time"
 )
 
-const DURATION = 500
-const FUNCTION_NAME = "TestFunctionName"
-const MEMORY_LIMIT = 512
-const FUNCTION_VERSION = "$Version"
-const APPLICATION_PROFILE = "TestProfile"
-const API_KEY = "TestApiKey"
-const DEFAULT_REGION = "TestRegion"
+const (
+	duration           = 500
+	functionName       = "TestFunctionName"
+	memoryLimit        = 512
+	functionVersion    = "$Version"
+	applicationProfile = "TestProfile"
+	apiKey             = "TestApiKey"
+	defaultRegion      = "TestRegion"
+)
 
 func TestTrace(t *testing.T) {
 	hello := func(s string) string {
-		time.Sleep(time.Millisecond * DURATION)
+		time.Sleep(time.Millisecond * duration)
 		return fmt.Sprintf("Happy monitoring with %s!", s)
 	}
 
@@ -53,9 +54,9 @@ func TestTrace(t *testing.T) {
 			th := createNewWithCollector([]string{"trace"}, mc)
 			lambdaHandler := WrapLambdaHandler(testCase.handler, th)
 
-			invocationStartTime := time.Now()
+			invocationStartTime := time.Now().Round(time.Millisecond)
 			response, err := lambdaHandler.InvokeWithoutSerialization(context.TODO(), []byte(testCase.input))
-			invocationEndTime := time.Now()
+			invocationEndTime := time.Now().Round(time.Millisecond)
 
 			if testCase.expected.err != nil {
 				assert.Equal(t, testCase.expected.err, err)
@@ -64,23 +65,23 @@ func TestTrace(t *testing.T) {
 				assert.Equal(t, testCase.expected.val, response.(string))
 
 				//Monitor Data
-				assert.Equal(t, constants.DATA_TYPE, mc.msg.Type)
-				assert.Equal(t, API_KEY, mc.msg.ApiKey)
-				assert.Equal(t, constants.DATA_FORMAT_VERSION, mc.msg.DataFormatVersion)
+				assert.Equal(t, dataType, mc.msg.Type)
+				assert.Equal(t, apiKey, mc.msg.ApiKey)
+				assert.Equal(t, dataFormatVersion, mc.msg.DataFormatVersion)
 
 				//Trace Data
 				assert.NotNil(t, mc.msg.Data.Id)
-				assert.Equal(t, FUNCTION_NAME, mc.msg.Data.ApplicationName)
+				assert.Equal(t, functionName, mc.msg.Data.ApplicationName)
 				assert.Equal(t, "", mc.msg.Data.ApplicationId)
-				assert.Equal(t, FUNCTION_VERSION, mc.msg.Data.ApplicationVersion)
-				assert.Equal(t, APPLICATION_PROFILE, mc.msg.Data.ApplicationProfile)
-				assert.Equal(t, constants.APPLICATION_TYPE, mc.msg.Data.ApplicationType)
+				assert.Equal(t, functionVersion, mc.msg.Data.ApplicationVersion)
+				assert.Equal(t, applicationProfile, mc.msg.Data.ApplicationProfile)
+				assert.Equal(t, applicationType, mc.msg.Data.ApplicationType)
 				assert.NotNil(t, mc.msg.Data.ContextId)
-				assert.Equal(t, FUNCTION_NAME, mc.msg.Data.ContextName)
-				assert.Equal(t, constants.EXECUTION_CONTEXT, mc.msg.Data.ContextType)
+				assert.Equal(t, functionName, mc.msg.Data.ContextName)
+				assert.Equal(t, executionContext, mc.msg.Data.ContextType)
 
-				st, err1 := time.Parse(constants.TIME_FORMAT, mc.msg.Data.StartTime)
-				et, err2 := time.Parse(constants.TIME_FORMAT, mc.msg.Data.EndTime)
+				st, err1 := time.Parse(timeFormat, mc.msg.Data.StartTime)
+				et, err2 := time.Parse(timeFormat, mc.msg.Data.EndTime)
 				if err1 != nil || err2 != nil {
 					fmt.Println("err1: ", err1)
 					fmt.Println("err2: ", err2)
@@ -88,29 +89,29 @@ func TestTrace(t *testing.T) {
 				assert.True(t, invocationStartTime.Before(st) || invocationStartTime.Equal(st))
 				assert.True(t, st.Before(et))
 				assert.True(t, et.Before(invocationEndTime))
-				assert.True(t, int64(DURATION) <= mc.msg.Data.Duration)
+				assert.True(t, int64(duration) <= mc.msg.Data.Duration)
 
 				assert.Nil(t, mc.msg.Data.Errors)
 				assert.Nil(t, mc.msg.Data.ThrownError)
 				assert.Nil(t, mc.msg.Data.ThrownErrorMessage)
 
 				//Trace Audit Info
-				assert.Equal(t, FUNCTION_NAME, mc.msg.Data.AuditInfo[constants.AUDIT_INFO_CONTEXT_NAME])
-				assert.NotNil(t, mc.msg.Data.AuditInfo[constants.AUDIT_INFO_ID])
-				assert.Equal(t, mc.msg.Data.StartTime, mc.msg.Data.AuditInfo[constants.AUDIT_INFO_OPEN_TIME])
-				assert.Equal(t, mc.msg.Data.EndTime, mc.msg.Data.AuditInfo[constants.AUDIT_INFO_CLOSE_TIME])
-				assert.Nil(t, mc.msg.Data.AuditInfo[constants.AUDIT_INFO_ERRORS])
-				assert.Nil(t, mc.msg.Data.AuditInfo[constants.AUDIT_INFO_THROWN_ERROR])
+				assert.Equal(t, functionName, mc.msg.Data.AuditInfo[auditInfoContextName])
+				assert.NotNil(t, mc.msg.Data.AuditInfo[auditInfoId])
+				assert.Equal(t, mc.msg.Data.StartTime, mc.msg.Data.AuditInfo[auditInfoOpenTime])
+				assert.Equal(t, mc.msg.Data.EndTime, mc.msg.Data.AuditInfo[audit_info_close_time])
+				assert.Nil(t, mc.msg.Data.AuditInfo[auditInfoErrors])
+				assert.Nil(t, mc.msg.Data.AuditInfo[auditInfoThrownError])
 
 				req := json.RawMessage(testCase.input)
 
 				//Trace Properties
-				assert.Equal(t, req, mc.msg.Data.Properties[constants.AUDIT_INFO_PROPERTIES_REQUEST])
-				assert.Equal(t, testCase.expected.val, mc.msg.Data.Properties[constants.AUDIT_INFO_PROPERTIES_RESPONSE])
+				assert.Equal(t, req, mc.msg.Data.Properties[auditInfoPropertiesRequest])
+				assert.Equal(t, testCase.expected.val, mc.msg.Data.Properties[auditInfoPropertiesResponse])
 				//TODO check cold start
-				assert.Equal(t, "true", mc.msg.Data.Properties[constants.AUDIT_INFO_PROPERTIES_COLD_START])
-				assert.Equal(t, DEFAULT_REGION, mc.msg.Data.Properties[constants.AUDIT_INFO_PROPERTIES_FUNCTION_REGION])
-				assert.Equal(t, MEMORY_LIMIT, mc.msg.Data.Properties[constants.AUDIT_INFO_PROPERTIES_FUNCTION_MEMORY_LIMIT])
+				assert.Equal(t, "true", mc.msg.Data.Properties[auditInfoPropertiesColdStart])
+				assert.Equal(t, defaultRegion, mc.msg.Data.Properties[auditInfoPropertiesFunctionRegion])
+				assert.Equal(t, memoryLimit, mc.msg.Data.Properties[auditInfoPropertiesFunctionMemoryLimit])
 			}
 			cleanEnvironment()
 		})
@@ -119,12 +120,12 @@ func TestTrace(t *testing.T) {
 }
 
 func prepareEnvironment() {
-	lambdacontext.FunctionName = FUNCTION_NAME
-	lambdacontext.MemoryLimitInMB = MEMORY_LIMIT
-	lambdacontext.FunctionVersion = FUNCTION_VERSION
-	os.Setenv(constants.THUNDRA_APPLICATION_PROFILE, APPLICATION_PROFILE)
-	os.Setenv(constants.THUNDRA_API_KEY, API_KEY)
-	os.Setenv(constants.AWS_DEFAULT_REGION, DEFAULT_REGION)
+	lambdacontext.FunctionName = functionName
+	lambdacontext.MemoryLimitInMB = memoryLimit
+	lambdacontext.FunctionVersion = functionVersion
+	os.Setenv(ThundraApplicationProfile, applicationProfile)
+	os.Setenv(ThundraApiKey, apiKey)
+	os.Setenv(awsDefaultRegion, defaultRegion)
 }
 
 func cleanEnvironment() {

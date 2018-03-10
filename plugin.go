@@ -13,22 +13,10 @@ type Plugin interface {
 }
 
 type CollecterAwarePlugin interface {
-	SetCollector(collector Collector)
+	Plugin
+	SetCollector(collector collector)
 }
 
 type PluginFactory interface {
 	Create() Plugin
-}
-
-var pluginDictionary map[string]PluginFactory
-
-func discoverPlugins() {
-	pD := make(map[string]PluginFactory)
-	//TODO read plugin list from file
-	pD["trace"] = &TraceFactory{}
-	pluginDictionary = pD
-}
-
-func registerPluginFactory(pluginName string, factory PluginFactory){
-	pluginDictionary[pluginName] = factory
 }
