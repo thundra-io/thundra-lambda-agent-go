@@ -10,7 +10,7 @@ const ThundraApplicationProfile = "thundra_applicationProfile"
 
 //Trace
 const dataFormatVersion = "1.0"
-const dataType = "AuditData"
+const traceDataType = "AuditData"
 const executionContext = "ExecutionContext"
 const applicationType = "go"
 const defaultProfile = "default"

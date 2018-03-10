@@ -233,13 +233,17 @@ func (t *MockPlugin) BeforeExecution(ctx context.Context, request interface{}, w
 	defer wg.Done()
 	t.Called(ctx, request, wg)
 }
-func (t *MockPlugin) AfterExecution(ctx context.Context, request interface{}, response interface{}, error interface{}, wg *sync.WaitGroup) {
+
+func (t *MockPlugin) AfterExecution(ctx context.Context, request interface{}, response interface{}, error interface{}, wg *sync.WaitGroup) Message {
 	defer wg.Done()
 	t.Called(ctx, request, response, error, wg)
+	return Message{}
 }
-func (t *MockPlugin) OnPanic(ctx context.Context, request json.RawMessage, panic *ThundraPanic, wg *sync.WaitGroup) {
+
+func (t *MockPlugin) OnPanic(ctx context.Context, request json.RawMessage, panic *ThundraPanic, wg *sync.WaitGroup) Message {
 	defer wg.Done()
 	t.Called(ctx, request, panic, wg)
+	return Message{}
 }
 
 func TestExecutePreHooks(t *testing.T) {
@@ -294,6 +298,7 @@ func TestExecutePostHooks(t *testing.T) {
 	mT.On("AfterExecution", ctx, req, resp, err2, mock.Anything).Return()
 	c.On("report").Return()
 	c.On("clear").Return()
+	c.On("collect", Message{}).Return()
 
 	th.executePostHooks(ctx, req, resp, err1)
 	th.executePostHooks(ctx, req, resp, err2)

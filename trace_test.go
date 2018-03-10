@@ -65,7 +65,7 @@ func TestTrace(t *testing.T) {
 				assert.Equal(t, testCase.expected.val, response.(string))
 
 				//Monitor Data
-				assert.Equal(t, dataType, mc.msg.Type)
+				assert.Equal(t, traceDataType, mc.msg.Type)
 				assert.Equal(t, apiKey, mc.msg.ApiKey)
 				assert.Equal(t, dataFormatVersion, mc.msg.DataFormatVersion)
 
@@ -116,7 +116,6 @@ func TestTrace(t *testing.T) {
 			cleanEnvironment()
 		})
 	}
-
 }
 
 func prepareEnvironment() {

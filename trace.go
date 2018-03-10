@@ -112,7 +112,8 @@ func prepareReport(request interface{}, response interface{}, err interface{}, t
 	props := prepareProperties(request, response)
 	ai := prepareAuditInfo(trace)
 	td := prepareTraceData(trace, err, props, ai)
-	return prepareMessage(td)
+	msg := prepareMessage(td)
+	return msg
 }
 
 func prepareProperties(request interface{}, response interface{}) map[string]interface{} {
@@ -202,7 +203,7 @@ func convertToMsec(duration time.Duration) int64 {
 func prepareMessage(td TraceData) Message {
 	return Message{
 		td,
-		dataType,
+		traceDataType,
 		ApiKey,
 		dataFormatVersion,
 	}

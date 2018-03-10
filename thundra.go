@@ -99,7 +99,10 @@ func (th *thundra) onPanic(ctx context.Context, request json.RawMessage, panic *
 	var wg sync.WaitGroup
 	wg.Add(len(th.plugins))
 	for _, plugin := range th.plugins {
-		go plugin.OnPanic(ctx, request, panic, &wg)
+		go func() {
+			msg := plugin.OnPanic(ctx, request, panic, &wg)
+			th.collector.collect(msg)
+		}()
 	}
 	wg.Wait()
 	th.collector.report()
