@@ -69,7 +69,8 @@ func (trace *trace) BeforeExecution(ctx context.Context, request interface{}, wg
 	wg.Done()
 }
 
-func (trace *trace) AfterExecution(ctx context.Context, request interface{}, response interface{}, err interface{}, wg *sync.WaitGroup) {
+func (trace *trace) AfterExecution(ctx context.Context, request interface{}, response interface{}, err interface{}, wg *sync.WaitGroup) Message {
+	defer wg.Done()
 	trace.endTime = time.Now().Round(time.Millisecond)
 	trace.duration = trace.endTime.Sub(trace.startTime)
 
@@ -84,11 +85,11 @@ func (trace *trace) AfterExecution(ctx context.Context, request interface{}, res
 	}
 
 	msg := prepareReport(request, response, err, trace)
-	sendReport(trace.collector, msg)
-	wg.Done()
+	return msg
 }
 
-func (trace *trace) OnPanic(ctx context.Context, request json.RawMessage, panic *ThundraPanic, wg *sync.WaitGroup) {
+func (trace *trace) OnPanic(ctx context.Context, request json.RawMessage, panic *ThundraPanic, wg *sync.WaitGroup) Message {
+	defer wg.Done()
 	trace.endTime = time.Now()
 	trace.duration = trace.endTime.Sub(trace.startTime)
 	trace.panicInfo = panic
@@ -98,8 +99,7 @@ func (trace *trace) OnPanic(ctx context.Context, request json.RawMessage, panic 
 	trace.errors = append(trace.errors, panic.ErrType)
 
 	msg := prepareReport(request, nil, nil, trace)
-	sendReport(trace.collector, msg)
-	wg.Done()
+	return msg
 }
 
 func (trace *trace) SetCollector(collector collector) {

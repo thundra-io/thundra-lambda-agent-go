@@ -37,7 +37,7 @@ type Message struct {
 	DataFormatVersion string    `json:"dataFormatVersion"`
 }
 
-func registerPluginFactory(pluginName string, factory PluginFactory){
+func registerPluginFactory(pluginName string, factory PluginFactory) {
 	pluginDictionary[pluginName] = factory
 }
 
@@ -52,8 +52,9 @@ func createNewWithCollector(pluginNames []string, collector collector) *thundra 
 	for _, pN := range pluginNames {
 		if pf := pluginDictionary[pN]; pf != nil {
 			p := pf.Create()
-			var i interface{} = p
+			i := p.(interface{})
 			cp, ok := i.(CollecterAwarePlugin)
+			//Is plugin a CollecterAwarePlugin if so add a collector
 			if ok {
 				cp.SetCollector(collector)
 			}
@@ -84,7 +85,10 @@ func (th *thundra) executePostHooks(ctx context.Context, request json.RawMessage
 	var wg sync.WaitGroup
 	wg.Add(len(th.plugins))
 	for _, plugin := range th.plugins {
-		go plugin.AfterExecution(ctx, request, response, error, &wg)
+		go func() {
+			msg := plugin.AfterExecution(ctx, request, response, error, &wg)
+			th.collector.collect(msg)
+		}()
 	}
 	wg.Wait()
 	th.collector.report()
