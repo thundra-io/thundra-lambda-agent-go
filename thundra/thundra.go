@@ -4,120 +4,27 @@ import (
 	"context"
 	"encoding/json"
 	"sync"
-	"reflect"
 	"fmt"
-	"runtime/debug"
+	"reflect"
 	"os"
+
+	"thundra-agent-go/plugin"
 )
 
-type thundra struct {
-	plugins   []Plugin
-	collector collector
-}
+var apiKey string
 
-//TODO addApiKey property in builder pattern
-var ApiKey string
-var pluginDictionary map[string]PluginFactory
+type thundra struct {
+	plugins  []plugin.Plugin
+	reporter reporter
+}
 
 func init() {
-	discoverPlugins()
+	apiKey = os.Getenv(plugin.ThundraApiKey)
 }
 
-func discoverPlugins() {
-	pD := make(map[string]PluginFactory)
-	//TODO read Plugin list from file
-	pD["trace"] = &TraceFactory{}
-	pluginDictionary = pD
-}
+type LambdaFunction func(context.Context, json.RawMessage) (interface{}, error)
 
-type Message struct {
-	Data              TraceData `json:"data"`
-	Type              string    `json:"type"`
-	ApiKey            string    `json:"apiKey"`
-	DataFormatVersion string    `json:"dataFormatVersion"`
-}
-
-func registerPluginFactory(pluginName string, factory PluginFactory) {
-	pluginDictionary[pluginName] = factory
-}
-
-func CreateNew(pluginNames []string) *thundra {
-	c := new(collectorImpl)
-	return createNewWithCollector(pluginNames, c)
-}
-
-func createNewWithCollector(pluginNames []string, collector collector) *thundra {
-	th := new(thundra)
-	th.collector = collector
-	for _, pN := range pluginNames {
-		if pf := pluginDictionary[pN]; pf != nil {
-			p := pf.Create()
-			i := p.(interface{})
-			cp, ok := i.(CollecterAwarePlugin)
-			//Is plugin a CollecterAwarePlugin if so add a collector
-			if ok {
-				cp.SetCollector(collector)
-			}
-			th.AddPlugin(p)
-		} else {
-			fmt.Println("Invalid Plugin Name: %s ", pN)
-		}
-	}
-	ApiKey = os.Getenv(ThundraApiKey)
-	return th
-}
-
-func (th *thundra) AddPlugin(plugin Plugin) {
-	th.plugins = append(th.plugins, plugin)
-}
-
-func (th *thundra) executePreHooks(ctx context.Context, request json.RawMessage) {
-	th.collector.clear()
-	var wg sync.WaitGroup
-	wg.Add(len(th.plugins))
-	for _, plugin := range th.plugins {
-		go plugin.BeforeExecution(ctx, request, &wg)
-	}
-	wg.Wait()
-}
-
-func (th *thundra) executePostHooks(ctx context.Context, request json.RawMessage, response interface{}, error interface{}) {
-	var wg sync.WaitGroup
-	wg.Add(len(th.plugins))
-	for _, plugin := range th.plugins {
-		go func() {
-			msg := plugin.AfterExecution(ctx, request, response, error, &wg)
-			th.collector.collect(msg)
-		}()
-	}
-	wg.Wait()
-	th.collector.report()
-	th.collector.clear()
-}
-
-func (th *thundra) onPanic(ctx context.Context, request json.RawMessage, panic *ThundraPanic) {
-	var wg sync.WaitGroup
-	wg.Add(len(th.plugins))
-	for _, plugin := range th.plugins {
-		go func() {
-			msg := plugin.OnPanic(ctx, request, panic, &wg)
-			th.collector.collect(msg)
-		}()
-	}
-	wg.Wait()
-	th.collector.report()
-	th.collector.clear()
-}
-
-type thundraLambdaHandler func(context.Context, json.RawMessage) (interface{}, error)
-
-func thundraErrorHandler(e error) thundraLambdaHandler {
-	return func(ctx context.Context, event json.RawMessage) (interface{}, error) {
-		return nil, e
-	}
-}
-
-func WrapLambdaHandler(handler interface{}, thundra *thundra) thundraLambdaHandler {
+func WrapLambdaHandler(handler interface{}, thundra *thundra) LambdaFunction {
 	if handler == nil {
 		return thundraErrorHandler(fmt.Errorf("handler is nil"))
 	}
@@ -141,13 +48,13 @@ func WrapLambdaHandler(handler interface{}, thundra *thundra) thundraLambdaHandl
 	return func(ctx context.Context, payload json.RawMessage) (interface{}, error) {
 		defer func() {
 			if err := recover(); err != nil {
-				panicInfo := ThundraPanic{
-					//TODO pass error only
+				//TODO pass error only
+				/*panicInfo := ThundraPanic{
 					ErrMessage: err.(error).Error(),
 					StackTrace: string(debug.Stack()), //fmt.Sprintf("%s: %s", err, debug.Stack()),
 					ErrType:    getErrorType(err),
 				}
-				thundra.onPanic(ctx, payload, &panicInfo)
+				thundra.onPanic(ctx, payload, &panicInfo)*/
 				panic(err)
 			}
 		}()
@@ -183,6 +90,50 @@ func WrapLambdaHandler(handler interface{}, thundra *thundra) thundraLambdaHandl
 		thundra.executePostHooks(ctx, payload, val, err)
 
 		return val, err
+	}
+}
+
+func (th *thundra) executePreHooks(ctx context.Context, request json.RawMessage) {
+	th.reporter.clear()
+	var wg sync.WaitGroup
+	wg.Add(len(th.plugins))
+	for _, p := range th.plugins {
+		go p.BeforeExecution(ctx, request, &wg)
+	}
+	wg.Wait()
+}
+
+func (th *thundra) executePostHooks(ctx context.Context, request json.RawMessage, response interface{}, error interface{}) {
+	var wg sync.WaitGroup
+	wg.Add(len(th.plugins))
+	for _, p := range th.plugins {
+		go func() {
+			msg := p.AfterExecution(ctx, request, response, error, &wg)
+			th.reporter.collect(msg)
+		}()
+	}
+	wg.Wait()
+	th.reporter.report()
+	th.reporter.clear()
+}
+
+func (th *thundra) onPanic(ctx context.Context, request json.RawMessage, panic interface{}) {
+	var wg sync.WaitGroup
+	wg.Add(len(th.plugins))
+	for _, p := range th.plugins {
+		go func() {
+			msg := p.OnPanic(ctx, request, panic, &wg)
+			th.reporter.collect(msg)
+		}()
+	}
+	wg.Wait()
+	th.reporter.report()
+	th.reporter.clear()
+}
+
+func thundraErrorHandler(e error) LambdaFunction {
+	return func(ctx context.Context, event json.RawMessage) (interface{}, error) {
+		return nil, e
 	}
 }
 

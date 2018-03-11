@@ -1,55 +1,48 @@
 package thundra
 
-//Collector is responsible for collecting and sending the data
-
 import (
 	"sync"
-	"os"
 	"encoding/json"
 	"fmt"
 	"bytes"
 	"net/http"
+	"os"
 )
 
-var ShouldSendAsync string
-
-func init() {
-	ShouldSendAsync = os.Getenv(ThundraLambdaPublishCloudwatchEnable)
-}
-
-type collector interface {
-	collect(msg Message)
+type reporter interface {
+	collect(msg interface{})
 	report()
 	clear()
 }
 
-type collectorImpl struct {
-	msgQueue []Message
+type reporterImpl struct {
+	msgQueue []interface{}
 }
 
+var shouldSendAsync = os.Getenv(ThundraLambdaPublishCloudwatchEnable)
 var mutex = &sync.Mutex{}
 
-func (c *collectorImpl) collect(msg Message) {
+func (c *reporterImpl) collect(msg interface{}) {
 	defer mutex.Unlock()
 	mutex.Lock()
-	if ShouldSendAsync == "true" {
+	if shouldSendAsync == "true" {
 		sendAsync(msg)
 		return
 	}
 	c.msgQueue = append(c.msgQueue, msg)
 }
 
-func (c *collectorImpl) report() {
-	if ShouldSendAsync == "false" {
+func (c *reporterImpl) report() {
+	if shouldSendAsync == "false" {
 		sendHttpReq(c.msgQueue)
 	}
 }
 
-func (c *collectorImpl) clear() {
+func (c *reporterImpl) clear() {
 	c.msgQueue = c.msgQueue[:0]
 }
 
-func sendAsync(msg Message) {
+func sendAsync(msg interface{}) {
 	b, err := json.Marshal(&msg)
 	if err != nil {
 		fmt.Println(err)
@@ -59,10 +52,10 @@ func sendAsync(msg Message) {
 	fmt.Println(string(b))
 }
 
-func sendHttpReq(msg []Message) {
+func sendHttpReq(msg []interface{}) {
 	b, _ := json.Marshal(&msg)
 	req, _ := http.NewRequest("POST", collectorUrl, bytes.NewBuffer(b))
-	req.Header.Set("Authorization", "ApiKey "+ApiKey)
+	req.Header.Set("Authorization", "ApiKey "+apiKey)
 	req.Header.Set("Content-Type", "application/json")
 
 	fmt.Println("Sending HTTP request")
@@ -76,6 +69,5 @@ func sendHttpReq(msg []Message) {
 	}
 	fmt.Println("response Status:", resp.Status)
 	//TODO if resp.status == 401 unauthorized : ApiKey is missing
-	fmt.Println("ApiKey:", ApiKey)
 	resp.Body.Close()
 }
