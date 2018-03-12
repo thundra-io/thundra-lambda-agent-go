@@ -11,15 +11,11 @@ import (
 	"thundra-agent-go/plugin"
 )
 
-var apiKey string
+var apiKey = os.Getenv(plugin.ThundraApiKey)
 
 type thundra struct {
 	plugins  []plugin.Plugin
 	reporter reporter
-}
-
-func init() {
-	apiKey = os.Getenv(plugin.ThundraApiKey)
 }
 
 type LambdaFunction func(context.Context, json.RawMessage) (interface{}, error)
@@ -108,7 +104,8 @@ func (th *thundra) executePostHooks(ctx context.Context, request json.RawMessage
 	wg.Add(len(th.plugins))
 	for _, p := range th.plugins {
 		go func() {
-			msg := p.AfterExecution(ctx, request, response, error, &wg)
+			data, dType := p.AfterExecution(ctx, request, response, error, &wg)
+			msg := prepareMessage(data, dType)
 			th.reporter.collect(msg)
 		}()
 	}
@@ -122,13 +119,28 @@ func (th *thundra) onPanic(ctx context.Context, request json.RawMessage, panic i
 	wg.Add(len(th.plugins))
 	for _, p := range th.plugins {
 		go func() {
-			msg := p.OnPanic(ctx, request, panic, &wg)
+			data, dType := p.OnPanic(ctx, request, panic, &wg)
+			msg := prepareMessage(data, dType)
 			th.reporter.collect(msg)
 		}()
 	}
 	wg.Wait()
 	th.reporter.report()
 	th.reporter.clear()
+}
+
+func prepareMessage(data interface{}, dataType string) plugin.Message {
+
+	return plugin.Message{
+		data,
+		dataType,
+		apiKey,
+		dataFormatVersion,
+	}
+}
+
+func SetApiKey(key string) {
+	apiKey = key
 }
 
 func thundraErrorHandler(e error) LambdaFunction {

@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"sync"
 	"thundra-agent-go/plugin"
+	"thundra-agent-go/trace"
 )
 
 // Invoke calls the handler, and serializes the response.
@@ -234,17 +235,17 @@ func (t *MockPlugin) BeforeExecution(ctx context.Context, request interface{}, w
 	defer wg.Done()
 	t.Called(ctx, request, wg)
 }
-func (t *MockPlugin) AfterExecution(ctx context.Context, request interface{}, response interface{}, error interface{}, wg *sync.WaitGroup) plugin.Message {
+func (t *MockPlugin) AfterExecution(ctx context.Context, request interface{}, response interface{}, error interface{}, wg *sync.WaitGroup) (interface{}, string) {
 	defer wg.Done()
 	t.Called(ctx, request, response, error, wg)
 	//TODO mocked parameters
-	return plugin.Message{}
+	return plugin.Message{}.Data, trace.TraceDataType
 }
-func (t *MockPlugin) OnPanic(ctx context.Context, request json.RawMessage, panic interface{}, wg *sync.WaitGroup) plugin.Message {
+func (t *MockPlugin) OnPanic(ctx context.Context, request json.RawMessage, panic interface{}, wg *sync.WaitGroup) (interface{}, string) {
 	defer wg.Done()
 	t.Called(ctx, request, panic, wg)
 	//TODO mocked parameters
-	return plugin.Message{}
+	return plugin.Message{}.Data, trace.TraceDataType
 }
 
 func TestExecutePreHooks(t *testing.T) {
@@ -261,12 +262,12 @@ func TestExecutePreHooks(t *testing.T) {
 
 type MockReporter struct {
 	mock.Mock
-	msg []interface{}
+	messageQueue []interface{}
 }
 
 func (r *MockReporter) collect(msg interface{}) {
+	r.messageQueue = append(r.messageQueue, msg)
 	r.Called(msg)
-	r.msg = append(r.msg, msg)
 }
 
 func (r *MockReporter) report() {

@@ -5,7 +5,6 @@ const TimeFormat = "2006-01-02 15:04:05.000 -0700"
 //TODO make them private
 
 //Trace
-const DataFormatVersion = "1.0"
 const TraceDataType = "AuditData"
 const ExecutionContext = "ExecutionContext"
 const ApplicationType = "go"

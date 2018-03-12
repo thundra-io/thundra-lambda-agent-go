@@ -16,7 +16,7 @@ type reporter interface {
 }
 
 type reporterImpl struct {
-	msgQueue []interface{}
+	messageQueue []interface{}
 }
 
 var shouldSendAsync = os.Getenv(ThundraLambdaPublishCloudwatchEnable)
@@ -29,17 +29,17 @@ func (c *reporterImpl) collect(msg interface{}) {
 		sendAsync(msg)
 		return
 	}
-	c.msgQueue = append(c.msgQueue, msg)
+	c.messageQueue = append(c.messageQueue, msg)
 }
 
 func (c *reporterImpl) report() {
 	if shouldSendAsync == "false" {
-		sendHttpReq(c.msgQueue)
+		sendHttpReq(c.messageQueue)
 	}
 }
 
 func (c *reporterImpl) clear() {
-	c.msgQueue = c.msgQueue[:0]
+	c.messageQueue = c.messageQueue[:0]
 }
 
 func sendAsync(msg interface{}) {

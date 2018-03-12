@@ -67,13 +67,13 @@ func TestTrace(t *testing.T) {
 				assert.Equal(t, testCase.expected.val, response.(string))
 
 				//Monitor Data
-				msg, ok := r.msg[0].(plugin.Message)
+				msg, ok := r.messageQueue[0].(plugin.Message)
 				if !ok {
 					fmt.Println("Collector message can't be casted to pluginMessage")
 				}
 				assert.Equal(t, trace.TraceDataType, msg.Type)
 				assert.Equal(t, TestApiKey, msg.ApiKey)
-				assert.Equal(t, trace.DataFormatVersion, msg.DataFormatVersion)
+				assert.Equal(t, dataFormatVersion, msg.DataFormatVersion)
 
 				//Trace Data
 				td, ok := msg.Data.(trace.TraceData)
@@ -135,8 +135,8 @@ func prepareEnvironment() {
 	lambdacontext.MemoryLimitInMB = memoryLimit
 	lambdacontext.FunctionVersion = functionVersion
 	os.Setenv(trace.ThundraApplicationProfile, applicationProfile)
-	os.Setenv(plugin.ThundraApiKey, TestApiKey)
 	os.Setenv(trace.AwsDefaultRegion, defaultRegion)
+	SetApiKey(TestApiKey)
 }
 
 func cleanEnvironment() {

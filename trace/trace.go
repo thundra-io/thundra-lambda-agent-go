@@ -69,7 +69,7 @@ func (trace *trace) BeforeExecution(ctx context.Context, request interface{}, wg
 	wg.Done()
 }
 
-func (trace *trace) AfterExecution(ctx context.Context, request interface{}, response interface{}, error interface{}, wg *sync.WaitGroup) plugin.Message {
+func (trace *trace) AfterExecution(ctx context.Context, request interface{}, response interface{}, error interface{}, wg *sync.WaitGroup) (interface{}, string) {
 	defer wg.Done()
 	trace.endTime = time.Now().Round(time.Millisecond)
 	trace.duration = trace.endTime.Sub(trace.startTime)
@@ -85,11 +85,11 @@ func (trace *trace) AfterExecution(ctx context.Context, request interface{}, res
 		trace.errors = append(trace.errors, trace.errorInfo.ErrType)
 	}*/
 
-	msg := prepareReport(request, response, error, trace)
-	return msg
+	td := prepareReport(request, response, error, trace)
+	return td, TraceDataType
 }
 
-func (trace *trace) OnPanic(ctx context.Context, request json.RawMessage, panic interface{}, wg *sync.WaitGroup) plugin.Message {
+func (trace *trace) OnPanic(ctx context.Context, request json.RawMessage, panic interface{}, wg *sync.WaitGroup) (interface{}, string) {
 	defer wg.Done()
 	trace.endTime = time.Now()
 	trace.duration = trace.endTime.Sub(trace.startTime)
@@ -99,18 +99,17 @@ func (trace *trace) OnPanic(ctx context.Context, request json.RawMessage, panic 
 		trace.thrownErrorMessage = panic.ErrMessage
 		trace.errors = append(trace.errors, panic.ErrType)
 	*/
-	msg := prepareReport(request, nil, nil, trace)
-	return msg
+	td := prepareReport(request, nil, nil, trace)
+	return td, TraceDataType
 }
 
-func prepareReport(request interface{}, response interface{}, err interface{}, trace *trace) plugin.Message {
+func prepareReport(request interface{}, response interface{}, err interface{}, trace *trace) interface{} {
 	uniqueId = uuid.Must(uuid.NewV4())
 
 	props := prepareProperties(request, response)
 	ai := prepareAuditInfo(trace)
 	td := prepareTraceData(trace, err, props, ai)
-	msg := prepareMessage(td)
-	return msg
+	return td
 }
 
 func prepareProperties(request interface{}, response interface{}) map[string]interface{} {
@@ -195,14 +194,4 @@ func splitAppId(logStreamName string) string {
 
 func convertToMsec(duration time.Duration) int64 {
 	return int64(duration / time.Millisecond)
-}
-
-func prepareMessage(td TraceData) plugin.Message {
-
-	return plugin.Message{
-		td,
-		TraceDataType,
-		os.Getenv(plugin.ThundraApiKey),
-		DataFormatVersion,
-	}
 }
