@@ -21,19 +21,19 @@ type trace struct {
 	errors             []string
 	thrownError        interface{}
 	thrownErrorMessage interface{}
-	panicInfo          *panicInfo
-	errorInfo          *errorInfo
+	panicInfo          *PanicInfo
+	errorInfo          *ErrorInfo
 }
 
 type TraceFactory struct{}
 
-type panicInfo struct {
+type PanicInfo struct {
 	ErrMessage string `json:"errorMessage"`
 	StackTrace string `json:"error"`
 	ErrType    string `json:"errorType"`
 }
 
-type errorInfo struct {
+type ErrorInfo struct {
 	ErrMessage string `json:"errorMessage"`
 	ErrType    string `json:"errorType"`
 }
@@ -83,7 +83,7 @@ func (trace *trace) AfterExecution(ctx context.Context, request interface{}, res
 		errMessage := getErrorMessage(err)
 		errType := getErrorType(err)
 
-		ei := &errorInfo{
+		ei := &ErrorInfo{
 			errMessage,
 			errType,
 		}
@@ -105,13 +105,13 @@ func (trace *trace) OnPanic(ctx context.Context, request json.RawMessage, err in
 
 	errMessage := err.(error).Error()
 	errType := getErrorType(err)
-	panicInfo := &panicInfo{
+	pi := &PanicInfo{
 		errMessage,
 		string(stackTrace),
 		errType,
 	}
 
-	trace.panicInfo = panicInfo
+	trace.panicInfo = pi
 	trace.thrownError = errType
 	trace.thrownErrorMessage = getErrorMessage(err)
 	trace.errors = append(trace.errors, errType)
