@@ -221,6 +221,21 @@ func TestPanic(t *testing.T) {
 				return hello(name), nil
 			},
 		},
+		{
+			input:    `"Thundra"`,
+			expected: expectedPanic{"Thundra works!", nil,errors.New(generatedPanic)},
+			handler: func(name string) (string, error) {
+				return hello(name), nil
+			},
+		},
+		{
+			input:    `"Thundra"`,
+			expected: expectedPanic{"Thundra works!", nil,errors.New(generatedPanic)},
+			handler: func(ctx context.Context, name string) (string, error) {
+				return hello(name), nil
+			},
+		},
+
 	}
 	for i, testCase := range testCases {
 		t.Run(fmt.Sprintf("testCase[%d] %s", i, testCase.name), func(t *testing.T) {

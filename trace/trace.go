@@ -160,12 +160,12 @@ func prepareAuditInfo(trace *trace) map[string]interface{} {
 	var auditThrownError interface{}
 
 	if trace.panicInfo != nil {
-		fmt.Println("PANIC NOT NULL")
+		fmt.Println("Panic is not null")
 		p := *trace.panicInfo
 		auditErrors = append(auditErrors, p)
 		auditThrownError = p
 	} else if trace.errorInfo != nil {
-		fmt.Println("ERROR NOT NULL")
+		fmt.Println("Error is not null")
 		e := *trace.errorInfo
 		auditErrors = append(auditErrors, e)
 		auditThrownError = e
