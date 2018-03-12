@@ -11,6 +11,7 @@ import (
 	"strings"
 	"fmt"
 	"thundra-agent-go/plugin"
+	"reflect"
 )
 
 type trace struct {
@@ -20,19 +21,19 @@ type trace struct {
 	errors             []string
 	thrownError        interface{}
 	thrownErrorMessage interface{}
-	panicInfo          *ThundraPanic
-	errorInfo          *ThundraError
+	panicInfo          *panicInfo
+	errorInfo          *errorInfo
 }
 
 type TraceFactory struct{}
 
-type ThundraPanic struct {
+type panicInfo struct {
 	ErrMessage string `json:"errorMessage"`
 	StackTrace string `json:"error"`
 	ErrType    string `json:"errorType"`
 }
 
-type ThundraError struct {
+type errorInfo struct {
 	ErrMessage string `json:"errorMessage"`
 	ErrType    string `json:"errorType"`
 }
@@ -66,41 +67,69 @@ type TraceData struct {
 
 func (trace *trace) BeforeExecution(ctx context.Context, request interface{}, wg *sync.WaitGroup) {
 	trace.startTime = time.Now().Round(time.Millisecond)
+	cleanBuffer(trace)
 	wg.Done()
 }
+func cleanBuffer(trace *trace) {
+	trace.errors = nil
+}
 
-func (trace *trace) AfterExecution(ctx context.Context, request interface{}, response interface{}, error interface{}, wg *sync.WaitGroup) (interface{}, string) {
+func (trace *trace) AfterExecution(ctx context.Context, request interface{}, response interface{}, err interface{}, wg *sync.WaitGroup) (interface{}, string) {
 	defer wg.Done()
 	trace.endTime = time.Now().Round(time.Millisecond)
 	trace.duration = trace.endTime.Sub(trace.startTime)
 
-	/* TODO error
-	if error != nil {
-		trace.errorInfo = &ThundraError{}
-		trace.errorInfo.ErrType = getErrorType(err)
-		trace.errorInfo.ErrMessage = err.(error).Error()
+	if err != nil {
+		errMessage := getErrorMessage(err)
+		errType := getErrorType(err)
 
-		trace.thrownError = trace.errorInfo.ErrType
-		trace.thrownErrorMessage = trace.errorInfo.ErrMessage
-		trace.errors = append(trace.errors, trace.errorInfo.ErrType)
-	}*/
+		ei := &errorInfo{
+			errMessage,
+			errType,
+		}
 
-	td := prepareReport(request, response, error, trace)
+		trace.errorInfo = ei
+		trace.thrownError = errType
+		trace.thrownErrorMessage = errMessage
+		trace.errors = append(trace.errors, errType)
+	}
+
+	td := prepareReport(request, response, err, trace)
 	return td, TraceDataType
 }
 
-func (trace *trace) OnPanic(ctx context.Context, request json.RawMessage, panic interface{}, wg *sync.WaitGroup) (interface{}, string) {
+func (trace *trace) OnPanic(ctx context.Context, request json.RawMessage, err interface{}, stackTrace []byte, wg *sync.WaitGroup) (interface{}, string) {
 	defer wg.Done()
 	trace.endTime = time.Now()
 	trace.duration = trace.endTime.Sub(trace.startTime)
-	/* TODO panic
-		trace.panicInfo = panic
-		trace.thrownError = panic.ErrType
-		trace.thrownErrorMessage = panic.ErrMessage
-		trace.errors = append(trace.errors, panic.ErrType)
-	*/
+
+	errMessage := err.(error).Error()
+	errType := getErrorType(err)
+	panicInfo := &panicInfo{
+		errMessage,
+		string(stackTrace),
+		errType,
+	}
+
+	trace.panicInfo = panicInfo
+	trace.thrownError = errType
+	trace.thrownErrorMessage = getErrorMessage(err)
+	trace.errors = append(trace.errors, errType)
+
 	td := prepareReport(request, nil, nil, trace)
 	return td, TraceDataType
+}
+
+func getErrorType(err interface{}) string {
+	errorType := reflect.TypeOf(err)
+	if errorType.Kind() == reflect.Ptr {
+		return errorType.Elem().Name()
+	}
+	return errorType.Name()
+}
+
+func getErrorMessage(err interface{}) string {
+	return err.(error).Error()
 }
 
 func prepareReport(request interface{}, response interface{}, err interface{}, trace *trace) interface{} {

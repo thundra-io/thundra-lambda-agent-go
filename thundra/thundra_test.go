@@ -11,6 +11,7 @@ import (
 	"sync"
 	"thundra-agent-go/plugin"
 	"thundra-agent-go/trace"
+	"runtime/debug"
 )
 
 // Invoke calls the handler, and serializes the response.
@@ -235,15 +236,15 @@ func (t *MockPlugin) BeforeExecution(ctx context.Context, request interface{}, w
 	defer wg.Done()
 	t.Called(ctx, request, wg)
 }
-func (t *MockPlugin) AfterExecution(ctx context.Context, request interface{}, response interface{}, error interface{}, wg *sync.WaitGroup) (interface{}, string) {
+func (t *MockPlugin) AfterExecution(ctx context.Context, request interface{}, response interface{}, err interface{}, wg *sync.WaitGroup) (interface{}, string) {
 	defer wg.Done()
-	t.Called(ctx, request, response, error, wg)
+	t.Called(ctx, request, response, err, wg)
 	//TODO mocked parameters
 	return plugin.Message{}.Data, trace.TraceDataType
 }
-func (t *MockPlugin) OnPanic(ctx context.Context, request json.RawMessage, panic interface{}, wg *sync.WaitGroup) (interface{}, string) {
+func (t *MockPlugin) OnPanic(ctx context.Context, request json.RawMessage, err interface{}, stackTrace []byte, wg *sync.WaitGroup) (interface{}, string) {
 	defer wg.Done()
-	t.Called(ctx, request, panic, wg)
+	t.Called(ctx, request, err, stackTrace, wg)
 	//TODO mocked parameters
 	return plugin.Message{}.Data, trace.TraceDataType
 }
@@ -305,27 +306,22 @@ func TestExecutePostHooks(t *testing.T) {
 	r.AssertExpectations(t)
 }
 
-/*TODO TestOnPanic
 func TestOnPanic(t *testing.T) {
 	ctx := *new(context.Context)
 	req := json.RawMessage{}
-	panic := ThundraPanic{
-		"Panic Message",
-		"runtime/debug.Stack(0xc420043f60, 0x1, 0x1)/n" +
-			"/r/usr/local/go/src/runtime/debug/stack.go:24 +0xa7",
-		"String Error",
-	}
+	err := errors.New("Generated Error")
+	stackTrace := debug.Stack()
 
-	c := new(MockReporter)
-	th := createNewWithCollector([]string{}, c)
+	r := new(MockReporter)
 	mT := new(MockPlugin)
-	th.AddPlugin(mT)
+	th := NewBuilder().AddPlugin(mT).SetReporter(r).Build()
 
-	mT.On("OnPanic", ctx, req, &panic, mock.Anything).Return()
-	c.On("report").Return()
-	c.On("clear").Return()
+	mT.On("OnPanic", ctx, req, err, stackTrace, mock.Anything).Return()
+	r.On("report").Return()
+	r.On("clear").Return()
+	r.On("collect", mock.Anything).Return()
 
-	th.onPanic(ctx, req, &panic)
+	th.onPanic(ctx, req, err, stackTrace)
 	mT.AssertExpectations(t)
-	c.AssertExpectations(t)
-}*/
+	r.AssertExpectations(t)
+}

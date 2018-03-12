@@ -9,9 +9,14 @@ import (
 	"os"
 
 	"thundra-agent-go/plugin"
+	"runtime/debug"
 )
 
-var apiKey = os.Getenv(plugin.ThundraApiKey)
+var apiKey string
+
+func init(){
+	apiKey = os.Getenv(plugin.ThundraApiKey)
+}
 
 type thundra struct {
 	plugins  []plugin.Plugin
@@ -44,13 +49,8 @@ func WrapLambdaHandler(handler interface{}, thundra *thundra) LambdaFunction {
 	return func(ctx context.Context, payload json.RawMessage) (interface{}, error) {
 		defer func() {
 			if err := recover(); err != nil {
-				//TODO pass error only
-				/*panicInfo := ThundraPanic{
-					ErrMessage: err.(error).Error(),
-					StackTrace: string(debug.Stack()), //fmt.Sprintf("%s: %s", err, debug.Stack()),
-					ErrType:    getErrorType(err),
-				}
-				thundra.onPanic(ctx, payload, &panicInfo)*/
+				stackTrace := debug.Stack()
+				thundra.onPanic(ctx, payload, err, stackTrace)
 				panic(err)
 			}
 		}()
@@ -81,6 +81,10 @@ func WrapLambdaHandler(handler interface{}, thundra *thundra) LambdaFunction {
 		var val interface{}
 		if len(response) > 1 {
 			val = response[0].Interface()
+		}
+
+		if err!=nil{
+			val = nil
 		}
 
 		thundra.executePostHooks(ctx, payload, val, err)
@@ -114,12 +118,12 @@ func (th *thundra) executePostHooks(ctx context.Context, request json.RawMessage
 	th.reporter.clear()
 }
 
-func (th *thundra) onPanic(ctx context.Context, request json.RawMessage, panic interface{}) {
+func (th *thundra) onPanic(ctx context.Context, request json.RawMessage, err interface{}, stackTrace []byte) {
 	var wg sync.WaitGroup
 	wg.Add(len(th.plugins))
 	for _, p := range th.plugins {
 		go func() {
-			data, dType := p.OnPanic(ctx, request, panic, &wg)
+			data, dType := p.OnPanic(ctx, request, err, stackTrace, &wg)
 			msg := prepareMessage(data, dType)
 			th.reporter.collect(msg)
 		}()
@@ -180,12 +184,4 @@ func validateReturns(handler reflect.Type) error {
 		}
 	}
 	return nil
-}
-
-func getErrorType(err interface{}) string {
-	errorType := reflect.TypeOf(err)
-	if errorType.Kind() == reflect.Ptr {
-		return errorType.Elem().Name()
-	}
-	return errorType.Name()
 }
