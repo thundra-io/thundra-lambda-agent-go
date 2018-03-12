@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"net/http"
 	"os"
+	"io/ioutil"
 )
 
 type reporter interface {
@@ -71,6 +72,8 @@ func sendHttpReq(msg []interface{}) {
 		fmt.Println("Error:", err)
 	}
 	fmt.Println("response Status:", resp.Status)
-	//TODO if resp.status == 401 unauthorized : ApiKey is missing
+	fmt.Println("response Headers:", resp.Header)
+	body, _ := ioutil.ReadAll(resp.Body)
+	fmt.Println("response Body:", string(body))
 	resp.Body.Close()
 }

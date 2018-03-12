@@ -239,13 +239,11 @@ func (t *MockPlugin) BeforeExecution(ctx context.Context, request interface{}, w
 func (t *MockPlugin) AfterExecution(ctx context.Context, request interface{}, response interface{}, err interface{}, wg *sync.WaitGroup) (interface{}, string) {
 	defer wg.Done()
 	t.Called(ctx, request, response, err, wg)
-	//TODO mocked parameters
 	return plugin.Message{}.Data, trace.TraceDataType
 }
 func (t *MockPlugin) OnPanic(ctx context.Context, request json.RawMessage, err interface{}, stackTrace []byte, wg *sync.WaitGroup) (interface{}, string) {
 	defer wg.Done()
 	t.Called(ctx, request, err, stackTrace, wg)
-	//TODO mocked parameters
 	return plugin.Message{}.Data, trace.TraceDataType
 }
 
@@ -254,11 +252,26 @@ func TestExecutePreHooks(t *testing.T) {
 	th := NewBuilder().AddPlugin(mT).Build()
 
 	ctx := context.TODO()
-	//TODO mock request
-	req := json.RawMessage{}
+	req := createRawMessage()
+
 	mT.On("BeforeExecution", ctx, req, mock.Anything).Return()
 	th.executePreHooks(ctx, req)
 	mT.AssertExpectations(t)
+}
+
+func createRawMessage() json.RawMessage {
+	var req json.RawMessage
+	event := struct {
+		name string
+	}{
+		"gandalf",
+	}
+
+	req, err := json.Marshal(event)
+	if err != nil {
+		fmt.Println(err)
+	}
+	return req
 }
 
 type MockReporter struct {
@@ -283,9 +296,8 @@ func TestExecutePostHooks(t *testing.T) {
 	type response struct {
 		msg string
 	}
-	//TODO context.TODO()
-	ctx := *new(context.Context)
-	req := json.RawMessage{}
+	ctx := context.TODO()
+	req := createRawMessage()
 	resp := response{"Thundra"}
 	var err1 error = nil
 	var err2 error = errors.New("Error")
@@ -307,8 +319,8 @@ func TestExecutePostHooks(t *testing.T) {
 }
 
 func TestOnPanic(t *testing.T) {
-	ctx := *new(context.Context)
-	req := json.RawMessage{}
+	ctx := context.TODO()
+	req := createRawMessage()
 	err := errors.New("Generated Error")
 	stackTrace := debug.Stack()
 
