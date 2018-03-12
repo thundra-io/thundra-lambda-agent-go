@@ -19,8 +19,12 @@ type reporterImpl struct {
 	messageQueue []interface{}
 }
 
-var shouldSendAsync = os.Getenv(ThundraLambdaPublishCloudwatchEnable)
+var shouldSendAsync string
 var mutex = &sync.Mutex{}
+
+func init(){
+	shouldSendAsync = os.Getenv(ThundraLambdaPublishCloudwatchEnable)
+}
 
 func (c *reporterImpl) collect(msg interface{}) {
 	defer mutex.Unlock()
@@ -48,7 +52,7 @@ func sendAsync(msg interface{}) {
 		fmt.Println(err)
 		return
 	}
-	fmt.Println("Sending ASYNC request")
+	fmt.Println("Sending ASYNC request to Thundra collector")
 	fmt.Println(string(b))
 }
 
@@ -58,14 +62,13 @@ func sendHttpReq(msg []interface{}) {
 	req.Header.Set("Authorization", "ApiKey "+apiKey)
 	req.Header.Set("Content-Type", "application/json")
 
-	fmt.Println("Sending HTTP request")
+	fmt.Println("Sending HTTP request to Thundra collector")
 	fmt.Println(msg)
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Println("Error:", err)
-		panic(err)
 	}
 	fmt.Println("response Status:", resp.Status)
 	//TODO if resp.status == 401 unauthorized : ApiKey is missing

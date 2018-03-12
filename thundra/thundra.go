@@ -14,8 +14,8 @@ import (
 
 var apiKey string
 
-func init(){
-	apiKey = os.Getenv(plugin.ThundraApiKey)
+func init() {
+	apiKey = os.Getenv(ThundraApiKey)
 }
 
 type thundra struct {
@@ -83,7 +83,7 @@ func WrapLambdaHandler(handler interface{}, thundra *thundra) LambdaFunction {
 			val = response[0].Interface()
 		}
 
-		if err!=nil{
+		if err != nil {
 			val = nil
 		}
 
