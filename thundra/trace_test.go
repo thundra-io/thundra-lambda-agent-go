@@ -39,7 +39,7 @@ type expectedPanic struct {
 func TestTrace(t *testing.T) {
 	hello := func(s string) string {
 		time.Sleep(time.Millisecond * duration)
-		return fmt.Sprintf("Happy monitoring with %s!", s)
+		return fmt.Sprintf("%s works!", s)
 	}
 
 	testCases := []struct {
@@ -50,18 +50,55 @@ func TestTrace(t *testing.T) {
 	}{
 		{
 			input:    `"Thundra"`,
-			expected: expected{"Happy monitoring with Thundra!", nil},
+			expected: expected{"Thundra works!", nil},
 			handler: func(name string) (string, error) {
 				return hello(name), nil
 			},
 		},
 		{
-			name:     "Error test",
+			input:    `"Thundra"`,
+			expected: expected{"Thundra works!", nil},
+			handler: func(name string) (string, error) {
+				return hello(name), nil
+			},
+		},
+		{
+			input:    `"Thundra"`,
+			expected: expected{"Thundra works!", nil},
+			handler: func(ctx context.Context, name string) (string, error) {
+				return hello(name), nil
+			},
+		},
+		{
 			input:    `"Thundra"`,
 			expected: expected{"", errors.New(generatedError)},
 			handler: func() error {
 				time.Sleep(time.Millisecond * duration)
 				return errors.New(generatedError)
+			},
+		},
+		{
+			input:    `"Thundra"`,
+			expected: expected{"", errors.New(generatedError)},
+			handler: func() (interface{}, error) {
+				time.Sleep(time.Millisecond * duration)
+				return nil, errors.New(generatedError)
+			},
+		},
+		{
+			input:    `"Thundra"`,
+			expected: expected{"", errors.New(generatedError)},
+			handler: func(e interface{}) (interface{}, error) {
+				time.Sleep(time.Millisecond * duration)
+				return nil, errors.New(generatedError)
+			},
+		},
+		{
+			input:    `"Thundra"`,
+			expected: expected{"", errors.New(generatedError)},
+			handler: func(ctx context.Context, e interface{}) (interface{}, error) {
+				time.Sleep(time.Millisecond * duration)
+				return nil, errors.New(generatedError)
 			},
 		},
 	}
@@ -147,7 +184,7 @@ func TestTrace(t *testing.T) {
 				assert.Equal(t, errorType, errorInfo.ErrType)
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, testCase.expected.val, response.(string))
+				assert.Equal(t, testCase.expected.val, response)
 
 				assert.Equal(t, testCase.expected.val, props[trace.AuditInfoPropertiesResponse])
 				assert.Nil(t, td.Errors)
