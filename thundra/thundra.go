@@ -7,25 +7,25 @@ import (
 	"fmt"
 	"reflect"
 	"os"
+	"runtime/debug"
 
 	"thundra-agent-go/plugin"
-	"runtime/debug"
 )
 
 var apiKey string
 
 func init() {
-	apiKey = os.Getenv(ThundraApiKey)
+	apiKey = os.Getenv(thundraApiKey)
 }
 
 type thundra struct {
 	plugins  []plugin.Plugin
-	reporter reporter
+	reporter Reporter
 }
 
 type LambdaFunction func(context.Context, json.RawMessage) (interface{}, error)
 
-func WrapLambdaHandler(handler interface{}, thundra *thundra) LambdaFunction {
+func Wrap(handler interface{}, thundra *thundra) LambdaFunction {
 	if handler == nil {
 		return thundraErrorHandler(fmt.Errorf("handler is nil"))
 	}
@@ -94,7 +94,7 @@ func WrapLambdaHandler(handler interface{}, thundra *thundra) LambdaFunction {
 }
 
 func (th *thundra) executePreHooks(ctx context.Context, request json.RawMessage) {
-	th.reporter.clear()
+	th.reporter.Clear()
 	var wg sync.WaitGroup
 	wg.Add(len(th.plugins))
 	for _, p := range th.plugins {
@@ -110,12 +110,12 @@ func (th *thundra) executePostHooks(ctx context.Context, request json.RawMessage
 		go func() {
 			data, dType := p.AfterExecution(ctx, request, response, error, &wg)
 			msg := prepareMessage(data, dType)
-			th.reporter.collect(msg)
+			th.reporter.Collect(msg)
 		}()
 	}
 	wg.Wait()
-	th.reporter.report()
-	th.reporter.clear()
+	th.reporter.Report()
+	th.reporter.Clear()
 }
 
 func (th *thundra) onPanic(ctx context.Context, request json.RawMessage, err interface{}, stackTrace []byte) {
@@ -125,12 +125,12 @@ func (th *thundra) onPanic(ctx context.Context, request json.RawMessage, err int
 		go func() {
 			data, dType := p.OnPanic(ctx, request, err, stackTrace, &wg)
 			msg := prepareMessage(data, dType)
-			th.reporter.collect(msg)
+			th.reporter.Collect(msg)
 		}()
 	}
 	wg.Wait()
-	th.reporter.report()
-	th.reporter.clear()
+	th.reporter.Report()
+	th.reporter.Clear()
 }
 
 func prepareMessage(data interface{}, dataType string) plugin.Message {
@@ -139,7 +139,7 @@ func prepareMessage(data interface{}, dataType string) plugin.Message {
 		data,
 		dataType,
 		apiKey,
-		dataFormatVersion,
+		DataFormatVersion,
 	}
 }
 
@@ -153,7 +153,6 @@ func thundraErrorHandler(e error) LambdaFunction {
 	}
 }
 
-//Taken from Amazon Inc
 func validateArguments(handler reflect.Type) (bool, error) {
 	handlerTakesContext := false
 	if handler.NumIn() > 2 {

@@ -6,13 +6,13 @@ import (
 
 type Builder interface {
 	AddPlugin(plugin.Plugin) Builder
-	SetReporter(reporter) Builder
+	SetReporter(Reporter) Builder
 	Build() *thundra
 }
 
 type builder struct {
 	plugins  []plugin.Plugin
-	reporter reporter
+	reporter Reporter
 }
 
 func (b *builder) AddPlugin(plugin plugin.Plugin) Builder {
@@ -20,7 +20,7 @@ func (b *builder) AddPlugin(plugin plugin.Plugin) Builder {
 	return b
 }
 
-func (b *builder) SetReporter(reporter reporter) Builder {
+func (b *builder) SetReporter(reporter Reporter) Builder {
 	b.reporter = reporter
 	return b
 }

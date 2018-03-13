@@ -1,32 +1,30 @@
 package trace
 
-const TimeFormat = "2006-01-02 15:04:05.000 -0700"
-
-//TODO make them private
+const timeFormat = "2006-01-02 15:04:05.000 -0700"
 
 //Trace
 const TraceDataType = "AuditData"
-const ExecutionContext = "ExecutionContext"
-const ApplicationType = "go"
-const DefaultProfile = "default"
+const executionContext = "ExecutionContext"
+const applicationType = "go"
+const defaultProfile = "default"
 
 //AuditInfo
-const AuditInfoOpenTime = "openTime"
-const AuditInfoCloseTime = "closeTime"
-const AuditInfoContextName = "contextName"
-const AuditInfoErrors = "errors"
-const AuditInfoId = "id"
-const AuditInfoThrownError = "thrownError"
+const auditInfoOpenTime = "openTime"
+const auditInfoCloseTime = "closeTime"
+const auditInfoContextName = "contextName"
+const auditInfoErrors = "errors"
+const auditInfoId = "id"
+const auditInfoThrownError = "thrownError"
 
 //AuditInfoProperties
-const AuditInfoPropertiesRequest = "request"
-const AuditInfoPropertiesResponse = "response"
-const AuditInfoPropertiesColdStart = "coldStart"
-const AuditInfoPropertiesFunctionRegion = "functionRegion"
-const AuditInfoPropertiesFunctionMemoryLimit = "functionMemoryLimitInMB"
+const auditInfoPropertiesRequest = "request"
+const auditInfoPropertiesResponse = "response"
+const auditInfoPropertiesColdStart = "coldStart"
+const auditInfoPropertiesFunctionRegion = "functionRegion"
+const auditInfoPropertiesFunctionMemoryLimit = "functionMemoryLimitInMB"
 
 //Thundra Environment
-const ThundraApplicationProfile = "thundra_applicationProfile"
+const thundraApplicationProfile = "thundra_applicationProfile"
 
 //AWS
-const AwsDefaultRegion = "AWS_DEFAULT_REGION"
+const awsDefaultRegion = "AWS_DEFAULT_REGION"

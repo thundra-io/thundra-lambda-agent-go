@@ -1,4 +1,4 @@
-package thundra
+package trace
 
 import (
 	"testing"
@@ -7,12 +7,15 @@ import (
 	"encoding/json"
 	"os"
 	"time"
+	"errors"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/aws/aws-lambda-go/lambdacontext"
-	"thundra-agent-go/trace"
+
+	"thundra-agent-go/thundra"
 	"thundra-agent-go/plugin"
-	"errors"
+	"thundra-agent-go/test"
 )
 
 const (
@@ -34,6 +37,11 @@ type expectedPanic struct {
 	val   string
 	err   error
 	panic error
+}
+
+type expected struct {
+	val string
+	err error
 }
 
 func TestTrace(t *testing.T) {
@@ -106,29 +114,30 @@ func TestTrace(t *testing.T) {
 		t.Run(fmt.Sprintf("testCase[%d] %s", i, testCase.name), func(t *testing.T) {
 			prepareEnvironment()
 
-			r := new(MockReporter)
-			r.On("report").Return()
-			r.On("clear").Return()
-			r.On("collect", mock.Anything).Return()
+			r := new(test.MockReporter)
+			r.On("Report").Return()
+			r.On("Clear").Return()
+			r.On("Collect", mock.Anything).Return()
 
-			tf := trace.TraceFactory{}
-			tr := tf.Create()
-			th := NewBuilder().AddPlugin(tr).SetReporter(r).Build()
-			lambdaHandler := WrapLambdaHandler(testCase.handler, th)
+			tr := &Trace{}
+			th := thundra.NewBuilder().AddPlugin(tr).SetReporter(r).Build()
+			lambdaHandler := thundra.Wrap(testCase.handler, th)
 
-			response, err, invocationStartTime, invocationEndTime := lambdaHandler.InvokeWithoutSerialization(context.TODO(), []byte(testCase.input))
+			invocationStartTime := time.Now().Round(time.Millisecond)
+			response, err := lambdaHandler(context.TODO(), []byte(testCase.input))
+			invocationEndTime := time.Now().Round(time.Millisecond)
 
 			//Monitor Data
-			msg, ok := r.messageQueue[0].(plugin.Message)
+			msg, ok := r.MessageQueue[0].(plugin.Message)
 			if !ok {
 				fmt.Println("Collector message can't be casted to pluginMessage")
 			}
-			assert.Equal(t, trace.TraceDataType, msg.Type)
+			assert.Equal(t, TraceDataType, msg.Type)
 			assert.Equal(t, TestApiKey, msg.ApiKey)
-			assert.Equal(t, dataFormatVersion, msg.DataFormatVersion)
+			assert.Equal(t, thundra.DataFormatVersion, msg.DataFormatVersion)
 
 			//Trace Data
-			td, ok := msg.Data.(trace.TraceData)
+			td, ok := msg.Data.(traceData)
 			if !ok {
 				fmt.Println("Can not convert to trace data")
 			}
@@ -137,13 +146,13 @@ func TestTrace(t *testing.T) {
 			assert.Equal(t, "", td.ApplicationId)
 			assert.Equal(t, functionVersion, td.ApplicationVersion)
 			assert.Equal(t, applicationProfile, td.ApplicationProfile)
-			assert.Equal(t, trace.ApplicationType, td.ApplicationType)
+			assert.Equal(t, applicationType, td.ApplicationType)
 			assert.NotNil(t, td.ContextId)
 			assert.Equal(t, functionName, td.ContextName)
-			assert.Equal(t, trace.ExecutionContext, td.ContextType)
+			assert.Equal(t, executionContext, td.ContextType)
 
-			st, err1 := time.Parse(trace.TimeFormat, td.StartTime)
-			et, err2 := time.Parse(trace.TimeFormat, td.EndTime)
+			st, err1 := time.Parse(timeFormat, td.StartTime)
+			et, err2 := time.Parse(timeFormat, td.EndTime)
 			if err1 != nil || err2 != nil {
 				fmt.Println("err1: ", err1)
 				fmt.Println("err2: ", err2)
@@ -155,19 +164,19 @@ func TestTrace(t *testing.T) {
 
 			//Trace Audit Info
 			ai := td.AuditInfo
-			assert.Equal(t, functionName, ai[trace.AuditInfoContextName])
-			assert.NotNil(t, ai[trace.AuditInfoId])
-			assert.Equal(t, td.StartTime, ai[trace.AuditInfoOpenTime])
-			assert.Equal(t, td.EndTime, ai[trace.AuditInfoCloseTime])
+			assert.Equal(t, functionName, ai[auditInfoContextName])
+			assert.NotNil(t, ai[auditInfoId])
+			assert.Equal(t, td.StartTime, ai[auditInfoOpenTime])
+			assert.Equal(t, td.EndTime, ai[auditInfoCloseTime])
 
 			req := json.RawMessage(testCase.input)
 
 			//Trace Properties
 			props := td.Properties
-			assert.Equal(t, req, props[trace.AuditInfoPropertiesRequest])
-			assert.Equal(t, coldStart, props[trace.AuditInfoPropertiesColdStart])
-			assert.Equal(t, defaultRegion, props[trace.AuditInfoPropertiesFunctionRegion])
-			assert.Equal(t, memoryLimit, props[trace.AuditInfoPropertiesFunctionMemoryLimit])
+			assert.Equal(t, req, props[auditInfoPropertiesRequest])
+			assert.Equal(t, coldStart, props[auditInfoPropertiesColdStart])
+			assert.Equal(t, defaultRegion, props[auditInfoPropertiesFunctionRegion])
+			assert.Equal(t, memoryLimit, props[auditInfoPropertiesFunctionMemoryLimit])
 
 			if testCase.expected.err != nil {
 				assert.Equal(t, testCase.expected.err, err)
@@ -176,22 +185,22 @@ func TestTrace(t *testing.T) {
 				assert.Equal(t, errorType, td.ThrownError)
 				assert.Equal(t, generatedError, td.ThrownErrorMessage)
 
-				assert.Equal(t, 1, len((ai[trace.AuditInfoErrors]).([]interface{})))
-				assert.Nil(t, props[trace.AuditInfoPropertiesResponse])
+				assert.Equal(t, 1, len((ai[auditInfoErrors]).([]interface{})))
+				assert.Nil(t, props[auditInfoPropertiesResponse])
 
-				errorInfo := ai[trace.AuditInfoThrownError].(trace.ErrorInfo)
+				errorInfo := ai[auditInfoThrownError].(errorInfo)
 				assert.Equal(t, generatedError, errorInfo.ErrMessage)
 				assert.Equal(t, errorType, errorInfo.ErrType)
 			} else {
 				assert.NoError(t, err)
 				assert.Equal(t, testCase.expected.val, response)
 
-				assert.Equal(t, testCase.expected.val, props[trace.AuditInfoPropertiesResponse])
+				assert.Equal(t, testCase.expected.val, props[auditInfoPropertiesResponse])
 				assert.Nil(t, td.Errors)
 				assert.Nil(t, td.ThrownError)
 				assert.Nil(t, td.ThrownErrorMessage)
-				assert.Nil(t, ai[trace.AuditInfoErrors])
-				assert.Nil(t, ai[trace.AuditInfoThrownError])
+				assert.Nil(t, ai[auditInfoErrors])
+				assert.Nil(t, ai[auditInfoThrownError])
 			}
 
 			cleanEnvironment()
@@ -223,33 +232,31 @@ func TestPanic(t *testing.T) {
 		},
 		{
 			input:    `"Thundra"`,
-			expected: expectedPanic{"Thundra works!", nil,errors.New(generatedPanic)},
+			expected: expectedPanic{"Thundra works!", nil, errors.New(generatedPanic)},
 			handler: func(name string) (string, error) {
 				return hello(name), nil
 			},
 		},
 		{
 			input:    `"Thundra"`,
-			expected: expectedPanic{"Thundra works!", nil,errors.New(generatedPanic)},
+			expected: expectedPanic{"Thundra works!", nil, errors.New(generatedPanic)},
 			handler: func(ctx context.Context, name string) (string, error) {
 				return hello(name), nil
 			},
 		},
-
 	}
 	for i, testCase := range testCases {
 		t.Run(fmt.Sprintf("testCase[%d] %s", i, testCase.name), func(t *testing.T) {
 			prepareEnvironment()
 
-			r := new(MockReporter)
-			r.On("report").Return()
-			r.On("clear").Return()
-			r.On("collect", mock.Anything).Return()
+			r := new(test.MockReporter)
+			r.On("Report").Return()
+			r.On("Clear").Return()
+			r.On("Collect", mock.Anything).Return()
 
-			tf := trace.TraceFactory{}
-			tr := tf.Create()
-			th := NewBuilder().AddPlugin(tr).SetReporter(r).Build()
-			lambdaHandler := WrapLambdaHandler(testCase.handler, th)
+			tr := &Trace{}
+			th := thundra.NewBuilder().AddPlugin(tr).SetReporter(r).Build()
+			lambdaHandler := thundra.Wrap(testCase.handler, th)
 			invocationStartTime := time.Now().Round(time.Millisecond)
 
 			defer func() {
@@ -257,16 +264,16 @@ func TestPanic(t *testing.T) {
 					invocationEndTime := time.Now().Round(time.Millisecond)
 
 					//Monitor Data
-					msg, ok := r.messageQueue[0].(plugin.Message)
+					msg, ok := r.MessageQueue[0].(plugin.Message)
 					if !ok {
 						fmt.Println("Collector message can't be casted to pluginMessage")
 					}
-					assert.Equal(t, trace.TraceDataType, msg.Type)
+					assert.Equal(t, TraceDataType, msg.Type)
 					assert.Equal(t, TestApiKey, msg.ApiKey)
-					assert.Equal(t, dataFormatVersion, msg.DataFormatVersion)
+					assert.Equal(t, thundra.DataFormatVersion, msg.DataFormatVersion)
 
 					//Trace Data
-					td, ok := msg.Data.(trace.TraceData)
+					td, ok := msg.Data.(traceData)
 					if !ok {
 						fmt.Println("Can not convert to trace data")
 					}
@@ -275,13 +282,13 @@ func TestPanic(t *testing.T) {
 					assert.Equal(t, "", td.ApplicationId)
 					assert.Equal(t, functionVersion, td.ApplicationVersion)
 					assert.Equal(t, applicationProfile, td.ApplicationProfile)
-					assert.Equal(t, trace.ApplicationType, td.ApplicationType)
+					assert.Equal(t, applicationType, td.ApplicationType)
 					assert.NotNil(t, td.ContextId)
 					assert.Equal(t, functionName, td.ContextName)
-					assert.Equal(t, trace.ExecutionContext, td.ContextType)
+					assert.Equal(t, executionContext, td.ContextType)
 
-					st, err1 := time.Parse(trace.TimeFormat, td.StartTime)
-					et, err2 := time.Parse(trace.TimeFormat, td.EndTime)
+					st, err1 := time.Parse(timeFormat, td.StartTime)
+					et, err2 := time.Parse(timeFormat, td.EndTime)
 					if err1 != nil || err2 != nil {
 						fmt.Println("err1: ", err1)
 						fmt.Println("err2: ", err2)
@@ -297,12 +304,12 @@ func TestPanic(t *testing.T) {
 
 					//Trace Audit Info
 					ai := td.AuditInfo
-					assert.Equal(t, functionName, ai[trace.AuditInfoContextName])
-					assert.NotNil(t, ai[trace.AuditInfoId])
-					assert.Equal(t, td.StartTime, ai[trace.AuditInfoOpenTime])
-					assert.Equal(t, td.EndTime, ai[trace.AuditInfoCloseTime])
+					assert.Equal(t, functionName, ai[auditInfoContextName])
+					assert.NotNil(t, ai[auditInfoId])
+					assert.Equal(t, td.StartTime, ai[auditInfoOpenTime])
+					assert.Equal(t, td.EndTime, ai[auditInfoCloseTime])
 
-					panicInfo := ai[trace.AuditInfoThrownError].(trace.PanicInfo)
+					panicInfo := ai[auditInfoThrownError].(panicInfo)
 					assert.Equal(t, generatedPanic, panicInfo.ErrMessage)
 					assert.Equal(t, errorType, panicInfo.ErrType)
 					assert.NotNil(t, panicInfo.StackTrace)
@@ -311,19 +318,19 @@ func TestPanic(t *testing.T) {
 
 					//Trace Properties
 					props := td.Properties
-					assert.Equal(t, req, props[trace.AuditInfoPropertiesRequest])
-					assert.Equal(t, coldStart, props[trace.AuditInfoPropertiesColdStart])
-					assert.Equal(t, defaultRegion, props[trace.AuditInfoPropertiesFunctionRegion])
-					assert.Equal(t, memoryLimit, props[trace.AuditInfoPropertiesFunctionMemoryLimit])
+					assert.Equal(t, req, props[auditInfoPropertiesRequest])
+					assert.Equal(t, coldStart, props[auditInfoPropertiesColdStart])
+					assert.Equal(t, defaultRegion, props[auditInfoPropertiesFunctionRegion])
+					assert.Equal(t, memoryLimit, props[auditInfoPropertiesFunctionMemoryLimit])
 
-					assert.Equal(t, 1, len((ai[trace.AuditInfoErrors]).([]interface{})))
-					assert.Nil(t, props[trace.AuditInfoPropertiesResponse])
+					assert.Equal(t, 1, len((ai[auditInfoErrors]).([]interface{})))
+					assert.Nil(t, props[auditInfoPropertiesResponse])
 
 					cleanEnvironment()
 					coldStart = "false"
 				}
 			}()
-			lambdaHandler.InvokeWithoutSerialization(context.TODO(), []byte(testCase.input))
+			lambdaHandler(context.TODO(), []byte(testCase.input))
 		})
 	}
 }
@@ -332,9 +339,9 @@ func prepareEnvironment() {
 	lambdacontext.FunctionName = functionName
 	lambdacontext.MemoryLimitInMB = memoryLimit
 	lambdacontext.FunctionVersion = functionVersion
-	os.Setenv(trace.ThundraApplicationProfile, applicationProfile)
-	os.Setenv(trace.AwsDefaultRegion, defaultRegion)
-	SetApiKey(TestApiKey)
+	os.Setenv(thundraApplicationProfile, applicationProfile)
+	os.Setenv(awsDefaultRegion, defaultRegion)
+	thundra.SetApiKey(TestApiKey)
 }
 
 func cleanEnvironment() {
@@ -342,15 +349,4 @@ func cleanEnvironment() {
 	lambdacontext.MemoryLimitInMB = 0
 	lambdacontext.FunctionVersion = ""
 	os.Clearenv()
-}
-
-//TODO Solve thundra.LambdaFunction type problem
-func (handler LambdaFunction) InvokeWithoutSerialization(ctx context.Context, payload []byte) (interface{}, error, time.Time, time.Time) {
-	startTime := time.Now().Round(time.Millisecond)
-	response, err := handler(ctx, payload)
-	endTime := time.Now().Round(time.Millisecond)
-	if err != nil {
-		return nil, err, startTime, endTime
-	}
-	return response, nil, startTime, endTime
 }

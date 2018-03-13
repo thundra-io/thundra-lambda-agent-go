@@ -1,8 +1,8 @@
 package thundra
 
 const collectorUrl = "https://collector.thundra.io/api/monitor-datas"
-const dataFormatVersion = "1.0"
+const DataFormatVersion = "1.0"
 
 //Thundra
-const ThundraApiKey = "thundraApiKey"
-const ThundraLambdaPublishCloudwatchEnable = "thundra_lambda_publish_cloudwatch_enable"
+const thundraApiKey = "thundraApiKey"
+const thundraLambdaPublishCloudwatchEnable = "thundra_lambda_publish_cloudwatch_enable"

@@ -6,34 +6,20 @@ import (
 	"context"
 	"errors"
 	"encoding/json"
+	"sync"
+	"runtime/debug"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"sync"
+
 	"thundra-agent-go/plugin"
 	"thundra-agent-go/trace"
-	"runtime/debug"
+	"thundra-agent-go/test"
 )
 
-// Invoke calls the handler, and serializes the response.
-// If the underlying handler returned an error, or an error occurs during serialization, error is returned.
-func (handler LambdaFunction) Invoke(ctx context.Context, payload []byte) ([]byte, error) {
-	response, err := handler(ctx, payload)
-	if err != nil {
-		return nil, err
-	}
-
-	responseBytes, err := json.Marshal(response)
-	if err != nil {
-		return nil, err
-	}
-
-	return responseBytes, nil
-}
-
-type expected struct {
-	val string
-	err error
-}
+const (
+	generatedError = "Generated Error"
+)
 
 func TestWrapper(t *testing.T) {
 	hello := func(s string) string {
@@ -140,8 +126,8 @@ func TestWrapper(t *testing.T) {
 	for i, testCase := range testCases {
 		t.Run(fmt.Sprintf("testCase[%d] %s", i, testCase.name), func(t *testing.T) {
 			th := NewBuilder().Build()
-			lambdaHandler := WrapLambdaHandler(testCase.handler, th)
-			response, err := lambdaHandler.Invoke(context.TODO(), []byte(testCase.input))
+			lambdaHandler := Wrap(testCase.handler, th)
+			response, err := lambdaHandler.invoke(context.TODO(), []byte(testCase.input))
 
 			if testCase.expected.err != nil {
 				assert.Equal(t, testCase.expected.err, err)
@@ -215,8 +201,8 @@ func TestInvalidWrappers(t *testing.T) {
 	for i, testCase := range testCases {
 		t.Run(fmt.Sprintf("testCase[%d] %s", i, testCase.name), func(t *testing.T) {
 			th := NewBuilder().Build()
-			lambdaHandler := WrapLambdaHandler(testCase.handler, th)
-			_, err := lambdaHandler.Invoke(context.TODO(), make([]byte, 0))
+			lambdaHandler := Wrap(testCase.handler, th)
+			_, err := lambdaHandler.invoke(context.TODO(), make([]byte, 0))
 			assert.Equal(t, testCase.expected, err)
 		})
 	}
@@ -224,12 +210,6 @@ func TestInvalidWrappers(t *testing.T) {
 
 type MockPlugin struct {
 	mock.Mock
-}
-
-type MockedPluginFactory struct{}
-
-func (t *MockedPluginFactory) Create() plugin.Plugin {
-	return &MockPlugin{}
 }
 
 func (t *MockPlugin) BeforeExecution(ctx context.Context, request interface{}, wg *sync.WaitGroup) {
@@ -274,24 +254,6 @@ func createRawMessage() json.RawMessage {
 	return req
 }
 
-type MockReporter struct {
-	mock.Mock
-	messageQueue []interface{}
-}
-
-func (r *MockReporter) collect(msg interface{}) {
-	r.messageQueue = append(r.messageQueue, msg)
-	r.Called(msg)
-}
-
-func (r *MockReporter) report() {
-	r.Called()
-}
-
-func (r *MockReporter) clear() {
-	r.Called()
-}
-
 func TestExecutePostHooks(t *testing.T) {
 	type response struct {
 		msg string
@@ -302,15 +264,15 @@ func TestExecutePostHooks(t *testing.T) {
 	var err1 error = nil
 	var err2 error = errors.New("Error")
 
-	r := new(MockReporter)
+	r := new(test.MockReporter)
 	mT := new(MockPlugin)
 	th := NewBuilder().AddPlugin(mT).SetReporter(r).Build()
 
 	mT.On("AfterExecution", ctx, req, resp, err1, mock.Anything).Return()
 	mT.On("AfterExecution", ctx, req, resp, err2, mock.Anything).Return()
-	r.On("report").Return()
-	r.On("clear").Return()
-	r.On("collect", mock.Anything).Return()
+	r.On("Report").Return()
+	r.On("Clear").Return()
+	r.On("Collect", mock.Anything).Return()
 
 	th.executePostHooks(ctx, req, resp, err1)
 	th.executePostHooks(ctx, req, resp, err2)
@@ -324,16 +286,35 @@ func TestOnPanic(t *testing.T) {
 	err := errors.New("Generated Error")
 	stackTrace := debug.Stack()
 
-	r := new(MockReporter)
+	r := new(test.MockReporter)
 	mT := new(MockPlugin)
 	th := NewBuilder().AddPlugin(mT).SetReporter(r).Build()
 
 	mT.On("OnPanic", ctx, req, err, stackTrace, mock.Anything).Return()
-	r.On("report").Return()
-	r.On("clear").Return()
-	r.On("collect", mock.Anything).Return()
+	r.On("Report").Return()
+	r.On("Clear").Return()
+	r.On("Collect", mock.Anything).Return()
 
 	th.onPanic(ctx, req, err, stackTrace)
 	mT.AssertExpectations(t)
 	r.AssertExpectations(t)
+}
+
+func (handler LambdaFunction) invoke(ctx context.Context, payload []byte) ([]byte, error) {
+	response, err := handler(ctx, payload)
+	if err != nil {
+		return nil, err
+	}
+
+	responseBytes, err := json.Marshal(response)
+	if err != nil {
+		return nil, err
+	}
+
+	return responseBytes, nil
+}
+
+type expected struct {
+	val string
+	err error
 }

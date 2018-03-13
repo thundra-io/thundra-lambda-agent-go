@@ -4,48 +4,31 @@ import (
 	"context"
 	"sync"
 	"time"
-	"github.com/satori/go.uuid"
-	"github.com/aws/aws-lambda-go/lambdacontext"
 	"os"
 	"encoding/json"
 	"strings"
 	"fmt"
-	"thundra-agent-go/plugin"
 	"reflect"
+
+	"github.com/satori/go.uuid"
+	"github.com/aws/aws-lambda-go/lambdacontext"
 )
 
-type trace struct {
+type Trace struct {
 	startTime          time.Time
 	endTime            time.Time
 	duration           time.Duration
 	errors             []string
 	thrownError        interface{}
 	thrownErrorMessage interface{}
-	panicInfo          *PanicInfo
-	errorInfo          *ErrorInfo
-}
-
-type TraceFactory struct{}
-
-type PanicInfo struct {
-	ErrMessage string `json:"errorMessage"`
-	StackTrace string `json:"error"`
-	ErrType    string `json:"errorType"`
-}
-
-type ErrorInfo struct {
-	ErrMessage string `json:"errorMessage"`
-	ErrType    string `json:"errorType"`
-}
-
-func (t *TraceFactory) Create() plugin.Plugin {
-	return &trace{}
+	panicInfo          *panicInfo
+	errorInfo          *errorInfo
 }
 
 var invocationCount uint32 = 0
 var uniqueId uuid.UUID
 
-type TraceData struct {
+type traceData struct {
 	Id                 string                 `json:"id"`
 	ApplicationName    string                 `json:"applicationName"`
 	ApplicationId      string                 `json:"applicationId"`
@@ -65,16 +48,13 @@ type TraceData struct {
 	Properties         map[string]interface{} `json:"properties"`
 }
 
-func (trace *trace) BeforeExecution(ctx context.Context, request interface{}, wg *sync.WaitGroup) {
+func (trace *Trace) BeforeExecution(ctx context.Context, request interface{}, wg *sync.WaitGroup) {
 	trace.startTime = time.Now().Round(time.Millisecond)
 	cleanBuffer(trace)
 	wg.Done()
 }
-func cleanBuffer(trace *trace) {
-	trace.errors = nil
-}
 
-func (trace *trace) AfterExecution(ctx context.Context, request interface{}, response interface{}, err interface{}, wg *sync.WaitGroup) (interface{}, string) {
+func (trace *Trace) AfterExecution(ctx context.Context, request interface{}, response interface{}, err interface{}, wg *sync.WaitGroup) (interface{}, string) {
 	defer wg.Done()
 	trace.endTime = time.Now().Round(time.Millisecond)
 	trace.duration = trace.endTime.Sub(trace.startTime)
@@ -83,7 +63,7 @@ func (trace *trace) AfterExecution(ctx context.Context, request interface{}, res
 		errMessage := getErrorMessage(err)
 		errType := getErrorType(err)
 
-		ei := &ErrorInfo{
+		ei := &errorInfo{
 			errMessage,
 			errType,
 		}
@@ -98,14 +78,14 @@ func (trace *trace) AfterExecution(ctx context.Context, request interface{}, res
 	return td, TraceDataType
 }
 
-func (trace *trace) OnPanic(ctx context.Context, request json.RawMessage, err interface{}, stackTrace []byte, wg *sync.WaitGroup) (interface{}, string) {
+func (trace *Trace) OnPanic(ctx context.Context, request json.RawMessage, err interface{}, stackTrace []byte, wg *sync.WaitGroup) (interface{}, string) {
 	defer wg.Done()
 	trace.endTime = time.Now()
 	trace.duration = trace.endTime.Sub(trace.startTime)
 
 	errMessage := err.(error).Error()
 	errType := getErrorType(err)
-	pi := &PanicInfo{
+	pi := &panicInfo{
 		errMessage,
 		string(stackTrace),
 		errType,
@@ -120,6 +100,10 @@ func (trace *trace) OnPanic(ctx context.Context, request json.RawMessage, err in
 	return td, TraceDataType
 }
 
+func cleanBuffer(trace *Trace) {
+	trace.errors = nil
+}
+
 func getErrorType(err interface{}) string {
 	errorType := reflect.TypeOf(err)
 	if errorType.Kind() == reflect.Ptr {
@@ -132,7 +116,7 @@ func getErrorMessage(err interface{}) string {
 	return err.(error).Error()
 }
 
-func prepareReport(request interface{}, response interface{}, err interface{}, trace *trace) interface{} {
+func prepareReport(request interface{}, response interface{}, err interface{}, trace *Trace) interface{} {
 	uniqueId = uuid.Must(uuid.NewV4())
 
 	props := prepareProperties(request, response)
@@ -147,15 +131,15 @@ func prepareProperties(request interface{}, response interface{}) map[string]int
 		coldStart = "false"
 	}
 	return map[string]interface{}{
-		AuditInfoPropertiesRequest:             request,
-		AuditInfoPropertiesResponse:            response,
-		AuditInfoPropertiesColdStart:           coldStart,
-		AuditInfoPropertiesFunctionRegion:      os.Getenv(AwsDefaultRegion),
-		AuditInfoPropertiesFunctionMemoryLimit: lambdacontext.MemoryLimitInMB,
+		auditInfoPropertiesRequest:             request,
+		auditInfoPropertiesResponse:            response,
+		auditInfoPropertiesColdStart:           coldStart,
+		auditInfoPropertiesFunctionRegion:      os.Getenv(awsDefaultRegion),
+		auditInfoPropertiesFunctionMemoryLimit: lambdacontext.MemoryLimitInMB,
 	}
 }
 
-func prepareAuditInfo(trace *trace) map[string]interface{} {
+func prepareAuditInfo(trace *Trace) map[string]interface{} {
 	var auditErrors []interface{}
 	var auditThrownError interface{}
 
@@ -172,37 +156,37 @@ func prepareAuditInfo(trace *trace) map[string]interface{} {
 	}
 
 	return map[string]interface{}{
-		AuditInfoContextName: lambdacontext.FunctionName,
-		AuditInfoId:          uniqueId,
-		AuditInfoOpenTime:    trace.startTime.Format(TimeFormat),
-		AuditInfoCloseTime:   trace.endTime.Format(TimeFormat),
-		AuditInfoErrors:      auditErrors,
-		AuditInfoThrownError: auditThrownError,
+		auditInfoContextName: lambdacontext.FunctionName,
+		auditInfoId:          uniqueId,
+		auditInfoOpenTime:    trace.startTime.Format(timeFormat),
+		auditInfoCloseTime:   trace.endTime.Format(timeFormat),
+		auditInfoErrors:      auditErrors,
+		auditInfoThrownError: auditThrownError,
 		//"thrownErrorMessage": trace.thrownErrorMessage,
 	}
 }
 
-func prepareTraceData(trace *trace, err interface{}, props map[string]interface{}, auditInfo map[string]interface{}) TraceData {
+func prepareTraceData(trace *Trace, err interface{}, props map[string]interface{}, auditInfo map[string]interface{}) traceData {
 	appId := splitAppId(lambdacontext.LogStreamName)
 	ver := lambdacontext.FunctionVersion
 
-	profile := os.Getenv(ThundraApplicationProfile)
+	profile := os.Getenv(thundraApplicationProfile)
 	if profile == "" {
-		profile = DefaultProfile
+		profile = defaultProfile
 	}
 
-	return TraceData{
+	return traceData{
 		uniqueId.String(),
 		lambdacontext.FunctionName,
 		appId,
 		ver,
 		profile,
-		ApplicationType,
+		applicationType,
 		uniqueId.String(),
 		lambdacontext.FunctionName,
-		ExecutionContext,
-		trace.startTime.Format(TimeFormat),
-		trace.endTime.Format(TimeFormat),
+		executionContext,
+		trace.startTime.Format(timeFormat),
+		trace.endTime.Format(timeFormat),
 		convertToMsec(trace.duration), //Convert it to msec
 		trace.errors,
 		trace.thrownError,

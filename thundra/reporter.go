@@ -10,10 +10,10 @@ import (
 	"io/ioutil"
 )
 
-type reporter interface {
-	collect(msg interface{})
-	report()
-	clear()
+type Reporter interface {
+	Collect(msg interface{})
+	Report()
+	Clear()
 }
 
 type reporterImpl struct {
@@ -23,11 +23,11 @@ type reporterImpl struct {
 var shouldSendAsync string
 var mutex = &sync.Mutex{}
 
-func init(){
-	shouldSendAsync = os.Getenv(ThundraLambdaPublishCloudwatchEnable)
+func init() {
+	shouldSendAsync = os.Getenv(thundraLambdaPublishCloudwatchEnable)
 }
 
-func (c *reporterImpl) collect(msg interface{}) {
+func (c *reporterImpl) Collect(msg interface{}) {
 	defer mutex.Unlock()
 	mutex.Lock()
 	if shouldSendAsync == "true" {
@@ -37,13 +37,13 @@ func (c *reporterImpl) collect(msg interface{}) {
 	c.messageQueue = append(c.messageQueue, msg)
 }
 
-func (c *reporterImpl) report() {
+func (c *reporterImpl) Report() {
 	if shouldSendAsync == "false" {
 		sendHttpReq(c.messageQueue)
 	}
 }
 
-func (c *reporterImpl) clear() {
+func (c *reporterImpl) Clear() {
 	c.messageQueue = c.messageQueue[:0]
 }
 
