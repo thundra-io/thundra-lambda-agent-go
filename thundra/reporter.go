@@ -12,7 +12,7 @@ import (
 
 type Reporter interface {
 	Collect(msg interface{})
-	Report()
+	Report(apiKey string)
 	Clear()
 }
 
@@ -37,9 +37,9 @@ func (c *reporterImpl) Collect(msg interface{}) {
 	c.messageQueue = append(c.messageQueue, msg)
 }
 
-func (c *reporterImpl) Report() {
+func (c *reporterImpl) Report(apiKey string) {
 	if shouldSendAsync == "false" {
-		sendHttpReq(c.messageQueue)
+		sendHttpReq(c.messageQueue, apiKey)
 	}
 }
 
@@ -57,7 +57,7 @@ func sendAsync(msg interface{}) {
 	fmt.Println(string(b))
 }
 
-func sendHttpReq(msg []interface{}) {
+func sendHttpReq(msg []interface{}, apiKey string) {
 	b, _ := json.Marshal(&msg)
 	req, _ := http.NewRequest("POST", collectorUrl, bytes.NewBuffer(b))
 	req.Header.Set("Authorization", "ApiKey "+apiKey)

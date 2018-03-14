@@ -13,8 +13,8 @@ func (r *MockReporter) Collect(msg interface{}) {
 	r.Called(msg)
 }
 
-func (r *MockReporter) Report() {
-	r.Called()
+func (r *MockReporter) Report(apiKey string) {
+	r.Called(apiKey)
 }
 
 func (r *MockReporter) Clear() {

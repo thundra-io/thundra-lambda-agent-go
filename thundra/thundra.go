@@ -6,21 +6,15 @@ import (
 	"sync"
 	"fmt"
 	"reflect"
-	"os"
 	"runtime/debug"
 
 	"thundra-agent-go/plugin"
 )
 
-var apiKey string
-
-func init() {
-	apiKey = os.Getenv(thundraApiKey)
-}
-
 type thundra struct {
 	plugins  []plugin.Plugin
 	reporter Reporter
+	apiKey   string
 }
 
 type LambdaFunction func(context.Context, json.RawMessage) (interface{}, error)
@@ -109,12 +103,12 @@ func (th *thundra) executePostHooks(ctx context.Context, request json.RawMessage
 	for _, p := range th.plugins {
 		go func() {
 			data, dType := p.AfterExecution(ctx, request, response, error, &wg)
-			msg := prepareMessage(data, dType)
+			msg := prepareMessage(data, dType, th.apiKey)
 			th.reporter.Collect(msg)
 		}()
 	}
 	wg.Wait()
-	th.reporter.Report()
+	th.reporter.Report(th.apiKey)
 	th.reporter.Clear()
 }
 
@@ -124,16 +118,16 @@ func (th *thundra) onPanic(ctx context.Context, request json.RawMessage, err int
 	for _, p := range th.plugins {
 		go func() {
 			data, dType := p.OnPanic(ctx, request, err, stackTrace, &wg)
-			msg := prepareMessage(data, dType)
+			msg := prepareMessage(data, dType, th.apiKey)
 			th.reporter.Collect(msg)
 		}()
 	}
 	wg.Wait()
-	th.reporter.Report()
+	th.reporter.Report(th.apiKey)
 	th.reporter.Clear()
 }
 
-func prepareMessage(data interface{}, dataType string) plugin.Message {
+func prepareMessage(data interface{}, dataType string, apiKey string) plugin.Message {
 
 	return plugin.Message{
 		data,
@@ -141,10 +135,6 @@ func prepareMessage(data interface{}, dataType string) plugin.Message {
 		apiKey,
 		DataFormatVersion,
 	}
-}
-
-func SetApiKey(key string) {
-	apiKey = key
 }
 
 func thundraErrorHandler(e error) LambdaFunction {

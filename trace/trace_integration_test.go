@@ -115,12 +115,12 @@ func TestTrace(t *testing.T) {
 			prepareEnvironment()
 
 			r := new(test.MockReporter)
-			r.On("Report").Return()
+			r.On("Report", TestApiKey).Return()
 			r.On("Clear").Return()
 			r.On("Collect", mock.Anything).Return()
 
 			tr := &Trace{}
-			th := thundra.NewBuilder().AddPlugin(tr).SetReporter(r).Build()
+			th := thundra.NewBuilder().AddPlugin(tr).SetReporter(r).SetAPIKey(TestApiKey).Build()
 			lambdaHandler := thundra.Wrap(testCase.handler, th)
 
 			invocationStartTime := time.Now().Round(time.Millisecond)
@@ -250,12 +250,12 @@ func TestPanic(t *testing.T) {
 			prepareEnvironment()
 
 			r := new(test.MockReporter)
-			r.On("Report").Return()
+			r.On("Report", TestApiKey).Return()
 			r.On("Clear").Return()
 			r.On("Collect", mock.Anything).Return()
 
 			tr := &Trace{}
-			th := thundra.NewBuilder().AddPlugin(tr).SetReporter(r).Build()
+			th := thundra.NewBuilder().AddPlugin(tr).SetReporter(r).SetAPIKey(TestApiKey).Build()
 			lambdaHandler := thundra.Wrap(testCase.handler, th)
 			invocationStartTime := time.Now().Round(time.Millisecond)
 
@@ -341,7 +341,6 @@ func prepareEnvironment() {
 	lambdacontext.FunctionVersion = functionVersion
 	os.Setenv(thundraApplicationProfile, applicationProfile)
 	os.Setenv(awsDefaultRegion, defaultRegion)
-	thundra.SetApiKey(TestApiKey)
 }
 
 func cleanEnvironment() {
