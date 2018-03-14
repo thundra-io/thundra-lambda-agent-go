@@ -19,6 +19,7 @@ import (
 
 const (
 	generatedError = "Generated Error"
+	TestApiKey     = "TestApiKey"
 )
 
 func TestWrapper(t *testing.T) {
@@ -266,11 +267,11 @@ func TestExecutePostHooks(t *testing.T) {
 
 	r := new(test.MockReporter)
 	mT := new(MockPlugin)
-	th := NewBuilder().AddPlugin(mT).SetReporter(r).Build()
+	th := NewBuilder().AddPlugin(mT).SetReporter(r).SetAPIKey(TestApiKey).Build()
 
 	mT.On("AfterExecution", ctx, req, resp, err1, mock.Anything).Return()
 	mT.On("AfterExecution", ctx, req, resp, err2, mock.Anything).Return()
-	r.On("Report").Return()
+	r.On("Report", TestApiKey).Return()
 	r.On("Clear").Return()
 	r.On("Collect", mock.Anything).Return()
 
@@ -288,10 +289,10 @@ func TestOnPanic(t *testing.T) {
 
 	r := new(test.MockReporter)
 	mT := new(MockPlugin)
-	th := NewBuilder().AddPlugin(mT).SetReporter(r).Build()
+	th := NewBuilder().AddPlugin(mT).SetReporter(r).SetAPIKey(TestApiKey).Build()
 
 	mT.On("OnPanic", ctx, req, err, stackTrace, mock.Anything).Return()
-	r.On("Report").Return()
+	r.On("Report", TestApiKey).Return()
 	r.On("Clear").Return()
 	r.On("Collect", mock.Anything).Return()
 
