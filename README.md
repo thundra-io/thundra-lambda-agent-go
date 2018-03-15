@@ -26,7 +26,7 @@ func main() {
 	// Instantiate Thundra Agent with Trace Support
 	t := thundra.NewBuilder().
 	            AddPlugin(&trace.Trace{}).
-	            SetApiKey(/*TODO login https://console.thundra.io to get your APIKey*/).
+	            SetAPIKey(/*TODO login https://console.thundra.io to get your APIKey*/).
 	            Build()
 	
 	// Wrap your lambda function with Thundra

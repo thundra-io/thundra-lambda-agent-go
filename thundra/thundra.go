@@ -8,7 +8,7 @@ import (
 	"reflect"
 	"runtime/debug"
 
-	"thundra-agent-go/plugin"
+	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 )
 
 type thundra struct {
