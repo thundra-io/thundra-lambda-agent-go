@@ -38,7 +38,7 @@ func (c *reporterImpl) Collect(msg interface{}) {
 }
 
 func (c *reporterImpl) Report(apiKey string) {
-	if shouldSendAsync == "false" {
+	if shouldSendAsync == "false" || shouldSendAsync == "" {
 		sendHttpReq(c.messageQueue, apiKey)
 	}
 }
