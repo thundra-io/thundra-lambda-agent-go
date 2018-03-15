@@ -1,8 +1,9 @@
 package thundra
 
 import (
-	"thundra-agent-go/plugin"
 	"os"
+
+	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 )
 
 type Builder interface {
