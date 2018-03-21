@@ -126,7 +126,12 @@ func TestWrapper(t *testing.T) {
 	}
 	for i, testCase := range testCases {
 		t.Run(fmt.Sprintf("testCase[%d] %s", i, testCase.name), func(t *testing.T) {
-			th := NewBuilder().Build()
+			r := &test.MockReporter{}
+			r.On("Report", TestApiKey).Return()
+			r.On("Clear").Return()
+			r.On("Collect", mock.Anything).Return()
+
+			th := NewBuilder().SetReporter(r).SetAPIKey(TestApiKey).Build()
 			lambdaHandler := Wrap(testCase.handler, th)
 			response, err := lambdaHandler.invoke(context.TODO(), []byte(testCase.input))
 
@@ -201,7 +206,12 @@ func TestInvalidWrappers(t *testing.T) {
 	}
 	for i, testCase := range testCases {
 		t.Run(fmt.Sprintf("testCase[%d] %s", i, testCase.name), func(t *testing.T) {
-			th := NewBuilder().Build()
+			r := &test.MockReporter{}
+			r.On("Report", TestApiKey).Return()
+			r.On("Clear").Return()
+			r.On("Collect", mock.Anything).Return()
+
+			th := NewBuilder().SetReporter(r).SetAPIKey(TestApiKey).Build()
 			lambdaHandler := Wrap(testCase.handler, th)
 			_, err := lambdaHandler.invoke(context.TODO(), make([]byte, 0))
 			assert.Equal(t, testCase.expected, err)
@@ -213,11 +223,11 @@ type MockPlugin struct {
 	mock.Mock
 }
 
-func (t *MockPlugin) BeforeExecution(ctx context.Context, request interface{}, wg *sync.WaitGroup) {
+func (t *MockPlugin) BeforeExecution(ctx context.Context, request json.RawMessage, wg *sync.WaitGroup) {
 	defer wg.Done()
 	t.Called(ctx, request, wg)
 }
-func (t *MockPlugin) AfterExecution(ctx context.Context, request interface{}, response interface{}, err interface{}, wg *sync.WaitGroup) (interface{}, string) {
+func (t *MockPlugin) AfterExecution(ctx context.Context, request json.RawMessage, response interface{}, err interface{}, wg *sync.WaitGroup) (interface{}, string) {
 	defer wg.Done()
 	t.Called(ctx, request, response, err, wg)
 	return plugin.Message{}.Data, trace.TraceDataType

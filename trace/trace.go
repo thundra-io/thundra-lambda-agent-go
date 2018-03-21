@@ -48,13 +48,13 @@ type traceData struct {
 	Properties         map[string]interface{} `json:"properties"`
 }
 
-func (trace *Trace) BeforeExecution(ctx context.Context, request interface{}, wg *sync.WaitGroup) {
+func (trace *Trace) BeforeExecution(ctx context.Context, request json.RawMessage, wg *sync.WaitGroup) {
 	trace.startTime = time.Now().Round(time.Millisecond)
 	cleanBuffer(trace)
 	wg.Done()
 }
 
-func (trace *Trace) AfterExecution(ctx context.Context, request interface{}, response interface{}, err interface{}, wg *sync.WaitGroup) (interface{}, string) {
+func (trace *Trace) AfterExecution(ctx context.Context, request json.RawMessage, response interface{}, err interface{}, wg *sync.WaitGroup) (interface{}, string) {
 	defer wg.Done()
 	trace.endTime = time.Now().Round(time.Millisecond)
 	trace.duration = trace.endTime.Sub(trace.startTime)
@@ -116,7 +116,7 @@ func getErrorMessage(err interface{}) string {
 	return err.(error).Error()
 }
 
-func prepareReport(request interface{}, response interface{}, err interface{}, trace *Trace) interface{} {
+func prepareReport(request json.RawMessage, response interface{}, err interface{}, trace *Trace) interface{} {
 	uniqueId = uuid.Must(uuid.NewV4())
 
 	props := prepareProperties(request, response)
@@ -125,13 +125,13 @@ func prepareReport(request interface{}, response interface{}, err interface{}, t
 	return td
 }
 
-func prepareProperties(request interface{}, response interface{}) map[string]interface{} {
+func prepareProperties(request json.RawMessage, response interface{}) map[string]interface{} {
 	coldStart := "true"
 	if invocationCount += 1; invocationCount != 1 {
 		coldStart = "false"
 	}
 	return map[string]interface{}{
-		auditInfoPropertiesRequest:             request,
+		auditInfoPropertiesRequest:             string(request),
 		auditInfoPropertiesResponse:            response,
 		auditInfoPropertiesColdStart:           coldStart,
 		auditInfoPropertiesFunctionRegion:      os.Getenv(awsDefaultRegion),

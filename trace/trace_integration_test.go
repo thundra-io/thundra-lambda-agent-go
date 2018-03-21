@@ -4,7 +4,6 @@ import (
 	"testing"
 	"context"
 	"fmt"
-	"encoding/json"
 	"os"
 	"time"
 	"errors"
@@ -169,11 +168,9 @@ func TestTrace(t *testing.T) {
 			assert.Equal(t, td.StartTime, ai[auditInfoOpenTime])
 			assert.Equal(t, td.EndTime, ai[auditInfoCloseTime])
 
-			req := json.RawMessage(testCase.input)
-
 			//Trace Properties
 			props := td.Properties
-			assert.Equal(t, req, props[auditInfoPropertiesRequest])
+			assert.Equal(t, testCase.input, props[auditInfoPropertiesRequest])
 			assert.Equal(t, coldStart, props[auditInfoPropertiesColdStart])
 			assert.Equal(t, defaultRegion, props[auditInfoPropertiesFunctionRegion])
 			assert.Equal(t, memoryLimit, props[auditInfoPropertiesFunctionMemoryLimit])
@@ -314,11 +311,9 @@ func TestPanic(t *testing.T) {
 					assert.Equal(t, errorType, panicInfo.ErrType)
 					assert.NotNil(t, panicInfo.StackTrace)
 
-					req := json.RawMessage(testCase.input)
-
 					//Trace Properties
 					props := td.Properties
-					assert.Equal(t, req, props[auditInfoPropertiesRequest])
+					assert.Equal(t, testCase.input, props[auditInfoPropertiesRequest])
 					assert.Equal(t, coldStart, props[auditInfoPropertiesColdStart])
 					assert.Equal(t, defaultRegion, props[auditInfoPropertiesFunctionRegion])
 					assert.Equal(t, memoryLimit, props[auditInfoPropertiesFunctionMemoryLimit])
