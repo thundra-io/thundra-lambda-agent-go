@@ -6,23 +6,26 @@ import (
 	"sync"
 	"time"
 	"github.com/aws/aws-lambda-go/lambdacontext"
-	"strings"
 	"os"
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
-	"github.com/satori/go.uuid"
 	"fmt"
 	"runtime"
 )
 
 const StatDataType = "StatData"
 
-var uniqueId uuid.UUID
-
 type Metric struct {
 	statData
-	statTime     time.Time
-	startGCCount uint32
-	endGCCount   uint32
+	statTime          time.Time
+	startGCCount      uint32
+	endGCCount        uint32
+	startPauseTotalNs uint64
+	endPauseTotalNs   uint64
+
+	EnableGCStats        bool
+	EnableHeapStats      bool
+	EnableGoroutineStats bool
+	EnableCPUStats       bool
 }
 
 type statData struct {
@@ -61,27 +64,7 @@ type heapStatsData struct {
 	HeapInuse uint64 `json:"heapInuse"`
 
 	// HeapObjects is the number of allocated heap objects.
-	HeapObjects uint64 `json:"heapObject"`
-}
-
-type stackStatsData struct {
-	Id                 string `json:"id"`
-	ApplicationName    string `json:"applicationName"`
-	ApplicationId      string `json:"applicationId"`
-	ApplicationVersion string `json:"applicationVersion"`
-	ApplicationProfile string `json:"applicationProfile"`
-	ApplicationType    string `json:"applicationType"`
-	StatName           string `json:"statName"`
-	StatTime           string `json:"statTime"`
-
-	// StackInuse is bytes in stack spans.
-	StackInuse uint64 `json:"stackInuse"`
-
-	// StackSys is bytes of stack memory obtained from the OS.
-	//
-	// StackSys is StackInuse, plus any memory obtained directly
-	// from the OS for OS thread stacks (which should be minimal).
-	StackSys uint64 `json:"stackSys"`
+	HeapObjects uint64 `json:"heapObjects"`
 }
 
 type gcStatsData struct {
@@ -99,31 +82,64 @@ type gcStatsData struct {
 	PauseTotalNs uint64 `json:"pauseTotalNs"`
 
 	// PauseNs is recent GC stop-the-world pause time in nanoseconds.
-	RecentPauseNs uint64 `json:"recentPauseNs"`
+	PauseNs uint64 `json:"pauseNs"`
 
 	// NumGC is the number of completed GC cycles.
 	NumGC uint32 `json:"numGC"`
+
+	// NextGC is the target heap size of the next GC cycle.
+	NextGC uint64 `json:"nextGC"`
 
 	// GCCPUFraction is the fraction of this program's available
 	// CPU time used by the GC since the program started.
 	GCCPUFraction float64 `json:"gcCPUFraction"`
 
-	DeltaGcCount uint32 `json:"deltaGcCount"`
+	//DeltaNumGc is the change in NUMGC from before execution to after execution
+	DeltaNumGc uint32 `json:"deltaNumGC"`
+
+	//DeltaPauseTotalNs is pause total change from before execution to after execution
+	DeltaPauseTotalNs uint64 `json:"deltaPauseTotalNs"`
+}
+
+type goRoutineStatsData struct {
+	Id                 string `json:"id"`
+	ApplicationName    string `json:"applicationName"`
+	ApplicationId      string `json:"applicationId"`
+	ApplicationVersion string `json:"applicationVersion"`
+	ApplicationProfile string `json:"applicationProfile"`
+	ApplicationType    string `json:"applicationType"`
+	StatName           string `json:"statName"`
+	StatTime           string `json:"statTime"`
+	NumGoroutine       uint64 `json:"numGoroutine"`
+}
+
+type cpuStatsData struct {
+	Id                 string `json:"id"`
+	ApplicationName    string `json:"applicationName"`
+	ApplicationId      string `json:"applicationId"`
+	ApplicationVersion string `json:"applicationVersion"`
+	ApplicationProfile string `json:"applicationProfile"`
+	ApplicationType    string `json:"applicationType"`
+	StatName           string `json:"statName"`
+	StatTime           string `json:"statTime"`
+	NumCPU             uint64 `json:"numCPU"`
 }
 
 func (metric *Metric) BeforeExecution(ctx context.Context, request json.RawMessage, wg *sync.WaitGroup) {
-	fmt.Println("Metric: BeforeExecution")
-
 	m := &runtime.MemStats{}
 	runtime.ReadMemStats(m)
 
-	metric.startGCCount = m.NumGC
+	if metric.EnableGCStats {
+		metric.startGCCount = m.NumGC
+		metric.startPauseTotalNs = m.PauseTotalNs
+	}
+
 	initStatData(metric)
 	wg.Done()
 }
 
 func initStatData(metric *Metric) {
-	appId := splitAppId(lambdacontext.LogStreamName)
+	appId := plugin.SplitAppId(lambdacontext.LogStreamName)
 	ver := lambdacontext.FunctionVersion
 	profile := os.Getenv(plugin.ThundraApplicationProfile)
 	if profile == "" {
@@ -137,41 +153,48 @@ func initStatData(metric *Metric) {
 	metric.ApplicationType = plugin.ApplicationType
 }
 
-func (metric *Metric) AfterExecution(ctx context.Context, request json.RawMessage, response interface{}, err interface{}, wg *sync.WaitGroup) (interface{}, string) {
-	defer wg.Done()
-	fmt.Println("Metric: AfterExecution")
+func (metric *Metric) AfterExecution(ctx context.Context, request json.RawMessage, response interface{}, err interface{}) ([]interface{}, string) {
+	mStats := &runtime.MemStats{}
+	runtime.ReadMemStats(mStats)
 
-	m := &runtime.MemStats{}
-	runtime.ReadMemStats(m)
-
-	metric.endGCCount = m.NumGC
 	metric.statTime = time.Now().Round(time.Millisecond)
 
-	heap := prepareHeapStatsData(metric, m)
-	stack := prepareStackStatsData(metric, m)
-	gc := prepareGCStatsData(metric, m)
-	fmt.Print("Heap Metrics: ", heap)
-	fmt.Print("Stack Metrics: ", stack)
-	fmt.Print("GC Metrics: ", gc)
-	//TODO return all types fo data in an array
-	return gc, StatDataType
+	var stats []interface{}
+	if metric.EnableHeapStats {
+		heap := prepareHeapStatsData(metric, mStats)
+		stats = append(stats, heap)
+	}
+
+	if metric.EnableGCStats {
+		metric.endGCCount = mStats.NumGC
+		metric.endPauseTotalNs = mStats.PauseTotalNs
+
+		gc := prepareGCStatsData(metric, mStats)
+		stats = append(stats, gc)
+	}
+
+	if metric.EnableGoroutineStats {
+		gs := prepareGoRoutineStatsData(metric)
+		stats = append(stats, gs)
+	}
+
+	if metric.EnableCPUStats {
+		cs := prepareCPUStatsData(metric)
+		stats = append(stats, cs)
+	}
+
+	fmt.Println("Metrics: ", stats)
+	return stats, StatDataType
 }
 
-func (metric *Metric) OnPanic(ctx context.Context, request json.RawMessage, err interface{}, stackTrace []byte, wg *sync.WaitGroup) (interface{}, string) {
-	defer wg.Done()
-
-	m := &runtime.MemStats{}
-	runtime.ReadMemStats(m)
-
-	gm := prepareGCStatsData(metric, m)
-
+func (metric *Metric) OnPanic(ctx context.Context, request json.RawMessage, err interface{}, stackTrace []byte) ([]interface{}, string) {
 	//TODO return all types fo data in an array
-	return gm, StatDataType
+	return nil, StatDataType
 }
 
 func prepareHeapStatsData(metric *Metric, memStats *runtime.MemStats) heapStatsData {
 	return heapStatsData{
-		Id:                 generateNewId(),
+		Id:                 plugin.GenerateNewId(),
 		ApplicationName:    metric.ApplicationName,
 		ApplicationId:      metric.ApplicationId,
 		ApplicationVersion: metric.ApplicationVersion,
@@ -187,26 +210,9 @@ func prepareHeapStatsData(metric *Metric, memStats *runtime.MemStats) heapStatsD
 	}
 }
 
-func prepareStackStatsData(metric *Metric, memStats *runtime.MemStats) stackStatsData {
-	return stackStatsData{
-		Id:                 generateNewId(),
-		ApplicationName:    metric.ApplicationName,
-		ApplicationId:      metric.ApplicationId,
-		ApplicationVersion: metric.ApplicationVersion,
-		ApplicationProfile: metric.ApplicationProfile,
-		ApplicationType:    plugin.ApplicationType,
-		StatName:           stackStat,
-		StatTime:           metric.statTime.Format(plugin.TimeFormat),
-
-		StackInuse: memStats.StackInuse,
-		StackSys:   memStats.StackSys,
-	}
-}
-
 func prepareGCStatsData(metric *Metric, memStats *runtime.MemStats) gcStatsData {
-
 	return gcStatsData{
-		Id:                 generateNewId(),
+		Id:                 plugin.GenerateNewId(),
 		ApplicationName:    metric.ApplicationName,
 		ApplicationId:      metric.ApplicationId,
 		ApplicationVersion: metric.ApplicationVersion,
@@ -215,23 +221,40 @@ func prepareGCStatsData(metric *Metric, memStats *runtime.MemStats) gcStatsData 
 		StatName:           gcStat,
 		StatTime:           metric.statTime.Format(plugin.TimeFormat),
 
-		PauseTotalNs:  memStats.PauseTotalNs,
-		RecentPauseNs: memStats.PauseNs[(memStats.NumGC+255)%256],
-		NumGC:         memStats.NumGC,
-		GCCPUFraction: memStats.GCCPUFraction,
-		DeltaGcCount:  metric.endGCCount - metric.startGCCount,
+		PauseTotalNs:      memStats.PauseTotalNs,
+		PauseNs:           memStats.PauseNs[(memStats.NumGC+255)%256],
+		NumGC:             memStats.NumGC,
+		NextGC:            memStats.NextGC,
+		GCCPUFraction:     memStats.GCCPUFraction,
+		DeltaNumGc:        metric.endGCCount - metric.startGCCount,
+		DeltaPauseTotalNs: metric.endPauseTotalNs - metric.startPauseTotalNs,
 	}
 }
 
-func generateNewId() string {
-	return uuid.Must(uuid.NewV4()).String()
+func prepareGoRoutineStatsData(metric *Metric) goRoutineStatsData {
+	return goRoutineStatsData{
+		Id:                 plugin.GenerateNewId(),
+		ApplicationName:    metric.ApplicationName,
+		ApplicationId:      metric.ApplicationId,
+		ApplicationVersion: metric.ApplicationVersion,
+		ApplicationProfile: metric.ApplicationProfile,
+		ApplicationType:    plugin.ApplicationType,
+		StatName:           goroutineStat,
+		StatTime:           metric.statTime.Format(plugin.TimeFormat),
+		NumGoroutine:       uint64(runtime.NumGoroutine()),
+	}
 }
 
-func splitAppId(logStreamName string) string {
-	s := strings.Split(logStreamName, "]")
-	if len(s) > 1 {
-		return s[1]
-	} else {
-		return ""
+func prepareCPUStatsData(metric *Metric) cpuStatsData {
+	return cpuStatsData{
+		Id:                 plugin.GenerateNewId(),
+		ApplicationName:    metric.ApplicationName,
+		ApplicationId:      metric.ApplicationId,
+		ApplicationVersion: metric.ApplicationVersion,
+		ApplicationProfile: metric.ApplicationProfile,
+		ApplicationType:    plugin.ApplicationType,
+		StatName:           cpuStat,
+		StatTime:           metric.statTime.Format(plugin.TimeFormat),
+		NumCPU:             uint64(runtime.NumCPU()),
 	}
 }

@@ -1,5 +1,6 @@
 package metric
 
 const gcStat = "GcStat"
-const stackStat = "StackStat"
+const goroutineStat = "GoroutineStat"
 const heapStat = "HeapStat"
+const cpuStat = "CpuStat"

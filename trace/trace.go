@@ -6,7 +6,6 @@ import (
 	"time"
 	"os"
 	"encoding/json"
-	"strings"
 	"fmt"
 	"reflect"
 
@@ -55,8 +54,7 @@ func (trace *Trace) BeforeExecution(ctx context.Context, request json.RawMessage
 	wg.Done()
 }
 
-func (trace *Trace) AfterExecution(ctx context.Context, request json.RawMessage, response interface{}, err interface{}, wg *sync.WaitGroup) (interface{}, string) {
-	defer wg.Done()
+func (trace *Trace) AfterExecution(ctx context.Context, request json.RawMessage, response interface{}, err interface{}) ([]interface{}, string) {
 	trace.endTime = time.Now().Round(time.Millisecond)
 	trace.duration = trace.endTime.Sub(trace.startTime)
 
@@ -75,12 +73,13 @@ func (trace *Trace) AfterExecution(ctx context.Context, request json.RawMessage,
 		trace.errors = append(trace.errors, errType)
 	}
 
-	td := prepareReport(request, response, err, trace)
-	return td, TraceDataType
+	td := prepareTraceData(request, response, err, trace)
+	var traceArr []interface{}
+	traceArr = append(traceArr, td)
+	return traceArr, TraceDataType
 }
 
-func (trace *Trace) OnPanic(ctx context.Context, request json.RawMessage, err interface{}, stackTrace []byte, wg *sync.WaitGroup) (interface{}, string) {
-	defer wg.Done()
+func (trace *Trace) OnPanic(ctx context.Context, request json.RawMessage, err interface{}, stackTrace []byte) ([]interface{}, string) {
 	trace.endTime = time.Now()
 	trace.duration = trace.endTime.Sub(trace.startTime)
 
@@ -97,8 +96,10 @@ func (trace *Trace) OnPanic(ctx context.Context, request json.RawMessage, err in
 	trace.thrownErrorMessage = getErrorMessage(err)
 	trace.errors = append(trace.errors, errType)
 
-	td := prepareReport(request, nil, nil, trace)
-	return td, TraceDataType
+	td := prepareTraceData(request, nil, nil, trace)
+	var traceArr []interface{}
+	traceArr = append(traceArr, td)
+	return traceArr, TraceDataType
 }
 
 func cleanBuffer(trace *Trace) {
@@ -117,13 +118,39 @@ func getErrorMessage(err interface{}) string {
 	return err.(error).Error()
 }
 
-func prepareReport(request json.RawMessage, response interface{}, err interface{}, trace *Trace) traceData {
+func prepareTraceData(request json.RawMessage, response interface{}, err interface{}, trace *Trace) traceData {
 	uniqueId = uuid.Must(uuid.NewV4())
+
+	appId := plugin.SplitAppId(lambdacontext.LogStreamName)
+	ver := lambdacontext.FunctionVersion
+
+	profile := os.Getenv(plugin.ThundraApplicationProfile)
+	if profile == "" {
+		profile = plugin.DefaultProfile
+	}
 
 	props := prepareProperties(request, response)
 	ai := prepareAuditInfo(trace)
-	td := prepareTraceData(trace, err, props, ai)
-	return td
+
+	return traceData{
+		Id:                 uniqueId.String(),
+		ApplicationName:    lambdacontext.FunctionName,
+		ApplicationId:      appId,
+		ApplicationVersion: ver,
+		ApplicationProfile: profile,
+		ApplicationType:    plugin.ApplicationType,
+		ContextId:          uniqueId.String(),
+		ContextName:        lambdacontext.FunctionName,
+		ContextType:        executionContext,
+		StartTime:          trace.startTime.Format(plugin.TimeFormat),
+		EndTime:            trace.endTime.Format(plugin.TimeFormat),
+		Duration:           convertToMsec(trace.duration), //Convert it to msec
+		Errors:             trace.errors,
+		ThrownError:        trace.thrownError,
+		ThrownErrorMessage: trace.thrownErrorMessage,
+		AuditInfo:          ai,
+		Properties:         props,
+	}
 }
 
 func prepareProperties(request json.RawMessage, response interface{}) map[string]interface{} {
@@ -164,45 +191,6 @@ func prepareAuditInfo(trace *Trace) map[string]interface{} {
 		auditInfoErrors:      auditErrors,
 		auditInfoThrownError: auditThrownError,
 		//"thrownErrorMessage": trace.thrownErrorMessage,
-	}
-}
-
-func prepareTraceData(trace *Trace, err interface{}, props map[string]interface{}, auditInfo map[string]interface{}) traceData {
-	appId := splitAppId(lambdacontext.LogStreamName)
-	ver := lambdacontext.FunctionVersion
-
-	profile := os.Getenv(plugin.ThundraApplicationProfile)
-	if profile == "" {
-		profile = plugin.DefaultProfile
-	}
-
-	return traceData{
-		uniqueId.String(),
-		lambdacontext.FunctionName,
-		appId,
-		ver,
-		profile,
-		plugin.ApplicationType,
-		uniqueId.String(),
-		lambdacontext.FunctionName,
-		executionContext,
-		trace.startTime.Format(plugin.TimeFormat),
-		trace.endTime.Format(plugin.TimeFormat),
-		convertToMsec(trace.duration), //Convert it to msec
-		trace.errors,
-		trace.thrownError,
-		trace.thrownErrorMessage,
-		auditInfo,
-		props,
-	}
-}
-
-func splitAppId(logStreamName string) string {
-	s := strings.Split(logStreamName, "]")
-	if len(s) > 1 {
-		return s[1]
-	} else {
-		return ""
 	}
 }
 

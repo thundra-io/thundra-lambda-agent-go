@@ -61,32 +61,6 @@ func TestPrepareHeapStatsData(t *testing.T) {
 	cleanEnvironment()
 }
 
-func TestPrepareStackStatsData(t *testing.T) {
-	prepareEnvironment()
-
-	metric := &Metric{
-		statTime: time.Now(),
-	}
-	initStatData(metric)
-	memStats := &runtime.MemStats{}
-
-	stackStatsData := prepareStackStatsData(metric, memStats)
-
-	assert.Equal(t, functionName, stackStatsData.ApplicationName)
-	assert.Equal(t, appId, stackStatsData.ApplicationId)
-	assert.Equal(t, functionVersion, stackStatsData.ApplicationVersion)
-	assert.Equal(t, applicationProfile, stackStatsData.ApplicationProfile)
-	assert.Equal(t, plugin.ApplicationType, stackStatsData.ApplicationType)
-
-	assert.Equal(t, stackStat, stackStatsData.StatName)
-	assert.Equal(t, metric.statTime.Format(plugin.TimeFormat), stackStatsData.StatTime)
-
-	assert.Equal(t, memStats.StackInuse, stackStatsData.StackInuse)
-	assert.Equal(t, memStats.StackSys, stackStatsData.StackSys)
-
-	cleanEnvironment()
-}
-
 func TestPrepareGCStatsData(t *testing.T) {
 	prepareEnvironment()
 
@@ -110,12 +84,65 @@ func TestPrepareGCStatsData(t *testing.T) {
 	assert.Equal(t, metric.statTime.Format(plugin.TimeFormat), gcStatsData.StatTime)
 
 	assert.Equal(t, memStats.PauseTotalNs, gcStatsData.PauseTotalNs)
-	assert.Equal(t, memStats.PauseNs[(memStats.NumGC+255)%256], gcStatsData.RecentPauseNs)
+	assert.Equal(t, memStats.PauseNs[(memStats.NumGC+255)%256], gcStatsData.PauseNs)
 	assert.Equal(t, memStats.NumGC, gcStatsData.NumGC)
+	assert.Equal(t, memStats.NextGC, gcStatsData.NextGC)
 	assert.Equal(t, memStats.GCCPUFraction, gcStatsData.GCCPUFraction)
 
 	//DeltaGCCount equals to endGCCount - startGCCount
-	assert.Equal(t, uint32(1), gcStatsData.DeltaGcCount)
+	assert.Equal(t, uint32(1), gcStatsData.DeltaNumGc)
+
+	cleanEnvironment()
+}
+
+func TestPrepareGoroutineStatsData(t *testing.T) {
+	prepareEnvironment()
+
+	metric := &Metric{
+		statTime:     time.Now(),
+		startGCCount: 1,
+		endGCCount:   2,
+	}
+	initStatData(metric)
+
+	gcStatsData := prepareGoRoutineStatsData(metric)
+
+	assert.Equal(t, functionName, gcStatsData.ApplicationName)
+	assert.Equal(t, appId, gcStatsData.ApplicationId)
+	assert.Equal(t, functionVersion, gcStatsData.ApplicationVersion)
+	assert.Equal(t, applicationProfile, gcStatsData.ApplicationProfile)
+	assert.Equal(t, plugin.ApplicationType, gcStatsData.ApplicationType)
+
+	assert.Equal(t, goroutineStat, gcStatsData.StatName)
+	assert.Equal(t, metric.statTime.Format(plugin.TimeFormat), gcStatsData.StatTime)
+
+	assert.Equal(t, uint64(runtime.NumGoroutine()), gcStatsData.NumGoroutine)
+
+	cleanEnvironment()
+}
+
+func TestPrepareCPUStatsData(t *testing.T) {
+	prepareEnvironment()
+
+	metric := &Metric{
+		statTime:     time.Now(),
+		startGCCount: 1,
+		endGCCount:   2,
+	}
+	initStatData(metric)
+
+	cpuStatsData := prepareCPUStatsData(metric)
+
+	assert.Equal(t, functionName, cpuStatsData.ApplicationName)
+	assert.Equal(t, appId, cpuStatsData.ApplicationId)
+	assert.Equal(t, functionVersion, cpuStatsData.ApplicationVersion)
+	assert.Equal(t, applicationProfile, cpuStatsData.ApplicationProfile)
+	assert.Equal(t, plugin.ApplicationType, cpuStatsData.ApplicationType)
+
+	assert.Equal(t, cpuStat, cpuStatsData.StatName)
+	assert.Equal(t, metric.statTime.Format(plugin.TimeFormat), cpuStatsData.StatTime)
+
+	assert.Equal(t, uint64(runtime.NumCPU()), cpuStatsData.NumCPU)
 
 	cleanEnvironment()
 }
