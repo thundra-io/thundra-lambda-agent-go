@@ -145,13 +145,13 @@ func TestTrace(t *testing.T) {
 			assert.Equal(t, "", td.ApplicationId)
 			assert.Equal(t, functionVersion, td.ApplicationVersion)
 			assert.Equal(t, applicationProfile, td.ApplicationProfile)
-			assert.Equal(t, applicationType, td.ApplicationType)
+			assert.Equal(t, plugin.ApplicationType, td.ApplicationType)
 			assert.NotNil(t, td.ContextId)
 			assert.Equal(t, functionName, td.ContextName)
 			assert.Equal(t, executionContext, td.ContextType)
 
-			st, err1 := time.Parse(timeFormat, td.StartTime)
-			et, err2 := time.Parse(timeFormat, td.EndTime)
+			st, err1 := time.Parse(plugin.TimeFormat, td.StartTime)
+			et, err2 := time.Parse(plugin.TimeFormat, td.EndTime)
 			if err1 != nil || err2 != nil {
 				fmt.Println("err1: ", err1)
 				fmt.Println("err2: ", err2)
@@ -279,13 +279,13 @@ func TestPanic(t *testing.T) {
 					assert.Equal(t, "", td.ApplicationId)
 					assert.Equal(t, functionVersion, td.ApplicationVersion)
 					assert.Equal(t, applicationProfile, td.ApplicationProfile)
-					assert.Equal(t, applicationType, td.ApplicationType)
+					assert.Equal(t, plugin.ApplicationType, td.ApplicationType)
 					assert.NotNil(t, td.ContextId)
 					assert.Equal(t, functionName, td.ContextName)
 					assert.Equal(t, executionContext, td.ContextType)
 
-					st, err1 := time.Parse(timeFormat, td.StartTime)
-					et, err2 := time.Parse(timeFormat, td.EndTime)
+					st, err1 := time.Parse(plugin.TimeFormat, td.StartTime)
+					et, err2 := time.Parse(plugin.TimeFormat, td.EndTime)
 					if err1 != nil || err2 != nil {
 						fmt.Println("err1: ", err1)
 						fmt.Println("err2: ", err2)
@@ -334,7 +334,7 @@ func prepareEnvironment() {
 	lambdacontext.FunctionName = functionName
 	lambdacontext.MemoryLimitInMB = memoryLimit
 	lambdacontext.FunctionVersion = functionVersion
-	os.Setenv(thundraApplicationProfile, applicationProfile)
+	os.Setenv(plugin.ThundraApplicationProfile, applicationProfile)
 	os.Setenv(awsDefaultRegion, defaultRegion)
 }
 

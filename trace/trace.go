@@ -12,6 +12,7 @@ import (
 
 	"github.com/satori/go.uuid"
 	"github.com/aws/aws-lambda-go/lambdacontext"
+	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 )
 
 type Trace struct {
@@ -116,7 +117,7 @@ func getErrorMessage(err interface{}) string {
 	return err.(error).Error()
 }
 
-func prepareReport(request json.RawMessage, response interface{}, err interface{}, trace *Trace) interface{} {
+func prepareReport(request json.RawMessage, response interface{}, err interface{}, trace *Trace) traceData {
 	uniqueId = uuid.Must(uuid.NewV4())
 
 	props := prepareProperties(request, response)
@@ -158,8 +159,8 @@ func prepareAuditInfo(trace *Trace) map[string]interface{} {
 	return map[string]interface{}{
 		auditInfoContextName: lambdacontext.FunctionName,
 		auditInfoId:          uniqueId,
-		auditInfoOpenTime:    trace.startTime.Format(timeFormat),
-		auditInfoCloseTime:   trace.endTime.Format(timeFormat),
+		auditInfoOpenTime:    trace.startTime.Format(plugin.TimeFormat),
+		auditInfoCloseTime:   trace.endTime.Format(plugin.TimeFormat),
 		auditInfoErrors:      auditErrors,
 		auditInfoThrownError: auditThrownError,
 		//"thrownErrorMessage": trace.thrownErrorMessage,
@@ -170,9 +171,9 @@ func prepareTraceData(trace *Trace, err interface{}, props map[string]interface{
 	appId := splitAppId(lambdacontext.LogStreamName)
 	ver := lambdacontext.FunctionVersion
 
-	profile := os.Getenv(thundraApplicationProfile)
+	profile := os.Getenv(plugin.ThundraApplicationProfile)
 	if profile == "" {
-		profile = defaultProfile
+		profile = plugin.DefaultProfile
 	}
 
 	return traceData{
@@ -181,12 +182,12 @@ func prepareTraceData(trace *Trace, err interface{}, props map[string]interface{
 		appId,
 		ver,
 		profile,
-		applicationType,
+		plugin.ApplicationType,
 		uniqueId.String(),
 		lambdacontext.FunctionName,
 		executionContext,
-		trace.startTime.Format(timeFormat),
-		trace.endTime.Format(timeFormat),
+		trace.startTime.Format(plugin.TimeFormat),
+		trace.endTime.Format(plugin.TimeFormat),
 		convertToMsec(trace.duration), //Convert it to msec
 		trace.errors,
 		trace.thrownError,

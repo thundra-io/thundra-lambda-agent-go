@@ -105,6 +105,7 @@ func (th *thundra) executePostHooks(ctx context.Context, request json.RawMessage
 			data, dType := p.AfterExecution(ctx, request, response, error, &wg)
 			msg := prepareMessage(data, dType, th.apiKey)
 			th.reporter.Collect(msg)
+			//TODO wg.Done()
 		}()
 	}
 	wg.Wait()
