@@ -8,6 +8,9 @@ import (
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 	"runtime"
 	"time"
+	"context"
+	"encoding/json"
+	"sync"
 )
 
 const (
@@ -18,27 +21,62 @@ const (
 	applicationProfile = "TestProfile"
 )
 
-func TestInitStatData(t *testing.T) {
-	prepareEnvironment()
+func TestMetric_BeforeExecution(t *testing.T) {
+	const MaxUint32 = ^uint32(0)
+	const MaxUint64 = ^uint64(0)
 
-	m := &Metric{}
-	initStatData(m)
-	assert.Equal(t, functionName, m.ApplicationName)
-	assert.Equal(t, appId, m.ApplicationId)
-	assert.Equal(t, functionVersion, m.ApplicationVersion)
-	assert.Equal(t, applicationProfile, m.ApplicationProfile)
-	assert.Equal(t, plugin.ApplicationType, m.ApplicationType)
+	m := &Metric{
+		EnableGCStats:     true,
+		startGCCount:      MaxUint32,
+		startPauseTotalNs: MaxUint64,
+	}
 
-	cleanEnvironment()
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	m.BeforeExecution(context.TODO(), json.RawMessage{}, &wg)
+
+	//In order to ensure startGCCount and startPauseTotalNs are assigned,
+	//check it's initial value is changed.
+	//Initial values are the maximum numbers to eliminate unlucky conditions from happenning.
+	assert.NotEqual(t, MaxUint32, m.startGCCount)
+	assert.NotEqual(t, MaxUint64, m.startPauseTotalNs)
+}
+
+func TestMetric_AfterExecution(t *testing.T) {
+	const MaxUint32 = ^uint32(0)
+	const MaxUint64 = ^uint64(0)
+
+	m := &Metric{
+		EnableHeapStats:      true,
+		EnableGCStats:        true,
+		EnableGoroutineStats: true,
+		endGCCount:           MaxUint32,
+		endPauseTotalNs:      MaxUint64,
+	}
+
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	stats, dataType := m.AfterExecution(context.TODO(), json.RawMessage{}, nil, nil)
+
+	//Assert Heap,GC,Goroutine and CPU stats are collected
+	assert.Equal(t, 3, len(stats))
+
+	//In order to ensure endGCCount and endPauseTotalNs are assigned,
+	//check it's initial value is changed.
+	//Initial values are the maximum numbers to eliminate unlucky conditions from happenning.
+	assert.NotEqual(t, MaxUint32, m.endGCCount)
+	assert.NotEqual(t, MaxUint64, m.endPauseTotalNs)
+
+	now := time.Now().Round(time.Millisecond)
+	assert.True(t, m.statTime.Before(now) || m.statTime.Equal(now))
+	assert.Equal(t, StatDataType, dataType)
 }
 
 func TestPrepareHeapStatsData(t *testing.T) {
 	prepareEnvironment()
 
-	metric := &Metric{
-		statTime: time.Now(),
-	}
-	initStatData(metric)
+	metric := NewMetric()
+	metric.statTime = time.Now()
 
 	memStats := &runtime.MemStats{}
 
@@ -64,12 +102,11 @@ func TestPrepareHeapStatsData(t *testing.T) {
 func TestPrepareGCStatsData(t *testing.T) {
 	prepareEnvironment()
 
-	metric := &Metric{
-		statTime:     time.Now(),
-		startGCCount: 1,
-		endGCCount:   2,
-	}
-	initStatData(metric)
+	metric := NewMetric()
+	metric.statTime = time.Now()
+	metric.startGCCount = 1
+	metric.endGCCount = 2
+
 	memStats := &runtime.MemStats{}
 
 	gcStatsData := prepareGCStatsData(metric, memStats)
@@ -98,12 +135,10 @@ func TestPrepareGCStatsData(t *testing.T) {
 func TestPrepareGoroutineStatsData(t *testing.T) {
 	prepareEnvironment()
 
-	metric := &Metric{
-		statTime:     time.Now(),
-		startGCCount: 1,
-		endGCCount:   2,
-	}
-	initStatData(metric)
+	metric := NewMetric()
+	metric.statTime = time.Now()
+	metric.startGCCount = 1
+	metric.endGCCount = 2
 
 	gcStatsData := prepareGoRoutineStatsData(metric)
 
@@ -124,12 +159,9 @@ func TestPrepareGoroutineStatsData(t *testing.T) {
 func TestPrepareCPUStatsData(t *testing.T) {
 	prepareEnvironment()
 
-	metric := &Metric{
-		statTime:     time.Now(),
-		startGCCount: 1,
-		endGCCount:   2,
-	}
-	initStatData(metric)
+	metric := NewMetric()
+	metric.startGCCount = 1
+	metric.endGCCount = 2
 
 	cpuStatsData := prepareCPUStatsData(metric)
 
@@ -141,8 +173,6 @@ func TestPrepareCPUStatsData(t *testing.T) {
 
 	assert.Equal(t, cpuStat, cpuStatsData.StatName)
 	assert.Equal(t, metric.statTime.Format(plugin.TimeFormat), cpuStatsData.StatTime)
-
-	assert.Equal(t, uint64(runtime.NumCPU()), cpuStatsData.NumCPU)
 
 	cleanEnvironment()
 }

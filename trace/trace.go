@@ -120,27 +120,18 @@ func getErrorMessage(err interface{}) string {
 
 func prepareTraceData(request json.RawMessage, response interface{}, err interface{}, trace *Trace) traceData {
 	uniqueId = uuid.Must(uuid.NewV4())
-
-	appId := plugin.SplitAppId(lambdacontext.LogStreamName)
-	ver := lambdacontext.FunctionVersion
-
-	profile := os.Getenv(plugin.ThundraApplicationProfile)
-	if profile == "" {
-		profile = plugin.DefaultProfile
-	}
-
 	props := prepareProperties(request, response)
 	ai := prepareAuditInfo(trace)
 
 	return traceData{
 		Id:                 uniqueId.String(),
-		ApplicationName:    lambdacontext.FunctionName,
-		ApplicationId:      appId,
-		ApplicationVersion: ver,
-		ApplicationProfile: profile,
-		ApplicationType:    plugin.ApplicationType,
+		ApplicationName:    plugin.GetApplicationName(),
+		ApplicationId:      plugin.GetAppId(lambdacontext.LogStreamName),
+		ApplicationVersion: plugin.GetApplicationVersion(),
+		ApplicationProfile: plugin.GetApplicationProfile(),
+		ApplicationType:    plugin.GetApplicationType(),
 		ContextId:          uniqueId.String(),
-		ContextName:        lambdacontext.FunctionName,
+		ContextName:        plugin.GetApplicationName(),
 		ContextType:        executionContext,
 		StartTime:          trace.startTime.Format(plugin.TimeFormat),
 		EndTime:            trace.endTime.Format(plugin.TimeFormat),
