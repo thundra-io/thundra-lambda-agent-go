@@ -14,7 +14,7 @@ type netIOStatsData struct {
 	ApplicationProfile string `json:"applicationProfile"`
 	ApplicationType    string `json:"applicationType"`
 	StatName           string `json:"statName"`
-	StatTime           string `json:"statTime"`
+	StatTimestamp      int64  `json:"statTimestamp"`
 
 	BytesRecv uint64 `json:"bytesRecv"`
 	BytesSent uint64 `json:"bytesSent"`
@@ -33,7 +33,7 @@ func prepareNetIOStatsData(metric *Metric) netIOStatsData {
 		ApplicationProfile: metric.applicationProfile,
 		ApplicationType:    plugin.ApplicationType,
 		StatName:           netIOStat,
-		StatTime:           metric.statTime.Format(plugin.TimeFormat),
+		StatTimestamp:      metric.statTimestamp,
 
 		BytesRecv: br,
 		BytesSent: bs,
@@ -42,7 +42,7 @@ func prepareNetIOStatsData(metric *Metric) netIOStatsData {
 	}
 }
 
-//Since lambda works continuously we should substract io values in order to get correct results per invocation
+//Since lambda works continuously we should subtract io values in order to get correct results per invocation
 func takeNetIOFrame(metric *Metric) (uint64, uint64, uint64, uint64) {
 	br := metric.currNetIOStat.BytesRecv - metric.prevNetIOStat.BytesRecv
 	bs := metric.currNetIOStat.BytesSent - metric.prevNetIOStat.BytesSent

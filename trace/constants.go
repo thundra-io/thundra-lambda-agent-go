@@ -5,8 +5,8 @@ const TraceDataType = "AuditData"
 const executionContext = "ExecutionContext"
 
 //AuditInfo
-const auditInfoOpenTime = "openTime"
-const auditInfoCloseTime = "closeTime"
+const auditInfoOpenTimestamp = "openTimestamp"
+const auditInfoCloseTimestamp = "closeTimestamp"
 const auditInfoContextName = "contextName"
 const auditInfoErrors = "errors"
 const auditInfoId = "id"

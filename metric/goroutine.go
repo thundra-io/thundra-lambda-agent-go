@@ -13,7 +13,7 @@ type goRoutineStatsData struct {
 	ApplicationProfile string `json:"applicationProfile"`
 	ApplicationType    string `json:"applicationType"`
 	StatName           string `json:"statName"`
-	StatTime           string `json:"statTime"`
+	StatTimestamp      int64  `json:"statTimestamp"`
 	NumGoroutine       uint64 `json:"numGoroutine"`
 }
 
@@ -26,7 +26,7 @@ func prepareGoRoutineStatsData(metric *Metric) goRoutineStatsData {
 		ApplicationProfile: metric.applicationProfile,
 		ApplicationType:    plugin.ApplicationType,
 		StatName:           goroutineStat,
-		StatTime:           metric.statTime.Format(plugin.TimeFormat),
+		StatTimestamp:      metric.statTimestamp,
 		NumGoroutine:       uint64(runtime.NumGoroutine()),
 	}
 }

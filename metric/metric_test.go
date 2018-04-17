@@ -7,7 +7,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 	"runtime"
-	"time"
 	"context"
 	"encoding/json"
 	"sync"
@@ -67,8 +66,7 @@ func TestMetric_AfterExecution(t *testing.T) {
 	assert.NotEqual(t, MaxUint32, m.endGCCount)
 	assert.NotEqual(t, MaxUint64, m.endPauseTotalNs)
 
-	now := time.Now().Round(time.Millisecond)
-	assert.True(t, m.statTime.Before(now) || m.statTime.Equal(now))
+	assert.True(t, m.statTimestamp <= plugin.MakeTimestamp())
 	assert.Equal(t, StatDataType, dataType)
 }
 
@@ -76,7 +74,7 @@ func TestPrepareHeapStatsData(t *testing.T) {
 	prepareEnvironment()
 
 	metric := NewMetric()
-	metric.statTime = time.Now()
+	metric.statTimestamp = plugin.MakeTimestamp()
 
 	memStats := &runtime.MemStats{}
 
@@ -89,7 +87,7 @@ func TestPrepareHeapStatsData(t *testing.T) {
 	assert.Equal(t, plugin.ApplicationType, heapStatsData.ApplicationType)
 
 	assert.Equal(t, heapStat, heapStatsData.StatName)
-	assert.Equal(t, metric.statTime.Format(plugin.TimeFormat), heapStatsData.StatTime)
+	assert.Equal(t, metric.statTimestamp, heapStatsData.StatTimestamp)
 
 	assert.Equal(t, memStats.HeapAlloc, heapStatsData.HeapAlloc)
 	assert.Equal(t, memStats.HeapSys, heapStatsData.HeapSys)
@@ -103,7 +101,7 @@ func TestPrepareGCStatsData(t *testing.T) {
 	prepareEnvironment()
 
 	metric := NewMetric()
-	metric.statTime = time.Now()
+	metric.statTimestamp = plugin.MakeTimestamp()
 	metric.startGCCount = 1
 	metric.endGCCount = 2
 
@@ -118,7 +116,7 @@ func TestPrepareGCStatsData(t *testing.T) {
 	assert.Equal(t, plugin.ApplicationType, gcStatsData.ApplicationType)
 
 	assert.Equal(t, gcStat, gcStatsData.StatName)
-	assert.Equal(t, metric.statTime.Format(plugin.TimeFormat), gcStatsData.StatTime)
+	assert.Equal(t, metric.statTimestamp, gcStatsData.StatTimestamp)
 
 	assert.Equal(t, memStats.PauseTotalNs, gcStatsData.PauseTotalNs)
 	assert.Equal(t, memStats.PauseNs[(memStats.NumGC+255)%256], gcStatsData.PauseNs)
@@ -136,7 +134,7 @@ func TestPrepareGoroutineStatsData(t *testing.T) {
 	prepareEnvironment()
 
 	metric := NewMetric()
-	metric.statTime = time.Now()
+	metric.statTimestamp = plugin.MakeTimestamp()
 	metric.startGCCount = 1
 	metric.endGCCount = 2
 
@@ -149,7 +147,7 @@ func TestPrepareGoroutineStatsData(t *testing.T) {
 	assert.Equal(t, plugin.ApplicationType, gcStatsData.ApplicationType)
 
 	assert.Equal(t, goroutineStat, gcStatsData.StatName)
-	assert.Equal(t, metric.statTime.Format(plugin.TimeFormat), gcStatsData.StatTime)
+	assert.Equal(t, metric.statTimestamp, gcStatsData.StatTimestamp)
 
 	assert.Equal(t, uint64(runtime.NumGoroutine()), gcStatsData.NumGoroutine)
 
@@ -172,7 +170,7 @@ func TestPrepareCPUStatsData(t *testing.T) {
 	assert.Equal(t, plugin.ApplicationType, cpuStatsData.ApplicationType)
 
 	assert.Equal(t, cpuStat, cpuStatsData.StatName)
-	assert.Equal(t, metric.statTime.Format(plugin.TimeFormat), cpuStatsData.StatTime)
+	assert.Equal(t, metric.statTimestamp, cpuStatsData.StatTimestamp)
 
 	cleanEnvironment()
 }
