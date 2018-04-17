@@ -11,7 +11,7 @@ import (
 )
 
 type Reporter interface {
-	Collect(msg interface{})
+	Collect(messages []interface{})
 	Report(apiKey string)
 	Clear()
 }
@@ -27,14 +27,14 @@ func init() {
 	shouldSendAsync = os.Getenv(thundraLambdaPublishCloudwatchEnable)
 }
 
-func (c *reporterImpl) Collect(msg interface{}) {
+func (c *reporterImpl) Collect(messages []interface{}) {
 	defer mutex.Unlock()
 	mutex.Lock()
 	if shouldSendAsync == "true" {
-		sendAsync(msg)
+		sendAsync(messages)
 		return
 	}
-	c.messageQueue = append(c.messageQueue, msg)
+	c.messageQueue = append(c.messageQueue, messages...)
 }
 
 func (c *reporterImpl) Report(apiKey string) {
@@ -57,14 +57,14 @@ func sendAsync(msg interface{}) {
 	fmt.Println(string(b))
 }
 
-func sendHttpReq(msg []interface{}, apiKey string) {
-	b, _ := json.Marshal(&msg)
+func sendHttpReq(mesageQueue []interface{}, apiKey string) {
+	b, _ := json.Marshal(&mesageQueue)
 	req, _ := http.NewRequest("POST", collectorUrl, bytes.NewBuffer(b))
 	req.Header.Set("Authorization", "ApiKey "+apiKey)
 	req.Header.Set("Content-Type", "application/json")
 
 	fmt.Println("Sending HTTP request to Thundra collector")
-	fmt.Println(msg)
+	fmt.Println(mesageQueue)
 
 	client := &http.Client{}
 	resp, err := client.Do(req)

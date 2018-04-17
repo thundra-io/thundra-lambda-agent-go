@@ -8,9 +8,9 @@ type MockReporter struct {
 	MessageQueue []interface{}
 }
 
-func (r *MockReporter) Collect(msg interface{}) {
-	r.MessageQueue = append(r.MessageQueue, msg)
-	r.Called(msg)
+func (r *MockReporter) Collect(messages []interface{}) {
+	r.MessageQueue = append(r.MessageQueue, messages...)
+	r.Called(messages)
 }
 
 func (r *MockReporter) Report(apiKey string) {

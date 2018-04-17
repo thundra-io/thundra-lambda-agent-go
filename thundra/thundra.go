@@ -101,11 +101,12 @@ func (th *thundra) executePostHooks(ctx context.Context, request json.RawMessage
 	var wg sync.WaitGroup
 	wg.Add(len(th.plugins))
 	for _, p := range th.plugins {
-		go func() {
-			data, dType := p.AfterExecution(ctx, request, response, error, &wg)
-			msg := prepareMessage(data, dType, th.apiKey)
-			th.reporter.Collect(msg)
-		}()
+		go func(plugin plugin.Plugin) {
+			data, dType := plugin.AfterExecution(ctx, request, response, error)
+			messages := prepareMessages(data, dType, th.apiKey)
+			th.reporter.Collect(messages)
+			wg.Done()
+		}(p)
 	}
 	wg.Wait()
 	th.reporter.Report(th.apiKey)
@@ -117,9 +118,10 @@ func (th *thundra) onPanic(ctx context.Context, request json.RawMessage, err int
 	wg.Add(len(th.plugins))
 	for _, p := range th.plugins {
 		go func() {
-			data, dType := p.OnPanic(ctx, request, err, stackTrace, &wg)
-			msg := prepareMessage(data, dType, th.apiKey)
-			th.reporter.Collect(msg)
+			data, dType := p.OnPanic(ctx, request, err, stackTrace)
+			messages := prepareMessages(data, dType, th.apiKey)
+			th.reporter.Collect(messages)
+			wg.Done()
 		}()
 	}
 	wg.Wait()
@@ -127,14 +129,18 @@ func (th *thundra) onPanic(ctx context.Context, request json.RawMessage, err int
 	th.reporter.Clear()
 }
 
-func prepareMessage(data interface{}, dataType string, apiKey string) plugin.Message {
-
-	return plugin.Message{
-		data,
-		dataType,
-		apiKey,
-		DataFormatVersion,
+func prepareMessages(data []interface{}, dataType string, apiKey string) []interface{} {
+	var messages []interface{}
+	for _, d := range data {
+		m := plugin.Message{
+			Data:              d,
+			Type:              dataType,
+			ApiKey:            apiKey,
+			DataFormatVersion: DataFormatVersion,
+		}
+		messages = append(messages, m)
 	}
+	return messages
 }
 
 func thundraErrorHandler(e error) LambdaFunction {

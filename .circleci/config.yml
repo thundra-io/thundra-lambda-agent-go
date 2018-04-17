@@ -27,3 +27,5 @@ jobs:
       - run: go test -v ./thundra
       - run: go get -v -t -d ./trace
       - run: go test -v ./trace
+      - run: go get -v -t -d ./metric
+      - run: go test -v ./metric

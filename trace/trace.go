@@ -6,12 +6,12 @@ import (
 	"time"
 	"os"
 	"encoding/json"
-	"strings"
 	"fmt"
 	"reflect"
 
 	"github.com/satori/go.uuid"
 	"github.com/aws/aws-lambda-go/lambdacontext"
+	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 )
 
 type Trace struct {
@@ -54,8 +54,7 @@ func (trace *Trace) BeforeExecution(ctx context.Context, request json.RawMessage
 	wg.Done()
 }
 
-func (trace *Trace) AfterExecution(ctx context.Context, request json.RawMessage, response interface{}, err interface{}, wg *sync.WaitGroup) (interface{}, string) {
-	defer wg.Done()
+func (trace *Trace) AfterExecution(ctx context.Context, request json.RawMessage, response interface{}, err interface{}) ([]interface{}, string) {
 	trace.endTime = time.Now().Round(time.Millisecond)
 	trace.duration = trace.endTime.Sub(trace.startTime)
 
@@ -74,12 +73,13 @@ func (trace *Trace) AfterExecution(ctx context.Context, request json.RawMessage,
 		trace.errors = append(trace.errors, errType)
 	}
 
-	td := prepareReport(request, response, err, trace)
-	return td, TraceDataType
+	td := prepareTraceData(request, response, err, trace)
+	var traceArr []interface{}
+	traceArr = append(traceArr, td)
+	return traceArr, TraceDataType
 }
 
-func (trace *Trace) OnPanic(ctx context.Context, request json.RawMessage, err interface{}, stackTrace []byte, wg *sync.WaitGroup) (interface{}, string) {
-	defer wg.Done()
+func (trace *Trace) OnPanic(ctx context.Context, request json.RawMessage, err interface{}, stackTrace []byte) ([]interface{}, string) {
 	trace.endTime = time.Now()
 	trace.duration = trace.endTime.Sub(trace.startTime)
 
@@ -96,8 +96,10 @@ func (trace *Trace) OnPanic(ctx context.Context, request json.RawMessage, err in
 	trace.thrownErrorMessage = getErrorMessage(err)
 	trace.errors = append(trace.errors, errType)
 
-	td := prepareReport(request, nil, nil, trace)
-	return td, TraceDataType
+	td := prepareTraceData(request, nil, nil, trace)
+	var traceArr []interface{}
+	traceArr = append(traceArr, td)
+	return traceArr, TraceDataType
 }
 
 func cleanBuffer(trace *Trace) {
@@ -116,13 +118,30 @@ func getErrorMessage(err interface{}) string {
 	return err.(error).Error()
 }
 
-func prepareReport(request json.RawMessage, response interface{}, err interface{}, trace *Trace) interface{} {
+func prepareTraceData(request json.RawMessage, response interface{}, err interface{}, trace *Trace) traceData {
 	uniqueId = uuid.Must(uuid.NewV4())
-
 	props := prepareProperties(request, response)
 	ai := prepareAuditInfo(trace)
-	td := prepareTraceData(trace, err, props, ai)
-	return td
+
+	return traceData{
+		Id:                 uniqueId.String(),
+		ApplicationName:    plugin.GetApplicationName(),
+		ApplicationId:      plugin.GetAppId(lambdacontext.LogStreamName),
+		ApplicationVersion: plugin.GetApplicationVersion(),
+		ApplicationProfile: plugin.GetApplicationProfile(),
+		ApplicationType:    plugin.GetApplicationType(),
+		ContextId:          uniqueId.String(),
+		ContextName:        plugin.GetApplicationName(),
+		ContextType:        executionContext,
+		StartTime:          trace.startTime.Format(plugin.TimeFormat),
+		EndTime:            trace.endTime.Format(plugin.TimeFormat),
+		Duration:           convertToMsec(trace.duration), //Convert it to msec
+		Errors:             trace.errors,
+		ThrownError:        trace.thrownError,
+		ThrownErrorMessage: trace.thrownErrorMessage,
+		AuditInfo:          ai,
+		Properties:         props,
+	}
 }
 
 func prepareProperties(request json.RawMessage, response interface{}) map[string]interface{} {
@@ -158,50 +177,11 @@ func prepareAuditInfo(trace *Trace) map[string]interface{} {
 	return map[string]interface{}{
 		auditInfoContextName: lambdacontext.FunctionName,
 		auditInfoId:          uniqueId,
-		auditInfoOpenTime:    trace.startTime.Format(timeFormat),
-		auditInfoCloseTime:   trace.endTime.Format(timeFormat),
+		auditInfoOpenTime:    trace.startTime.Format(plugin.TimeFormat),
+		auditInfoCloseTime:   trace.endTime.Format(plugin.TimeFormat),
 		auditInfoErrors:      auditErrors,
 		auditInfoThrownError: auditThrownError,
 		//"thrownErrorMessage": trace.thrownErrorMessage,
-	}
-}
-
-func prepareTraceData(trace *Trace, err interface{}, props map[string]interface{}, auditInfo map[string]interface{}) traceData {
-	appId := splitAppId(lambdacontext.LogStreamName)
-	ver := lambdacontext.FunctionVersion
-
-	profile := os.Getenv(thundraApplicationProfile)
-	if profile == "" {
-		profile = defaultProfile
-	}
-
-	return traceData{
-		uniqueId.String(),
-		lambdacontext.FunctionName,
-		appId,
-		ver,
-		profile,
-		applicationType,
-		uniqueId.String(),
-		lambdacontext.FunctionName,
-		executionContext,
-		trace.startTime.Format(timeFormat),
-		trace.endTime.Format(timeFormat),
-		convertToMsec(trace.duration), //Convert it to msec
-		trace.errors,
-		trace.thrownError,
-		trace.thrownErrorMessage,
-		auditInfo,
-		props,
-	}
-}
-
-func splitAppId(logStreamName string) string {
-	s := strings.Split(logStreamName, "]")
-	if len(s) > 1 {
-		return s[1]
-	} else {
-		return ""
 	}
 }
 

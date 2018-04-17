@@ -12,14 +12,13 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
-	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 	"github.com/thundra-io/thundra-lambda-agent-go/test"
-	"github.com/thundra-io/thundra-lambda-agent-go/trace"
 )
 
 const (
 	generatedError = "Generated Error"
-	TestApiKey     = "TestApiKey"
+	testApiKey     = "TestApiKey"
+	testDataType   = "TestDataType"
 )
 
 func TestWrapper(t *testing.T) {
@@ -127,11 +126,11 @@ func TestWrapper(t *testing.T) {
 	for i, testCase := range testCases {
 		t.Run(fmt.Sprintf("testCase[%d] %s", i, testCase.name), func(t *testing.T) {
 			r := &test.MockReporter{}
-			r.On("Report", TestApiKey).Return()
+			r.On("Report", testApiKey).Return()
 			r.On("Clear").Return()
 			r.On("Collect", mock.Anything).Return()
 
-			th := NewBuilder().SetReporter(r).SetAPIKey(TestApiKey).Build()
+			th := NewBuilder().SetReporter(r).SetAPIKey(testApiKey).Build()
 			lambdaHandler := Wrap(testCase.handler, th)
 			response, err := lambdaHandler.invoke(context.TODO(), []byte(testCase.input))
 
@@ -207,11 +206,11 @@ func TestInvalidWrappers(t *testing.T) {
 	for i, testCase := range testCases {
 		t.Run(fmt.Sprintf("testCase[%d] %s", i, testCase.name), func(t *testing.T) {
 			r := &test.MockReporter{}
-			r.On("Report", TestApiKey).Return()
+			r.On("Report", testApiKey).Return()
 			r.On("Clear").Return()
 			r.On("Collect", mock.Anything).Return()
 
-			th := NewBuilder().SetReporter(r).SetAPIKey(TestApiKey).Build()
+			th := NewBuilder().SetReporter(r).SetAPIKey(testApiKey).Build()
 			lambdaHandler := Wrap(testCase.handler, th)
 			_, err := lambdaHandler.invoke(context.TODO(), make([]byte, 0))
 			assert.Equal(t, testCase.expected, err)
@@ -227,15 +226,13 @@ func (t *MockPlugin) BeforeExecution(ctx context.Context, request json.RawMessag
 	defer wg.Done()
 	t.Called(ctx, request, wg)
 }
-func (t *MockPlugin) AfterExecution(ctx context.Context, request json.RawMessage, response interface{}, err interface{}, wg *sync.WaitGroup) (interface{}, string) {
-	defer wg.Done()
-	t.Called(ctx, request, response, err, wg)
-	return plugin.Message{}.Data, trace.TraceDataType
+func (t *MockPlugin) AfterExecution(ctx context.Context, request json.RawMessage, response interface{}, err interface{}) ([]interface{}, string) {
+	t.Called(ctx, request, response, err)
+	return []interface{}{}, testDataType
 }
-func (t *MockPlugin) OnPanic(ctx context.Context, request json.RawMessage, err interface{}, stackTrace []byte, wg *sync.WaitGroup) (interface{}, string) {
-	defer wg.Done()
-	t.Called(ctx, request, err, stackTrace, wg)
-	return plugin.Message{}.Data, trace.TraceDataType
+func (t *MockPlugin) OnPanic(ctx context.Context, request json.RawMessage, err interface{}, stackTrace []byte) ([]interface{}, string) {
+	t.Called(ctx, request, err, stackTrace)
+	return []interface{}{}, testDataType
 }
 
 func TestExecutePreHooks(t *testing.T) {
@@ -277,11 +274,11 @@ func TestExecutePostHooks(t *testing.T) {
 
 	r := new(test.MockReporter)
 	mT := new(MockPlugin)
-	th := NewBuilder().AddPlugin(mT).SetReporter(r).SetAPIKey(TestApiKey).Build()
+	th := NewBuilder().AddPlugin(mT).SetReporter(r).SetAPIKey(testApiKey).Build()
 
 	mT.On("AfterExecution", ctx, req, resp, err1, mock.Anything).Return()
 	mT.On("AfterExecution", ctx, req, resp, err2, mock.Anything).Return()
-	r.On("Report", TestApiKey).Return()
+	r.On("Report", testApiKey).Return()
 	r.On("Clear").Return()
 	r.On("Collect", mock.Anything).Return()
 
@@ -299,10 +296,10 @@ func TestOnPanic(t *testing.T) {
 
 	r := new(test.MockReporter)
 	mT := new(MockPlugin)
-	th := NewBuilder().AddPlugin(mT).SetReporter(r).SetAPIKey(TestApiKey).Build()
+	th := NewBuilder().AddPlugin(mT).SetReporter(r).SetAPIKey(testApiKey).Build()
 
 	mT.On("OnPanic", ctx, req, err, stackTrace, mock.Anything).Return()
-	r.On("Report", TestApiKey).Return()
+	r.On("Report", testApiKey).Return()
 	r.On("Clear").Return()
 	r.On("Collect", mock.Anything).Return()
 
