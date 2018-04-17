@@ -3,7 +3,6 @@ package trace
 import (
 	"context"
 	"sync"
-	"time"
 	"os"
 	"encoding/json"
 	"fmt"
@@ -15,9 +14,9 @@ import (
 )
 
 type Trace struct {
-	startTime          time.Time
-	endTime            time.Time
-	duration           time.Duration
+	startTime          int64
+	endTime            int64
+	duration           int64
 	errors             []string
 	thrownError        interface{}
 	thrownErrorMessage interface{}
@@ -38,8 +37,8 @@ type traceData struct {
 	ContextId          string                 `json:"contextId"`
 	ContextName        string                 `json:"contextName"`
 	ContextType        string                 `json:"contextType"`
-	StartTime          string                 `json:"startTime"`
-	EndTime            string                 `json:"endTime"`
+	StartTimestamp     int64                  `json:"startTimestamp"`
+	EndTimestamp       int64                  `json:"endTimestamp"`
 	Duration           int64                  `json:"duration"`
 	Errors             []string               `json:"errors"`
 	ThrownError        interface{}            `json:"thrownError"`
@@ -49,14 +48,14 @@ type traceData struct {
 }
 
 func (trace *Trace) BeforeExecution(ctx context.Context, request json.RawMessage, wg *sync.WaitGroup) {
-	trace.startTime = time.Now().Round(time.Millisecond)
+	trace.startTime = plugin.MakeTimestamp()
 	cleanBuffer(trace)
 	wg.Done()
 }
 
 func (trace *Trace) AfterExecution(ctx context.Context, request json.RawMessage, response interface{}, err interface{}) ([]interface{}, string) {
-	trace.endTime = time.Now().Round(time.Millisecond)
-	trace.duration = trace.endTime.Sub(trace.startTime)
+	trace.endTime = plugin.MakeTimestamp()
+	trace.duration = trace.endTime - trace.startTime
 
 	if err != nil {
 		errMessage := getErrorMessage(err)
@@ -80,8 +79,8 @@ func (trace *Trace) AfterExecution(ctx context.Context, request json.RawMessage,
 }
 
 func (trace *Trace) OnPanic(ctx context.Context, request json.RawMessage, err interface{}, stackTrace []byte) ([]interface{}, string) {
-	trace.endTime = time.Now()
-	trace.duration = trace.endTime.Sub(trace.startTime)
+	trace.endTime = plugin.MakeTimestamp()
+	trace.duration = trace.endTime - trace.startTime
 
 	errMessage := err.(error).Error()
 	errType := getErrorType(err)
@@ -133,9 +132,9 @@ func prepareTraceData(request json.RawMessage, response interface{}, err interfa
 		ContextId:          uniqueId.String(),
 		ContextName:        plugin.GetApplicationName(),
 		ContextType:        executionContext,
-		StartTime:          trace.startTime.Format(plugin.TimeFormat),
-		EndTime:            trace.endTime.Format(plugin.TimeFormat),
-		Duration:           convertToMsec(trace.duration), //Convert it to msec
+		StartTimestamp:     trace.startTime,
+		EndTimestamp:       trace.endTime,
+		Duration:           trace.duration,
 		Errors:             trace.errors,
 		ThrownError:        trace.thrownError,
 		ThrownErrorMessage: trace.thrownErrorMessage,
@@ -175,16 +174,12 @@ func prepareAuditInfo(trace *Trace) map[string]interface{} {
 	}
 
 	return map[string]interface{}{
-		auditInfoContextName: lambdacontext.FunctionName,
-		auditInfoId:          uniqueId,
-		auditInfoOpenTime:    trace.startTime.Format(plugin.TimeFormat),
-		auditInfoCloseTime:   trace.endTime.Format(plugin.TimeFormat),
-		auditInfoErrors:      auditErrors,
-		auditInfoThrownError: auditThrownError,
+		auditInfoContextName:    lambdacontext.FunctionName,
+		auditInfoId:             uniqueId,
+		auditInfoOpenTimestamp:  trace.startTime,
+		auditInfoCloseTimestamp: trace.endTime,
+		auditInfoErrors:         auditErrors,
+		auditInfoThrownError:    auditThrownError,
 		//"thrownErrorMessage": trace.thrownErrorMessage,
 	}
-}
-
-func convertToMsec(duration time.Duration) int64 {
-	return int64(duration / time.Millisecond)
 }

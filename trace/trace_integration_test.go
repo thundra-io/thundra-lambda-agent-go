@@ -122,9 +122,9 @@ func TestTrace(t *testing.T) {
 			th := thundra.NewBuilder().AddPlugin(tr).SetReporter(r).SetAPIKey(TestApiKey).Build()
 			lambdaHandler := thundra.Wrap(testCase.handler, th)
 
-			invocationStartTime := time.Now().Round(time.Millisecond)
+			invocationStartTime := plugin.MakeTimestamp()
 			response, err := lambdaHandler(context.TODO(), []byte(testCase.input))
-			invocationEndTime := time.Now().Round(time.Millisecond)
+			invocationEndTime := plugin.MakeTimestamp()
 
 			//Monitor Data
 			msg, ok := r.MessageQueue[0].(plugin.Message)
@@ -150,23 +150,17 @@ func TestTrace(t *testing.T) {
 			assert.Equal(t, functionName, td.ContextName)
 			assert.Equal(t, executionContext, td.ContextType)
 
-			st, err1 := time.Parse(plugin.TimeFormat, td.StartTime)
-			et, err2 := time.Parse(plugin.TimeFormat, td.EndTime)
-			if err1 != nil || err2 != nil {
-				fmt.Println("err1: ", err1)
-				fmt.Println("err2: ", err2)
-			}
-			assert.True(t, invocationStartTime.Before(st) || invocationStartTime.Equal(st))
-			assert.True(t, st.Before(et))
-			assert.True(t, et.Before(invocationEndTime) || et.Equal(invocationEndTime))
+			assert.True(t, invocationStartTime <= td.StartTimestamp)
+			assert.True(t, td.StartTimestamp < td.EndTimestamp)
+			assert.True(t, td.EndTimestamp <= invocationEndTime)
 			assert.True(t, int64(duration) <= td.Duration)
 
 			//Trace Audit Info
 			ai := td.AuditInfo
 			assert.Equal(t, functionName, ai[auditInfoContextName])
 			assert.NotNil(t, ai[auditInfoId])
-			assert.Equal(t, td.StartTime, ai[auditInfoOpenTime])
-			assert.Equal(t, td.EndTime, ai[auditInfoCloseTime])
+			assert.Equal(t, td.StartTimestamp, ai[auditInfoOpenTimestamp])
+			assert.Equal(t, td.EndTimestamp, ai[auditInfoCloseTimestamp])
 
 			//Trace Properties
 			props := td.Properties
@@ -254,11 +248,11 @@ func TestPanic(t *testing.T) {
 			tr := &Trace{}
 			th := thundra.NewBuilder().AddPlugin(tr).SetReporter(r).SetAPIKey(TestApiKey).Build()
 			lambdaHandler := thundra.Wrap(testCase.handler, th)
-			invocationStartTime := time.Now().Round(time.Millisecond)
+			invocationStartTime := plugin.MakeTimestamp()
 
 			defer func() {
 				if rec := recover(); rec != nil {
-					invocationEndTime := time.Now().Round(time.Millisecond)
+					invocationEndTime := plugin.MakeTimestamp()
 
 					//Monitor Data
 					msg, ok := r.MessageQueue[0].(plugin.Message)
@@ -284,15 +278,9 @@ func TestPanic(t *testing.T) {
 					assert.Equal(t, functionName, td.ContextName)
 					assert.Equal(t, executionContext, td.ContextType)
 
-					st, err1 := time.Parse(plugin.TimeFormat, td.StartTime)
-					et, err2 := time.Parse(plugin.TimeFormat, td.EndTime)
-					if err1 != nil || err2 != nil {
-						fmt.Println("err1: ", err1)
-						fmt.Println("err2: ", err2)
-					}
-					assert.True(t, invocationStartTime.Before(st) || invocationStartTime.Equal(st))
-					assert.True(t, st.Before(et))
-					assert.True(t, et.Before(invocationEndTime) || et.Equal(invocationEndTime))
+					assert.True(t, invocationStartTime <= td.StartTimestamp)
+					assert.True(t, td.StartTimestamp < td.EndTimestamp)
+					assert.True(t, td.EndTimestamp <= invocationEndTime)
 					assert.True(t, int64(duration) <= td.Duration)
 
 					assert.Equal(t, 1, len(td.Errors))
@@ -303,8 +291,8 @@ func TestPanic(t *testing.T) {
 					ai := td.AuditInfo
 					assert.Equal(t, functionName, ai[auditInfoContextName])
 					assert.NotNil(t, ai[auditInfoId])
-					assert.Equal(t, td.StartTime, ai[auditInfoOpenTime])
-					assert.Equal(t, td.EndTime, ai[auditInfoCloseTime])
+					assert.Equal(t, td.StartTimestamp, ai[auditInfoOpenTimestamp])
+					assert.Equal(t, td.EndTimestamp, ai[auditInfoCloseTimestamp])
 
 					panicInfo := ai[auditInfoThrownError].(panicInfo)
 					assert.Equal(t, generatedPanic, panicInfo.ErrMessage)

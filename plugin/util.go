@@ -7,6 +7,7 @@ import (
 	"os"
 	"github.com/shirou/gopsutil/process"
 	"fmt"
+	"time"
 )
 
 func GenerateNewId() string {
@@ -51,4 +52,9 @@ func GetThisProcess() *process.Process {
 		return nil
 	}
 	return p
+}
+
+//Returns current Unix timestamp in msec
+func MakeTimestamp() int64 {
+	return time.Now().UnixNano() / (int64(time.Millisecond)/int64(time.Nanosecond))
 }

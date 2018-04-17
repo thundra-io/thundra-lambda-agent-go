@@ -12,7 +12,7 @@ type ioStatsData struct {
 	ApplicationProfile string `json:"applicationProfile"`
 	ApplicationType    string `json:"applicationType"`
 	StatName           string `json:"statName"`
-	StatTime           string `json:"statTime"`
+	StatTimestamp      int64  `json:"statTimestamp"`
 
 	ReadBytes  uint64 `json:"readBytes"`
 	WriteBytes uint64 `json:"writeBytes"`
@@ -29,14 +29,14 @@ func prepareIOStatsData(metric *Metric) ioStatsData {
 		ApplicationProfile: metric.applicationProfile,
 		ApplicationType:    plugin.ApplicationType,
 		StatName:           ioStat,
-		StatTime:           metric.statTime.Format(plugin.TimeFormat),
+		StatTimestamp:      metric.statTimestamp,
 
 		ReadBytes:  rb,
 		WriteBytes: wb,
 	}
 }
 
-//Since lambda works continuously we should substract io values in order to get correct results per invocation
+//Since lambda works continuously we should subtract io values in order to get correct results per invocation
 func takeIOFrame(metric *Metric) (uint64, uint64) {
 
 	rb := metric.currIOStat.ReadBytes - metric.prevIOStat.ReadBytes

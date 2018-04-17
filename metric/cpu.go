@@ -13,7 +13,7 @@ type cpuStatsData struct {
 	ApplicationProfile string  `json:"applicationProfile"`
 	ApplicationType    string  `json:"applicationType"`
 	StatName           string  `json:"statName"`
-	StatTime           string  `json:"statTime"`
+	StatTimestamp      int64   `json:"statTimestamp"`
 	CPUPercent         float64 `json:"cpuPercent"`
 }
 
@@ -26,7 +26,7 @@ func prepareCPUStatsData(metric *Metric) cpuStatsData {
 		ApplicationProfile: metric.applicationProfile,
 		ApplicationType:    plugin.ApplicationType,
 		StatName:           cpuStat,
-		StatTime:           metric.statTime.Format(plugin.TimeFormat),
+		StatTimestamp:      metric.statTimestamp,
 		CPUPercent:         metric.cpuPercent,
 	}
 }

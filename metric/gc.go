@@ -13,7 +13,7 @@ type gcStatsData struct {
 	ApplicationProfile string `json:"applicationProfile"`
 	ApplicationType    string `json:"applicationType"`
 	StatName           string `json:"statName"`
-	StatTime           string `json:"statTime"`
+	StatTimestamp      int64  `json:"statTimestamp"`
 
 	// PauseTotalNs is the cumulative nanoseconds in GC
 	// stop-the-world pauses since the program started.
@@ -48,7 +48,7 @@ func prepareGCStatsData(metric *Metric, memStats *runtime.MemStats) gcStatsData 
 		ApplicationProfile: metric.applicationProfile,
 		ApplicationType:    plugin.ApplicationType,
 		StatName:           gcStat,
-		StatTime:           metric.statTime.Format(plugin.TimeFormat),
+		StatTimestamp:      metric.statTimestamp,
 
 		PauseTotalNs:      memStats.PauseTotalNs,
 		PauseNs:           memStats.PauseNs[(memStats.NumGC+255)%256],

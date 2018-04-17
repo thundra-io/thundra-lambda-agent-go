@@ -13,7 +13,7 @@ type heapStatsData struct {
 	ApplicationProfile string `json:"applicationProfile"`
 	ApplicationType    string `json:"applicationType"`
 	StatName           string `json:"statName"`
-	StatTime           string `json:"statTime"`
+	StatTimestamp      int64  `json:"statTimestamp"`
 
 	// HeapAlloc is bytes of allocated heap objects.
 	//
@@ -45,7 +45,7 @@ func prepareHeapStatsData(metric *Metric, memStats *runtime.MemStats) heapStatsD
 		ApplicationProfile: metric.applicationProfile,
 		ApplicationType:    plugin.ApplicationType,
 		StatName:           heapStat,
-		StatTime:           metric.statTime.Format(plugin.TimeFormat),
+		StatTimestamp:      metric.statTimestamp,
 
 		HeapAlloc:   memStats.HeapAlloc,
 		HeapSys:     memStats.HeapSys,

@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"sync"
-	"time"
 	"github.com/aws/aws-lambda-go/lambdacontext"
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 	"runtime"
@@ -16,11 +15,9 @@ import (
 
 const StatDataType = "StatData"
 
-//const selfStatFile = "/proc/1/stat"
-
 type Metric struct {
 	statData
-	statTime          time.Time
+	statTimestamp     int64
 	startGCCount      uint32
 	endGCCount        uint32
 	startPauseTotalNs uint64
@@ -85,10 +82,9 @@ func (metric *Metric) AfterExecution(ctx context.Context, request json.RawMessag
 	mStats := &runtime.MemStats{}
 	runtime.ReadMemStats(mStats)
 
-	metric.statTime = time.Now().Round(time.Millisecond)
+	metric.statTimestamp = plugin.MakeTimestamp()
 
 	var stats []interface{}
-	metric.statTime = time.Now().Round(time.Millisecond)
 
 	if metric.EnableHeapStats {
 		h := prepareHeapStatsData(metric, mStats)
@@ -113,7 +109,6 @@ func (metric *Metric) AfterExecution(ctx context.Context, request json.RawMessag
 		if err != nil {
 			fmt.Println(err)
 		} else {
-			fmt.Println("CpuPercent: ", p)
 			metric.cpuPercent = p
 			c := prepareCPUStatsData(metric)
 			stats = append(stats, c)
@@ -125,7 +120,6 @@ func (metric *Metric) AfterExecution(ctx context.Context, request json.RawMessag
 		if err != nil {
 			fmt.Println(err)
 		} else {
-			fmt.Println("ioStat: ", ioStat)
 			metric.currIOStat = ioStat
 			io := prepareIOStatsData(metric)
 			stats = append(stats, io)
@@ -137,7 +131,6 @@ func (metric *Metric) AfterExecution(ctx context.Context, request json.RawMessag
 		if err != nil {
 			fmt.Println(err)
 		} else {
-			fmt.Println("netIOSTat: ", netIOStat)
 			metric.currNetIOStat = &netIOStat[ALL]
 			n := prepareNetIOStatsData(metric)
 			stats = append(stats, n)
