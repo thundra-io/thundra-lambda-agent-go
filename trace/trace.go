@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/satori/go.uuid"
 	"github.com/aws/aws-lambda-go/lambdacontext"
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 )
@@ -25,7 +24,7 @@ type Trace struct {
 }
 
 var invocationCount uint32 = 0
-var uniqueId uuid.UUID
+var uniqueId string
 
 type traceData struct {
 	Id                 string                 `json:"id"`
@@ -118,18 +117,18 @@ func getErrorMessage(err interface{}) string {
 }
 
 func prepareTraceData(request json.RawMessage, response interface{}, err interface{}, trace *Trace) traceData {
-	uniqueId = uuid.Must(uuid.NewV4())
+	uniqueId = plugin.GenerateNewId()
 	props := prepareProperties(request, response)
 	ai := prepareAuditInfo(trace)
 
 	return traceData{
-		Id:                 uniqueId.String(),
+		Id:                 uniqueId,
 		ApplicationName:    plugin.GetApplicationName(),
-		ApplicationId:      plugin.GetAppId(lambdacontext.LogStreamName),
+		ApplicationId:      plugin.GetAppIdFromStreamName(lambdacontext.LogStreamName),
 		ApplicationVersion: plugin.GetApplicationVersion(),
 		ApplicationProfile: plugin.GetApplicationProfile(),
 		ApplicationType:    plugin.GetApplicationType(),
-		ContextId:          uniqueId.String(),
+		ContextId:          uniqueId,
 		ContextName:        plugin.GetApplicationName(),
 		ContextType:        executionContext,
 		StartTimestamp:     trace.startTime,

@@ -11,11 +11,11 @@ import (
 )
 
 func GenerateNewId() string {
-	return uuid.Must(uuid.NewV4()).String()
+	return uuid.NewV4().String()
 }
 
 //AppId starts after ] in logstreamname
-func GetAppId(logStreamName string) string {
+func GetAppIdFromStreamName(logStreamName string) string {
 	s := strings.Split(logStreamName, "]")
 	if len(s) > 1 {
 		return s[1]
@@ -56,5 +56,5 @@ func GetThisProcess() *process.Process {
 
 //Returns current Unix timestamp in msec
 func MakeTimestamp() int64 {
-	return time.Now().UnixNano() / (int64(time.Millisecond)/int64(time.Nanosecond))
+	return time.Now().UnixNano() / (int64(time.Millisecond) / int64(time.Nanosecond))
 }
