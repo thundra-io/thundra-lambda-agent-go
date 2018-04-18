@@ -50,7 +50,7 @@ func NewMetric() *Metric {
 	return &Metric{
 		statData: statData{
 			applicationName:    plugin.GetApplicationName(),
-			applicationId:      plugin.GetAppId(lambdacontext.LogStreamName),
+			applicationId:      plugin.GetAppIdFromStreamName(lambdacontext.LogStreamName),
 			applicationVersion: plugin.GetApplicationVersion(),
 			applicationProfile: plugin.GetApplicationProfile(),
 			applicationType:    plugin.GetApplicationType(),
