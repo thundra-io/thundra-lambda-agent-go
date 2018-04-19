@@ -66,7 +66,7 @@ func TestMetric_AfterExecution(t *testing.T) {
 	assert.NotEqual(t, MaxUint32, m.endGCCount)
 	assert.NotEqual(t, MaxUint64, m.endPauseTotalNs)
 
-	assert.True(t, m.statTimestamp <= plugin.MakeTimestamp())
+	assert.True(t, m.statTimestamp <= plugin.GetTimestamp())
 	assert.Equal(t, StatDataType, dataType)
 }
 
@@ -74,7 +74,7 @@ func TestPrepareHeapStatsData(t *testing.T) {
 	prepareEnvironment()
 
 	metric := NewMetric()
-	metric.statTimestamp = plugin.MakeTimestamp()
+	metric.statTimestamp = plugin.GetTimestamp()
 
 	memStats := &runtime.MemStats{}
 
@@ -101,7 +101,7 @@ func TestPrepareGCStatsData(t *testing.T) {
 	prepareEnvironment()
 
 	metric := NewMetric()
-	metric.statTimestamp = plugin.MakeTimestamp()
+	metric.statTimestamp = plugin.GetTimestamp()
 	metric.startGCCount = 1
 	metric.endGCCount = 2
 
@@ -134,7 +134,7 @@ func TestPrepareGoroutineStatsData(t *testing.T) {
 	prepareEnvironment()
 
 	metric := NewMetric()
-	metric.statTimestamp = plugin.MakeTimestamp()
+	metric.statTimestamp = plugin.GetTimestamp()
 	metric.startGCCount = 1
 	metric.endGCCount = 2
 

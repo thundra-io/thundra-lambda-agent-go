@@ -1,4 +1,4 @@
-# Lambda Go Agent
+# Lambda Go Agent [![Build Status][ci-img]][ci]
 
 Trace your AWS lambda functions with async monitoring by [Thundra](https://www.thundra.io/)!
 

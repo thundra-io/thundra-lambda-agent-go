@@ -33,7 +33,7 @@ type Metric struct {
 	EnableHeapStats      bool
 	EnableGoroutineStats bool
 	EnableCPUStats       bool
-	EnableIOStats        bool
+	EnableDiskStats      bool
 	EnableNetworkIOStats bool
 }
 
@@ -71,7 +71,7 @@ func (metric *Metric) BeforeExecution(ctx context.Context, request json.RawMessa
 		metric.startPauseTotalNs = m.PauseTotalNs
 	}
 
-	if metric.EnableCPUStats || metric.EnableIOStats {
+	if metric.EnableCPUStats || metric.EnableDiskStats {
 		metric.process = plugin.GetThisProcess()
 	}
 
@@ -82,7 +82,7 @@ func (metric *Metric) AfterExecution(ctx context.Context, request json.RawMessag
 	mStats := &runtime.MemStats{}
 	runtime.ReadMemStats(mStats)
 
-	metric.statTimestamp = plugin.MakeTimestamp()
+	metric.statTimestamp = plugin.GetTimestamp()
 
 	var stats []interface{}
 
@@ -115,14 +115,14 @@ func (metric *Metric) AfterExecution(ctx context.Context, request json.RawMessag
 		}
 	}
 
-	if metric.EnableIOStats {
-		ioStat, err := metric.process.IOCounters()
+	if metric.EnableDiskStats {
+		diskStat, err := metric.process.IOCounters()
 		if err != nil {
 			fmt.Println(err)
 		} else {
-			metric.currIOStat = ioStat
-			io := prepareIOStatsData(metric)
-			stats = append(stats, io)
+			metric.currIOStat = diskStat
+			d := prepareDiskStatsData(metric)
+			stats = append(stats, d)
 		}
 	}
 
@@ -132,7 +132,7 @@ func (metric *Metric) AfterExecution(ctx context.Context, request json.RawMessag
 			fmt.Println(err)
 		} else {
 			metric.currNetIOStat = &netIOStat[ALL]
-			n := prepareNetIOStatsData(metric)
+			n := prepareNetStatsData(metric)
 			stats = append(stats, n)
 		}
 	}

@@ -4,7 +4,7 @@ import (
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 )
 
-type ioStatsData struct {
+type diskStatsData struct {
 	Id                 string `json:"id"`
 	ApplicationName    string `json:"applicationName"`
 	ApplicationId      string `json:"applicationId"`
@@ -16,32 +16,51 @@ type ioStatsData struct {
 
 	ReadBytes  uint64 `json:"readBytes"`
 	WriteBytes uint64 `json:"writeBytes"`
+	ReadCount  uint64 `json:"readCount"`
+	WriteCount uint64 `json:"writeCount"`
 }
 
-func prepareIOStatsData(metric *Metric) ioStatsData {
-	rb, wb := takeIOFrame(metric)
+func prepareDiskStatsData(metric *Metric) diskStatsData {
+	df := takeDiskFrame(metric)
 
-	return ioStatsData{
+	return diskStatsData{
 		Id:                 plugin.GenerateNewId(),
 		ApplicationName:    metric.applicationName,
 		ApplicationId:      metric.applicationId,
 		ApplicationVersion: metric.applicationVersion,
 		ApplicationProfile: metric.applicationProfile,
 		ApplicationType:    plugin.ApplicationType,
-		StatName:           ioStat,
+		StatName:           diskStat,
 		StatTimestamp:      metric.statTimestamp,
 
-		ReadBytes:  rb,
-		WriteBytes: wb,
+		ReadBytes:  df.readBytes,
+		WriteBytes: df.writeBytes,
+		ReadCount:  df.readCount,
+		WriteCount: df.writeCount,
 	}
 }
 
-//Since lambda works continuously we should subtract io values in order to get correct results per invocation
-func takeIOFrame(metric *Metric) (uint64, uint64) {
+type diskFrame struct {
+	readBytes  uint64
+	writeBytes uint64
+	readCount  uint64
+	writeCount uint64
+}
 
+//Since lambda works continuously we should subtract io values in order to get correct results per invocation
+//takeDiskFrame returns IO operations count for a specific time range
+func takeDiskFrame(metric *Metric) *diskFrame {
 	rb := metric.currIOStat.ReadBytes - metric.prevIOStat.ReadBytes
 	wb := metric.currIOStat.WriteBytes - metric.prevIOStat.WriteBytes
 
+	rc := metric.currIOStat.ReadCount - metric.prevIOStat.ReadCount
+	wc := metric.currIOStat.WriteCount - metric.prevIOStat.WriteCount
+
 	metric.prevIOStat = metric.currIOStat
-	return rb, wb
+	return &diskFrame{
+		readBytes:  rb,
+		writeBytes: wb,
+		readCount:  rc,
+		writeCount: wc,
+	}
 }
