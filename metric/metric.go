@@ -11,30 +11,34 @@ import (
 	"github.com/shirou/gopsutil/process"
 	"fmt"
 	"github.com/shirou/gopsutil/net"
+	"github.com/shirou/gopsutil/cpu"
 )
 
 const StatDataType = "StatData"
 
 type Metric struct {
 	statData
-	statTimestamp     int64
+	statTimestamp int64
+	//TODO separate as GC objects, process objects etc.
 	startGCCount      uint32
 	endGCCount        uint32
 	startPauseTotalNs uint64
 	endPauseTotalNs   uint64
 	process           *process.Process
 	cpuPercent        float64
-	prevIOStat        *process.IOCountersStat
-	currIOStat        *process.IOCountersStat
-	prevNetIOStat     *net.IOCountersStat
-	currNetIOStat     *net.IOCountersStat
+	currDiskStat      *process.IOCountersStat
+	prevDiskStat      *process.IOCountersStat
+	currNetStat       *net.IOCountersStat
+	prevNetStat       *net.IOCountersStat
+	currTimeStat      *cpu.TimesStat
+	prevTimeStat      *cpu.TimesStat
 
 	EnableGCStats        bool
 	EnableHeapStats      bool
 	EnableGoroutineStats bool
 	EnableCPUStats       bool
 	EnableDiskStats      bool
-	EnableNetworkIOStats bool
+	EnableNetStats       bool
 }
 
 type statData struct {
@@ -57,16 +61,19 @@ func NewMetric() *Metric {
 		},
 
 		//Initialize with empty objects
-		prevIOStat:    &process.IOCountersStat{},
-		prevNetIOStat: &net.IOCountersStat{},
+		prevDiskStat: &process.IOCountersStat{},
+		prevNetStat:  &net.IOCountersStat{},
+		prevTimeStat: &cpu.TimesStat{},
 	}
 }
 
 func (metric *Metric) BeforeExecution(ctx context.Context, request json.RawMessage, wg *sync.WaitGroup) {
-	m := &runtime.MemStats{}
-	runtime.ReadMemStats(m)
+	metric.statTimestamp = plugin.GetTimestamp()
 
 	if metric.EnableGCStats {
+		m := &runtime.MemStats{}
+		runtime.ReadMemStats(m)
+
 		metric.startGCCount = m.NumGC
 		metric.startPauseTotalNs = m.PauseTotalNs
 	}
@@ -81,8 +88,6 @@ func (metric *Metric) BeforeExecution(ctx context.Context, request json.RawMessa
 func (metric *Metric) AfterExecution(ctx context.Context, request json.RawMessage, response interface{}, err interface{}) ([]interface{}, string) {
 	mStats := &runtime.MemStats{}
 	runtime.ReadMemStats(mStats)
-
-	metric.statTimestamp = plugin.GetTimestamp()
 
 	var stats []interface{}
 
@@ -120,18 +125,18 @@ func (metric *Metric) AfterExecution(ctx context.Context, request json.RawMessag
 		if err != nil {
 			fmt.Println(err)
 		} else {
-			metric.currIOStat = diskStat
+			metric.currDiskStat = diskStat
 			d := prepareDiskStatsData(metric)
 			stats = append(stats, d)
 		}
 	}
 
-	if metric.EnableNetworkIOStats {
+	if metric.EnableNetStats {
 		netIOStat, err := net.IOCounters(false)
 		if err != nil {
 			fmt.Println(err)
 		} else {
-			metric.currNetIOStat = &netIOStat[ALL]
+			metric.currNetStat = &netIOStat[ALL]
 			n := prepareNetStatsData(metric)
 			stats = append(stats, n)
 		}

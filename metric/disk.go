@@ -50,13 +50,13 @@ type diskFrame struct {
 //Since lambda works continuously we should subtract io values in order to get correct results per invocation
 //takeDiskFrame returns IO operations count for a specific time range
 func takeDiskFrame(metric *Metric) *diskFrame {
-	rb := metric.currIOStat.ReadBytes - metric.prevIOStat.ReadBytes
-	wb := metric.currIOStat.WriteBytes - metric.prevIOStat.WriteBytes
+	rb := metric.currDiskStat.ReadBytes - metric.prevDiskStat.ReadBytes
+	wb := metric.currDiskStat.WriteBytes - metric.prevDiskStat.WriteBytes
 
-	rc := metric.currIOStat.ReadCount - metric.prevIOStat.ReadCount
-	wc := metric.currIOStat.WriteCount - metric.prevIOStat.WriteCount
+	rc := metric.currDiskStat.ReadCount - metric.prevDiskStat.ReadCount
+	wc := metric.currDiskStat.WriteCount - metric.prevDiskStat.WriteCount
 
-	metric.prevIOStat = metric.currIOStat
+	metric.prevDiskStat = metric.currDiskStat
 	return &diskFrame{
 		readBytes:  rb,
 		writeBytes: wb,

@@ -57,14 +57,14 @@ type netFrame struct {
 
 //Since lambda works continuously we should subtract io values in order to get correct results per invocation
 func takeNetFrame(metric *Metric) *netFrame {
-	br := metric.currNetIOStat.BytesRecv - metric.prevNetIOStat.BytesRecv
-	bs := metric.currNetIOStat.BytesSent - metric.prevNetIOStat.BytesSent
-	ps := metric.currNetIOStat.PacketsSent - metric.prevNetIOStat.PacketsSent
-	pr := metric.currNetIOStat.PacketsRecv - metric.prevNetIOStat.PacketsRecv
-	ei := metric.currNetIOStat.Errin - metric.prevNetIOStat.Errin
-	eo := metric.currNetIOStat.Errout - metric.prevNetIOStat.Errout
+	br := metric.currNetStat.BytesRecv - metric.prevNetStat.BytesRecv
+	bs := metric.currNetStat.BytesSent - metric.prevNetStat.BytesSent
+	ps := metric.currNetStat.PacketsSent - metric.prevNetStat.PacketsSent
+	pr := metric.currNetStat.PacketsRecv - metric.prevNetStat.PacketsRecv
+	ei := metric.currNetStat.Errin - metric.prevNetStat.Errin
+	eo := metric.currNetStat.Errout - metric.prevNetStat.Errout
 
-	metric.prevNetIOStat = metric.currNetIOStat
+	metric.prevNetStat = metric.currNetStat
 	return &netFrame{
 		bytesRecv:   br,
 		bytesSent:   bs,
