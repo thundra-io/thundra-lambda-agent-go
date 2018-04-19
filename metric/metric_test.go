@@ -19,29 +19,13 @@ const (
 	applicationProfile = "TestProfile"
 )
 
-func TestNewMetric(t *testing.T) {
-	prepareEnvironment()
-	m := NewMetric()
-
-	assert.Equal(t, functionName, m.applicationName)
-	assert.Equal(t, appId, m.applicationId)
-	assert.Equal(t, functionVersion, m.applicationVersion)
-	assert.Equal(t, applicationProfile, m.applicationProfile)
-	assert.Equal(t, plugin.ApplicationType, m.applicationType)
-
-	assert.NotNil(t, m.prevDiskStat)
-	assert.NotNil(t, m.prevNetStat)
-}
-
 func TestMetric_BeforeExecution(t *testing.T) {
 	const MaxUint32 = ^uint32(0)
 	const MaxUint64 = ^uint64(0)
 
-	m := &Metric{
-		EnableGCStats:     true,
-		startGCCount:      MaxUint32,
-		startPauseTotalNs: MaxUint64,
-	}
+	m := NewBuilder().EnableGCStats().Build()
+	m.startGCCount = MaxUint32
+	m.startPauseTotalNs = MaxUint64
 
 	wg := sync.WaitGroup{}
 	wg.Add(1)
@@ -58,13 +42,9 @@ func TestMetric_AfterExecution(t *testing.T) {
 	const MaxUint32 = ^uint32(0)
 	const MaxUint64 = ^uint64(0)
 
-	m := &Metric{
-		EnableHeapStats:      true,
-		EnableGCStats:        true,
-		EnableGoroutineStats: true,
-		endGCCount:           MaxUint32,
-		endPauseTotalNs:      MaxUint64,
-	}
+	m := NewBuilder().EnableHeapStats().EnableGCStats().EnableGoroutineStats().Build()
+	m.endGCCount = MaxUint32
+	m.endPauseTotalNs = MaxUint64
 
 	wg := sync.WaitGroup{}
 	wg.Add(1)

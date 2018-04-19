@@ -20,7 +20,7 @@ type diskStatsData struct {
 	WriteCount uint64 `json:"writeCount"`
 }
 
-func prepareDiskStatsData(metric *Metric) diskStatsData {
+func prepareDiskStatsData(metric *metric) diskStatsData {
 	df := takeDiskFrame(metric)
 
 	return diskStatsData{
@@ -49,7 +49,7 @@ type diskFrame struct {
 
 //Since lambda works continuously we should subtract io values in order to get correct results per invocation
 //takeDiskFrame returns IO operations count for a specific time range
-func takeDiskFrame(metric *Metric) *diskFrame {
+func takeDiskFrame(metric *metric) *diskFrame {
 	rb := metric.currDiskStat.ReadBytes - metric.prevDiskStat.ReadBytes
 	wb := metric.currDiskStat.WriteBytes - metric.prevDiskStat.WriteBytes
 

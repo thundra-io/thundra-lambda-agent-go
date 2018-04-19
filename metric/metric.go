@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"sync"
-	"github.com/aws/aws-lambda-go/lambdacontext"
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 	"runtime"
 
@@ -16,10 +15,9 @@ import (
 
 const StatDataType = "StatData"
 
-type Metric struct {
+type metric struct {
 	statData
-	statTimestamp int64
-	//TODO separate as GC objects, process objects etc.
+	statTimestamp     int64
 	startGCCount      uint32
 	endGCCount        uint32
 	startPauseTotalNs uint64
@@ -33,12 +31,12 @@ type Metric struct {
 	currTimeStat      *cpu.TimesStat
 	prevTimeStat      *cpu.TimesStat
 
-	EnableGCStats        bool
-	EnableHeapStats      bool
-	EnableGoroutineStats bool
-	EnableCPUStats       bool
-	EnableDiskStats      bool
-	EnableNetStats       bool
+	enableGCStats        bool
+	enableHeapStats      bool
+	enableGoroutineStats bool
+	enableCPUStats       bool
+	enableDiskStats      bool
+	enableNetStats       bool
 }
 
 type statData struct {
@@ -49,28 +47,10 @@ type statData struct {
 	applicationType    string
 }
 
-func NewMetric() *Metric {
-
-	return &Metric{
-		statData: statData{
-			applicationName:    plugin.GetApplicationName(),
-			applicationId:      plugin.GetAppIdFromStreamName(lambdacontext.LogStreamName),
-			applicationVersion: plugin.GetApplicationVersion(),
-			applicationProfile: plugin.GetApplicationProfile(),
-			applicationType:    plugin.GetApplicationType(),
-		},
-
-		//Initialize with empty objects
-		prevDiskStat: &process.IOCountersStat{},
-		prevNetStat:  &net.IOCountersStat{},
-		prevTimeStat: &cpu.TimesStat{},
-	}
-}
-
-func (metric *Metric) BeforeExecution(ctx context.Context, request json.RawMessage, wg *sync.WaitGroup) {
+func (metric *metric) BeforeExecution(ctx context.Context, request json.RawMessage, wg *sync.WaitGroup) {
 	metric.statTimestamp = plugin.GetTimestamp()
 
-	if metric.EnableGCStats {
+	if metric.enableGCStats {
 		m := &runtime.MemStats{}
 		runtime.ReadMemStats(m)
 
@@ -78,25 +58,32 @@ func (metric *Metric) BeforeExecution(ctx context.Context, request json.RawMessa
 		metric.startPauseTotalNs = m.PauseTotalNs
 	}
 
-	if metric.EnableCPUStats || metric.EnableDiskStats {
-		metric.process = plugin.GetThisProcess()
+	if metric.enableCPUStats {
+		var err error
+		metric.prevTimeStat, err = metric.process.Times()
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
+
+	if metric.enableDiskStats {
 	}
 
 	wg.Done()
 }
 
-func (metric *Metric) AfterExecution(ctx context.Context, request json.RawMessage, response interface{}, err interface{}) ([]interface{}, string) {
+func (metric *metric) AfterExecution(ctx context.Context, request json.RawMessage, response interface{}, err interface{}) ([]interface{}, string) {
 	mStats := &runtime.MemStats{}
 	runtime.ReadMemStats(mStats)
 
 	var stats []interface{}
 
-	if metric.EnableHeapStats {
+	if metric.enableHeapStats {
 		h := prepareHeapStatsData(metric, mStats)
 		stats = append(stats, h)
 	}
 
-	if metric.EnableGCStats {
+	if metric.enableGCStats {
 		metric.endGCCount = mStats.NumGC
 		metric.endPauseTotalNs = mStats.PauseTotalNs
 
@@ -104,12 +91,12 @@ func (metric *Metric) AfterExecution(ctx context.Context, request json.RawMessag
 		stats = append(stats, gc)
 	}
 
-	if metric.EnableGoroutineStats {
+	if metric.enableGoroutineStats {
 		g := prepareGoRoutineStatsData(metric)
 		stats = append(stats, g)
 	}
 
-	if metric.EnableCPUStats {
+	if metric.enableCPUStats {
 		p, err := getCPUUsagePercentage(metric.process)
 		if err != nil {
 			fmt.Println(err)
@@ -120,7 +107,7 @@ func (metric *Metric) AfterExecution(ctx context.Context, request json.RawMessag
 		}
 	}
 
-	if metric.EnableDiskStats {
+	if metric.enableDiskStats {
 		diskStat, err := metric.process.IOCounters()
 		if err != nil {
 			fmt.Println(err)
@@ -131,7 +118,7 @@ func (metric *Metric) AfterExecution(ctx context.Context, request json.RawMessag
 		}
 	}
 
-	if metric.EnableNetStats {
+	if metric.enableNetStats {
 		netIOStat, err := net.IOCounters(false)
 		if err != nil {
 			fmt.Println(err)
@@ -146,6 +133,6 @@ func (metric *Metric) AfterExecution(ctx context.Context, request json.RawMessag
 }
 
 //OnPanic just collect the metrics and send them as in the AfterExecution
-func (metric *Metric) OnPanic(ctx context.Context, request json.RawMessage, err interface{}, stackTrace []byte) ([]interface{}, string) {
+func (metric *metric) OnPanic(ctx context.Context, request json.RawMessage, err interface{}, stackTrace []byte) ([]interface{}, string) {
 	return metric.AfterExecution(ctx, request, nil, err)
 }

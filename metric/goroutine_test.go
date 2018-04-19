@@ -13,7 +13,7 @@ const numGoroutines = 5
 const defaultGoroutines = 2
 
 func TestPrepareGoroutineStatsData(t *testing.T) {
-	metric := NewMetric()
+	metric := NewBuilder().EnableGoroutineStats().Build()
 	metric.statTimestamp = plugin.GetTimestamp()
 	metric.startGCCount = 1
 	metric.endGCCount = 2

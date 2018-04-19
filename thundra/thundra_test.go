@@ -237,7 +237,7 @@ func (t *MockPlugin) OnPanic(ctx context.Context, request json.RawMessage, err i
 
 func TestExecutePreHooks(t *testing.T) {
 	mT := new(MockPlugin)
-	th := NewBuilder().AddPlugin(mT).Build()
+	th := NewBuilder().AddPlugin(mT).SetAPIKey(testApiKey).Build()
 
 	ctx := context.TODO()
 	req := createRawMessage()

@@ -24,7 +24,7 @@ type netStatsData struct {
 	ErrOut      uint64 `json:"errOut"`
 }
 
-func prepareNetStatsData(metric *Metric) netStatsData {
+func prepareNetStatsData(metric *metric) netStatsData {
 	nf := takeNetFrame(metric)
 
 	return netStatsData{
@@ -56,7 +56,7 @@ type netFrame struct {
 }
 
 //Since lambda works continuously we should subtract io values in order to get correct results per invocation
-func takeNetFrame(metric *Metric) *netFrame {
+func takeNetFrame(metric *metric) *netFrame {
 	br := metric.currNetStat.BytesRecv - metric.prevNetStat.BytesRecv
 	bs := metric.currNetStat.BytesSent - metric.prevNetStat.BytesSent
 	ps := metric.currNetStat.PacketsSent - metric.prevNetStat.PacketsSent

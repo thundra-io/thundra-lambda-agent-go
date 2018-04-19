@@ -6,7 +6,7 @@ import (
 )
 
 func TestPrepareCPUStatsData(t *testing.T) {
-	metric := NewMetric()
+	metric := NewBuilder().EnableCPUStats().Build()
 
 	cpuStatsData := prepareCPUStatsData(metric)
 

@@ -17,7 +17,7 @@ type goRoutineStatsData struct {
 	NumGoroutine       uint64 `json:"numGoroutine"`
 }
 
-func prepareGoRoutineStatsData(metric *Metric) goRoutineStatsData {
+func prepareGoRoutineStatsData(metric *metric) goRoutineStatsData {
 	return goRoutineStatsData{
 		Id:                 plugin.GenerateNewId(),
 		ApplicationName:    metric.applicationName,

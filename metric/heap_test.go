@@ -7,7 +7,7 @@ import (
 )
 
 func TestPrepareHeapStatsData(t *testing.T) {
-	metric := NewMetric()
+	metric := NewBuilder().EnableHeapStats().Build()
 
 	memStats := &runtime.MemStats{}
 

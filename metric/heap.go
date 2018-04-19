@@ -36,7 +36,7 @@ type heapStatsData struct {
 	HeapObjects uint64 `json:"heapObjects"`
 }
 
-func prepareHeapStatsData(metric *Metric, memStats *runtime.MemStats) heapStatsData {
+func prepareHeapStatsData(metric *metric, memStats *runtime.MemStats) heapStatsData {
 	return heapStatsData{
 		Id:                 plugin.GenerateNewId(),
 		ApplicationName:    metric.applicationName,

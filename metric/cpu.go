@@ -17,7 +17,7 @@ type cpuStatsData struct {
 	CPUPercent         float64 `json:"cpuPercent"`
 }
 
-func prepareCPUStatsData(metric *Metric) cpuStatsData {
+func prepareCPUStatsData(metric *metric) cpuStatsData {
 	return cpuStatsData{
 		Id:                 plugin.GenerateNewId(),
 		ApplicationName:    metric.applicationName,
