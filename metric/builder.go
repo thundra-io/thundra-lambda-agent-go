@@ -69,7 +69,7 @@ func (b *builder) Build() *metric {
 		b.prevNetStat = &net.IOCountersStat{}
 	}
 
-	if b.enableCPUStats || b.enableDiskStats {
+	if b.enableCPUStats || b.enableDiskStats || b.enableHeapStats {
 		b.process = plugin.GetThisProcess()
 	}
 

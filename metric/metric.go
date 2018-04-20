@@ -23,13 +23,12 @@ type metric struct {
 	startPauseTotalNs uint64
 	endPauseTotalNs   uint64
 	process           *process.Process
-	cpuPercent        float64
+	processCpuPercent float64
+	systemCpuPercent  float64
 	currDiskStat      *process.IOCountersStat
 	prevDiskStat      *process.IOCountersStat
 	currNetStat       *net.IOCountersStat
 	prevNetStat       *net.IOCountersStat
-	currTimeStat      *cpu.TimesStat
-	prevTimeStat      *cpu.TimesStat
 
 	enableGCStats        bool
 	enableHeapStats      bool
@@ -59,14 +58,10 @@ func (metric *metric) BeforeExecution(ctx context.Context, request json.RawMessa
 	}
 
 	if metric.enableCPUStats {
-		var err error
-		metric.prevTimeStat, err = metric.process.Times()
-		if err != nil {
-			fmt.Println(err)
-		}
-	}
-
-	if metric.enableDiskStats {
+		// We need to calculate process and system percentages here to register cpu times
+		// Later we'll use them to calculate cpu usage percentage
+		metric.process.Percent(0)
+		cpu.Percent(0, false)
 	}
 
 	wg.Done()
@@ -97,11 +92,12 @@ func (metric *metric) AfterExecution(ctx context.Context, request json.RawMessag
 	}
 
 	if metric.enableCPUStats {
-		p, err := getCPUUsagePercentage(metric.process)
+		p, s, err := getCPUUsagePercentage(metric.process)
 		if err != nil {
 			fmt.Println(err)
 		} else {
-			metric.cpuPercent = p
+			metric.processCpuPercent = p
+			metric.systemCpuPercent = s
 			c := prepareCPUStatsData(metric)
 			stats = append(stats, c)
 		}

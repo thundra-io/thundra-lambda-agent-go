@@ -1,4 +1,4 @@
-# Lambda Go Agent [![Build Status][ci-img]][ci]
+# Lambda Go Agent [![CircleCI](https://circleci.com/gh/thundra-io/thundra-lambda-agent-go.svg?style=svg)](https://circleci.com/gh/thundra-io/thundra-lambda-agent-go/)
 
 Trace your AWS lambda functions with async monitoring by [Thundra](https://www.thundra.io/)!
 
