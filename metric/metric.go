@@ -4,18 +4,18 @@ import (
 	"context"
 	"encoding/json"
 	"sync"
-	"github.com/aws/aws-lambda-go/lambdacontext"
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 	"runtime"
 
 	"github.com/shirou/gopsutil/process"
 	"fmt"
 	"github.com/shirou/gopsutil/net"
+	"github.com/shirou/gopsutil/cpu"
 )
 
 const StatDataType = "StatData"
 
-type Metric struct {
+type metric struct {
 	statData
 	statTimestamp     int64
 	startGCCount      uint32
@@ -23,18 +23,19 @@ type Metric struct {
 	startPauseTotalNs uint64
 	endPauseTotalNs   uint64
 	process           *process.Process
-	cpuPercent        float64
-	prevIOStat        *process.IOCountersStat
-	currIOStat        *process.IOCountersStat
-	prevNetIOStat     *net.IOCountersStat
-	currNetIOStat     *net.IOCountersStat
+	processCpuPercent float64
+	systemCpuPercent  float64
+	currDiskStat      *process.IOCountersStat
+	prevDiskStat      *process.IOCountersStat
+	currNetStat       *net.IOCountersStat
+	prevNetStat       *net.IOCountersStat
 
-	EnableGCStats        bool
-	EnableHeapStats      bool
-	EnableGoroutineStats bool
-	EnableCPUStats       bool
-	EnableIOStats        bool
-	EnableNetworkIOStats bool
+	enableGCStats        bool
+	enableHeapStats      bool
+	enableGoroutineStats bool
+	enableCPUStats       bool
+	enableDiskStats      bool
+	enableNetStats       bool
 }
 
 type statData struct {
@@ -45,53 +46,39 @@ type statData struct {
 	applicationType    string
 }
 
-func NewMetric() *Metric {
+func (metric *metric) BeforeExecution(ctx context.Context, request json.RawMessage, wg *sync.WaitGroup) {
+	metric.statTimestamp = plugin.GetTimestamp()
 
-	return &Metric{
-		statData: statData{
-			applicationName:    plugin.GetApplicationName(),
-			applicationId:      plugin.GetAppIdFromStreamName(lambdacontext.LogStreamName),
-			applicationVersion: plugin.GetApplicationVersion(),
-			applicationProfile: plugin.GetApplicationProfile(),
-			applicationType:    plugin.GetApplicationType(),
-		},
+	if metric.enableGCStats {
+		m := &runtime.MemStats{}
+		runtime.ReadMemStats(m)
 
-		//Initialize with empty objects
-		prevIOStat:    &process.IOCountersStat{},
-		prevNetIOStat: &net.IOCountersStat{},
-	}
-}
-
-func (metric *Metric) BeforeExecution(ctx context.Context, request json.RawMessage, wg *sync.WaitGroup) {
-	m := &runtime.MemStats{}
-	runtime.ReadMemStats(m)
-
-	if metric.EnableGCStats {
 		metric.startGCCount = m.NumGC
 		metric.startPauseTotalNs = m.PauseTotalNs
 	}
 
-	if metric.EnableCPUStats || metric.EnableIOStats {
-		metric.process = plugin.GetThisProcess()
+	if metric.enableCPUStats {
+		// We need to calculate process and system percentages here to register cpu times
+		// Later we'll use them to calculate cpu usage percentage
+		metric.process.Percent(0)
+		cpu.Percent(0, false)
 	}
 
 	wg.Done()
 }
 
-func (metric *Metric) AfterExecution(ctx context.Context, request json.RawMessage, response interface{}, err interface{}) ([]interface{}, string) {
+func (metric *metric) AfterExecution(ctx context.Context, request json.RawMessage, response interface{}, err interface{}) ([]interface{}, string) {
 	mStats := &runtime.MemStats{}
 	runtime.ReadMemStats(mStats)
 
-	metric.statTimestamp = plugin.MakeTimestamp()
-
 	var stats []interface{}
 
-	if metric.EnableHeapStats {
+	if metric.enableHeapStats {
 		h := prepareHeapStatsData(metric, mStats)
 		stats = append(stats, h)
 	}
 
-	if metric.EnableGCStats {
+	if metric.enableGCStats {
 		metric.endGCCount = mStats.NumGC
 		metric.endPauseTotalNs = mStats.PauseTotalNs
 
@@ -99,40 +86,41 @@ func (metric *Metric) AfterExecution(ctx context.Context, request json.RawMessag
 		stats = append(stats, gc)
 	}
 
-	if metric.EnableGoroutineStats {
+	if metric.enableGoroutineStats {
 		g := prepareGoRoutineStatsData(metric)
 		stats = append(stats, g)
 	}
 
-	if metric.EnableCPUStats {
-		p, err := getCPUUsagePercentage(metric.process)
+	if metric.enableCPUStats {
+		p, s, err := getCPUUsagePercentage(metric.process)
 		if err != nil {
 			fmt.Println(err)
 		} else {
-			metric.cpuPercent = p
+			metric.processCpuPercent = p
+			metric.systemCpuPercent = s
 			c := prepareCPUStatsData(metric)
 			stats = append(stats, c)
 		}
 	}
 
-	if metric.EnableIOStats {
-		ioStat, err := metric.process.IOCounters()
+	if metric.enableDiskStats {
+		diskStat, err := metric.process.IOCounters()
 		if err != nil {
 			fmt.Println(err)
 		} else {
-			metric.currIOStat = ioStat
-			io := prepareIOStatsData(metric)
-			stats = append(stats, io)
+			metric.currDiskStat = diskStat
+			d := prepareDiskStatsData(metric)
+			stats = append(stats, d)
 		}
 	}
 
-	if metric.EnableNetworkIOStats {
+	if metric.enableNetStats {
 		netIOStat, err := net.IOCounters(false)
 		if err != nil {
 			fmt.Println(err)
 		} else {
-			metric.currNetIOStat = &netIOStat[ALL]
-			n := prepareNetIOStatsData(metric)
+			metric.currNetStat = &netIOStat[ALL]
+			n := prepareNetStatsData(metric)
 			stats = append(stats, n)
 		}
 	}
@@ -141,6 +129,6 @@ func (metric *Metric) AfterExecution(ctx context.Context, request json.RawMessag
 }
 
 //OnPanic just collect the metrics and send them as in the AfterExecution
-func (metric *Metric) OnPanic(ctx context.Context, request json.RawMessage, err interface{}, stackTrace []byte) ([]interface{}, string) {
+func (metric *metric) OnPanic(ctx context.Context, request json.RawMessage, err interface{}, stackTrace []byte) ([]interface{}, string) {
 	return metric.AfterExecution(ctx, request, nil, err)
 }

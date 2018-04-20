@@ -6,7 +6,6 @@ import (
 	"testing"
 	"github.com/stretchr/testify/assert"
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
-	"runtime"
 	"context"
 	"encoding/json"
 	"sync"
@@ -24,11 +23,9 @@ func TestMetric_BeforeExecution(t *testing.T) {
 	const MaxUint32 = ^uint32(0)
 	const MaxUint64 = ^uint64(0)
 
-	m := &Metric{
-		EnableGCStats:     true,
-		startGCCount:      MaxUint32,
-		startPauseTotalNs: MaxUint64,
-	}
+	m := NewBuilder().EnableGCStats().Build()
+	m.startGCCount = MaxUint32
+	m.startPauseTotalNs = MaxUint64
 
 	wg := sync.WaitGroup{}
 	wg.Add(1)
@@ -45,13 +42,9 @@ func TestMetric_AfterExecution(t *testing.T) {
 	const MaxUint32 = ^uint32(0)
 	const MaxUint64 = ^uint64(0)
 
-	m := &Metric{
-		EnableHeapStats:      true,
-		EnableGCStats:        true,
-		EnableGoroutineStats: true,
-		endGCCount:           MaxUint32,
-		endPauseTotalNs:      MaxUint64,
-	}
+	m := NewBuilder().EnableHeapStats().EnableGCStats().EnableGoroutineStats().Build()
+	m.endGCCount = MaxUint32
+	m.endPauseTotalNs = MaxUint64
 
 	wg := sync.WaitGroup{}
 	wg.Add(1)
@@ -66,113 +59,8 @@ func TestMetric_AfterExecution(t *testing.T) {
 	assert.NotEqual(t, MaxUint32, m.endGCCount)
 	assert.NotEqual(t, MaxUint64, m.endPauseTotalNs)
 
-	assert.True(t, m.statTimestamp <= plugin.MakeTimestamp())
+	assert.True(t, m.statTimestamp <= plugin.GetTimestamp())
 	assert.Equal(t, StatDataType, dataType)
-}
-
-func TestPrepareHeapStatsData(t *testing.T) {
-	prepareEnvironment()
-
-	metric := NewMetric()
-	metric.statTimestamp = plugin.MakeTimestamp()
-
-	memStats := &runtime.MemStats{}
-
-	heapStatsData := prepareHeapStatsData(metric, memStats)
-
-	assert.Equal(t, functionName, heapStatsData.ApplicationName)
-	assert.Equal(t, appId, heapStatsData.ApplicationId)
-	assert.Equal(t, functionVersion, heapStatsData.ApplicationVersion)
-	assert.Equal(t, applicationProfile, heapStatsData.ApplicationProfile)
-	assert.Equal(t, plugin.ApplicationType, heapStatsData.ApplicationType)
-
-	assert.Equal(t, heapStat, heapStatsData.StatName)
-	assert.Equal(t, metric.statTimestamp, heapStatsData.StatTimestamp)
-
-	assert.Equal(t, memStats.HeapAlloc, heapStatsData.HeapAlloc)
-	assert.Equal(t, memStats.HeapSys, heapStatsData.HeapSys)
-	assert.Equal(t, memStats.HeapInuse, heapStatsData.HeapInuse)
-	assert.Equal(t, memStats.HeapObjects, heapStatsData.HeapObjects)
-
-	cleanEnvironment()
-}
-
-func TestPrepareGCStatsData(t *testing.T) {
-	prepareEnvironment()
-
-	metric := NewMetric()
-	metric.statTimestamp = plugin.MakeTimestamp()
-	metric.startGCCount = 1
-	metric.endGCCount = 2
-
-	memStats := &runtime.MemStats{}
-
-	gcStatsData := prepareGCStatsData(metric, memStats)
-
-	assert.Equal(t, functionName, gcStatsData.ApplicationName)
-	assert.Equal(t, appId, gcStatsData.ApplicationId)
-	assert.Equal(t, functionVersion, gcStatsData.ApplicationVersion)
-	assert.Equal(t, applicationProfile, gcStatsData.ApplicationProfile)
-	assert.Equal(t, plugin.ApplicationType, gcStatsData.ApplicationType)
-
-	assert.Equal(t, gcStat, gcStatsData.StatName)
-	assert.Equal(t, metric.statTimestamp, gcStatsData.StatTimestamp)
-
-	assert.Equal(t, memStats.PauseTotalNs, gcStatsData.PauseTotalNs)
-	assert.Equal(t, memStats.PauseNs[(memStats.NumGC+255)%256], gcStatsData.PauseNs)
-	assert.Equal(t, memStats.NumGC, gcStatsData.NumGC)
-	assert.Equal(t, memStats.NextGC, gcStatsData.NextGC)
-	assert.Equal(t, memStats.GCCPUFraction, gcStatsData.GCCPUFraction)
-
-	//DeltaGCCount equals to endGCCount - startGCCount
-	assert.Equal(t, uint32(1), gcStatsData.DeltaNumGc)
-
-	cleanEnvironment()
-}
-
-func TestPrepareGoroutineStatsData(t *testing.T) {
-	prepareEnvironment()
-
-	metric := NewMetric()
-	metric.statTimestamp = plugin.MakeTimestamp()
-	metric.startGCCount = 1
-	metric.endGCCount = 2
-
-	gcStatsData := prepareGoRoutineStatsData(metric)
-
-	assert.Equal(t, functionName, gcStatsData.ApplicationName)
-	assert.Equal(t, appId, gcStatsData.ApplicationId)
-	assert.Equal(t, functionVersion, gcStatsData.ApplicationVersion)
-	assert.Equal(t, applicationProfile, gcStatsData.ApplicationProfile)
-	assert.Equal(t, plugin.ApplicationType, gcStatsData.ApplicationType)
-
-	assert.Equal(t, goroutineStat, gcStatsData.StatName)
-	assert.Equal(t, metric.statTimestamp, gcStatsData.StatTimestamp)
-
-	assert.Equal(t, uint64(runtime.NumGoroutine()), gcStatsData.NumGoroutine)
-
-	cleanEnvironment()
-}
-
-func TestPrepareCPUStatsData(t *testing.T) {
-	prepareEnvironment()
-
-	metric := NewMetric()
-	metric.startGCCount = 1
-	metric.endGCCount = 2
-
-	cpuStatsData := prepareCPUStatsData(metric)
-
-	assert.Equal(t, functionName, cpuStatsData.ApplicationName)
-	assert.Equal(t, appId, cpuStatsData.ApplicationId)
-	assert.Equal(t, functionVersion, cpuStatsData.ApplicationVersion)
-	assert.Equal(t, applicationProfile, cpuStatsData.ApplicationProfile)
-	assert.Equal(t, plugin.ApplicationType, cpuStatsData.ApplicationType)
-
-	assert.Equal(t, cpuStat, cpuStatsData.StatName)
-	assert.Equal(t, metric.statTimestamp, cpuStatsData.StatTimestamp)
-
-	cleanEnvironment()
 }
 
 func prepareEnvironment() {

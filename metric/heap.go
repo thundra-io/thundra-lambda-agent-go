@@ -3,6 +3,7 @@ package metric
 import (
 	"runtime"
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
+	"fmt"
 )
 
 type heapStatsData struct {
@@ -34,22 +35,31 @@ type heapStatsData struct {
 
 	// HeapObjects is the number of allocated heap objects.
 	HeapObjects uint64 `json:"heapObjects"`
+
+	// MemoryPercent returns how many percent of the total RAM this process uses
+	MemoryPercent float32 `json:"memoryPercent"`
 }
 
-func prepareHeapStatsData(metric *Metric, memStats *runtime.MemStats) heapStatsData {
+func prepareHeapStatsData(m *metric, memStats *runtime.MemStats) heapStatsData {
+	mp, err := m.process.MemoryPercent()
+	if err != nil {
+		fmt.Println(err)
+	}
+
 	return heapStatsData{
 		Id:                 plugin.GenerateNewId(),
-		ApplicationName:    metric.applicationName,
-		ApplicationId:      metric.applicationId,
-		ApplicationVersion: metric.applicationVersion,
-		ApplicationProfile: metric.applicationProfile,
+		ApplicationName:    m.applicationName,
+		ApplicationId:      m.applicationId,
+		ApplicationVersion: m.applicationVersion,
+		ApplicationProfile: m.applicationProfile,
 		ApplicationType:    plugin.ApplicationType,
 		StatName:           heapStat,
-		StatTimestamp:      metric.statTimestamp,
+		StatTimestamp:      m.statTimestamp,
 
-		HeapAlloc:   memStats.HeapAlloc,
-		HeapSys:     memStats.HeapSys,
-		HeapInuse:   memStats.HeapInuse,
-		HeapObjects: memStats.HeapObjects,
+		HeapAlloc:     memStats.HeapAlloc,
+		HeapSys:       memStats.HeapSys,
+		HeapInuse:     memStats.HeapInuse,
+		HeapObjects:   memStats.HeapObjects,
+		MemoryPercent: mp,
 	}
 }

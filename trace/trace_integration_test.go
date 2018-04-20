@@ -122,9 +122,9 @@ func TestTrace(t *testing.T) {
 			th := thundra.NewBuilder().AddPlugin(tr).SetReporter(r).SetAPIKey(TestApiKey).Build()
 			lambdaHandler := thundra.Wrap(testCase.handler, th)
 
-			invocationStartTime := plugin.MakeTimestamp()
+			invocationStartTime := plugin.GetTimestamp()
 			response, err := lambdaHandler(context.TODO(), []byte(testCase.input))
-			invocationEndTime := plugin.MakeTimestamp()
+			invocationEndTime := plugin.GetTimestamp()
 
 			//Monitor Data
 			msg, ok := r.MessageQueue[0].(plugin.Message)
@@ -248,11 +248,11 @@ func TestPanic(t *testing.T) {
 			tr := &Trace{}
 			th := thundra.NewBuilder().AddPlugin(tr).SetReporter(r).SetAPIKey(TestApiKey).Build()
 			lambdaHandler := thundra.Wrap(testCase.handler, th)
-			invocationStartTime := plugin.MakeTimestamp()
+			invocationStartTime := plugin.GetTimestamp()
 
 			defer func() {
 				if rec := recover(); rec != nil {
-					invocationEndTime := plugin.MakeTimestamp()
+					invocationEndTime := plugin.GetTimestamp()
 
 					//Monitor Data
 					msg, ok := r.MessageQueue[0].(plugin.Message)

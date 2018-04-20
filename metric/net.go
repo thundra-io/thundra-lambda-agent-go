@@ -6,7 +6,7 @@ import (
 
 const ALL = 0
 
-type netIOStatsData struct {
+type netStatsData struct {
 	Id                 string `json:"id"`
 	ApplicationName    string `json:"applicationName"`
 	ApplicationId      string `json:"applicationId"`
@@ -16,39 +16,61 @@ type netIOStatsData struct {
 	StatName           string `json:"statName"`
 	StatTimestamp      int64  `json:"statTimestamp"`
 
-	BytesRecv uint64 `json:"bytesRecv"`
-	BytesSent uint64 `json:"bytesSent"`
-	ErrIn     uint64 `json:"errIn"`
-	ErrOut    uint64 `json:"errOut"`
+	BytesRecv   uint64 `json:"bytesRecv"`
+	BytesSent   uint64 `json:"bytesSent"`
+	PacketsRecv uint64 `json:"packetsRecv"`
+	PacketsSent uint64 `json:"packetsSent"`
+	ErrIn       uint64 `json:"errIn"`
+	ErrOut      uint64 `json:"errOut"`
 }
 
-func prepareNetIOStatsData(metric *Metric) netIOStatsData {
-	br, bs, ei, eo := takeNetIOFrame(metric)
+func prepareNetStatsData(metric *metric) netStatsData {
+	nf := takeNetFrame(metric)
 
-	return netIOStatsData{
+	return netStatsData{
 		Id:                 plugin.GenerateNewId(),
 		ApplicationName:    metric.applicationName,
 		ApplicationId:      metric.applicationId,
 		ApplicationVersion: metric.applicationVersion,
 		ApplicationProfile: metric.applicationProfile,
 		ApplicationType:    plugin.ApplicationType,
-		StatName:           netIOStat,
+		StatName:           netStat,
 		StatTimestamp:      metric.statTimestamp,
 
-		BytesRecv: br,
-		BytesSent: bs,
-		ErrIn:     ei,
-		ErrOut:    eo,
+		BytesRecv:   nf.bytesRecv,
+		BytesSent:   nf.bytesSent,
+		PacketsRecv: nf.packetsRecv,
+		PacketsSent: nf.packetsSent,
+		ErrIn:       nf.errin,
+		ErrOut:      nf.errout,
 	}
 }
 
-//Since lambda works continuously we should subtract io values in order to get correct results per invocation
-func takeNetIOFrame(metric *Metric) (uint64, uint64, uint64, uint64) {
-	br := metric.currNetIOStat.BytesRecv - metric.prevNetIOStat.BytesRecv
-	bs := metric.currNetIOStat.BytesSent - metric.prevNetIOStat.BytesSent
-	ei := metric.currNetIOStat.Errin - metric.prevNetIOStat.Errin
-	eo := metric.currNetIOStat.Errout - metric.prevNetIOStat.Errout
+type netFrame struct {
+	bytesSent   uint64
+	bytesRecv   uint64
+	packetsRecv uint64
+	packetsSent uint64
+	errin       uint64
+	errout      uint64
+}
 
-	metric.prevNetIOStat = metric.currNetIOStat
-	return br, bs, ei, eo
+//Since lambda works continuously we should subtract io values in order to get correct results per invocation
+func takeNetFrame(metric *metric) *netFrame {
+	br := metric.currNetStat.BytesRecv - metric.prevNetStat.BytesRecv
+	bs := metric.currNetStat.BytesSent - metric.prevNetStat.BytesSent
+	ps := metric.currNetStat.PacketsSent - metric.prevNetStat.PacketsSent
+	pr := metric.currNetStat.PacketsRecv - metric.prevNetStat.PacketsRecv
+	ei := metric.currNetStat.Errin - metric.prevNetStat.Errin
+	eo := metric.currNetStat.Errout - metric.prevNetStat.Errout
+
+	metric.prevNetStat = metric.currNetStat
+	return &netFrame{
+		bytesRecv:   br,
+		bytesSent:   bs,
+		packetsRecv: pr,
+		packetsSent: ps,
+		errin:       ei,
+		errout:      eo,
+	}
 }

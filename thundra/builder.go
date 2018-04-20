@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
+	"errors"
 )
 
 type Builder interface {
@@ -39,7 +40,11 @@ func (b *builder) Build() *thundra {
 		b.reporter = &reporterImpl{}
 	}
 	if b.apiKey == "" {
-		b.apiKey = os.Getenv(thundraApiKey)
+		k := os.Getenv(thundraApiKey)
+		if k == "" {
+			panic(errors.New("thundraApiKey is not set"))
+		}
+		b.apiKey = k
 	}
 	return &thundra{
 		b.plugins,

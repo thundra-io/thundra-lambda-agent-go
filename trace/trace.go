@@ -47,13 +47,13 @@ type traceData struct {
 }
 
 func (trace *Trace) BeforeExecution(ctx context.Context, request json.RawMessage, wg *sync.WaitGroup) {
-	trace.startTime = plugin.MakeTimestamp()
+	trace.startTime = plugin.GetTimestamp()
 	cleanBuffer(trace)
 	wg.Done()
 }
 
 func (trace *Trace) AfterExecution(ctx context.Context, request json.RawMessage, response interface{}, err interface{}) ([]interface{}, string) {
-	trace.endTime = plugin.MakeTimestamp()
+	trace.endTime = plugin.GetTimestamp()
 	trace.duration = trace.endTime - trace.startTime
 
 	if err != nil {
@@ -78,7 +78,7 @@ func (trace *Trace) AfterExecution(ctx context.Context, request json.RawMessage,
 }
 
 func (trace *Trace) OnPanic(ctx context.Context, request json.RawMessage, err interface{}, stackTrace []byte) ([]interface{}, string) {
-	trace.endTime = plugin.MakeTimestamp()
+	trace.endTime = plugin.GetTimestamp()
 	trace.duration = trace.endTime - trace.startTime
 
 	errMessage := err.(error).Error()

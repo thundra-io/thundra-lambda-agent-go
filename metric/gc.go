@@ -39,7 +39,7 @@ type gcStatsData struct {
 	DeltaPauseTotalNs uint64 `json:"deltaPauseTotalNs"`
 }
 
-func prepareGCStatsData(metric *Metric, memStats *runtime.MemStats) gcStatsData {
+func prepareGCStatsData(metric *metric, memStats *runtime.MemStats) gcStatsData {
 	return gcStatsData{
 		Id:                 plugin.GenerateNewId(),
 		ApplicationName:    metric.applicationName,
