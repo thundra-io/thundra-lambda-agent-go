@@ -15,6 +15,7 @@ type thundra struct {
 	plugins  []plugin.Plugin
 	reporter Reporter
 	apiKey   string
+	warmup   bool
 }
 
 type LambdaFunction func(context.Context, json.RawMessage) (interface{}, error)
@@ -60,7 +61,14 @@ func Wrap(handler interface{}, thundra *thundra) LambdaFunction {
 			if err := json.Unmarshal(payload, newEvent.Interface()); err != nil {
 				return nil, err
 			}
-			args = append(args, newEvent.Elem())
+
+			elem := newEvent.Elem()
+
+			if thundra.warmup && checkAndHandleWarmupRequest(elem,newEventType){
+				return nil,nil
+			}
+
+			args = append(args, elem)
 		}
 
 		thundra.executePreHooks(ctx, payload)
@@ -109,7 +117,10 @@ func (th *thundra) executePostHooks(ctx context.Context, request json.RawMessage
 		}(p)
 	}
 	wg.Wait()
-	th.reporter.Report(th.apiKey)
+	// Don't report if there aren't any plugins, which means that no data is collected
+	if len(th.plugins) > 0{
+		th.reporter.Report(th.apiKey)
+	}
 	th.reporter.Clear()
 }
 
@@ -125,7 +136,10 @@ func (th *thundra) onPanic(ctx context.Context, request json.RawMessage, err int
 		}()
 	}
 	wg.Wait()
-	th.reporter.Report(th.apiKey)
+	// Don't report if there aren't any plugins, which means that no data is collected
+	if len(th.plugins) > 0{
+		th.reporter.Report(th.apiKey)
+	}
 	th.reporter.Clear()
 }
 

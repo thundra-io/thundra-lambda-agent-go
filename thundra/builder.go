@@ -11,6 +11,7 @@ type Builder interface {
 	AddPlugin(plugin.Plugin) Builder
 	SetReporter(Reporter) Builder
 	SetAPIKey(string) Builder
+	EnableWarmup() Builder
 	Build() *thundra
 }
 
@@ -18,6 +19,7 @@ type builder struct {
 	plugins  []plugin.Plugin
 	reporter Reporter
 	apiKey   string
+	warmup   bool
 }
 
 func (b *builder) AddPlugin(plugin plugin.Plugin) Builder {
@@ -35,6 +37,11 @@ func (b *builder) SetAPIKey(apiKey string) Builder {
 	return b
 }
 
+func (b *builder) EnableWarmup() Builder {
+	b.warmup = true
+	return b
+}
+
 func (b *builder) Build() *thundra {
 	if b.reporter == nil {
 		b.reporter = &reporterImpl{}
@@ -47,9 +54,10 @@ func (b *builder) Build() *thundra {
 		b.apiKey = k
 	}
 	return &thundra{
-		b.plugins,
-		b.reporter,
-		b.apiKey,
+		plugins:  b.plugins,
+		reporter: b.reporter,
+		apiKey:   b.apiKey,
+		warmup:   b.warmup,
 	}
 }
 

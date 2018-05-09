@@ -21,10 +21,16 @@ type reporterImpl struct {
 }
 
 var shouldSendAsync string
+var collectorUrl string
 var mutex = &sync.Mutex{}
 
 func init() {
 	shouldSendAsync = os.Getenv(thundraLambdaPublishCloudwatchEnable)
+	if url := os.Getenv(thundraLambdaPublishRestBaseUrl); url != "" {
+		collectorUrl = url
+	} else {
+		collectorUrl = defaultCollectorUrl
+	}
 }
 
 func (c *reporterImpl) Collect(messages []interface{}) {
@@ -59,7 +65,7 @@ func sendAsync(msg interface{}) {
 
 func sendHttpReq(mesageQueue []interface{}, apiKey string) {
 	b, _ := json.Marshal(&mesageQueue)
-	req, _ := http.NewRequest("POST", collectorUrl, bytes.NewBuffer(b))
+	req, _ := http.NewRequest("POST", collectorUrl+monitorDatas, bytes.NewBuffer(b))
 	req.Header.Set("Authorization", "ApiKey "+apiKey)
 	req.Header.Set("Content-Type", "application/json")
 
