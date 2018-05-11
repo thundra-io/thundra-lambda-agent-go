@@ -132,7 +132,9 @@ func TestWrapper(t *testing.T) {
 
 			th := NewBuilder().SetReporter(r).SetAPIKey(testApiKey).Build()
 			lambdaHandler := Wrap(testCase.handler, th)
-			response, err := lambdaHandler.invoke(context.TODO(), []byte(testCase.input))
+			h := lambdaHandler.(func(context.Context, json.RawMessage) (interface{}, error))
+			f := LambdaFunction(h)
+			response, err := f.invoke(context.TODO(), []byte(testCase.input))
 
 			if testCase.expected.err != nil {
 				assert.Equal(t, testCase.expected.err, err)
@@ -212,7 +214,12 @@ func TestInvalidWrappers(t *testing.T) {
 
 			th := NewBuilder().SetReporter(r).SetAPIKey(testApiKey).Build()
 			lambdaHandler := Wrap(testCase.handler, th)
-			_, err := lambdaHandler.invoke(context.TODO(), make([]byte, 0))
+			h, ok := lambdaHandler.(LambdaFunction)
+			if !ok {
+				h = lambdaHandler.(func(context.Context, json.RawMessage) (interface{}, error))
+			}
+			//f := LambdaFunction(h)
+			_, err := h.invoke(context.TODO(), make([]byte, 0))
 			assert.Equal(t, testCase.expected, err)
 		})
 	}

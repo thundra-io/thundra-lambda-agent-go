@@ -3,10 +3,12 @@ package thundra
 import (
 	"context"
 	"encoding/json"
-	"sync"
 	"fmt"
+	"os"
 	"reflect"
 	"runtime/debug"
+	"strconv"
+	"sync"
 
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 )
@@ -20,7 +22,11 @@ type thundra struct {
 
 type LambdaFunction func(context.Context, json.RawMessage) (interface{}, error)
 
-func Wrap(handler interface{}, thundra *thundra) LambdaFunction {
+func Wrap(handler interface{}, thundra *thundra) interface{} {
+	if isThundraDisabled() {
+		return handler
+	}
+
 	if handler == nil {
 		return thundraErrorHandler(fmt.Errorf("handler is nil"))
 	}
@@ -64,8 +70,8 @@ func Wrap(handler interface{}, thundra *thundra) LambdaFunction {
 
 			elem := newEvent.Elem()
 
-			if thundra.warmup && checkAndHandleWarmupRequest(elem,newEventType){
-				return nil,nil
+			if thundra.warmup && checkAndHandleWarmupRequest(elem, newEventType) {
+				return nil, nil
 			}
 
 			args = append(args, elem)
@@ -118,7 +124,7 @@ func (th *thundra) executePostHooks(ctx context.Context, request json.RawMessage
 	}
 	wg.Wait()
 	// Don't report if there aren't any plugins, which means that no data is collected
-	if len(th.plugins) > 0{
+	if len(th.plugins) > 0 {
 		th.reporter.Report(th.apiKey)
 	}
 	th.reporter.Clear()
@@ -137,7 +143,7 @@ func (th *thundra) onPanic(ctx context.Context, request json.RawMessage, err int
 	}
 	wg.Wait()
 	// Don't report if there aren't any plugins, which means that no data is collected
-	if len(th.plugins) > 0{
+	if len(th.plugins) > 0 {
 		th.reporter.Report(th.apiKey)
 	}
 	th.reporter.Clear()
@@ -193,4 +199,16 @@ func validateReturns(handler reflect.Type) error {
 		}
 	}
 	return nil
+}
+
+func isThundraDisabled() bool {
+	disabled := os.Getenv(thundraLambdaDisable);
+	b, err := strconv.ParseBool(disabled);
+	if err != nil {
+		if disabled != "" {
+			fmt.Println(err, " ignoring the parsing error. Thundra is enabled by default.")
+		}
+		return false
+	}
+	return b
 }
