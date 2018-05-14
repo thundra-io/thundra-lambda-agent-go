@@ -2,11 +2,11 @@ package trace
 
 import (
 	"context"
-	"sync"
-	"os"
 	"encoding/json"
 	"fmt"
+	"os"
 	"reflect"
+	"sync"
 
 	"github.com/aws/aws-lambda-go/lambdacontext"
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
@@ -146,6 +146,12 @@ func prepareProperties(request json.RawMessage, response interface{}) map[string
 	coldStart := "true"
 	if invocationCount += 1; invocationCount != 1 {
 		coldStart = "false"
+	}
+	if shouldHideRequest() {
+		request = nil
+	}
+	if shouldHideResponse() {
+		response = nil
 	}
 	return map[string]interface{}{
 		auditInfoPropertiesRequest:             string(request),

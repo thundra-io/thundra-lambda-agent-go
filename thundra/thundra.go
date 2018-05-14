@@ -4,10 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"os"
 	"reflect"
 	"runtime/debug"
-	"strconv"
 	"sync"
 
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
@@ -199,16 +197,4 @@ func validateReturns(handler reflect.Type) error {
 		}
 	}
 	return nil
-}
-
-func isThundraDisabled() bool {
-	disabled := os.Getenv(thundraLambdaDisable);
-	b, err := strconv.ParseBool(disabled);
-	if err != nil {
-		if disabled != "" {
-			fmt.Println(err, " ignoring the parsing error. Thundra is enabled by default.")
-		}
-		return false
-	}
-	return b
 }
