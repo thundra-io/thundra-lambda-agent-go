@@ -2,11 +2,11 @@ package trace
 
 import (
 	"context"
-	"sync"
-	"os"
 	"encoding/json"
 	"fmt"
+	"os"
 	"reflect"
+	"sync"
 
 	"github.com/aws/aws-lambda-go/lambdacontext"
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
@@ -44,6 +44,11 @@ type traceData struct {
 	ThrownErrorMessage interface{}            `json:"thrownErrorMessage"`
 	AuditInfo          map[string]interface{} `json:"auditInfo"`
 	Properties         map[string]interface{} `json:"properties"`
+}
+
+// NewTrace returns a new trace object.
+func NewTrace() *Trace {
+	return &Trace{}
 }
 
 func (trace *Trace) BeforeExecution(ctx context.Context, request json.RawMessage, wg *sync.WaitGroup) {
@@ -146,6 +151,12 @@ func prepareProperties(request json.RawMessage, response interface{}) map[string
 	coldStart := "true"
 	if invocationCount += 1; invocationCount != 1 {
 		coldStart = "false"
+	}
+	if shouldHideRequest() {
+		request = nil
+	}
+	if shouldHideResponse() {
+		response = nil
 	}
 	return map[string]interface{}{
 		auditInfoPropertiesRequest:             string(request),
