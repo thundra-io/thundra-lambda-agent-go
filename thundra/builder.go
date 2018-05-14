@@ -9,44 +9,44 @@ import (
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 )
 
-type Builder interface {
-	AddPlugin(plugin.Plugin) Builder
-	SetReporter(Reporter) Builder
-	SetAPIKey(string) Builder
-	EnableWarmup() Builder
+type tBuilder interface {
+	AddPlugin(plugin.Plugin) tBuilder
+	SetReporter(reporter) tBuilder
+	SetAPIKey(string) tBuilder
+	EnableWarmup() tBuilder
 	Build() *thundra
 }
 
 type builder struct {
 	plugins  []plugin.Plugin
-	reporter Reporter
+	reporter reporter
 	apiKey   string
 	warmup   bool
 }
 
 // AddPlugin is used to enable plugins on thundra. Trace and Metrics are two plugins that are supported currently.
 // You need to initialize a plugin object and pass it as a parameter in order to enable it.
-func (b *builder) AddPlugin(plugin plugin.Plugin) Builder {
+func (b *builder) AddPlugin(plugin plugin.Plugin) tBuilder {
 	b.plugins = append(b.plugins, plugin)
 	return b
 }
 
 // SetReporter is used
-func (b *builder) SetReporter(reporter Reporter) Builder {
+func (b *builder) SetReporter(reporter reporter) tBuilder {
 	b.reporter = reporter
 	return b
 }
 
 // SetAPIKey is used to set ApiKey to use Thundra. See https://docs.thundra.io/docs/api-keys to learn how you can
 // generate your own api key.
-func (b *builder) SetAPIKey(apiKey string) Builder {
+func (b *builder) SetAPIKey(apiKey string) tBuilder {
 	b.apiKey = apiKey
 	return b
 }
 
 // EnableWarmup enables warming up to reduce cold starts of your lambda. See https://docs.thundra.io/docs/how-to-warmup
 // to learn how you can configure thundra-lambda-warmup.
-func (b *builder) EnableWarmup() Builder {
+func (b *builder) EnableWarmup() tBuilder {
 	b.warmup = true
 	return b
 }
@@ -69,7 +69,7 @@ func (b *builder) Build() *thundra {
 }
 
 // NewBuilder returns a new thundra builder.
-func NewBuilder() Builder {
+func NewBuilder() tBuilder {
 	return &builder{}
 }
 

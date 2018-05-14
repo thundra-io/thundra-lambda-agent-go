@@ -13,12 +13,12 @@ import (
 
 type thundra struct {
 	plugins  []plugin.Plugin
-	reporter Reporter
+	reporter reporter
 	apiKey   string
 	warmup   bool
 }
 
-type LambdaFunction func(context.Context, json.RawMessage) (interface{}, error)
+type lambdaFunction func(context.Context, json.RawMessage) (interface{}, error)
 
 func Wrap(handler interface{}, thundra *thundra) interface{} {
 	if isThundraDisabled() {
@@ -154,14 +154,14 @@ func prepareMessages(data []interface{}, dataType string, apiKey string) []inter
 			Data:              d,
 			Type:              dataType,
 			ApiKey:            apiKey,
-			DataFormatVersion: DataFormatVersion,
+			DataFormatVersion: dataFormatVersion,
 		}
 		messages = append(messages, m)
 	}
 	return messages
 }
 
-func thundraErrorHandler(e error) LambdaFunction {
+func thundraErrorHandler(e error) lambdaFunction {
 	return func(ctx context.Context, event json.RawMessage) (interface{}, error) {
 		return nil, e
 	}

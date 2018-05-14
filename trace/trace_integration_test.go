@@ -119,11 +119,11 @@ func TestTrace(t *testing.T) {
 			r.On("Clear").Return()
 			r.On("Collect", mock.Anything).Return()
 
-			tr := &Trace{}
+			tr := &trace{}
 			th := thundra.NewBuilder().AddPlugin(tr).SetReporter(r).SetAPIKey(TestApiKey).Build()
 			lambdaHandler := thundra.Wrap(testCase.handler, th)
 			h := lambdaHandler.(func(context.Context, json.RawMessage) (interface{}, error))
-			f := thundra.LambdaFunction(h)
+			f := lambdaFunction(h)
 
 			invocationStartTime := plugin.GetTimestamp()
 			response, err := f(context.TODO(), []byte(testCase.input))
@@ -134,9 +134,9 @@ func TestTrace(t *testing.T) {
 			if !ok {
 				fmt.Println("Collector message can't be casted to pluginMessage")
 			}
-			assert.Equal(t, TraceDataType, msg.Type)
+			assert.Equal(t, traceDataType, msg.Type)
 			assert.Equal(t, TestApiKey, msg.ApiKey)
-			assert.Equal(t, thundra.DataFormatVersion, msg.DataFormatVersion)
+			assert.Equal(t, "1.1", msg.DataFormatVersion)
 
 			//Trace Data
 			td, ok := msg.Data.(traceData)
@@ -248,7 +248,7 @@ func TestPanic(t *testing.T) {
 			r.On("Clear").Return()
 			r.On("Collect", mock.Anything).Return()
 
-			tr := &Trace{}
+			tr := &trace{}
 			th := thundra.NewBuilder().AddPlugin(tr).SetReporter(r).SetAPIKey(TestApiKey).Build()
 			lambdaHandler := thundra.Wrap(testCase.handler, th)
 			invocationStartTime := plugin.GetTimestamp()
@@ -262,9 +262,9 @@ func TestPanic(t *testing.T) {
 					if !ok {
 						fmt.Println("Collector message can't be casted to pluginMessage")
 					}
-					assert.Equal(t, TraceDataType, msg.Type)
+					assert.Equal(t, traceDataType, msg.Type)
 					assert.Equal(t, TestApiKey, msg.ApiKey)
-					assert.Equal(t, thundra.DataFormatVersion, msg.DataFormatVersion)
+					assert.Equal(t, "1.1", msg.DataFormatVersion)
 
 					//Trace Data
 					td, ok := msg.Data.(traceData)
@@ -317,7 +317,7 @@ func TestPanic(t *testing.T) {
 				}
 			}()
 			h := lambdaHandler.(func(context.Context, json.RawMessage) (interface{}, error))
-			f := thundra.LambdaFunction(h)
+			f := lambdaFunction(h)
 			f(context.TODO(), []byte(testCase.input))
 		})
 	}
@@ -337,3 +337,5 @@ func cleanEnvironment() {
 	lambdacontext.FunctionVersion = ""
 	os.Clearenv()
 }
+
+type lambdaFunction func(context.Context, json.RawMessage) (interface{}, error)

@@ -4,7 +4,7 @@ import (
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 )
 
-const ALL = 0
+const all = 0
 
 type netStatsData struct {
 	Id                 string `json:"id"`
