@@ -12,7 +12,7 @@ import (
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 )
 
-type Trace struct {
+type trace struct {
 	startTime          int64
 	endTime            int64
 	duration           int64
@@ -47,17 +47,17 @@ type traceData struct {
 }
 
 // NewTrace returns a new trace object.
-func NewTrace() *Trace {
-	return &Trace{}
+func NewTrace() *trace {
+	return &trace{}
 }
 
-func (trace *Trace) BeforeExecution(ctx context.Context, request json.RawMessage, wg *sync.WaitGroup) {
+func (trace *trace) BeforeExecution(ctx context.Context, request json.RawMessage, wg *sync.WaitGroup) {
 	trace.startTime = plugin.GetTimestamp()
 	cleanBuffer(trace)
 	wg.Done()
 }
 
-func (trace *Trace) AfterExecution(ctx context.Context, request json.RawMessage, response interface{}, err interface{}) ([]interface{}, string) {
+func (trace *trace) AfterExecution(ctx context.Context, request json.RawMessage, response interface{}, err interface{}) ([]interface{}, string) {
 	trace.endTime = plugin.GetTimestamp()
 	trace.duration = trace.endTime - trace.startTime
 
@@ -79,10 +79,10 @@ func (trace *Trace) AfterExecution(ctx context.Context, request json.RawMessage,
 	td := prepareTraceData(request, response, err, trace)
 	var traceArr []interface{}
 	traceArr = append(traceArr, td)
-	return traceArr, TraceDataType
+	return traceArr, traceDataType
 }
 
-func (trace *Trace) OnPanic(ctx context.Context, request json.RawMessage, err interface{}, stackTrace []byte) ([]interface{}, string) {
+func (trace *trace) OnPanic(ctx context.Context, request json.RawMessage, err interface{}, stackTrace []byte) ([]interface{}, string) {
 	trace.endTime = plugin.GetTimestamp()
 	trace.duration = trace.endTime - trace.startTime
 
@@ -102,10 +102,10 @@ func (trace *Trace) OnPanic(ctx context.Context, request json.RawMessage, err in
 	td := prepareTraceData(request, nil, nil, trace)
 	var traceArr []interface{}
 	traceArr = append(traceArr, td)
-	return traceArr, TraceDataType
+	return traceArr, traceDataType
 }
 
-func cleanBuffer(trace *Trace) {
+func cleanBuffer(trace *trace) {
 	trace.errors = nil
 }
 
@@ -121,7 +121,7 @@ func getErrorMessage(err interface{}) string {
 	return err.(error).Error()
 }
 
-func prepareTraceData(request json.RawMessage, response interface{}, err interface{}, trace *Trace) traceData {
+func prepareTraceData(request json.RawMessage, response interface{}, err interface{}, trace *trace) traceData {
 	uniqueId = plugin.GenerateNewId()
 	props := prepareProperties(request, response)
 	ai := prepareAuditInfo(trace)
@@ -167,7 +167,7 @@ func prepareProperties(request json.RawMessage, response interface{}) map[string
 	}
 }
 
-func prepareAuditInfo(trace *Trace) map[string]interface{} {
+func prepareAuditInfo(trace *trace) map[string]interface{} {
 	var auditErrors []interface{}
 	var auditThrownError interface{}
 

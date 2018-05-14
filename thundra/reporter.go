@@ -10,7 +10,7 @@ import (
 	"io/ioutil"
 )
 
-type Reporter interface {
+type reporter interface {
 	Collect(messages []interface{})
 	Report(apiKey string)
 	Clear()

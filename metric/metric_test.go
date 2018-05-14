@@ -1,14 +1,15 @@
 package metric
 
 import (
-	"github.com/aws/aws-lambda-go/lambdacontext"
-	"os"
-	"testing"
-	"github.com/stretchr/testify/assert"
-	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 	"context"
 	"encoding/json"
+	"os"
 	"sync"
+	"testing"
+
+	"github.com/aws/aws-lambda-go/lambdacontext"
+	"github.com/stretchr/testify/assert"
+	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 )
 
 const (
@@ -61,7 +62,7 @@ func TestMetric_AfterExecution(t *testing.T) {
 	assert.NotEqual(t, MaxUint64, m.endPauseTotalNs)
 
 	assert.True(t, m.statTimestamp <= plugin.GetTimestamp())
-	assert.Equal(t, StatDataType, dataType)
+	assert.Equal(t, statDataType, dataType)
 }
 
 func prepareEnvironment() {

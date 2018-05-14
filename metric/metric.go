@@ -13,8 +13,6 @@ import (
 	"github.com/shirou/gopsutil/cpu"
 )
 
-const StatDataType = "StatData"
-
 type metric struct {
 	statData
 	statTimestamp     int64
@@ -119,13 +117,13 @@ func (metric *metric) AfterExecution(ctx context.Context, request json.RawMessag
 		if err != nil {
 			fmt.Println(err)
 		} else {
-			metric.currNetStat = &netIOStat[ALL]
+			metric.currNetStat = &netIOStat[all]
 			n := prepareNetStatsData(metric)
 			stats = append(stats, n)
 		}
 	}
 
-	return stats, StatDataType
+	return stats, statDataType
 }
 
 //OnPanic just collect the metrics and send them as in the AfterExecution

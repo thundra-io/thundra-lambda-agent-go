@@ -1,7 +1,7 @@
 package trace
 
 //Trace
-const TraceDataType = "AuditData"
+const traceDataType = "AuditData"
 const executionContext = "ExecutionContext"
 const thundraLambdaHideRequest = "thundra_lambda_hide_request"
 const thundraLambdaHideResponse = "thundra_lambda_hide_response"

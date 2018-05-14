@@ -133,7 +133,7 @@ func TestWrapper(t *testing.T) {
 			th := NewBuilder().SetReporter(r).SetAPIKey(testApiKey).Build()
 			lambdaHandler := Wrap(testCase.handler, th)
 			h := lambdaHandler.(func(context.Context, json.RawMessage) (interface{}, error))
-			f := LambdaFunction(h)
+			f := lambdaFunction(h)
 			response, err := f.invoke(context.TODO(), []byte(testCase.input))
 
 			if testCase.expected.err != nil {
@@ -214,11 +214,11 @@ func TestInvalidWrappers(t *testing.T) {
 
 			th := NewBuilder().SetReporter(r).SetAPIKey(testApiKey).Build()
 			lambdaHandler := Wrap(testCase.handler, th)
-			h, ok := lambdaHandler.(LambdaFunction)
+			h, ok := lambdaHandler.(lambdaFunction)
 			if !ok {
 				h = lambdaHandler.(func(context.Context, json.RawMessage) (interface{}, error))
 			}
-			//f := LambdaFunction(h)
+			//f := lambdaFunction(h)
 			_, err := h.invoke(context.TODO(), make([]byte, 0))
 			assert.Equal(t, testCase.expected, err)
 		})
@@ -315,7 +315,7 @@ func TestOnPanic(t *testing.T) {
 	r.AssertExpectations(t)
 }
 
-func (handler LambdaFunction) invoke(ctx context.Context, payload []byte) ([]byte, error) {
+func (handler lambdaFunction) invoke(ctx context.Context, payload []byte) ([]byte, error) {
 	response, err := handler(ctx, payload)
 	if err != nil {
 		return nil, err

@@ -1,5 +1,6 @@
 package metric
 
+const statDataType = "StatData"
 const gcStat = "GcStat"
 const goroutineStat = "GoroutineStat"
 const heapStat = "HeapStat"
