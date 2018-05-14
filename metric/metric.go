@@ -30,12 +30,12 @@ type metric struct {
 	currNetStat       *net.IOCountersStat
 	prevNetStat       *net.IOCountersStat
 
-	enableGCStats        bool
-	enableHeapStats      bool
-	enableGoroutineStats bool
-	enableCPUStats       bool
-	enableDiskStats      bool
-	enableNetStats       bool
+	disableGCStats        bool
+	disableHeapStats      bool
+	disableGoroutineStats bool
+	disableCPUStats       bool
+	disableDiskStats      bool
+	disableNetStats       bool
 }
 
 type statData struct {
@@ -49,7 +49,7 @@ type statData struct {
 func (metric *metric) BeforeExecution(ctx context.Context, request json.RawMessage, wg *sync.WaitGroup) {
 	metric.statTimestamp = plugin.GetTimestamp()
 
-	if metric.enableGCStats {
+	if !metric.disableGCStats {
 		m := &runtime.MemStats{}
 		runtime.ReadMemStats(m)
 
@@ -57,7 +57,7 @@ func (metric *metric) BeforeExecution(ctx context.Context, request json.RawMessa
 		metric.startPauseTotalNs = m.PauseTotalNs
 	}
 
-	if metric.enableCPUStats {
+	if !metric.disableCPUStats {
 		// We need to calculate process and system percentages here to register cpu times
 		// Later we'll use them to calculate cpu usage percentage
 		metric.process.Percent(0)
@@ -73,12 +73,12 @@ func (metric *metric) AfterExecution(ctx context.Context, request json.RawMessag
 
 	var stats []interface{}
 
-	if metric.enableHeapStats {
+	if !metric.disableHeapStats {
 		h := prepareHeapStatsData(metric, mStats)
 		stats = append(stats, h)
 	}
 
-	if metric.enableGCStats {
+	if !metric.disableGCStats {
 		metric.endGCCount = mStats.NumGC
 		metric.endPauseTotalNs = mStats.PauseTotalNs
 
@@ -86,12 +86,12 @@ func (metric *metric) AfterExecution(ctx context.Context, request json.RawMessag
 		stats = append(stats, gc)
 	}
 
-	if metric.enableGoroutineStats {
+	if !metric.disableGoroutineStats {
 		g := prepareGoRoutineStatsData(metric)
 		stats = append(stats, g)
 	}
 
-	if metric.enableCPUStats {
+	if !metric.disableCPUStats {
 		p, s, err := getCPUUsagePercentage(metric.process)
 		if err != nil {
 			fmt.Println(err)
@@ -103,7 +103,7 @@ func (metric *metric) AfterExecution(ctx context.Context, request json.RawMessag
 		}
 	}
 
-	if metric.enableDiskStats {
+	if !metric.disableDiskStats {
 		diskStat, err := metric.process.IOCounters()
 		if err != nil {
 			fmt.Println(err)
@@ -114,7 +114,7 @@ func (metric *metric) AfterExecution(ctx context.Context, request json.RawMessag
 		}
 	}
 
-	if metric.enableNetStats {
+	if !metric.disableNetStats {
 		netIOStat, err := net.IOCounters(false)
 		if err != nil {
 			fmt.Println(err)

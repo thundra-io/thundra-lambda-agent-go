@@ -16,11 +16,22 @@ type netStatsData struct {
 	StatName           string `json:"statName"`
 	StatTimestamp      int64  `json:"statTimestamp"`
 
+	// BytesRecv is how many bytes received from network
 	BytesRecv   uint64 `json:"bytesRecv"`
+
+	// BytesSent is how many bytes sent to network
 	BytesSent   uint64 `json:"bytesSent"`
+
+	// PacketsRecv is how many packets received from network
 	PacketsRecv uint64 `json:"packetsRecv"`
+
+	// PacketsSent is how many packets sent to network
 	PacketsSent uint64 `json:"packetsSent"`
+
+	// ErrIn is the number of errors while sending packet
 	ErrIn       uint64 `json:"errIn"`
+
+	// ErrOut is the number of errors while receiving packet
 	ErrOut      uint64 `json:"errOut"`
 }
 

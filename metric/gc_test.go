@@ -9,7 +9,7 @@ import (
 const numGC = 5
 
 func TestPrepareGCStatsData(t *testing.T) {
-	metric := NewBuilder().EnableGCStats().Build()
+	metric := NewBuilder().Build()
 	metric.startGCCount = 0
 	metric.endGCCount = numGC
 

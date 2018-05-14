@@ -65,12 +65,12 @@ func sendAsync(msg interface{}) {
 
 func sendHttpReq(mesageQueue []interface{}, apiKey string) {
 	b, _ := json.Marshal(&mesageQueue)
-	req, _ := http.NewRequest("POST", collectorUrl+monitorDatas, bytes.NewBuffer(b))
+	targetURL := collectorUrl+monitorDatas
+	fmt.Println("Sending HTTP request to Thundra collector: " + targetURL)
+	fmt.Println(mesageQueue)
+	req, _ := http.NewRequest("POST", targetURL, bytes.NewBuffer(b))
 	req.Header.Set("Authorization", "ApiKey "+apiKey)
 	req.Header.Set("Content-Type", "application/json")
-
-	fmt.Println("Sending HTTP request to Thundra collector")
-	fmt.Println(mesageQueue)
 
 	client := &http.Client{}
 	resp, err := client.Do(req)

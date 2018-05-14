@@ -15,6 +15,7 @@ import (
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 	"github.com/thundra-io/thundra-lambda-agent-go/test"
 	"github.com/thundra-io/thundra-lambda-agent-go/thundra"
+	"encoding/json"
 )
 
 const (
@@ -121,9 +122,11 @@ func TestTrace(t *testing.T) {
 			tr := &Trace{}
 			th := thundra.NewBuilder().AddPlugin(tr).SetReporter(r).SetAPIKey(TestApiKey).Build()
 			lambdaHandler := thundra.Wrap(testCase.handler, th)
+			h := lambdaHandler.(func(context.Context, json.RawMessage) (interface{}, error))
+			f := thundra.LambdaFunction(h)
 
 			invocationStartTime := plugin.GetTimestamp()
-			response, err := lambdaHandler(context.TODO(), []byte(testCase.input))
+			response, err := f(context.TODO(), []byte(testCase.input))
 			invocationEndTime := plugin.GetTimestamp()
 
 			//Monitor Data
@@ -313,7 +316,9 @@ func TestPanic(t *testing.T) {
 					coldStart = "false"
 				}
 			}()
-			lambdaHandler(context.TODO(), []byte(testCase.input))
+			h := lambdaHandler.(func(context.Context, json.RawMessage) (interface{}, error))
+			f := thundra.LambdaFunction(h)
+			f(context.TODO(), []byte(testCase.input))
 		})
 	}
 }

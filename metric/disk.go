@@ -14,9 +14,16 @@ type diskStatsData struct {
 	StatName           string `json:"statName"`
 	StatTimestamp      int64  `json:"statTimestamp"`
 
-	ReadBytes  uint64 `json:"readBytes"`
+	// ReadBytes is the number of bytes read from disk
+	ReadBytes uint64 `json:"readBytes"`
+
+	// WriteBytes is the number of bytes write to disk
 	WriteBytes uint64 `json:"writeBytes"`
-	ReadCount  uint64 `json:"readCount"`
+
+	// ReadCount is the number read operations from disk
+	ReadCount uint64 `json:"readCount"`
+
+	// WriteCount is the number write operations to disk
 	WriteCount uint64 `json:"writeCount"`
 }
 
