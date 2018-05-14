@@ -8,75 +8,75 @@ import (
 )
 
 type Builder interface {
-	EnableGCStats() Builder
-	EnableHeapStats() Builder
-	EnableGoroutineStats() Builder
-	EnableCPUStats() Builder
-	EnableDiskStats() Builder
-	EnableNetStats() Builder
+	DisableGCStats() Builder
+	DisableHeapStats() Builder
+	DisableGoroutineStats() Builder
+	DisableCPUStats() Builder
+	DisableDiskStats() Builder
+	DisableNetStats() Builder
 	Build() *metric
 }
 
 type builder struct {
-	enableGCStats        bool
-	enableHeapStats      bool
-	enableGoroutineStats bool
-	enableCPUStats       bool
-	enableDiskStats      bool
-	enableNetStats       bool
-	prevDiskStat         *process.IOCountersStat
-	prevNetStat          *net.IOCountersStat
-	process              *process.Process
+	disableGCStats        bool
+	disableHeapStats      bool
+	disableGoroutineStats bool
+	disableCPUStats       bool
+	disableDiskStats      bool
+	disableNetStats       bool
+	prevDiskStat          *process.IOCountersStat
+	prevNetStat           *net.IOCountersStat
+	process               *process.Process
 }
 
-// EnableGCStats enables gc metrics collection. Check gcStatsData to see which metrics are collected.
-func (b *builder) EnableGCStats() Builder {
-	b.enableGCStats = true
+// DisableGCStats disables gc metrics collection. Check gcStatsData to see which metrics are collected.
+func (b *builder) DisableGCStats() Builder {
+	b.disableGCStats = true
 	return b
 }
 
-// EnableHeapStats enables heap stats collection. Check heapStatsData to see which metrics are collected.
-func (b *builder) EnableHeapStats() Builder {
-	b.enableHeapStats = true
+// DisableHeapStats disables heap stats collection. Check heapStatsData to see which metrics are collected.
+func (b *builder) DisableHeapStats() Builder {
+	b.disableHeapStats = true
 	return b
 }
 
-// EnableGoroutineStats enables heap stats collection. Check goRoutineStatsData to see which metrics are collected.
-func (b *builder) EnableGoroutineStats() Builder {
-	b.enableGoroutineStats = true
+// DisableGoroutineStats disables heap stats collection. Check goRoutineStatsData to see which metrics are collected.
+func (b *builder) DisableGoroutineStats() Builder {
+	b.disableGoroutineStats = true
 	return b
 }
 
-// EnableCPUStats enables cpu stats collection. Check cpuStatsData to see which metrics are collected.
-func (b *builder) EnableCPUStats() Builder {
-	b.enableCPUStats = true
+// DisableCPUStats disables cpu stats collection. Check cpuStatsData to see which metrics are collected.
+func (b *builder) DisableCPUStats() Builder {
+	b.disableCPUStats = true
 	return b
 }
 
-// EnableDiskStats enables disk stats collection. Check diskStatsData to see which metrics are collected.
-func (b *builder) EnableDiskStats() Builder {
-	b.enableDiskStats = true
+// DisableDiskStats disables disk stats collection. Check diskStatsData to see which metrics are collected.
+func (b *builder) DisableDiskStats() Builder {
+	b.disableDiskStats = true
 	return b
 }
 
-// EnableNetStats enables net stats collection. Check netStatsData to see which metrics are collected.
-func (b *builder) EnableNetStats() Builder {
-	b.enableNetStats = true
+// DisableNetStats disables net stats collection. Check netStatsData to see which metrics are collected.
+func (b *builder) DisableNetStats() Builder {
+	b.disableNetStats = true
 	return b
 }
 
 // Builds and returns the metric plugin that you can pass to a thundra object while building it using AddPlugin().
 func (b *builder) Build() *metric {
 	//Initialize with empty objects
-	if b.enableDiskStats {
+	if !b.disableDiskStats {
 		b.prevDiskStat = &process.IOCountersStat{}
 	}
 
-	if b.enableNetStats {
+	if !b.disableNetStats {
 		b.prevNetStat = &net.IOCountersStat{}
 	}
 
-	if b.enableCPUStats || b.enableDiskStats || b.enableHeapStats {
+	if !b.disableCPUStats || !b.disableDiskStats || !b.disableHeapStats {
 		b.process = plugin.GetThisProcess()
 	}
 
@@ -93,12 +93,12 @@ func (b *builder) Build() *metric {
 		prevNetStat:  b.prevNetStat,
 		process:      b.process,
 
-		enableGCStats:        b.enableGCStats,
-		enableHeapStats:      b.enableHeapStats,
-		enableGoroutineStats: b.enableGoroutineStats,
-		enableCPUStats:       b.enableCPUStats,
-		enableDiskStats:      b.enableDiskStats,
-		enableNetStats:       b.enableNetStats,
+		disableGCStats:        b.disableGCStats,
+		disableHeapStats:      b.disableHeapStats,
+		disableGoroutineStats: b.disableGoroutineStats,
+		disableCPUStats:       b.disableCPUStats,
+		disableDiskStats:      b.disableDiskStats,
+		disableNetStats:       b.disableNetStats,
 	}
 }
 

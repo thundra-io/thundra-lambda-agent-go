@@ -8,14 +8,7 @@ import (
 
 func TestNewBuilder(t *testing.T) {
 	prepareEnvironment()
-	m := NewBuilder().
-		EnableDiskStats().
-		EnableNetStats().
-		EnableCPUStats().
-		EnableGoroutineStats().
-		EnableHeapStats().
-		EnableGCStats().
-		Build()
+	m := NewBuilder().Build()
 
 	assert.Equal(t, functionName, m.applicationName)
 	assert.Equal(t, appId, m.applicationId)
@@ -27,10 +20,11 @@ func TestNewBuilder(t *testing.T) {
 	assert.NotNil(t, m.prevNetStat)
 	assert.NotNil(t, m.process)
 
-	assert.True(t, m.enableDiskStats)
-	assert.True(t, m.enableNetStats)
-	assert.True(t, m.enableCPUStats)
-	assert.True(t, m.enableGoroutineStats)
-	assert.True(t, m.enableHeapStats)
-	assert.True(t, m.enableGCStats)
+	assert.False(t, m.disableDiskStats)
+	assert.False(t, m.disableNetStats)
+	assert.False(t, m.disableCPUStats)
+	assert.False(t, m.disableGoroutineStats)
+	assert.False(t, m.disableHeapStats)
+	assert.False(t, m.disableGCStats)
+	cleanEnvironment()
 }
