@@ -46,6 +46,11 @@ type traceData struct {
 	Properties         map[string]interface{} `json:"properties"`
 }
 
+// NewTrace returns a new trace object.
+func NewTrace() *Trace {
+	return &Trace{}
+}
+
 func (trace *Trace) BeforeExecution(ctx context.Context, request json.RawMessage, wg *sync.WaitGroup) {
 	trace.startTime = plugin.GetTimestamp()
 	cleanBuffer(trace)
