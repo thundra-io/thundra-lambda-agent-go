@@ -32,10 +32,10 @@ type gcStatsData struct {
 	// CPU time used by the GC since the program started.
 	GCCPUFraction float64 `json:"gcCPUFraction"`
 
-	//DeltaNumGc is the change in NUMGC from before execution to after execution
+	//DeltaNumGc is the change in NUMGC from before execution to after execution.
 	DeltaNumGc uint32 `json:"deltaNumGC"`
 
-	//DeltaPauseTotalNs is pause total change from before execution to after execution
+	//DeltaPauseTotalNs is pause total change from before execution to after execution.
 	DeltaPauseTotalNs uint64 `json:"deltaPauseTotalNs"`
 }
 

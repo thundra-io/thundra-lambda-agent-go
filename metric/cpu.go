@@ -15,7 +15,11 @@ type cpuStatsData struct {
 	ApplicationType    string  `json:"applicationType"`
 	StatName           string  `json:"statName"`
 	StatTimestamp      int64   `json:"statTimestamp"`
+
+	// ProcessCPUPercent is the process usage of the total CPU time
 	ProcessCPUPercent  float64 `json:"procPercent"`
+
+	// SystemCPUPercent is the system usage of the total CPU time
 	SystemCPUPercent   float64 `json:"sysPercent"`
 }
 

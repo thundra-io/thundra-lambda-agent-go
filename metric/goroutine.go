@@ -14,6 +14,8 @@ type goRoutineStatsData struct {
 	ApplicationType    string `json:"applicationType"`
 	StatName           string `json:"statName"`
 	StatTimestamp      int64  `json:"statTimestamp"`
+
+	// NumGoroutine is the number of goroutines on execution
 	NumGoroutine       uint64 `json:"numGoroutine"`
 }
 

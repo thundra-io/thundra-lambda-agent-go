@@ -29,36 +29,43 @@ type builder struct {
 	process              *process.Process
 }
 
+// EnableGCStats enables gc metrics collection. Check gcStatsData to see which metrics are collected.
 func (b *builder) EnableGCStats() Builder {
 	b.enableGCStats = true
 	return b
 }
 
+// EnableHeapStats enables heap stats collection. Check heapStatsData to see which metrics are collected.
 func (b *builder) EnableHeapStats() Builder {
 	b.enableHeapStats = true
 	return b
 }
 
+// EnableGoroutineStats enables heap stats collection. Check goRoutineStatsData to see which metrics are collected.
 func (b *builder) EnableGoroutineStats() Builder {
 	b.enableGoroutineStats = true
 	return b
 }
 
+// EnableCPUStats enables cpu stats collection. Check cpuStatsData to see which metrics are collected.
 func (b *builder) EnableCPUStats() Builder {
 	b.enableCPUStats = true
 	return b
 }
 
+// EnableDiskStats enables disk stats collection. Check diskStatsData to see which metrics are collected.
 func (b *builder) EnableDiskStats() Builder {
 	b.enableDiskStats = true
 	return b
 }
 
+// EnableNetStats enables net stats collection. Check netStatsData to see which metrics are collected.
 func (b *builder) EnableNetStats() Builder {
 	b.enableNetStats = true
 	return b
 }
 
+// Builds and returns the metric plugin that you can pass to a thundra object while building it using AddPlugin().
 func (b *builder) Build() *metric {
 	//Initialize with empty objects
 	if b.enableDiskStats {
@@ -95,6 +102,7 @@ func (b *builder) Build() *metric {
 	}
 }
 
+// NewBuilder returns a new metric builder.
 func NewBuilder() Builder {
 	return &builder{}
 }
