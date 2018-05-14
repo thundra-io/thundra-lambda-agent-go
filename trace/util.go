@@ -7,11 +7,11 @@ import (
 )
 
 func shouldHideRequest() bool {
-	e := os.Getenv(thundraLambdaHideRequest)
+	e := os.Getenv(thundraLambdaRequestDisable)
 	env, err := strconv.ParseBool(e)
 	if err != nil {
 		if e != "" {
-			fmt.Println(err, " thundra_lambda_hide_request is not a bool value. Requests aren't hidden.")
+			fmt.Println(err, thundraLambdaRequestDisable+"is not a bool value. Requests aren't hidden.")
 		}
 		return false
 	}
@@ -19,11 +19,11 @@ func shouldHideRequest() bool {
 }
 
 func shouldHideResponse() bool {
-	e := os.Getenv(thundraLambdaHideResponse)
+	e := os.Getenv(thundraLambdaResponseDisable)
 	env, err := strconv.ParseBool(e)
 	if err != nil {
 		if e != "" {
-			fmt.Println(err, " thundra_lambda_hide_response is not a bool value. Responses aren't hidden.")
+			fmt.Println(err, thundraLambdaResponseDisable+" is not a bool value. Responses aren't hidden.")
 		}
 		return false
 	}
