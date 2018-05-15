@@ -229,9 +229,9 @@ type MockPlugin struct {
 	mock.Mock
 }
 
-func (t *MockPlugin) BeforeExecution(ctx context.Context, request json.RawMessage, wg *sync.WaitGroup) {
+func (t *MockPlugin) BeforeExecution(ctx context.Context, request json.RawMessage, transactionId string, wg *sync.WaitGroup) {
 	defer wg.Done()
-	t.Called(ctx, request, wg)
+	t.Called(ctx, request, transactionId, wg)
 }
 func (t *MockPlugin) AfterExecution(ctx context.Context, request json.RawMessage, response interface{}, err interface{}) ([]interface{}, string) {
 	t.Called(ctx, request, response, err)
@@ -249,7 +249,7 @@ func TestExecutePreHooks(t *testing.T) {
 	ctx := context.TODO()
 	req := createRawMessage()
 
-	mT.On("BeforeExecution", ctx, req, mock.Anything).Return()
+	mT.On("BeforeExecution", ctx, req, mock.Anything, mock.Anything).Return()
 	th.executePreHooks(ctx, req)
 	mT.AssertExpectations(t)
 }
@@ -302,18 +302,26 @@ func TestOnPanic(t *testing.T) {
 	stackTrace := debug.Stack()
 
 	r := new(test.MockReporter)
-	mT := new(MockPlugin)
-	th := NewBuilder().AddPlugin(mT).SetReporter(r).SetAPIKey(testApiKey).Build()
+	mP := new(MockPlugin)
+	th := NewBuilder().AddPlugin(mP).SetReporter(r).SetAPIKey(testApiKey).Build()
 
-	mT.On("OnPanic", ctx, req, err, stackTrace, mock.Anything).Return()
+	mP.On("OnPanic", ctx, req, err, stackTrace, mock.Anything).Return()
 	r.On("Report", testApiKey).Return()
 	r.On("Clear").Return()
 	r.On("Collect", mock.Anything).Return()
 
 	th.onPanic(ctx, req, err, stackTrace)
-	mT.AssertExpectations(t)
+	mP.AssertExpectations(t)
 	r.AssertExpectations(t)
 }
+
+/*func (t *thundra) removeInvocation() plugin.Plugin {
+	tmp := t.plugins[1]
+	t.plugins = []plugin.Plugin{}
+
+	t.plugins[0] = nil
+	return t.plugins[0]
+}*/
 
 func (handler lambdaFunction) invoke(ctx context.Context, payload []byte) ([]byte, error) {
 	response, err := handler(ctx, payload)

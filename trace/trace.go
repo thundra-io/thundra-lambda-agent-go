@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"reflect"
 	"sync"
 
 	"github.com/aws/aws-lambda-go/lambdacontext"
@@ -13,6 +12,7 @@ import (
 )
 
 type trace struct {
+	transactionId      string
 	startTime          int64
 	endTime            int64
 	duration           int64
@@ -28,6 +28,7 @@ var uniqueId string
 
 type traceData struct {
 	Id                 string                 `json:"id"`
+	TransactionId      string                 `json:"transactionId"`
 	ApplicationName    string                 `json:"applicationName"`
 	ApplicationId      string                 `json:"applicationId"`
 	ApplicationVersion string                 `json:"applicationVersion"`
@@ -51,8 +52,9 @@ func NewTrace() *trace {
 	return &trace{}
 }
 
-func (trace *trace) BeforeExecution(ctx context.Context, request json.RawMessage, wg *sync.WaitGroup) {
+func (trace *trace) BeforeExecution(ctx context.Context, request json.RawMessage, transactionId string, wg *sync.WaitGroup) {
 	trace.startTime = plugin.GetTimestamp()
+	trace.transactionId = transactionId
 	cleanBuffer(trace)
 	wg.Done()
 }
@@ -62,8 +64,8 @@ func (trace *trace) AfterExecution(ctx context.Context, request json.RawMessage,
 	trace.duration = trace.endTime - trace.startTime
 
 	if err != nil {
-		errMessage := getErrorMessage(err)
-		errType := getErrorType(err)
+		errMessage := plugin.GetErrorMessage(err)
+		errType := plugin.GetErrorType(err)
 
 		ei := &errorInfo{
 			errMessage,
@@ -76,7 +78,7 @@ func (trace *trace) AfterExecution(ctx context.Context, request json.RawMessage,
 		trace.errors = append(trace.errors, errType)
 	}
 
-	td := prepareTraceData(request, response, err, trace)
+	td := prepareTraceData(request, response, trace)
 	var traceArr []interface{}
 	traceArr = append(traceArr, td)
 	return traceArr, traceDataType
@@ -87,7 +89,7 @@ func (trace *trace) OnPanic(ctx context.Context, request json.RawMessage, err in
 	trace.duration = trace.endTime - trace.startTime
 
 	errMessage := err.(error).Error()
-	errType := getErrorType(err)
+	errType := plugin.GetErrorType(err)
 	pi := &panicInfo{
 		errMessage,
 		string(stackTrace),
@@ -96,10 +98,10 @@ func (trace *trace) OnPanic(ctx context.Context, request json.RawMessage, err in
 
 	trace.panicInfo = pi
 	trace.thrownError = errType
-	trace.thrownErrorMessage = getErrorMessage(err)
+	trace.thrownErrorMessage = plugin.GetErrorMessage(err)
 	trace.errors = append(trace.errors, errType)
 
-	td := prepareTraceData(request, nil, nil, trace)
+	td := prepareTraceData(request, nil, trace)
 	var traceArr []interface{}
 	traceArr = append(traceArr, td)
 	return traceArr, traceDataType
@@ -109,27 +111,16 @@ func cleanBuffer(trace *trace) {
 	trace.errors = nil
 }
 
-func getErrorType(err interface{}) string {
-	errorType := reflect.TypeOf(err)
-	if errorType.Kind() == reflect.Ptr {
-		return errorType.Elem().Name()
-	}
-	return errorType.Name()
-}
-
-func getErrorMessage(err interface{}) string {
-	return err.(error).Error()
-}
-
-func prepareTraceData(request json.RawMessage, response interface{}, err interface{}, trace *trace) traceData {
+func prepareTraceData(request json.RawMessage, response interface{}, trace *trace) traceData {
 	uniqueId = plugin.GenerateNewId()
 	props := prepareProperties(request, response)
 	ai := prepareAuditInfo(trace)
 
 	return traceData{
 		Id:                 uniqueId,
+		TransactionId:      trace.transactionId,
 		ApplicationName:    plugin.GetApplicationName(),
-		ApplicationId:      plugin.GetAppIdFromStreamName(lambdacontext.LogStreamName),
+		ApplicationId:      plugin.GetAppId(),
 		ApplicationVersion: plugin.GetApplicationVersion(),
 		ApplicationProfile: plugin.GetApplicationProfile(),
 		ApplicationType:    plugin.GetApplicationType(),

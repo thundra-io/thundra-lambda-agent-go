@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-lambda-go/lambdacontext"
 	"github.com/stretchr/testify/assert"
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
+	"runtime"
 )
 
 const (
@@ -27,11 +28,13 @@ func TestMetric_BeforeExecution(t *testing.T) {
 	m := NewBuilder().Build()
 	m.startGCCount = MaxUint32
 	m.startPauseTotalNs = MaxUint64
+	transId := plugin.GenerateNewId()
 
 	wg := sync.WaitGroup{}
 	wg.Add(1)
-	m.BeforeExecution(context.TODO(), json.RawMessage{}, &wg)
+	m.BeforeExecution(context.TODO(), json.RawMessage{}, transId, &wg)
 
+	assert.Equal(t, transId, m.transactionId)
 	// In order to ensure startGCCount and startPauseTotalNs are assigned,
 	// check it's initial value is changed.
 	// Initial values are the maximum numbers to eliminate unlucky conditions from happenning.
@@ -53,7 +56,9 @@ func TestMetric_AfterExecution(t *testing.T) {
 
 	// Assert all stats are collected, heap, gc, goroutine, cpu, net, disk
 	// Note that this fails on MACOSX and returns 5 instead of 6
-	assert.Equal(t, 6, len(stats))
+	if runtime.GOOS != "darwin" {
+		assert.Equal(t, 6, len(stats))
+	}
 
 	// In order to ensure endGCCount and endPauseTotalNs are assigned,
 	// check it's initial value is changed.

@@ -2,7 +2,6 @@ package metric
 
 import (
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
-	"github.com/aws/aws-lambda-go/lambdacontext"
 	"github.com/shirou/gopsutil/process"
 	"github.com/shirou/gopsutil/net"
 )
@@ -83,7 +82,7 @@ func (b *builder) Build() *metric {
 	return &metric{
 		statData: statData{
 			applicationName:    plugin.GetApplicationName(),
-			applicationId:      plugin.GetAppIdFromStreamName(lambdacontext.LogStreamName),
+			applicationId:      plugin.GetAppId(),
 			applicationVersion: plugin.GetApplicationVersion(),
 			applicationProfile: plugin.GetApplicationProfile(),
 			applicationType:    plugin.GetApplicationType(),

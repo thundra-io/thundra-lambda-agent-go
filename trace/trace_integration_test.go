@@ -130,13 +130,13 @@ func TestTrace(t *testing.T) {
 			invocationEndTime := plugin.GetTimestamp()
 
 			//Monitor Data
-			msg, ok := r.MessageQueue[0].(plugin.Message)
+			msg, ok := r.MessageQueue[1].(plugin.Message)
 			if !ok {
 				fmt.Println("Collector message can't be casted to pluginMessage")
 			}
 			assert.Equal(t, traceDataType, msg.Type)
 			assert.Equal(t, TestApiKey, msg.ApiKey)
-			assert.Equal(t, "1.1", msg.DataFormatVersion)
+			assert.Equal(t, "1.2", msg.DataFormatVersion)
 
 			//Trace Data
 			td, ok := msg.Data.(traceData)
@@ -248,7 +248,7 @@ func TestPanic(t *testing.T) {
 			r.On("Clear").Return()
 			r.On("Collect", mock.Anything).Return()
 
-			tr := &trace{}
+			tr := NewTrace()
 			th := thundra.NewBuilder().AddPlugin(tr).SetReporter(r).SetAPIKey(TestApiKey).Build()
 			lambdaHandler := thundra.Wrap(testCase.handler, th)
 			invocationStartTime := plugin.GetTimestamp()
@@ -258,13 +258,13 @@ func TestPanic(t *testing.T) {
 					invocationEndTime := plugin.GetTimestamp()
 
 					//Monitor Data
-					msg, ok := r.MessageQueue[0].(plugin.Message)
+					msg, ok := r.MessageQueue[1].(plugin.Message)
 					if !ok {
 						fmt.Println("Collector message can't be casted to pluginMessage")
 					}
 					assert.Equal(t, traceDataType, msg.Type)
 					assert.Equal(t, TestApiKey, msg.ApiKey)
-					assert.Equal(t, "1.1", msg.DataFormatVersion)
+					assert.Equal(t, "1.2", msg.DataFormatVersion)
 
 					//Trace Data
 					td, ok := msg.Data.(traceData)

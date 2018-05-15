@@ -29,3 +29,5 @@ jobs:
       - run: go test -v ./trace
       - run: go get -v -t -d ./metric
       - run: go test -v ./metric
+      - run: go get -v -t -d ./invocation
+      - run: go test -v ./invocation

@@ -99,52 +99,47 @@ func Wrap(handler interface{}, thundra *thundra) interface{} {
 	}
 }
 
-func (th *thundra) executePreHooks(ctx context.Context, request json.RawMessage) {
-	th.reporter.Clear()
+func (t *thundra) executePreHooks(ctx context.Context, request json.RawMessage) {
+	t.reporter.Clear()
 	var wg sync.WaitGroup
-	wg.Add(len(th.plugins))
-	for _, p := range th.plugins {
-		go p.BeforeExecution(ctx, request, &wg)
+	wg.Add(len(t.plugins))
+	transactionId := plugin.GenerateNewId()
+	for _, p := range t.plugins {
+		go p.BeforeExecution(ctx, request, transactionId, &wg)
 	}
 	wg.Wait()
 }
 
-func (th *thundra) executePostHooks(ctx context.Context, request json.RawMessage, response interface{}, error interface{}) {
+func (t *thundra) executePostHooks(ctx context.Context, request json.RawMessage, response interface{}, error interface{}) {
 	var wg sync.WaitGroup
-	wg.Add(len(th.plugins))
-	for _, p := range th.plugins {
+	wg.Add(len(t.plugins))
+	for _, p := range t.plugins {
 		go func(plugin plugin.Plugin) {
 			data, dType := plugin.AfterExecution(ctx, request, response, error)
-			messages := prepareMessages(data, dType, th.apiKey)
-			th.reporter.Collect(messages)
+			messages := prepareMessages(data, dType, t.apiKey)
+			t.reporter.Collect(messages)
 			wg.Done()
 		}(p)
 	}
 	wg.Wait()
-	// Don't report if there aren't any plugins, which means that no data is collected
-	if len(th.plugins) > 0 {
-		th.reporter.Report(th.apiKey)
-	}
-	th.reporter.Clear()
+	t.reporter.Report(t.apiKey)
+	t.reporter.Clear()
 }
 
-func (th *thundra) onPanic(ctx context.Context, request json.RawMessage, err interface{}, stackTrace []byte) {
+func (t *thundra) onPanic(ctx context.Context, request json.RawMessage, err interface{}, stackTrace []byte) {
 	var wg sync.WaitGroup
-	wg.Add(len(th.plugins))
-	for _, p := range th.plugins {
-		go func() {
-			data, dType := p.OnPanic(ctx, request, err, stackTrace)
-			messages := prepareMessages(data, dType, th.apiKey)
-			th.reporter.Collect(messages)
+	wg.Add(len(t.plugins))
+	for _, p := range t.plugins {
+		go func(plugin plugin.Plugin) {
+			data, dType := plugin.OnPanic(ctx, request, err, stackTrace)
+			messages := prepareMessages(data, dType, t.apiKey)
+			t.reporter.Collect(messages)
 			wg.Done()
-		}()
+		}(p)
 	}
 	wg.Wait()
-	// Don't report if there aren't any plugins, which means that no data is collected
-	if len(th.plugins) > 0 {
-		th.reporter.Report(th.apiKey)
-	}
-	th.reporter.Clear()
+	t.reporter.Report(t.apiKey)
+	t.reporter.Clear()
 }
 
 func prepareMessages(data []interface{}, dataType string, apiKey string) []interface{} {

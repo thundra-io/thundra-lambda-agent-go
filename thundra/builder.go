@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
+	"github.com/thundra-io/thundra-lambda-agent-go/invocation"
 )
 
 type tBuilder interface {
@@ -53,6 +54,8 @@ func (b *builder) EnableWarmup() tBuilder {
 
 // Builds and returns the thundra object that you will pass to thundra.Wrap() function.
 func (b *builder) Build() *thundra {
+	// Invocation is the default plugin
+	b.AddPlugin(invocation.NewInvocation())
 	if b.reporter == nil {
 		b.reporter = &reporterImpl{}
 	}

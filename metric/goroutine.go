@@ -7,6 +7,7 @@ import (
 
 type goRoutineStatsData struct {
 	Id                 string `json:"id"`
+	TransactionId      string `json:"transactionId"`
 	ApplicationName    string `json:"applicationName"`
 	ApplicationId      string `json:"applicationId"`
 	ApplicationVersion string `json:"applicationVersion"`
@@ -16,12 +17,13 @@ type goRoutineStatsData struct {
 	StatTimestamp      int64  `json:"statTimestamp"`
 
 	// NumGoroutine is the number of goroutines on execution
-	NumGoroutine       uint64 `json:"numGoroutine"`
+	NumGoroutine uint64 `json:"numGoroutine"`
 }
 
 func prepareGoRoutineStatsData(metric *metric) goRoutineStatsData {
 	return goRoutineStatsData{
 		Id:                 plugin.GenerateNewId(),
+		TransactionId:      metric.transactionId,
 		ApplicationName:    metric.applicationName,
 		ApplicationId:      metric.applicationId,
 		ApplicationVersion: metric.applicationVersion,
