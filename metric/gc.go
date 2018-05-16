@@ -7,6 +7,7 @@ import (
 
 type gcStatsData struct {
 	Id                 string `json:"id"`
+	TransactionId      string `json:"transactionId"`
 	ApplicationName    string `json:"applicationName"`
 	ApplicationId      string `json:"applicationId"`
 	ApplicationVersion string `json:"applicationVersion"`
@@ -42,6 +43,7 @@ type gcStatsData struct {
 func prepareGCStatsData(metric *metric, memStats *runtime.MemStats) gcStatsData {
 	return gcStatsData{
 		Id:                 plugin.GenerateNewId(),
+		TransactionId:      metric.transactionId,
 		ApplicationName:    metric.applicationName,
 		ApplicationId:      metric.applicationId,
 		ApplicationVersion: metric.applicationVersion,

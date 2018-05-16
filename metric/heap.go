@@ -8,6 +8,7 @@ import (
 
 type heapStatsData struct {
 	Id                 string `json:"id"`
+	TransactionId      string `json:"transactionId"`
 	ApplicationName    string `json:"applicationName"`
 	ApplicationId      string `json:"applicationId"`
 	ApplicationVersion string `json:"applicationVersion"`
@@ -40,21 +41,22 @@ type heapStatsData struct {
 	MemoryPercent float32 `json:"memoryPercent"`
 }
 
-func prepareHeapStatsData(m *metric, memStats *runtime.MemStats) heapStatsData {
-	mp, err := m.process.MemoryPercent()
+func prepareHeapStatsData(metric *metric, memStats *runtime.MemStats) heapStatsData {
+	mp, err := metric.process.MemoryPercent()
 	if err != nil {
 		fmt.Println(err)
 	}
 
 	return heapStatsData{
 		Id:                 plugin.GenerateNewId(),
-		ApplicationName:    m.applicationName,
-		ApplicationId:      m.applicationId,
-		ApplicationVersion: m.applicationVersion,
-		ApplicationProfile: m.applicationProfile,
+		TransactionId:      metric.transactionId,
+		ApplicationName:    metric.applicationName,
+		ApplicationId:      metric.applicationId,
+		ApplicationVersion: metric.applicationVersion,
+		ApplicationProfile: metric.applicationProfile,
 		ApplicationType:    plugin.ApplicationType,
 		StatName:           heapStat,
-		StatTimestamp:      m.statTimestamp,
+		StatTimestamp:      metric.statTimestamp,
 
 		HeapAlloc:     memStats.HeapAlloc,
 		HeapSys:       memStats.HeapSys,

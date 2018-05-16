@@ -7,25 +7,27 @@ import (
 )
 
 type cpuStatsData struct {
-	Id                 string  `json:"id"`
-	ApplicationName    string  `json:"applicationName"`
-	ApplicationId      string  `json:"applicationId"`
-	ApplicationVersion string  `json:"applicationVersion"`
-	ApplicationProfile string  `json:"applicationProfile"`
-	ApplicationType    string  `json:"applicationType"`
-	StatName           string  `json:"statName"`
-	StatTimestamp      int64   `json:"statTimestamp"`
+	Id                 string `json:"id"`
+	TransactionId      string `json:"transactionId"`
+	ApplicationName    string `json:"applicationName"`
+	ApplicationId      string `json:"applicationId"`
+	ApplicationVersion string `json:"applicationVersion"`
+	ApplicationProfile string `json:"applicationProfile"`
+	ApplicationType    string `json:"applicationType"`
+	StatName           string `json:"statName"`
+	StatTimestamp      int64  `json:"statTimestamp"`
 
 	// ProcessCPUPercent is the process usage of the total CPU time
-	ProcessCPUPercent  float64 `json:"procPercent"`
+	ProcessCPUPercent float64 `json:"procPercent"`
 
 	// SystemCPUPercent is the system usage of the total CPU time
-	SystemCPUPercent   float64 `json:"sysPercent"`
+	SystemCPUPercent float64 `json:"sysPercent"`
 }
 
 func prepareCPUStatsData(metric *metric) cpuStatsData {
 	return cpuStatsData{
 		Id:                 plugin.GenerateNewId(),
+		TransactionId:      metric.transactionId,
 		ApplicationName:    metric.applicationName,
 		ApplicationId:      metric.applicationId,
 		ApplicationVersion: metric.applicationVersion,

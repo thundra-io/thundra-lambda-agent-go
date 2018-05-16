@@ -6,6 +6,7 @@ import (
 
 type diskStatsData struct {
 	Id                 string `json:"id"`
+	TransactionId      string `json:"transactionId"`
 	ApplicationName    string `json:"applicationName"`
 	ApplicationId      string `json:"applicationId"`
 	ApplicationVersion string `json:"applicationVersion"`
@@ -32,6 +33,7 @@ func prepareDiskStatsData(metric *metric) diskStatsData {
 
 	return diskStatsData{
 		Id:                 plugin.GenerateNewId(),
+		TransactionId:      metric.transactionId,
 		ApplicationName:    metric.applicationName,
 		ApplicationId:      metric.applicationId,
 		ApplicationVersion: metric.applicationVersion,

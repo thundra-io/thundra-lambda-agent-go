@@ -2,7 +2,7 @@ package thundra
 
 const defaultCollectorUrl = "https://collector.thundra.io/api"
 const monitorDatas = "/monitor-datas"
-const dataFormatVersion = "1.1"
+const dataFormatVersion = "1.2"
 
 //Thundra
 const thundraApiKey = "thundra_apiKey"
