@@ -2,6 +2,7 @@ package metric
 
 import (
 	"testing"
+
 	"github.com/stretchr/testify/assert"
 )
 

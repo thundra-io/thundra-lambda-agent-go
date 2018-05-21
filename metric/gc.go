@@ -2,6 +2,7 @@ package metric
 
 import (
 	"runtime"
+
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 )
 

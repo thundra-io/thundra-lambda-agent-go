@@ -20,6 +20,9 @@ type thundra struct {
 
 type lambdaFunction func(context.Context, json.RawMessage) (interface{}, error)
 
+// Wrap is used for wrapping your lambda functions and start monitoring it by following the thundra objects settings
+// It wraps your lambda function and return a new lambda function. By that, AWS will be able to run this function
+// and Thundra will be able to collect monitoring data from your function.
 func Wrap(handler interface{}, thundra *thundra) interface{} {
 	if isThundraDisabled() {
 		return handler

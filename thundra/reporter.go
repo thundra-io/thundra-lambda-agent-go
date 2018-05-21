@@ -1,13 +1,13 @@
 package thundra
 
 import (
-	"sync"
+	"bytes"
 	"encoding/json"
 	"fmt"
-	"bytes"
+	"io/ioutil"
 	"net/http"
 	"os"
-	"io/ioutil"
+	"sync"
 )
 
 type reporter interface {
@@ -65,7 +65,7 @@ func sendAsync(msg interface{}) {
 
 func sendHttpReq(mesageQueue []interface{}, apiKey string) {
 	b, err := json.Marshal(&mesageQueue)
-	if err!= nil{
+	if err != nil {
 		fmt.Println(err)
 	}
 

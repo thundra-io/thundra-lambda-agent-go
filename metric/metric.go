@@ -3,14 +3,14 @@ package metric
 import (
 	"context"
 	"encoding/json"
-	"sync"
-	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
-	"runtime"
-
-	"github.com/shirou/gopsutil/process"
 	"fmt"
-	"github.com/shirou/gopsutil/net"
+	"runtime"
+	"sync"
+
 	"github.com/shirou/gopsutil/cpu"
+	"github.com/shirou/gopsutil/net"
+	"github.com/shirou/gopsutil/process"
+	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 )
 
 type metric struct {

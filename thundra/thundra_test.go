@@ -1,13 +1,13 @@
 package thundra
 
 import (
-	"testing"
-	"fmt"
 	"context"
-	"errors"
 	"encoding/json"
-	"sync"
+	"errors"
+	"fmt"
 	"runtime/debug"
+	"sync"
+	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -276,7 +276,7 @@ func TestExecutePostHooks(t *testing.T) {
 	ctx := context.TODO()
 	req := createRawMessage()
 	resp := response{"Thundra"}
-	var err1 error = nil
+	var err1 error
 	var err2 error = errors.New("Error")
 
 	r := new(test.MockReporter)

@@ -1,8 +1,9 @@
 package metric
 
 import (
-	"testing"
 	"runtime"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 )
 

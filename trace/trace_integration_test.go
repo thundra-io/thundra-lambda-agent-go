@@ -1,21 +1,21 @@
 package trace
 
 import (
-	"testing"
 	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
+	"testing"
 	"time"
-	"errors"
 
+	"github.com/aws/aws-lambda-go/lambdacontext"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"github.com/aws/aws-lambda-go/lambdacontext"
 
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 	"github.com/thundra-io/thundra-lambda-agent-go/test"
 	"github.com/thundra-io/thundra-lambda-agent-go/thundra"
-	"encoding/json"
 )
 
 const (

@@ -1,9 +1,9 @@
 package metric
 
 import (
-	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 	"github.com/shirou/gopsutil/cpu"
 	"github.com/shirou/gopsutil/process"
+	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 )
 
 type cpuStatsData struct {
