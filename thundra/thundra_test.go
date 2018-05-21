@@ -276,7 +276,7 @@ func TestExecutePostHooks(t *testing.T) {
 	ctx := context.TODO()
 	req := createRawMessage()
 	resp := response{"Thundra"}
-	var err1 error = nil
+	var err1 error
 	var err2 error = errors.New("Error")
 
 	r := new(test.MockReporter)

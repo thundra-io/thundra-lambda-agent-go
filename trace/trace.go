@@ -23,7 +23,7 @@ type trace struct {
 	errorInfo          *errorInfo
 }
 
-var invocationCount uint32 = 0
+var invocationCount uint32
 var uniqueId string
 
 type traceData struct {

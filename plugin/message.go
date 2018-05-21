@@ -2,7 +2,7 @@ package plugin
 
 type Data interface{}
 
-//Data is TraceData
+// Message defines the structure that given dataformat follows by Thundra. In here data could be a trace, metric or log data.
 type Message struct {
 	Data              Data   `json:"data"`
 	Type              string `json:"type"`

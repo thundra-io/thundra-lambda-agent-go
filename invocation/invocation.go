@@ -8,7 +8,7 @@ import (
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 )
 
-var invocationCount uint32 = 0
+var invocationCount uint32
 
 type invocation struct {
 	Id                 string `json:"id"`
@@ -32,6 +32,7 @@ type invocation struct {
 	MemorySize int    `json:"memorySize"` // Memory Size of the function in MB
 }
 
+// NewInvocation initializes and returns a new invocation object
 func NewInvocation() *invocation {
 	return &invocation{
 		ApplicationName:    plugin.GetApplicationName(),
