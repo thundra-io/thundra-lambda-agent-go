@@ -2,6 +2,7 @@ package metric
 
 import (
 	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 )

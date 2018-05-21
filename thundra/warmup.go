@@ -1,11 +1,11 @@
 package thundra
 
 import (
-	"reflect"
 	"fmt"
-	"time"
-	"strings"
+	"reflect"
 	"strconv"
+	"strings"
+	"time"
 )
 
 // Please visit https://github.com/thundra-io/thundra-lambda-warmup to learn more about warmup.
@@ -51,7 +51,7 @@ func checkAndHandleWarmupRequest(event interface{}, eventType reflect.Type) bool
 			}
 			fmt.Println("Received warmup request as warmup message. Handling with ", delay, " milliseconds delay ...")
 			time.Sleep(time.Millisecond * time.Duration(delay))
-			return true;
+			return true
 		}
 	}
 

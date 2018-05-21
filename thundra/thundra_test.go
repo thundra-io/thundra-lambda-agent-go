@@ -1,13 +1,13 @@
 package thundra
 
 import (
-	"testing"
-	"fmt"
 	"context"
-	"errors"
 	"encoding/json"
-	"sync"
+	"errors"
+	"fmt"
 	"runtime/debug"
+	"sync"
+	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"

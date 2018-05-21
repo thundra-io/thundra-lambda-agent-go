@@ -2,8 +2,9 @@ package metric
 
 import (
 	"testing"
-	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
+
 	"github.com/stretchr/testify/assert"
+	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 )
 
 const numGoroutines = 5

@@ -2,8 +2,8 @@ package plugin
 
 import (
 	"context"
-	"sync"
 	"encoding/json"
+	"sync"
 )
 
 type Plugin interface {

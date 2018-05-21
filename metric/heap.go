@@ -1,9 +1,10 @@
 package metric
 
 import (
-	"runtime"
-	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 	"fmt"
+	"runtime"
+
+	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 )
 
 type heapStatsData struct {

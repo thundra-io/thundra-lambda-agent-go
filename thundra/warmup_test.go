@@ -1,8 +1,8 @@
 package thundra
 
 import (
-	"testing"
 	"reflect"
+	"testing"
 
 	"github.com/stretchr/testify/assert"
 )

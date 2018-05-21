@@ -6,8 +6,8 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 	"github.com/thundra-io/thundra-lambda-agent-go/invocation"
+	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 )
 
 type tBuilder interface {
@@ -110,10 +110,10 @@ func determineWarmup(builderWarmup bool) bool {
 
 // checkWarmup fetches the warmup value from environment variable
 func checkWarmup() (bool, error) {
-	w := os.Getenv(thundraLambdaWarmupWarmupAware);
+	w := os.Getenv(thundraLambdaWarmupWarmupAware)
 	b, err := strconv.ParseBool(w)
 	if err != nil {
-		if w != ""{
+		if w != "" {
 			fmt.Println(err, " thundra_lambda_warmup_warmupAware should be set with a boolean.")
 		}
 		return false, err
