@@ -106,9 +106,9 @@ func (t *thundra) executePreHooks(ctx context.Context, request json.RawMessage) 
 	t.reporter.Clear()
 	var wg sync.WaitGroup
 	wg.Add(len(t.plugins))
-	transactionId := plugin.GenerateNewId()
+	plugin.GenerateNewTransactionId()
 	for _, p := range t.plugins {
-		go p.BeforeExecution(ctx, request, transactionId, &wg)
+		go p.BeforeExecution(ctx, request, &wg)
 	}
 	wg.Wait()
 }

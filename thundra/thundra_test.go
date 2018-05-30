@@ -229,9 +229,9 @@ type MockPlugin struct {
 	mock.Mock
 }
 
-func (t *MockPlugin) BeforeExecution(ctx context.Context, request json.RawMessage, transactionId string, wg *sync.WaitGroup) {
+func (t *MockPlugin) BeforeExecution(ctx context.Context, request json.RawMessage, wg *sync.WaitGroup) {
 	defer wg.Done()
-	t.Called(ctx, request, transactionId, wg)
+	t.Called(ctx, request, wg)
 }
 func (t *MockPlugin) AfterExecution(ctx context.Context, request json.RawMessage, response interface{}, err interface{}) ([]interface{}, string) {
 	t.Called(ctx, request, response, err)
@@ -314,14 +314,6 @@ func TestOnPanic(t *testing.T) {
 	mP.AssertExpectations(t)
 	r.AssertExpectations(t)
 }
-
-/*func (t *thundra) removeInvocation() plugin.Plugin {
-	tmp := t.plugins[1]
-	t.plugins = []plugin.Plugin{}
-
-	t.plugins[0] = nil
-	return t.plugins[0]
-}*/
 
 func (handler lambdaFunction) invoke(ctx context.Context, payload []byte) ([]byte, error) {
 	response, err := handler(ctx, payload)

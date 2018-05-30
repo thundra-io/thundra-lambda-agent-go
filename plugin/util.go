@@ -17,8 +17,12 @@ func GenerateNewId() string {
 	return uuid.NewV4().String()
 }
 
-// GetAppId returns application id.
-func GetAppId() string {
+func GenerateNewTransactionId() {
+	TransactionId = GenerateNewId()
+}
+
+// getAppId returns application id.
+func getAppId() string {
 	return getAppIdFromStreamName(lambdacontext.LogStreamName)
 }
 
@@ -31,13 +35,13 @@ func getAppIdFromStreamName(logStreamName string) string {
 	return ""
 }
 
-// GetApplicationVersion returns function version.
-func GetApplicationVersion() string {
+// getApplicationVersion returns function version.
+func getApplicationVersion() string {
 	return lambdacontext.FunctionVersion
 }
 
-// GetApplicationProfile returns profile.
-func GetApplicationProfile() string {
+// getApplicationProfile returns profile.
+func getApplicationProfile() string {
 	p := os.Getenv(ThundraApplicationProfile)
 	if p == "" {
 		p = DefaultProfile
@@ -45,14 +49,9 @@ func GetApplicationProfile() string {
 	return p
 }
 
-// GetApplicationName return function name.
-func GetApplicationName() string {
+// getApplicationName returns function name.
+func getApplicationName() string {
 	return lambdacontext.FunctionName
-}
-
-// GetApplicationType returns programming language type, i.e. "go."
-func GetApplicationType() string {
-	return ApplicationType
 }
 
 // GetThisProcess returns process info about this process.
@@ -71,13 +70,13 @@ func GetTimestamp() int64 {
 	return time.Now().UnixNano() / (int64(time.Millisecond) / int64(time.Nanosecond))
 }
 
-// GetRegion returns AWS region's name
-func GetRegion() string {
+// getRegion returns AWS region's name
+func getRegion() string {
 	return os.Getenv(AwsDefaultRegion)
 }
 
-// GetMemorySize returns configured memory limit for the current instance of the Lambda Function
-func GetMemorySize() int {
+// getMemorySize returns configured memory limit for the current instance of the Lambda Function
+func getMemorySize() int {
 	return lambdacontext.MemoryLimitInMB
 }
 
@@ -92,5 +91,9 @@ func GetErrorType(err interface{}) string {
 
 // GetErrorMessage returns error message
 func GetErrorMessage(err interface{}) string {
-	return err.(error).Error()
+	e, ok := err.(error)
+	if !ok {
+		return err.(string)
+	}
+	return e.Error()
 }

@@ -4,15 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"os"
 	"sync"
 
-	"github.com/aws/aws-lambda-go/lambdacontext"
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 )
 
 type trace struct {
-	transactionId      string
 	startTime          int64
 	endTime            int64
 	duration           int64
@@ -24,38 +21,17 @@ type trace struct {
 }
 
 var invocationCount uint32
-var uniqueId string
-
-type traceData struct {
-	Id                 string                 `json:"id"`
-	TransactionId      string                 `json:"transactionId"`
-	ApplicationName    string                 `json:"applicationName"`
-	ApplicationId      string                 `json:"applicationId"`
-	ApplicationVersion string                 `json:"applicationVersion"`
-	ApplicationProfile string                 `json:"applicationProfile"`
-	ApplicationType    string                 `json:"applicationType"`
-	ContextId          string                 `json:"contextId"`
-	ContextName        string                 `json:"contextName"`
-	ContextType        string                 `json:"contextType"`
-	StartTimestamp     int64                  `json:"startTimestamp"`
-	EndTimestamp       int64                  `json:"endTimestamp"`
-	Duration           int64                  `json:"duration"`
-	Errors             []string               `json:"errors"`
-	ThrownError        interface{}            `json:"thrownError"`
-	ThrownErrorMessage interface{}            `json:"thrownErrorMessage"`
-	AuditInfo          map[string]interface{} `json:"auditInfo"`
-	Properties         map[string]interface{} `json:"properties"`
-}
+var UniqueId string
 
 // NewTrace returns a new trace object.
 func NewTrace() *trace {
 	return &trace{}
 }
 
-func (trace *trace) BeforeExecution(ctx context.Context, request json.RawMessage, transactionId string, wg *sync.WaitGroup) {
-	trace.startTime = plugin.GetTimestamp()
-	trace.transactionId = transactionId
+func (trace *trace) BeforeExecution(ctx context.Context, request json.RawMessage, wg *sync.WaitGroup) {
 	cleanBuffer(trace)
+	trace.startTime = plugin.GetTimestamp()
+	UniqueId = plugin.GenerateNewId()
 	wg.Done()
 }
 
@@ -88,7 +64,7 @@ func (trace *trace) OnPanic(ctx context.Context, request json.RawMessage, err in
 	trace.endTime = plugin.GetTimestamp()
 	trace.duration = trace.endTime - trace.startTime
 
-	errMessage := err.(error).Error()
+	errMessage := plugin.GetErrorMessage(err)
 	errType := plugin.GetErrorType(err)
 	pi := &panicInfo{
 		errMessage,
@@ -112,20 +88,19 @@ func cleanBuffer(trace *trace) {
 }
 
 func prepareTraceData(request json.RawMessage, response interface{}, trace *trace) traceData {
-	uniqueId = plugin.GenerateNewId()
 	props := prepareProperties(request, response)
 	ai := prepareAuditInfo(trace)
 
 	return traceData{
-		Id:                 uniqueId,
-		TransactionId:      trace.transactionId,
-		ApplicationName:    plugin.GetApplicationName(),
-		ApplicationId:      plugin.GetAppId(),
-		ApplicationVersion: plugin.GetApplicationVersion(),
-		ApplicationProfile: plugin.GetApplicationProfile(),
-		ApplicationType:    plugin.GetApplicationType(),
-		ContextId:          uniqueId,
-		ContextName:        plugin.GetApplicationName(),
+		Id:                 UniqueId,
+		TransactionId:      plugin.TransactionId,
+		ApplicationName:    plugin.ApplicationName,
+		ApplicationId:      plugin.ApplicationId,
+		ApplicationVersion: plugin.ApplicationVersion,
+		ApplicationProfile: plugin.ApplicationProfile,
+		ApplicationType:    plugin.ApplicationType,
+		ContextId:          UniqueId,
+		ContextName:        plugin.ApplicationName,
 		ContextType:        executionContext,
 		StartTimestamp:     trace.startTime,
 		EndTimestamp:       trace.endTime,
@@ -153,8 +128,8 @@ func prepareProperties(request json.RawMessage, response interface{}) map[string
 		auditInfoPropertiesRequest:             string(request),
 		auditInfoPropertiesResponse:            response,
 		auditInfoPropertiesColdStart:           coldStart,
-		auditInfoPropertiesFunctionRegion:      os.Getenv(awsDefaultRegion),
-		auditInfoPropertiesFunctionMemoryLimit: lambdacontext.MemoryLimitInMB,
+		auditInfoPropertiesFunctionRegion:      plugin.Region,
+		auditInfoPropertiesFunctionMemoryLimit: plugin.MemorySize,
 	}
 }
 
@@ -175,8 +150,8 @@ func prepareAuditInfo(trace *trace) map[string]interface{} {
 	}
 
 	return map[string]interface{}{
-		auditInfoContextName:    lambdacontext.FunctionName,
-		auditInfoId:             uniqueId,
+		auditInfoContextName:    plugin.ApplicationName,
+		auditInfoId:             UniqueId,
 		auditInfoOpenTimestamp:  trace.startTime,
 		auditInfoCloseTimestamp: trace.endTime,
 		auditInfoErrors:         auditErrors,

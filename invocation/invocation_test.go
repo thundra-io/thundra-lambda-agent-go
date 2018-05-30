@@ -3,53 +3,45 @@ package invocation
 import (
 	"context"
 	"errors"
-	"os"
 	"sync"
 	"testing"
 
-	"github.com/aws/aws-lambda-go/lambdacontext"
 	"github.com/stretchr/testify/assert"
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
+	"github.com/thundra-io/thundra-lambda-agent-go/test"
 )
 
 const (
-	functionName       = "TestFunctionName"
-	memoryLimit        = 512
-	functionVersion    = "$Version"
-	appId              = "$AppId"
-	applicationProfile = "TestProfile"
-	defaultRegion      = "TestRegion"
-	testErrorMessage   = "test Error"
-	testErrorType      = "errorString"
+	testErrorMessage = "test Error"
+	testErrorType    = "errorString"
 )
 
 func TestNewInvocation(t *testing.T) {
-	prepareEnvironment()
+	test.PrepareEnvironment()
 	i := NewInvocation()
 
 	assert.NotNil(t, i.Id)
-	assert.Equal(t, functionName, i.ApplicationName)
-	assert.Equal(t, appId, i.ApplicationId)
-	assert.Equal(t, functionVersion, i.ApplicationVersion)
+	assert.Equal(t, test.FunctionName, i.ApplicationName)
+	assert.Equal(t, test.AppId, i.ApplicationId)
+	assert.Equal(t, test.FunctionVersion, i.ApplicationVersion)
 	assert.Equal(t, plugin.ApplicationType, i.ApplicationType)
-	assert.Equal(t, defaultRegion, i.Region)
-	assert.Equal(t, memoryLimit, i.MemorySize)
+	assert.Equal(t, test.Region, i.Region)
+	assert.Equal(t, test.MemoryLimit, i.MemorySize)
 
-	cleanEnvironment()
+	test.CleanEnvironment()
 }
 
 func TestInvocationData_BeforeExecution(t *testing.T) {
 	i := NewInvocation()
 	prevId := i.Id
-	transId := plugin.GenerateNewId()
 	prevTime := plugin.GetTimestamp()
 
 	wg := sync.WaitGroup{}
 	wg.Add(1)
-	i.BeforeExecution(context.TODO(), nil, transId, &wg)
+	i.BeforeExecution(context.TODO(), nil, &wg)
 
 	assert.NotEqual(t, prevId, i.Id)
-	assert.Equal(t, transId, i.TransactionId)
+	assert.Equal(t, plugin.TransactionId, i.TransactionId)
 	assert.True(t, prevTime <= i.StartTimestamp)
 }
 
@@ -105,20 +97,4 @@ func TestInvocationData_OnPanic(t *testing.T) {
 	assert.True(t, i.ColdStart)
 	assert.False(t, i.Timeout)
 	assert.Equal(t, invocationDataType, dataType)
-}
-
-func prepareEnvironment() {
-	lambdacontext.FunctionName = functionName
-	lambdacontext.MemoryLimitInMB = memoryLimit
-	lambdacontext.FunctionVersion = functionVersion
-	lambdacontext.LogStreamName = "[]" + appId
-	os.Setenv(plugin.ThundraApplicationProfile, applicationProfile)
-	os.Setenv(plugin.AwsDefaultRegion, defaultRegion)
-}
-
-func cleanEnvironment() {
-	lambdacontext.FunctionName = ""
-	lambdacontext.MemoryLimitInMB = 0
-	lambdacontext.FunctionVersion = ""
-	os.Clearenv()
 }

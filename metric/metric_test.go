@@ -3,22 +3,12 @@ package metric
 import (
 	"context"
 	"encoding/json"
-	"os"
 	"sync"
 	"testing"
 
-	"github.com/aws/aws-lambda-go/lambdacontext"
 	"github.com/stretchr/testify/assert"
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 	"runtime"
-)
-
-const (
-	functionName       = "TestFunctionName"
-	logStreamName      = "2018/01/01/[$LATEST]1234567890"
-	appId              = "1234567890"
-	functionVersion    = "$Version"
-	applicationProfile = "TestProfile"
 )
 
 func TestMetric_BeforeExecution(t *testing.T) {
@@ -28,13 +18,11 @@ func TestMetric_BeforeExecution(t *testing.T) {
 	m := NewBuilder().Build()
 	m.startGCCount = MaxUint32
 	m.startPauseTotalNs = MaxUint64
-	transId := plugin.GenerateNewId()
 
 	wg := sync.WaitGroup{}
 	wg.Add(1)
-	m.BeforeExecution(context.TODO(), json.RawMessage{}, transId, &wg)
+	m.BeforeExecution(context.TODO(), json.RawMessage{}, &wg)
 
-	assert.Equal(t, transId, m.transactionId)
 	// In order to ensure startGCCount and startPauseTotalNs are assigned,
 	// check it's initial value is changed.
 	// Initial values are the maximum numbers to eliminate unlucky conditions from happenning.
@@ -68,18 +56,4 @@ func TestMetric_AfterExecution(t *testing.T) {
 
 	assert.True(t, m.statTimestamp <= plugin.GetTimestamp())
 	assert.Equal(t, statDataType, dataType)
-}
-
-func prepareEnvironment() {
-	lambdacontext.FunctionName = functionName
-	lambdacontext.LogStreamName = logStreamName
-	lambdacontext.FunctionVersion = functionVersion
-	os.Setenv(plugin.ThundraApplicationProfile, applicationProfile)
-}
-
-func cleanEnvironment() {
-	lambdacontext.FunctionName = ""
-	lambdacontext.MemoryLimitInMB = 0
-	lambdacontext.FunctionVersion = ""
-	os.Clearenv()
 }

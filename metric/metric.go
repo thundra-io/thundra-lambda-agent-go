@@ -14,8 +14,6 @@ import (
 )
 
 type metric struct {
-	statData
-	transactionId     string
 	statTimestamp     int64
 	startGCCount      uint32
 	endGCCount        uint32
@@ -37,17 +35,8 @@ type metric struct {
 	disableNetStats       bool
 }
 
-type statData struct {
-	applicationName    string
-	applicationId      string
-	applicationVersion string
-	applicationProfile string
-	applicationType    string
-}
-
-func (metric *metric) BeforeExecution(ctx context.Context, request json.RawMessage, transactionId string, wg *sync.WaitGroup) {
+func (metric *metric) BeforeExecution(ctx context.Context, request json.RawMessage, wg *sync.WaitGroup) {
 	metric.statTimestamp = plugin.GetTimestamp()
-	metric.transactionId = transactionId
 
 	if !metric.disableGCStats {
 		m := &runtime.MemStats{}

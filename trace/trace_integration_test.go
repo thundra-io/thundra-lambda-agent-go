@@ -5,11 +5,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"os"
 	"testing"
 	"time"
 
-	"github.com/aws/aws-lambda-go/lambdacontext"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
@@ -19,16 +17,11 @@ import (
 )
 
 const (
-	duration           = 500
-	functionName       = "TestFunctionName"
-	memoryLimit        = 512
-	functionVersion    = "$Version"
-	applicationProfile = "TestProfile"
-	TestApiKey         = "TestApiKey"
-	defaultRegion      = "TestRegion"
-	generatedError     = "Generated Error"
-	errorType          = "errorString"
-	generatedPanic     = "Generated Panic"
+	duration       = 500
+	testApiKey     = "testApiKey"
+	generatedError = "Generated Error"
+	errorType      = "errorString"
+	generatedPanic = "Generated Panic"
 )
 
 var coldStart = "true"
@@ -112,15 +105,15 @@ func TestTrace(t *testing.T) {
 	}
 	for i, testCase := range testCases {
 		t.Run(fmt.Sprintf("testCase[%d] %s", i, testCase.name), func(t *testing.T) {
-			prepareEnvironment()
+			test.PrepareEnvironment()
 
 			r := new(test.MockReporter)
-			r.On("Report", TestApiKey).Return()
+			r.On("Report", testApiKey).Return()
 			r.On("Clear").Return()
 			r.On("Collect", mock.Anything).Return()
 
 			tr := &trace{}
-			th := thundra.NewBuilder().AddPlugin(tr).SetReporter(r).SetAPIKey(TestApiKey).Build()
+			th := thundra.NewBuilder().AddPlugin(tr).SetReporter(r).SetAPIKey(testApiKey).Build()
 			lambdaHandler := thundra.Wrap(testCase.handler, th)
 			h := lambdaHandler.(func(context.Context, json.RawMessage) (interface{}, error))
 			f := lambdaFunction(h)
@@ -135,7 +128,7 @@ func TestTrace(t *testing.T) {
 				fmt.Println("Collector message can't be casted to pluginMessage")
 			}
 			assert.Equal(t, traceDataType, msg.Type)
-			assert.Equal(t, TestApiKey, msg.ApiKey)
+			assert.Equal(t, testApiKey, msg.ApiKey)
 			assert.Equal(t, "1.2", msg.DataFormatVersion)
 
 			//Trace Data
@@ -144,13 +137,13 @@ func TestTrace(t *testing.T) {
 				fmt.Println("Can not convert to trace data")
 			}
 			assert.NotNil(t, td.Id)
-			assert.Equal(t, functionName, td.ApplicationName)
-			assert.Equal(t, "", td.ApplicationId)
-			assert.Equal(t, functionVersion, td.ApplicationVersion)
-			assert.Equal(t, applicationProfile, td.ApplicationProfile)
+			assert.Equal(t, test.FunctionName, td.ApplicationName)
+			assert.Equal(t, test.AppId, td.ApplicationId)
+			assert.Equal(t, test.FunctionVersion, td.ApplicationVersion)
+			assert.Equal(t, test.ApplicationProfile, td.ApplicationProfile)
 			assert.Equal(t, plugin.ApplicationType, td.ApplicationType)
 			assert.NotNil(t, td.ContextId)
-			assert.Equal(t, functionName, td.ContextName)
+			assert.Equal(t, test.FunctionName, td.ContextName)
 			assert.Equal(t, executionContext, td.ContextType)
 
 			assert.True(t, invocationStartTime <= td.StartTimestamp)
@@ -160,7 +153,7 @@ func TestTrace(t *testing.T) {
 
 			//Trace Audit Info
 			ai := td.AuditInfo
-			assert.Equal(t, functionName, ai[auditInfoContextName])
+			assert.Equal(t, test.FunctionName, ai[auditInfoContextName])
 			assert.NotNil(t, ai[auditInfoId])
 			assert.Equal(t, td.StartTimestamp, ai[auditInfoOpenTimestamp])
 			assert.Equal(t, td.EndTimestamp, ai[auditInfoCloseTimestamp])
@@ -169,8 +162,8 @@ func TestTrace(t *testing.T) {
 			props := td.Properties
 			assert.Equal(t, testCase.input, props[auditInfoPropertiesRequest])
 			assert.Equal(t, coldStart, props[auditInfoPropertiesColdStart])
-			assert.Equal(t, defaultRegion, props[auditInfoPropertiesFunctionRegion])
-			assert.Equal(t, memoryLimit, props[auditInfoPropertiesFunctionMemoryLimit])
+			assert.Equal(t, test.Region, props[auditInfoPropertiesFunctionRegion])
+			assert.Equal(t, test.MemoryLimit, props[auditInfoPropertiesFunctionMemoryLimit])
 
 			if testCase.expected.err != nil {
 				assert.Equal(t, testCase.expected.err, err)
@@ -197,7 +190,7 @@ func TestTrace(t *testing.T) {
 				assert.Nil(t, ai[auditInfoThrownError])
 			}
 
-			cleanEnvironment()
+			test.CleanEnvironment()
 			coldStart = "false"
 		})
 	}
@@ -241,15 +234,15 @@ func TestPanic(t *testing.T) {
 	}
 	for i, testCase := range testCases {
 		t.Run(fmt.Sprintf("testCase[%d] %s", i, testCase.name), func(t *testing.T) {
-			prepareEnvironment()
+			test.PrepareEnvironment()
 
 			r := new(test.MockReporter)
-			r.On("Report", TestApiKey).Return()
+			r.On("Report", testApiKey).Return()
 			r.On("Clear").Return()
 			r.On("Collect", mock.Anything).Return()
 
 			tr := NewTrace()
-			th := thundra.NewBuilder().AddPlugin(tr).SetReporter(r).SetAPIKey(TestApiKey).Build()
+			th := thundra.NewBuilder().AddPlugin(tr).SetReporter(r).SetAPIKey(testApiKey).Build()
 			lambdaHandler := thundra.Wrap(testCase.handler, th)
 			invocationStartTime := plugin.GetTimestamp()
 
@@ -263,7 +256,7 @@ func TestPanic(t *testing.T) {
 						fmt.Println("Collector message can't be casted to pluginMessage")
 					}
 					assert.Equal(t, traceDataType, msg.Type)
-					assert.Equal(t, TestApiKey, msg.ApiKey)
+					assert.Equal(t, testApiKey, msg.ApiKey)
 					assert.Equal(t, "1.2", msg.DataFormatVersion)
 
 					//Trace Data
@@ -272,13 +265,13 @@ func TestPanic(t *testing.T) {
 						fmt.Println("Can not convert to trace data")
 					}
 					assert.NotNil(t, td.Id)
-					assert.Equal(t, functionName, td.ApplicationName)
-					assert.Equal(t, "", td.ApplicationId)
-					assert.Equal(t, functionVersion, td.ApplicationVersion)
-					assert.Equal(t, applicationProfile, td.ApplicationProfile)
+					assert.Equal(t, test.FunctionName, td.ApplicationName)
+					assert.Equal(t, test.AppId, td.ApplicationId)
+					assert.Equal(t, test.FunctionVersion, td.ApplicationVersion)
+					assert.Equal(t, test.ApplicationProfile, td.ApplicationProfile)
 					assert.Equal(t, plugin.ApplicationType, td.ApplicationType)
 					assert.NotNil(t, td.ContextId)
-					assert.Equal(t, functionName, td.ContextName)
+					assert.Equal(t, test.FunctionName, td.ContextName)
 					assert.Equal(t, executionContext, td.ContextType)
 
 					assert.True(t, invocationStartTime <= td.StartTimestamp)
@@ -292,7 +285,7 @@ func TestPanic(t *testing.T) {
 
 					//Trace Audit Info
 					ai := td.AuditInfo
-					assert.Equal(t, functionName, ai[auditInfoContextName])
+					assert.Equal(t, test.FunctionName, ai[auditInfoContextName])
 					assert.NotNil(t, ai[auditInfoId])
 					assert.Equal(t, td.StartTimestamp, ai[auditInfoOpenTimestamp])
 					assert.Equal(t, td.EndTimestamp, ai[auditInfoCloseTimestamp])
@@ -306,13 +299,13 @@ func TestPanic(t *testing.T) {
 					props := td.Properties
 					assert.Equal(t, testCase.input, props[auditInfoPropertiesRequest])
 					assert.Equal(t, coldStart, props[auditInfoPropertiesColdStart])
-					assert.Equal(t, defaultRegion, props[auditInfoPropertiesFunctionRegion])
-					assert.Equal(t, memoryLimit, props[auditInfoPropertiesFunctionMemoryLimit])
+					assert.Equal(t, test.Region, props[auditInfoPropertiesFunctionRegion])
+					assert.Equal(t, test.MemoryLimit, props[auditInfoPropertiesFunctionMemoryLimit])
 
 					assert.Equal(t, 1, len((ai[auditInfoErrors]).([]interface{})))
 					assert.Nil(t, props[auditInfoPropertiesResponse])
 
-					cleanEnvironment()
+					test.CleanEnvironment()
 					coldStart = "false"
 				}
 			}()
@@ -321,21 +314,6 @@ func TestPanic(t *testing.T) {
 			f(context.TODO(), []byte(testCase.input))
 		})
 	}
-}
-
-func prepareEnvironment() {
-	lambdacontext.FunctionName = functionName
-	lambdacontext.MemoryLimitInMB = memoryLimit
-	lambdacontext.FunctionVersion = functionVersion
-	os.Setenv(plugin.ThundraApplicationProfile, applicationProfile)
-	os.Setenv(awsDefaultRegion, defaultRegion)
-}
-
-func cleanEnvironment() {
-	lambdacontext.FunctionName = ""
-	lambdacontext.MemoryLimitInMB = 0
-	lambdacontext.FunctionVersion = ""
-	os.Clearenv()
 }
 
 type lambdaFunction func(context.Context, json.RawMessage) (interface{}, error)

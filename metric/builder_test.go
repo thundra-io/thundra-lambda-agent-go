@@ -4,18 +4,12 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
+	"github.com/thundra-io/thundra-lambda-agent-go/test"
 )
 
 func TestNewBuilder(t *testing.T) {
-	prepareEnvironment()
+	test.PrepareEnvironment()
 	m := NewBuilder().Build()
-
-	assert.Equal(t, functionName, m.applicationName)
-	assert.Equal(t, appId, m.applicationId)
-	assert.Equal(t, functionVersion, m.applicationVersion)
-	assert.Equal(t, applicationProfile, m.applicationProfile)
-	assert.Equal(t, plugin.ApplicationType, m.applicationType)
 
 	assert.NotNil(t, m.prevDiskStat)
 	assert.NotNil(t, m.prevNetStat)
@@ -27,5 +21,5 @@ func TestNewBuilder(t *testing.T) {
 	assert.False(t, m.disableGoroutineStats)
 	assert.False(t, m.disableHeapStats)
 	assert.False(t, m.disableGCStats)
-	cleanEnvironment()
+	test.CleanEnvironment()
 }

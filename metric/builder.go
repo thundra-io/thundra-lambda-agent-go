@@ -80,14 +80,6 @@ func (b *builder) Build() *metric {
 	}
 
 	return &metric{
-		statData: statData{
-			applicationName:    plugin.GetApplicationName(),
-			applicationId:      plugin.GetAppId(),
-			applicationVersion: plugin.GetApplicationVersion(),
-			applicationProfile: plugin.GetApplicationProfile(),
-			applicationType:    plugin.GetApplicationType(),
-		},
-
 		prevDiskStat: b.prevDiskStat,
 		prevNetStat:  b.prevNetStat,
 		process:      b.process,
