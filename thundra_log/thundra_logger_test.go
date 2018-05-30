@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"github.com/stretchr/testify/assert"
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
-	"testing"
 	"runtime"
+	"testing"
 )
 
 const (
