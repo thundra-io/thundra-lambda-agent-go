@@ -18,7 +18,7 @@ const (
 
 func TestNewInvocation(t *testing.T) {
 	test.PrepareEnvironment()
-	i := NewInvocation()
+	i := New()
 
 	assert.NotNil(t, i.Id)
 	assert.Equal(t, test.FunctionName, i.ApplicationName)
@@ -32,7 +32,7 @@ func TestNewInvocation(t *testing.T) {
 }
 
 func TestInvocationData_BeforeExecution(t *testing.T) {
-	i := NewInvocation()
+	i := New()
 	prevId := i.Id
 	prevTime := plugin.GetTimestamp()
 
@@ -46,7 +46,7 @@ func TestInvocationData_BeforeExecution(t *testing.T) {
 }
 
 func TestInvocationData_AfterExecution(t *testing.T) {
-	i := NewInvocation()
+	i := New()
 	invocationCount = 0
 	prevTime := plugin.GetTimestamp()
 	i.StartTimestamp = prevTime
@@ -66,7 +66,7 @@ func TestInvocationData_AfterExecution(t *testing.T) {
 func TestInvocationData_AfterExecutionWithError(t *testing.T) {
 	const testErrorMessage = "test Error"
 	const testErrorType = "errorString"
-	i := NewInvocation()
+	i := New()
 	err := errors.New(testErrorMessage)
 
 	wg := sync.WaitGroup{}
@@ -78,7 +78,7 @@ func TestInvocationData_AfterExecutionWithError(t *testing.T) {
 }
 
 func TestInvocationData_OnPanic(t *testing.T) {
-	i := NewInvocation()
+	i := New()
 	invocationCount = 0
 	prevTime := plugin.GetTimestamp()
 	i.StartTimestamp = prevTime

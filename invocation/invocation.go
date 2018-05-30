@@ -10,8 +10,8 @@ import (
 
 var invocationCount uint32
 
-// NewInvocation initializes and returns a new invocation object
-func NewInvocation() *invocation {
+// New initializes and returns a new invocation object.
+func New() *invocation {
 	return &invocation{
 		ApplicationName:    plugin.ApplicationName,
 		ApplicationId:      plugin.ApplicationId,

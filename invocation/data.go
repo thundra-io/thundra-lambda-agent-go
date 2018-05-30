@@ -1,5 +1,6 @@
 package invocation
 
+// invocation is the simplest form of data collected from lambda functions. It is collected for any case.
 type invocation struct {
 	Id                 string `json:"id"`
 	TransactionId      string `json:"transactionId"`

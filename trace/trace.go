@@ -23,8 +23,8 @@ type trace struct {
 var invocationCount uint32
 var UniqueId string
 
-// NewTrace returns a new trace object.
-func NewTrace() *trace {
+// New returns a new trace object.
+func New() *trace {
 	return &trace{}
 }
 

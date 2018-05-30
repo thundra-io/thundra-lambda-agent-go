@@ -28,6 +28,17 @@ type builder struct {
 	process               *process.Process
 }
 
+// New initializes a new metric object which collects all types of metrics. If you want to disable a metric that
+// you don't want to collect use NewBuilder() instead.
+func New() *metric{
+	return NewBuilder().Build()
+}
+
+// NewBuilder returns a builder that you can use to disable the metrics that you don't want to collect.
+func NewBuilder() mBuilder {
+	return &builder{}
+}
+
 // DisableGCStats disables gc metrics collection. Check gcStatsData to see which metrics are collected.
 func (b *builder) DisableGCStats() mBuilder {
 	b.disableGCStats = true
@@ -91,9 +102,4 @@ func (b *builder) Build() *metric {
 		disableDiskStats:      b.disableDiskStats,
 		disableNetStats:       b.disableNetStats,
 	}
-}
-
-// NewBuilder returns a new metric builder.
-func NewBuilder() mBuilder {
-	return &builder{}
 }

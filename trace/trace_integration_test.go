@@ -241,7 +241,7 @@ func TestPanic(t *testing.T) {
 			r.On("Clear").Return()
 			r.On("Collect", mock.Anything).Return()
 
-			tr := NewTrace()
+			tr := New()
 			th := thundra.NewBuilder().AddPlugin(tr).SetReporter(r).SetAPIKey(testApiKey).Build()
 			lambdaHandler := thundra.Wrap(testCase.handler, th)
 			invocationStartTime := plugin.GetTimestamp()
