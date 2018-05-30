@@ -70,8 +70,10 @@ func sendHttpReq(mesageQueue []interface{}, apiKey string) {
 	}
 
 	targetURL := collectorUrl + monitorDatas
-	fmt.Println("Sending HTTP request to Thundra collector: " + targetURL)
-	fmt.Println(string(b))
+	if debugEnabled {
+		fmt.Println("Sending HTTP request to Thundra collector: " + targetURL)
+		fmt.Println(string(b))
+	}
 
 	req, _ := http.NewRequest("POST", targetURL, bytes.NewBuffer(b))
 	req.Header.Set("Authorization", "ApiKey "+apiKey)
@@ -82,9 +84,11 @@ func sendHttpReq(mesageQueue []interface{}, apiKey string) {
 	if err != nil {
 		fmt.Println("Error:", err)
 	}
-	fmt.Println("response Status:", resp.Status)
-	fmt.Println("response Headers:", resp.Header)
 	body, _ := ioutil.ReadAll(resp.Body)
-	fmt.Println("response Body:", string(body))
+	if debugEnabled {
+		fmt.Println("response Status:", resp.Status)
+		fmt.Println("response Headers:", resp.Header)
+		fmt.Println("response Body:", string(body))
+	}
 	resp.Body.Close()
 }
