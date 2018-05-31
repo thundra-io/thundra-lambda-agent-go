@@ -112,9 +112,10 @@ func Wrap(handler interface{}, thundra *thundra) interface{} {
 
 func (t *thundra) executePreHooks(ctx context.Context, request json.RawMessage) {
 	t.reporter.Clear()
+	plugin.GenerateNewTransactionId()
+	plugin.GenerateNewContextId()
 	var wg sync.WaitGroup
 	wg.Add(len(t.plugins))
-	plugin.GenerateNewTransactionId()
 	for _, p := range t.plugins {
 		go p.BeforeExecution(ctx, request, &wg)
 	}

@@ -2,7 +2,6 @@ package thundra_log
 
 import (
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
-	"github.com/thundra-io/thundra-lambda-agent-go/trace"
 )
 
 type logData struct {
@@ -46,6 +45,6 @@ func prepareLogData(log *monitoredLog) logData {
 		LogTimestamp:                log.logTimestamp,
 		LogLevel:                    log.logLevel,
 		LogLevelId:                  log.logLevelId,
-		RootExecutionAuditContextId: trace.UniqueId,
+		RootExecutionAuditContextId: plugin.ContextId,
 	}
 }
