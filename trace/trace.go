@@ -29,6 +29,7 @@ func New() *trace {
 func (trace *trace) BeforeExecution(ctx context.Context, request json.RawMessage, wg *sync.WaitGroup) {
 	cleanBuffer(trace)
 	trace.startTime = plugin.GetTimestamp()
+	plugin.GenerateNewContextId()
 	wg.Done()
 }
 
