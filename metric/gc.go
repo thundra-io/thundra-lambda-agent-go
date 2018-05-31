@@ -44,11 +44,11 @@ type gcStatsData struct {
 func prepareGCStatsData(metric *metric, memStats *runtime.MemStats) gcStatsData {
 	return gcStatsData{
 		Id:                 plugin.GenerateNewId(),
-		TransactionId:      metric.transactionId,
-		ApplicationName:    metric.applicationName,
-		ApplicationId:      metric.applicationId,
-		ApplicationVersion: metric.applicationVersion,
-		ApplicationProfile: metric.applicationProfile,
+		TransactionId:      plugin.TransactionId,
+		ApplicationName:    plugin.ApplicationName,
+		ApplicationId:      plugin.ApplicationId,
+		ApplicationVersion: plugin.ApplicationVersion,
+		ApplicationProfile: plugin.ApplicationProfile,
 		ApplicationType:    plugin.ApplicationType,
 		StatName:           gcStat,
 		StatTimestamp:      metric.statTimestamp,

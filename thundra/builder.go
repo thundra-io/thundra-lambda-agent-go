@@ -25,8 +25,19 @@ type builder struct {
 	warmup   bool
 }
 
-// AddPlugin is used to enable plugins on thundra. Trace and Metrics are two plugins that are supported currently.
+// New is used to collect basic invocation data with thundra. Use NewBuilder and AddPlugin to access full functionality.
+func New() *thundra {
+	return NewBuilder().Build()
+}
+
+// NewBuilder can be used to add plugins (trace, metric and log) to choose how to monitor the application.
+func NewBuilder() tBuilder {
+	return &builder{}
+}
+
+// AddPlugin is used to enable plugins on thundra. You can use Trace, Metrics and Log plugins.
 // You need to initialize a plugin object and pass it as a parameter in order to enable it.
+// e.g. AddPlugin(trace.New())
 func (b *builder) AddPlugin(plugin plugin.Plugin) tBuilder {
 	b.plugins = append(b.plugins, plugin)
 	return b
@@ -55,7 +66,7 @@ func (b *builder) EnableWarmup() tBuilder {
 // Builds and returns the thundra object that you will pass to thundra.Wrap() function.
 func (b *builder) Build() *thundra {
 	// Invocation is the default plugin
-	b.AddPlugin(invocation.NewInvocation())
+	b.AddPlugin(invocation.New())
 	if b.reporter == nil {
 		b.reporter = &reporterImpl{}
 	}
@@ -69,11 +80,6 @@ func (b *builder) Build() *thundra {
 		apiKey:   k,
 		warmup:   w,
 	}
-}
-
-// NewBuilder returns a new thundra builder.
-func NewBuilder() tBuilder {
-	return &builder{}
 }
 
 // determineApiKey determines which apiKey to use. if apiKey is set from environment variable, returns that value.

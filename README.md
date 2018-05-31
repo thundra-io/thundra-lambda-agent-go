@@ -46,11 +46,13 @@ Later just build and deploy your executable to AWS as regular. Test your functio
 | thundra_apiKey                           | string |       -       |
 | thundra_applicationProfile               | string |    default    |
 | thundra_disable                          |  bool  |     false     |
-| thundra_lambda_request_disable           |  bool  |     false     |
-| thundra_lambda_response_disable          |  bool  |     false     |
+| thundra_lambda_trace_request_disable     |  bool  |     false     |
+| thundra_lambda_trace_response_disable    |  bool  |     false     |
 | thundra_lambda_publish_cloudwatch_enable |  bool  |     false     |
 | thundra_lambda_warmup_warmupAware        |  bool  |     false     |
 | thundra_lambda_publish_rest_baseUrl      | string |  https<nolink>://collector.thundra.io/api  |
+| thundra_log_logLevel                     | string |       -       |
+| thundra_lambda_debug_enable              | string |     false     |
 
 
 ### Async Monitoring

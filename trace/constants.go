@@ -3,8 +3,8 @@ package trace
 //Trace
 const traceDataType = "AuditData"
 const executionContext = "ExecutionContext"
-const thundraLambdaRequestDisable = "thundra_lambda_request_disable"
-const thundraLambdaResponseDisable = "thundra_lambda_response_disable"
+const thundraLambdaTraceRequestDisable = "thundra_lambda_trace_request_disable"
+const thundraLambdaTraceResponseDisable = "thundra_lambda_trace_response_disable"
 
 //AuditInfo
 const auditInfoOpenTimestamp = "openTimestamp"

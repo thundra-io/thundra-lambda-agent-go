@@ -9,6 +9,8 @@ import (
 	"sync"
 
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
+	"os"
+	"strconv"
 )
 
 type thundra struct {
@@ -19,6 +21,12 @@ type thundra struct {
 }
 
 type lambdaFunction func(context.Context, json.RawMessage) (interface{}, error)
+
+var debugEnabled bool
+
+func init() {
+	debugEnabled = isThundraDebugEnabled()
+}
 
 // Wrap is used for wrapping your lambda functions and start monitoring it by following the thundra objects settings
 // It wraps your lambda function and return a new lambda function. By that, AWS will be able to run this function
@@ -104,11 +112,11 @@ func Wrap(handler interface{}, thundra *thundra) interface{} {
 
 func (t *thundra) executePreHooks(ctx context.Context, request json.RawMessage) {
 	t.reporter.Clear()
+	plugin.GenerateNewTransactionId()
 	var wg sync.WaitGroup
 	wg.Add(len(t.plugins))
-	transactionId := plugin.GenerateNewId()
 	for _, p := range t.plugins {
-		go p.BeforeExecution(ctx, request, transactionId, &wg)
+		go p.BeforeExecution(ctx, request, &wg)
 	}
 	wg.Wait()
 }
@@ -195,4 +203,12 @@ func validateReturns(handler reflect.Type) error {
 		}
 	}
 	return nil
+}
+
+func isThundraDebugEnabled() bool {
+	b, err := strconv.ParseBool(os.Getenv(thundraLambdaDebugEnable))
+	if err != nil {
+		return false
+	}
+	return b
 }

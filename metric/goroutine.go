@@ -23,11 +23,11 @@ type goRoutineStatsData struct {
 func prepareGoRoutineStatsData(metric *metric) goRoutineStatsData {
 	return goRoutineStatsData{
 		Id:                 plugin.GenerateNewId(),
-		TransactionId:      metric.transactionId,
-		ApplicationName:    metric.applicationName,
-		ApplicationId:      metric.applicationId,
-		ApplicationVersion: metric.applicationVersion,
-		ApplicationProfile: metric.applicationProfile,
+		TransactionId:      plugin.TransactionId,
+		ApplicationName:    plugin.ApplicationName,
+		ApplicationId:      plugin.ApplicationId,
+		ApplicationVersion: plugin.ApplicationVersion,
+		ApplicationProfile: plugin.ApplicationProfile,
 		ApplicationType:    plugin.ApplicationType,
 		StatName:           goroutineStat,
 		StatTimestamp:      metric.statTimestamp,
