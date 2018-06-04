@@ -25,8 +25,8 @@ func hello() (string, error) {
 
 func main() {
 	// Instantiate Thundra Agent with Trace & Metric Support
-	tr := trace.NewTrace()
-	m := metric.NewBuilder().Build()
+	tr := trace.New()
+	m := metric.New()
 	t := thundra.NewBuilder().
 	            AddPlugin(tr).
 	            AddPlugin(m).
