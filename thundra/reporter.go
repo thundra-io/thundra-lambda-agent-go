@@ -75,16 +75,23 @@ func sendHttpReq(mesageQueue []interface{}, apiKey string) {
 		fmt.Println(string(b))
 	}
 
-	req, _ := http.NewRequest("POST", targetURL, bytes.NewBuffer(b))
+	req, err := http.NewRequest("POST", targetURL, bytes.NewBuffer(b))
+	if err != nil {
+		fmt.Println("Error http.NewRequest: ", err)
+	}
+	req.Close = true
 	req.Header.Set("Authorization", "ApiKey "+apiKey)
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		fmt.Println("Error:", err)
+		fmt.Println("Error client.Do(req): ", err)
 	}
-	body, _ := ioutil.ReadAll(resp.Body)
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Println("ioutil.ReadAll(resp.Body): ", err)
+	}
 	if debugEnabled {
 		fmt.Println("response Status:", resp.Status)
 		fmt.Println("response Headers:", resp.Header)
