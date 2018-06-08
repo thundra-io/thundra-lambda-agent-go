@@ -6,7 +6,7 @@ jobs:
   build:
     docker:
       # specify the version
-      - image: circleci/golang:1.9
+      - image: circleci/golang:1.10.3
 
       # Specify service dependencies here if necessary
       # CircleCI maintains a library of pre-built images
@@ -31,3 +31,16 @@ jobs:
       - run: go test -v ./metric
       - run: go get -v -t -d ./invocation
       - run: go test -v ./invocation
+  test:
+    pre:
+      - go get github.com/mattn/goveralls
+    override:
+      - go test -v -cover -race -coverprofile=/home/ubuntu/coverage.out
+    post:
+      - /home/ubuntu/.go_workspace/bin/goveralls -coverprofile=/home/ubuntu/coverage.out -service=circle-ci -repotoken=$COVERALLS_TOKEN
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - build
+      - test
