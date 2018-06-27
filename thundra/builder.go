@@ -99,7 +99,7 @@ func determineApiKey(builderApiKey string) string {
 func checkApiKey() (string, error) {
 	k := os.Getenv(thundraApiKey)
 	if k == "" {
-		return "", errors.New("thundraApiKey is not set")
+		return "", errors.New("thundra_apiKey is not set")
 	}
 	return k, nil
 }
