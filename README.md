@@ -53,7 +53,7 @@ Later just build and deploy your executable to AWS as regular. Test your functio
 | thundra_lambda_publish_rest_baseUrl      | string |  https<nolink>://collector.thundra.io/api  |
 | thundra_log_logLevel                     | string |       -       |
 | thundra_lambda_debug_enable              | string |     false     |
-
+| thundra_lambda_timeout_gap               | int    |     150       |
 
 ### Async Monitoring
 
