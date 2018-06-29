@@ -41,7 +41,7 @@ func (i *invocation) AfterExecution(ctx context.Context, request json.RawMessage
 	}
 
 	i.ColdStart = isColdStarted()
-	i.Timeout = isTimeout()
+	i.Timeout = isTimeout(err)
 
 	var invocationArr []interface{}
 	invocationArr = append(invocationArr, i)
@@ -55,7 +55,9 @@ func (i *invocation) OnPanic(ctx context.Context, request json.RawMessage, err i
 	i.ErrorMessage = plugin.GetErrorMessage(err)
 	i.ErrorType = plugin.GetErrorType(err)
 	i.ColdStart = isColdStarted()
-	i.Timeout = isTimeout()
+
+	// since it is panicked it could not be timed out
+	i.Timeout = false
 
 	var invocationArr []interface{}
 	invocationArr = append(invocationArr, i)
@@ -70,8 +72,13 @@ func isColdStarted() (coldStart bool) {
 	return coldStart
 }
 
-// TODO !NOT IMPLEMENTED YET!
 // isTimeout returns if the lambda invocation is timed out.
-func isTimeout() (timeout bool) {
-	return timeout
+func isTimeout(err interface{}) bool {
+	if err == nil {
+		return false
+	}
+	if plugin.GetErrorType(err) == "timeoutError" {
+		return true
+	}
+	return false
 }

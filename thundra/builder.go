@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/thundra-io/thundra-lambda-agent-go/invocation"
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
@@ -73,12 +74,13 @@ func (b *builder) Build() *thundra {
 
 	k := determineApiKey(b.apiKey)
 	w := determineWarmup(b.warmup)
-
+	g := determineTimeoutMargin()
 	return &thundra{
-		plugins:  b.plugins,
-		reporter: b.reporter,
-		apiKey:   k,
-		warmup:   w,
+		plugins:       b.plugins,
+		reporter:      b.reporter,
+		apiKey:        k,
+		warmup:        w,
+		timeoutMargin: g,
 	}
 }
 
@@ -125,4 +127,23 @@ func checkWarmup() (bool, error) {
 		return false, err
 	}
 	return b, nil
+}
+
+// determineTimeoutMargin fetches thundraLambdaTimeoutMargin if it exist, if not returns default timegap value
+func determineTimeoutMargin() time.Duration {
+	t := os.Getenv(thundraLambdaTimeoutMargin)
+	// environment variable is not set
+	if t == "" {
+		return time.Duration(defaultTimeoutMargin)
+	}
+
+	i, err := strconv.ParseInt(t, 10, 32)
+
+	// environment variable is not set in the correct format
+	if err != nil {
+		fmt.Println(err, " "+thundraLambdaTimeoutMargin+" should be set with an integer.")
+		return time.Duration(defaultTimeoutMargin)
+	}
+
+	return time.Duration(i) * time.Millisecond
 }
