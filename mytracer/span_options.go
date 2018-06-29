@@ -1,4 +1,4 @@
-package tracer
+package mytracer
 
 import (
 	"github.com/opentracing/opentracing-go"
