@@ -32,3 +32,11 @@ type operationType string
 func (r operationType) Apply(o *startSpanOptions) {
 	o.operationType = executionContext
 }
+
+func newStartSpanOptions(sso []opentracing.StartSpanOption) startSpanOptions {
+	opts := startSpanOptions{}
+	for _, o := range sso {
+		o.Apply(&opts.Options)
+	}
+	return opts
+}

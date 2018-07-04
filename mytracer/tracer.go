@@ -2,7 +2,6 @@ package mytracer
 
 import (
 	ot "github.com/opentracing/opentracing-go"
-	"time"
 	"github.com/pkg/errors"
 )
 
@@ -58,56 +57,8 @@ type tracerImpl struct {
 	opts Options
 }
 
-func (t *tracerImpl) StartSpan(operationName string, opts ...ot.StartSpanOption) ot.Span {
-	sso := startSpanOptions{}
-	for _, o := range opts {
-		o.Apply(&sso.Options)
-	}
-	// Start time.
-	startTime := sso.Options.StartTime
-	if startTime.IsZero() {
-		startTime = time.Now()
-	}
-	// Build the new span. This is the only allocation: We'll return this as
-	// an opentracing.Span.
-	sp := &spanImpl{}
-	// Look for a parent in the list of References.
-	//
-	// TODO: would be nice if basictracer did something with all
-	// References, not just the first one.
-	ReferencesLoop:
-		for _, ref := range opts.References {
-			switch ref.Type {
-			case opentracing.ChildOfRef,
-				opentracing.FollowsFromRef:
-
-				refCtx := ref.ReferencedContext.(SpanContext)
-				sp.raw.Context.TraceID = refCtx.TraceID
-				sp.raw.Context.SpanID = randomID()
-				sp.raw.Context.Sampled = refCtx.Sampled
-				sp.raw.ParentSpanID = refCtx.SpanID
-
-				if l := len(refCtx.Baggage); l > 0 {
-					sp.raw.Context.Baggage = make(map[string]string, l)
-					for k, v := range refCtx.Baggage {
-						sp.raw.Context.Baggage[k] = v
-					}
-				}
-				break ReferencesLoop
-			}
-		}
-	/*if sp.raw.Context.TraceID == 0 {
-		// No parent Span found; allocate new trace and span ids and determine
-		// the Sampled status.
-		// TODO change it for generation
-		sp.raw.Context.TraceID, sp.raw.Context.SpanID = 1, 2
-	}*/
-	sp.tracer = t
-	sp.raw.Operation = operationName
-	sp.raw.Start = startTime
-	sp.raw.Duration = -1
-	//sp.raw.Tags = opts.Tags
-	return sp
+func (t *tracerImpl) StartSpan(operationName string, sso ...ot.StartSpanOption) ot.Span {
+	return newSpan(operationName, t, sso)
 }
 
 //

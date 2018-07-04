@@ -15,8 +15,56 @@ type spanImpl struct {
 	numDroppedLogs int
 }
 
-func newSpan(operationName string, opts ...ot.StartSpanOption) *spanImpl {
+func newSpan(operationName string, tracer *tracerImpl, sso []ot.StartSpanOption) *spanImpl {
+	opts := newStartSpanOptions(sso)
+
+	// Start time.
+	startTime := opts.Options.StartTime
+	if startTime.IsZero() {
+		startTime = time.Now()
+	}
+	// Build the new span. This is the only allocation: We'll return this as
+	// an opentracing.Span.
 	sp := &spanImpl{}
+
+	// Look for a parent in the list of References.
+	//
+	// TODO: would be nice if basictracer did something with all
+	// References, not just the first one.
+ReferencesLoop:
+	for _, ref := range opts.Options.References {
+		switch ref.Type {
+		case ot.ChildOfRef,
+			ot.FollowsFromRef:
+
+			refCtx := ref.ReferencedContext.(SpanContext)
+			sp.raw.Context.TraceID = refCtx.TraceID
+			sp.raw.Context.SpanID = randomID()
+			sp.raw.ParentSpanID = refCtx.SpanID
+
+			if l := len(refCtx.Baggage); l > 0 {
+				sp.raw.Context.Baggage = make(map[string]string, l)
+				for k, v := range refCtx.Baggage {
+					sp.raw.Context.Baggage[k] = v
+				}
+			}
+			break ReferencesLoop
+		}
+	}
+
+	if sp.raw.Context.TraceID == 0 {
+		// TraceID not set by parent reference or explicitly
+		sp.raw.Context.TraceID, sp.raw.Context.SpanID = randomID2()
+	} else if sp.raw.Context.SpanID == 0 {
+		// TraceID set but SpanID not set
+		sp.raw.Context.SpanID = randomID()
+	}
+
+	sp.tracer = tracer
+	sp.raw.Operation = operationName
+	sp.raw.Start = startTime
+	sp.raw.Duration = -1
+	//sp.raw.Tags = opts.Tags
 	return sp
 }
 
