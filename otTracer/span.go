@@ -5,6 +5,7 @@ import (
 	"time"
 	"sync"
 	"github.com/opentracing/opentracing-go/log"
+	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 )
 
 type spanImpl struct {
@@ -63,8 +64,12 @@ ReferencesLoop:
 	sp.tracer = tracer
 	sp.raw.Operation = operationName
 	sp.raw.Start = startTime
+	sp.raw.StartTimestamp = plugin.GetTimestamp()
 	sp.raw.Duration = -1
 	//sp.raw.Tags = opts.Tags
+
+	sp.tracer.opts.Recorder.RecordSpanStarted(&sp.raw)
+
 	return sp
 }
 
@@ -114,8 +119,10 @@ func (s *spanImpl) FinishWithOptions(opts ot.FinishOptions) {
 
 	s.raw.Duration = duration
 	s.raw.End = finishTime
+	s.raw.EndTimestamp = plugin.GetTimestamp()
 
-	s.tracer.opts.Recorder.RecordSpan(s.raw)
+	//s.tracer.opts.Recorder.RecordSpan(s.raw)
+	s.tracer.opts.Recorder.RecordSpanEnded()
 }
 
 // Deprecated: use LogFields or LogKV

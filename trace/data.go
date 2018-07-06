@@ -73,6 +73,11 @@ func prepareProperties(request json.RawMessage, response interface{}) map[string
 }
 
 func prepareAuditInfo(trace *trace) map[string]interface{} {
+	var children []map[string]interface{}
+	// Opentracing enabled
+	if trace.tracer != nil {
+		children = convertSpantoTraceData(trace)
+	}
 	var auditErrors []interface{}
 	var auditThrownError interface{}
 
@@ -93,5 +98,6 @@ func prepareAuditInfo(trace *trace) map[string]interface{} {
 		auditInfoCloseTimestamp: trace.endTime,
 		auditInfoErrors:         auditErrors,
 		auditInfoThrownError:    auditThrownError,
+		auditInfoChildren:       children,
 	}
 }

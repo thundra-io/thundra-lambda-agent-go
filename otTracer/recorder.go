@@ -4,15 +4,15 @@ import (
 	"sync"
 )
 
-var allSpansTree *RawSpanTree
-var activeSpansStack spanTreeStack
-
 // A SpanRecorder handles all of the `RawSpan` data generated via an
 // associated `Tracer` (see `NewStandardTracer`) instance. It also names
 // the containing process and provides access to a straightforward tag map.
 type SpanRecorder interface {
 	// Implementations must determine whether and where to store `span`.
-	RecordSpan(span RawSpan)
+	//RecordSpan(span RawSpan)
+
+	RecordSpanStarted(span *RawSpan)
+	RecordSpanEnded()
 }
 
 // InMemorySpanRecorder is a simple thread-safe implementation of
@@ -20,15 +20,18 @@ type SpanRecorder interface {
 // via reporter.GetSpans(). It is primarily intended for testing purposes.
 type InMemorySpanRecorder struct {
 	sync.RWMutex
-	spans []RawSpan
+
+	allSpansTree     *RawSpanTree
+	activeSpansStack spanTreeStack
 }
 
 // NewInMemoryRecorder creates new InMemorySpanRecorder
 func NewInMemoryRecorder() *InMemorySpanRecorder {
-	return new(InMemorySpanRecorder)
+	r := new(InMemorySpanRecorder)
+	return r
 }
 
-// RecordSpan implements the respective method of SpanRecorder.
+/*// RecordSpan implements the respective method of SpanRecorder.
 func (r *InMemorySpanRecorder) RecordSpan(span RawSpan) {
 	r.Lock()
 	defer r.Unlock()
@@ -49,4 +52,44 @@ func (r *InMemorySpanRecorder) Reset() {
 	r.Lock()
 	defer r.Unlock()
 	r.spans = nil
+}*/
+
+func (r *InMemorySpanRecorder) RecordSpanStarted(span *RawSpan) {
+	r.Lock()
+	defer r.Unlock()
+
+	t := newRawSpanTree(span)
+	if r.allSpansTree == nil {
+		r.allSpansTree = t
+		r.activeSpansStack.Push(t)
+		return
+	}
+	top, err := r.activeSpansStack.Top()
+	if err != nil {
+
+	}
+
+	top.addChild(t)
+	r.activeSpansStack.Push(t)
+}
+
+func (r *InMemorySpanRecorder) RecordSpanEnded() {
+	r.Lock()
+	defer r.Unlock()
+
+	r.activeSpansStack.Pop()
+}
+
+func (r *InMemorySpanRecorder) GetAllSpansTree() *RawSpanTree {
+	r.Lock()
+	defer r.Unlock()
+
+	return r.allSpansTree
+}
+
+func (r *InMemorySpanRecorder) Reset() {
+	r.Lock()
+	defer r.Unlock()
+	r.allSpansTree = nil
+	r.activeSpansStack = *NewStack()
 }

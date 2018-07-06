@@ -6,6 +6,8 @@ import (
 	"sync"
 
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
+	"github.com/thundra-io/thundra-lambda-agent-go/otTracer"
+	"github.com/opentracing/opentracing-go"
 )
 
 type trace struct {
@@ -17,6 +19,8 @@ type trace struct {
 	thrownErrorMessage interface{}
 	panicInfo          *panicInfo
 	errorInfo          *errorInfo
+	tracer             opentracing.Tracer
+	recorder           *otTracer.InMemorySpanRecorder
 }
 
 var invocationCount uint32
@@ -24,6 +28,24 @@ var invocationCount uint32
 // New returns a new trace object.
 func New() *trace {
 	return &trace{}
+}
+
+func NewWithOpentracing() *trace {
+	memRecorder := otTracer.NewInMemoryRecorder()
+	tracer := otTracer.New(memRecorder)
+	opentracing.SetGlobalTracer(tracer)
+	return &trace{
+		tracer:   tracer,
+		recorder: memRecorder,
+	}
+}
+
+func (trace *trace) GetOpentracingTracer() opentracing.Tracer {
+	return trace.tracer
+}
+
+func (trace *trace) GetMemRecorder() *otTracer.InMemorySpanRecorder {
+	return trace.recorder
 }
 
 func (trace *trace) BeforeExecution(ctx context.Context, request json.RawMessage, wg *sync.WaitGroup) {

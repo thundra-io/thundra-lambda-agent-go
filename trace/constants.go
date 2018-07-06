@@ -13,6 +13,7 @@ const auditInfoContextName = "contextName"
 const auditInfoErrors = "errors"
 const auditInfoId = "id"
 const auditInfoThrownError = "thrownError"
+const auditInfoChildren = "children"
 
 //AuditInfoProperties
 const auditInfoPropertiesRequest = "request"

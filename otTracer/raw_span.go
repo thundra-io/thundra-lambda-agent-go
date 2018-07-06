@@ -25,6 +25,9 @@ type RawSpan struct {
 	Duration time.Duration
 	End      time.Time
 
+	StartTimestamp int64
+	EndTimestamp   int64
+
 	// Essentially an extension mechanism. Can be used for many purposes,
 	// not to be enumerated here.
 	Tags ot.Tags
