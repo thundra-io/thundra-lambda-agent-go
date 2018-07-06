@@ -1,4 +1,4 @@
-package mytracer
+package otTracer
 
 import (
 	ot "github.com/opentracing/opentracing-go"
@@ -113,6 +113,7 @@ func (s *spanImpl) FinishWithOptions(opts ot.FinishOptions) {
 	}
 
 	s.raw.Duration = duration
+	s.raw.End = finishTime
 
 	s.tracer.opts.Recorder.RecordSpan(s.raw)
 }

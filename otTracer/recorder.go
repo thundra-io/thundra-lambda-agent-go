@@ -1,6 +1,11 @@
-package mytracer
+package otTracer
 
-import "sync"
+import (
+	"sync"
+)
+
+var allSpansTree *RawSpanTree
+var activeSpansStack spanTreeStack
 
 // A SpanRecorder handles all of the `RawSpan` data generated via an
 // associated `Tracer` (see `NewStandardTracer`) instance. It also names
@@ -38,19 +43,6 @@ func (r *InMemorySpanRecorder) GetSpans() []RawSpan {
 	copy(spans, r.spans)
 	return spans
 }
-
-/*// GetSampledSpans returns a slice of spans accumulated so far which were sampled.
-func (r *InMemorySpanRecorder) GetSampledSpans() []RawSpan {
-	r.RLock()
-	defer r.RUnlock()
-	spans := make([]RawSpan, 0, len(r.spans))
-	for _, span := range r.spans {
-		if span.Context.Sampled {
-			spans = append(spans, span)
-		}
-	}
-	return spans
-}*/
 
 // Reset clears the internal array of spans.
 func (r *InMemorySpanRecorder) Reset() {

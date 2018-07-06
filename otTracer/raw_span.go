@@ -1,4 +1,4 @@
-package mytracer
+package otTracer
 
 import (
 	"time"
@@ -23,6 +23,7 @@ type RawSpan struct {
 	// one of the timestamps has global clock uncertainty issues.
 	Start    time.Time
 	Duration time.Duration
+	End      time.Time
 
 	// Essentially an extension mechanism. Can be used for many purposes,
 	// not to be enumerated here.

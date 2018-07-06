@@ -1,9 +1,9 @@
-package basictracer
+package otTracer
 
 import (
 	"math/rand"
-	"sync"
 	"time"
+	"sync"
 )
 
 var (
