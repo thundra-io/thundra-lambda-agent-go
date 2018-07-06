@@ -16,6 +16,7 @@ const auditInfoThrownError = "thrownError"
 const auditInfoChildren = "children"
 
 //AuditInfoProperties
+const auditInfoProps = "props"
 const auditInfoPropertiesRequest = "request"
 const auditInfoPropertiesResponse = "response"
 const auditInfoPropertiesColdStart = "coldStart"

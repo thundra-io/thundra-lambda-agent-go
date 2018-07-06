@@ -29,7 +29,7 @@ func walkAndConvert(t *otTracer.RawSpanTree) map[string]interface{} {
 }
 
 func convertToAuditData(span *otTracer.RawSpan) map[string]interface{} {
-	return map[string]interface{}{
+	audit := map[string]interface{}{
 		auditInfoContextName:    span.Operation,
 		auditInfoId:             span.Context.SpanID,
 		auditInfoOpenTimestamp:  span.StartTimestamp,
@@ -37,5 +37,7 @@ func convertToAuditData(span *otTracer.RawSpan) map[string]interface{} {
 		auditInfoErrors:         nil,
 		auditInfoThrownError:    nil,
 		auditInfoChildren:       make([]map[string]interface{}, 0),
+		auditInfoProps:          span.Tags,
 	}
+	return audit
 }
