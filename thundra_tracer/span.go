@@ -1,4 +1,4 @@
-package otTracer
+package thundra_tracer
 
 import (
 	ot "github.com/opentracing/opentracing-go"
@@ -29,9 +29,6 @@ func newSpan(operationName string, tracer *tracerImpl, sso []ot.StartSpanOption)
 	sp := &spanImpl{}
 
 	// Look for a parent in the list of References.
-	//
-	// TODO: would be nice if basictracer did something with all
-	// References, not just the first one.
 ReferencesLoop:
 	for _, ref := range opts.Options.References {
 		switch ref.Type {

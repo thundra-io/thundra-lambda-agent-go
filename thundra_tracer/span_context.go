@@ -1,4 +1,4 @@
-package otTracer
+package thundra_tracer
 
 // SpanContext holds the basic Span metadata.
 type SpanContext struct {

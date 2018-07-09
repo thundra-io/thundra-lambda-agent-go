@@ -1,5 +1,6 @@
-package otTracer
+package thundra_tracer
 
+//
 type RawSpanTree struct {
 	Value    *RawSpan
 	Children []*RawSpanTree
@@ -16,8 +17,7 @@ func newRawSpanTree(span *RawSpan) *RawSpanTree {
 	return tree
 }
 
-// Walk traverses a tree depth-first,
-// sending each Value on a channel.
+// Walk traverses a tree depth-first
 func (t *RawSpanTree) Walk(ch chan *RawSpan) {
 	if t == nil {
 		return
@@ -26,15 +26,4 @@ func (t *RawSpanTree) Walk(ch chan *RawSpan) {
 	for _, child := range t.Children {
 		child.Walk(ch)
 	}
-}
-
-// Walker launches Walk in a new goroutine,
-// and returns a read-only channel of values.
-func Walker(t *RawSpanTree) <-chan *RawSpan {
-	ch := make(chan *RawSpan)
-	go func() {
-		t.Walk(ch)
-		close(ch)
-	}()
-	return ch
 }

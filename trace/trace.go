@@ -6,7 +6,7 @@ import (
 	"sync"
 
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
-	"github.com/thundra-io/thundra-lambda-agent-go/otTracer"
+	"github.com/thundra-io/thundra-lambda-agent-go/thundra_tracer"
 	"github.com/opentracing/opentracing-go"
 )
 
@@ -19,8 +19,8 @@ type trace struct {
 	thrownErrorMessage interface{}
 	panicInfo          *panicInfo
 	errorInfo          *errorInfo
-	tracer             opentracing.Tracer
-	recorder           *otTracer.InMemorySpanRecorder
+	opentracingEnabled bool
+	recorder           *thundra_tracer.TreeSpanRecorder
 }
 
 var invocationCount uint32
@@ -30,21 +30,19 @@ func New() *trace {
 	return &trace{}
 }
 
+// NewWithOpentracing initializes thundra_tracer for opentracing and returns a new trace object
 func NewWithOpentracing() *trace {
-	memRecorder := otTracer.NewInMemoryRecorder()
-	tracer := otTracer.New(memRecorder)
+	memRecorder := thundra_tracer.NewTreeSpanRecorder()
+	tracer := thundra_tracer.New(memRecorder)
 	opentracing.SetGlobalTracer(tracer)
 	return &trace{
-		tracer:   tracer,
-		recorder: memRecorder,
+		opentracingEnabled: true,
+		recorder:           memRecorder,
 	}
 }
 
-func (trace *trace) GetOpentracingTracer() opentracing.Tracer {
-	return trace.tracer
-}
-
-func (trace *trace) GetMemRecorder() *otTracer.InMemorySpanRecorder {
+// GetRecorder returns the TreeSpanRecorder
+func (trace *trace) GetRecorder() *thundra_tracer.TreeSpanRecorder {
 	return trace.recorder
 }
 

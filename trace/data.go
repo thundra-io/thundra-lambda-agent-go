@@ -75,7 +75,7 @@ func prepareProperties(request json.RawMessage, response interface{}) map[string
 func prepareAuditInfo(trace *trace) map[string]interface{} {
 	var children []map[string]interface{}
 	// Opentracing enabled
-	if trace.tracer != nil {
+	if trace.opentracingEnabled {
 		children = convertSpantoTraceData(trace)
 	}
 	var auditErrors []interface{}
