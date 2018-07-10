@@ -8,6 +8,9 @@ func convertSpantoTraceData(trace *trace) []map[string]interface{} {
 	mr := trace.GetRecorder()
 	sTree := mr.GetSpanTree()
 	root := walkAndConvert(sTree)
+	if trace.thrownError != nil {
+		root = setErrorsOnRightestChildren(root, trace.errors, trace.thrownError)
+	}
 	mr.Reset()
 	aiChildren := root[auditInfoChildren].([]map[string]interface{})
 	return aiChildren
@@ -42,4 +45,20 @@ func convertToAuditData(span *thundra_tracer.RawSpan) map[string]interface{} {
 		auditInfoChildren:       make([]map[string]interface{}, 0),
 		auditInfoProps:          span.Tags,
 	}
+}
+
+
+// If panic occurs on the execution, it occurs on the last leaf node because execution can not continue from that point.
+// setErrorsOnRightestChildren traverses the tree and adds error logs to all rightest children
+func setErrorsOnRightestChildren(root map[string]interface{}, errors []string, thrownError interface{}) map[string]interface{} {
+	aiChildren := root[auditInfoChildren].([]map[string]interface{})
+	if len(aiChildren) != 0 {
+		last := aiChildren[len(aiChildren)-1]
+		last = setErrorsOnRightestChildren(last, errors, thrownError)
+		aiChildren[len(aiChildren)-1] = last
+		root[auditInfoChildren] = aiChildren
+	}
+	root[auditInfoErrors] = errors
+	root[auditInfoThrownError] = thrownError
+	return root
 }
