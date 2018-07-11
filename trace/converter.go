@@ -4,9 +4,13 @@ import (
 	"github.com/thundra-io/thundra-lambda-agent-go/thundra_tracer"
 )
 
+// convertSpantoTraceData converts manually instrumented spans to traceData format
 func convertSpantoTraceData(trace *trace) []map[string]interface{} {
 	mr := trace.GetRecorder()
 	sTree := mr.GetSpanTree()
+	if sTree == nil {
+		return nil
+	}
 	root := walkAndConvert(sTree)
 	if trace.thrownError != nil {
 		root = setErrorsOnRightestChildren(root, trace.errors, trace.thrownError)
@@ -46,7 +50,6 @@ func convertToAuditData(span *thundra_tracer.RawSpan) map[string]interface{} {
 		auditInfoProps:          span.Tags,
 	}
 }
-
 
 // If panic occurs on the execution, it occurs on the last leaf node because execution can not continue from that point.
 // setErrorsOnRightestChildren traverses the tree and adds error logs to all rightest children

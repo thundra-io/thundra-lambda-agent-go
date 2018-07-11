@@ -15,6 +15,11 @@ func GenerateNewId() string {
 	return uuid.NewV4().String()
 }
 
+// Generate2NewId generates 2 new uuids.
+func Generate2NewId() (string, string) {
+	return GenerateNewId(), GenerateNewId()
+}
+
 func GenerateNewTransactionId() {
 	TransactionId = GenerateNewId()
 }

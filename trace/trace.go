@@ -19,25 +19,20 @@ type trace struct {
 	thrownErrorMessage interface{}
 	panicInfo          *panicInfo
 	errorInfo          *errorInfo
-	opentracingEnabled bool
 	recorder           *thundra_tracer.TreeSpanRecorder
 }
 
 var invocationCount uint32
 
-// New returns a new trace object.
+// New returns a new trace object with thundra_tracer for opentracing.
+// Inorder to use thundra_tracer to manually instrument your code, follow opentracing format.
+// If manual instrumentation is not used, collected span data is ignored.
 func New() *trace {
-	return &trace{}
-}
-
-// NewWithOpentracing initializes thundra_tracer for opentracing and returns a new trace object
-func NewWithOpentracing() *trace {
 	memRecorder := thundra_tracer.NewTreeSpanRecorder()
 	tracer := thundra_tracer.New(memRecorder)
 	opentracing.SetGlobalTracer(tracer)
 	return &trace{
-		opentracingEnabled: true,
-		recorder:           memRecorder,
+		recorder: memRecorder,
 	}
 }
 

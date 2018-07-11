@@ -3,10 +3,10 @@ package thundra_tracer
 // SpanContext holds the basic Span metadata.
 type SpanContext struct {
 	// A probabilistically unique identifier for a [multi-span] trace.
-	TraceID uint64
+	TraceID string
 
 	// A probabilistically unique identifier for a span.
-	SpanID uint64
+	SpanID string
 
 	// The span's associated baggage.
 	Baggage map[string]string // initialized on first use

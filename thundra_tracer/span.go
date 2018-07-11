@@ -20,10 +20,8 @@ func newSpan(operationName string, tracer *tracerImpl, sso []ot.StartSpanOption)
 	opts := newStartSpanOptions(sso)
 
 	// Start time.
-	startTime := opts.Options.StartTime
-	if startTime.IsZero() {
-		startTime = time.Now()
-	}
+	startTimestamp := plugin.GetTimestamp()
+
 	// Build the new span. This is the only allocation: We'll return this as
 	// an opentracing.Span.
 	sp := &spanImpl{}
@@ -37,7 +35,7 @@ ReferencesLoop:
 
 			refCtx := ref.ReferencedContext.(SpanContext)
 			sp.raw.Context.TraceID = refCtx.TraceID
-			sp.raw.Context.SpanID = randomID()
+			sp.raw.Context.SpanID = plugin.GenerateNewId()
 			sp.raw.ParentSpanID = refCtx.SpanID
 
 			if l := len(refCtx.Baggage); l > 0 {
@@ -50,18 +48,17 @@ ReferencesLoop:
 		}
 	}
 
-	if sp.raw.Context.TraceID == 0 {
+	if sp.raw.Context.TraceID == "" {
 		// TraceID not set by parent reference or explicitly
-		sp.raw.Context.TraceID, sp.raw.Context.SpanID = randomID2()
-	} else if sp.raw.Context.SpanID == 0 {
+		sp.raw.Context.TraceID, sp.raw.Context.SpanID = plugin.Generate2NewId()
+	} else if sp.raw.Context.SpanID == "" {
 		// TraceID set but SpanID not set
-		sp.raw.Context.SpanID = randomID()
+		sp.raw.Context.SpanID = plugin.GenerateNewId()
 	}
 
 	sp.tracer = tracer
 	sp.raw.Operation = operationName
-	sp.raw.Start = startTime
-	sp.raw.StartTimestamp = plugin.GetTimestamp()
+	sp.raw.StartTimestamp = startTimestamp
 	sp.raw.Duration = -1
 	//sp.raw.Tags = opts.Tags
 
@@ -76,11 +73,8 @@ func (s *spanImpl) Finish() {
 }
 
 func (s *spanImpl) FinishWithOptions(opts ot.FinishOptions) {
-	finishTime := opts.FinishTime
-	if finishTime.IsZero() {
-		finishTime = time.Now()
-	}
-	duration := finishTime.Sub(s.raw.Start)
+	finishTimestamp := plugin.GetTimestamp()
+	duration := finishTimestamp - s.raw.StartTimestamp
 
 	s.Lock()
 	defer s.Unlock()
@@ -115,8 +109,7 @@ func (s *spanImpl) FinishWithOptions(opts ot.FinishOptions) {
 	}
 
 	s.raw.Duration = duration
-	s.raw.End = finishTime
-	s.raw.EndTimestamp = plugin.GetTimestamp()
+	s.raw.EndTimestamp = finishTimestamp
 
 	//s.tracer.opts.Recorder.RecordSpan(s.raw)
 	s.tracer.opts.Recorder.RecordSpanEnded()
@@ -250,6 +243,6 @@ func (s *spanImpl) Operation() string {
 	return s.raw.Operation
 }
 
-func (s *spanImpl) Start() time.Time {
-	return s.raw.Start
+func (s *spanImpl) Start() int64 {
+	return s.raw.StartTimestamp
 }
