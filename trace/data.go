@@ -85,6 +85,7 @@ func prepareAuditInfo(trace *trace) map[string]interface{} {
 		auditErrors = append(auditErrors, e)
 		auditThrownError = e
 	}
+	children := transformSpantoTraceData(trace.recorder)
 
 	return map[string]interface{}{
 		auditInfoContextName:    plugin.ApplicationName,
@@ -93,5 +94,6 @@ func prepareAuditInfo(trace *trace) map[string]interface{} {
 		auditInfoCloseTimestamp: trace.endTime,
 		auditInfoErrors:         auditErrors,
 		auditInfoThrownError:    auditThrownError,
+		auditInfoChildren:       children,
 	}
 }

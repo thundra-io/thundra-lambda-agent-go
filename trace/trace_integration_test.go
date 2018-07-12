@@ -112,7 +112,7 @@ func TestTrace(t *testing.T) {
 			r.On("Clear").Return()
 			r.On("Collect", mock.Anything).Return()
 
-			tr := &trace{}
+			tr := New()
 			th := thundra.NewBuilder().AddPlugin(tr).SetReporter(r).SetAPIKey(testApiKey).Build()
 			lambdaHandler := thundra.Wrap(testCase.handler, th)
 			h := lambdaHandler.(func(context.Context, json.RawMessage) (interface{}, error))

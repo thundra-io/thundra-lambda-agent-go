@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"sync"
 
+	"github.com/opentracing/opentracing-go"
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
+	"github.com/thundra-io/thundra-lambda-agent-go/thundra_tracer"
 )
 
 type trace struct {
@@ -17,13 +19,21 @@ type trace struct {
 	thrownErrorMessage interface{}
 	panicInfo          *panicInfo
 	errorInfo          *errorInfo
+	recorder           *thundra_tracer.TreeSpanRecorder
 }
 
 var invocationCount uint32
 
-// New returns a new trace object.
+// New returns a new trace object with thundra_tracer for opentracing.
+// Inorder to use thundra_tracer to manually instrument your code, follow opentracing format.
+// If manual instrumentation is not used, collected span data is ignored.
 func New() *trace {
-	return &trace{}
+	memRecorder := thundra_tracer.NewTreeSpanRecorder()
+	tracer := thundra_tracer.New(memRecorder)
+	opentracing.SetGlobalTracer(tracer)
+	return &trace{
+		recorder: memRecorder,
+	}
 }
 
 func (trace *trace) BeforeExecution(ctx context.Context, request json.RawMessage, wg *sync.WaitGroup) {
