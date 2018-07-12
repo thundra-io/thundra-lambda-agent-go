@@ -5,15 +5,17 @@ import (
 )
 
 // transformSpantoTraceData transforms manually instrumented spans to traceData format
-func transformSpantoTraceData(recorder thundra_tracer.SpanRecorder) interface{} {
+func transformSpantoTraceData(recorder thundra_tracer.SpanRecorder) []map[string]interface{} {
 	sTree := recorder.GetSpanTree()
 	if sTree == nil {
 		return nil
 	}
 	root := traverseAndTransform(sTree)
 	recorder.Reset()
-	// We currently ignore the root span because of our trace plugin sets the the root
-	return root //root[auditInfoChildren]
+	// Creates a new array and add the object because it should return an array
+	var rslt []map[string]interface{}
+	rslt = append(rslt, root)
+	return rslt
 }
 
 // traverseAndTransform traverses tree in depth-first and transforms spans to audit data
