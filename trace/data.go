@@ -76,6 +76,7 @@ func prepareAuditInfo(trace *trace) map[string]interface{} {
 	var auditErrors []interface{}
 	var auditThrownError interface{}
 
+	children := convertSpantoTraceData(trace)
 	if trace.panicInfo != nil {
 		p := *trace.panicInfo
 		auditErrors = append(auditErrors, p)
@@ -93,5 +94,6 @@ func prepareAuditInfo(trace *trace) map[string]interface{} {
 		auditInfoCloseTimestamp: trace.endTime,
 		auditInfoErrors:         auditErrors,
 		auditInfoThrownError:    auditThrownError,
+		auditInfoChildren:       children,
 	}
 }
