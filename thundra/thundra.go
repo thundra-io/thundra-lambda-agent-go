@@ -102,7 +102,8 @@ func (t *thundra) catchTimeout(ctx context.Context, payload json.RawMessage) {
 		return
 	}
 
-	timeoutChannel := time.After(time.Until(timeoutDuration))
+	timer := time.NewTimer(time.Until(timeoutDuration))
+	timeoutChannel := timer.C
 
 	select {
 	case <-timeoutChannel:
@@ -110,6 +111,8 @@ func (t *thundra) catchTimeout(ctx context.Context, payload json.RawMessage) {
 		t.executePostHooks(ctx, payload, nil, timeoutError{})
 		return
 	case <-ctx.Done():
+		// close timeoutChannel
+		timer.Stop()
 		return
 	}
 }
