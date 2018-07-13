@@ -22,7 +22,6 @@ jobs:
       - checkout
 
       # specify any bash command here prefixed with `run: `
-      - run: echo "Hello Circleci"
       - run: go get -v -t -d ./thundra
       - run: go test -v ./thundra
       - run: go get -v -t -d ./trace
