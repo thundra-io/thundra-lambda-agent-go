@@ -3,6 +3,7 @@ package trace
 import (
 	"encoding/json"
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
+	"context"
 )
 
 type traceData struct {
@@ -26,8 +27,8 @@ type traceData struct {
 	Properties         map[string]interface{} `json:"properties"`
 }
 
-func prepareTraceData(request json.RawMessage, response interface{}, trace *trace) traceData {
-	props := prepareProperties(request, response)
+func prepareTraceData(ctx context.Context, request json.RawMessage, response interface{}, trace *trace) traceData {
+	props := prepareProperties(ctx, request, response)
 	ai := prepareAuditInfo(trace)
 
 	return traceData{
@@ -52,7 +53,7 @@ func prepareTraceData(request json.RawMessage, response interface{}, trace *trac
 	}
 }
 
-func prepareProperties(request json.RawMessage, response interface{}) map[string]interface{} {
+func prepareProperties(ctx context.Context, request json.RawMessage, response interface{}) map[string]interface{} {
 	coldStart := "true"
 	if invocationCount += 1; invocationCount != 1 {
 		coldStart = "false"
@@ -63,12 +64,17 @@ func prepareProperties(request json.RawMessage, response interface{}) map[string
 	if shouldHideResponse() {
 		response = nil
 	}
+
 	return map[string]interface{}{
 		auditInfoPropertiesRequest:             string(request),
 		auditInfoPropertiesResponse:            response,
 		auditInfoPropertiesColdStart:           coldStart,
+		auditInfoPropertiesLogGroupName:        plugin.LogGroupName,
+		auditInfoPropertiesLogStreamName:       plugin.LogStreamName,
 		auditInfoPropertiesFunctionRegion:      plugin.Region,
 		auditInfoPropertiesFunctionMemoryLimit: plugin.MemorySize,
+		auditInfoPropertiesFunctionARN:         plugin.GetInvokedFunctionArn(ctx),
+		auditInfoPropertiesRequestId:           plugin.GetAwsRequestID(ctx),
 	}
 }
 

@@ -4,15 +4,20 @@ import (
 	"github.com/aws/aws-lambda-go/lambdacontext"
 	"os"
 	"strings"
+	"context"
 )
 
 var ApplicationName string
 var ApplicationId string
 var ApplicationVersion string
 var ApplicationProfile string
-var TransactionId string
 var Region string
 var MemorySize int
+var LogGroupName string
+var LogStreamName string
+var FunctionARN string
+
+var TransactionId string
 var ContextId string
 
 func init() {
@@ -22,6 +27,8 @@ func init() {
 	ApplicationProfile = getApplicationProfile()
 	Region = getRegion()
 	MemorySize = getMemorySize()
+	LogGroupName = getLogGroupName()
+	LogStreamName = getLogStreamName()
 }
 
 // getApplicationName returns function name.
@@ -65,4 +72,32 @@ func getRegion() string {
 // getMemorySize returns configured memory limit for the current instance of the Lambda Function
 func getMemorySize() int {
 	return lambdacontext.MemoryLimitInMB
+}
+
+func getLogGroupName() string {
+	return lambdacontext.LogGroupName
+}
+
+func getLogStreamName() string {
+	return lambdacontext.LogStreamName
+}
+
+// GetFromContext returns InvokedFunctionArn and AwsRequestID if available.
+func GetInvokedFunctionArn(ctx context.Context) string {
+	lc, ok := lambdacontext.FromContext(ctx)
+	if !ok {
+		// lambdaContext is not set
+		return ""
+	}
+	return lc.InvokedFunctionArn
+}
+
+// GetFromContext returns InvokedFunctionArn and AwsRequestID if available.
+func GetAwsRequestID(ctx context.Context) (string) {
+	lc, ok := lambdacontext.FromContext(ctx)
+	if !ok {
+		// lambdaContext is not set
+		return ""
+	}
+	return lc.AwsRequestID
 }

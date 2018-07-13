@@ -18,8 +18,12 @@ const auditInfoThrownError = "thrownError"
 const auditInfoPropertiesRequest = "request"
 const auditInfoPropertiesResponse = "response"
 const auditInfoPropertiesColdStart = "coldStart"
-const auditInfoPropertiesFunctionRegion = "functionRegion"
+const auditInfoPropertiesLogGroupName = "logGroupName"
+const auditInfoPropertiesLogStreamName = "logStreamName"
 const auditInfoPropertiesFunctionMemoryLimit = "functionMemoryLimitInMB"
+const auditInfoPropertiesFunctionRegion = "functionRegion"
+const auditInfoPropertiesFunctionARN = "functionARN"
+const auditInfoPropertiesRequestId = "requestId"
 
 //AWS
 const awsDefaultRegion = "AWS_DEFAULT_REGION"
