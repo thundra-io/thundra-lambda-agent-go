@@ -83,11 +83,21 @@ func getLogStreamName() string {
 }
 
 // GetFromContext returns InvokedFunctionArn and AwsRequestID if available.
-func GetFromContext(ctx context.Context) (string, string) {
+func GetInvokedFunctionArn(ctx context.Context) string {
 	lc, ok := lambdacontext.FromContext(ctx)
 	if !ok {
 		// lambdaContext is not set
-		return "", ""
+		return ""
 	}
-	return lc.InvokedFunctionArn, lc.AwsRequestID
+	return lc.InvokedFunctionArn
+}
+
+// GetFromContext returns InvokedFunctionArn and AwsRequestID if available.
+func GetAwsRequestID(ctx context.Context) (string) {
+	lc, ok := lambdacontext.FromContext(ctx)
+	if !ok {
+		// lambdaContext is not set
+		return ""
+	}
+	return lc.AwsRequestID
 }

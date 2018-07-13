@@ -65,7 +65,6 @@ func prepareProperties(ctx context.Context, request json.RawMessage, response in
 		response = nil
 	}
 
-	arn, rId := plugin.GetFromContext(ctx)
 	return map[string]interface{}{
 		auditInfoPropertiesRequest:             string(request),
 		auditInfoPropertiesResponse:            response,
@@ -74,8 +73,8 @@ func prepareProperties(ctx context.Context, request json.RawMessage, response in
 		auditInfoPropertiesLogStreamName:       plugin.LogStreamName,
 		auditInfoPropertiesFunctionRegion:      plugin.Region,
 		auditInfoPropertiesFunctionMemoryLimit: plugin.MemorySize,
-		auditInfoPropertiesFunctionARN:         arn,
-		auditInfoPropertiesRequestId:           rId,
+		auditInfoPropertiesFunctionARN:         plugin.GetInvokedFunctionArn(ctx),
+		auditInfoPropertiesRequestId:           plugin.GetAwsRequestID(ctx),
 	}
 }
 
