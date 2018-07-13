@@ -8,12 +8,6 @@
   version = "1.0.0"
 
 [[projects]]
-  name = "github.com/aws/aws-lambda-go"
-  packages = ["lambdacontext"]
-  revision = "fafa7e49388b8991caf99308e80655ba91816b72"
-  version = "v1.1.0"
-
-[[projects]]
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
   revision = "346938d642f2ec3594ed81d874461961cd0faa76"
@@ -86,6 +80,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "cf9312b652e609266ba07f6e5bca57c0e053b8ac0a364e1cd45dce565e6e56d3"
+  inputs-digest = "047b51f8d5bd7448e70c304e1178445d1fb125e0ccc2ae0e4428bb2a86cb1db0"
   solver-name = "gps-cdcl"
   solver-version = 1
