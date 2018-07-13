@@ -14,6 +14,7 @@ const (
 	ApplicationProfile = "TestProfile"
 	Region             = "TestRegion"
 	MemoryLimit        = 512
+	LogGroupName       = "TestLogGroupName"
 )
 
 //MockReporter is used in tests for mock reporter
@@ -43,6 +44,8 @@ func PrepareEnvironment() {
 	plugin.ApplicationProfile = ApplicationProfile
 	plugin.Region = Region
 	plugin.MemorySize = MemoryLimit
+	plugin.LogGroupName = LogGroupName
+	plugin.LogStreamName = LogStreamName
 }
 
 func CleanEnvironment() {

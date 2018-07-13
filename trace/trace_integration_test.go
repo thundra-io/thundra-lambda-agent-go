@@ -164,6 +164,10 @@ func TestTrace(t *testing.T) {
 			assert.Equal(t, coldStart, props[auditInfoPropertiesColdStart])
 			assert.Equal(t, test.Region, props[auditInfoPropertiesFunctionRegion])
 			assert.Equal(t, test.MemoryLimit, props[auditInfoPropertiesFunctionMemoryLimit])
+			assert.Equal(t, test.LogGroupName, props[auditInfoPropertiesLogGroupName])
+			assert.Equal(t, test.LogStreamName, props[auditInfoPropertiesLogStreamName])
+			assert.NotNil(t, props[auditInfoPropertiesFunctionARN])
+			assert.NotNil(t, props[auditInfoPropertiesRequestId])
 
 			if testCase.expected.err != nil {
 				assert.Equal(t, testCase.expected.err, err)
@@ -301,6 +305,10 @@ func TestPanic(t *testing.T) {
 					assert.Equal(t, coldStart, props[auditInfoPropertiesColdStart])
 					assert.Equal(t, test.Region, props[auditInfoPropertiesFunctionRegion])
 					assert.Equal(t, test.MemoryLimit, props[auditInfoPropertiesFunctionMemoryLimit])
+					assert.Equal(t, test.LogGroupName, props[auditInfoPropertiesLogGroupName])
+					assert.Equal(t, test.LogStreamName, props[auditInfoPropertiesLogStreamName])
+					assert.NotNil(t, props[auditInfoPropertiesFunctionARN])
+					assert.NotNil(t, props[auditInfoPropertiesRequestId])
 
 					assert.Equal(t, 1, len((ai[auditInfoErrors]).([]interface{})))
 					assert.Nil(t, props[auditInfoPropertiesResponse])

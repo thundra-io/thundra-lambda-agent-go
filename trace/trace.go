@@ -52,7 +52,7 @@ func (trace *trace) AfterExecution(ctx context.Context, request json.RawMessage,
 		trace.errors = append(trace.errors, errType)
 	}
 
-	td := prepareTraceData(request, response, trace)
+	td := prepareTraceData(ctx, request, response, trace)
 	var traceArr []interface{}
 	traceArr = append(traceArr, td)
 	return traceArr, traceDataType
@@ -75,7 +75,7 @@ func (trace *trace) OnPanic(ctx context.Context, request json.RawMessage, err in
 	trace.thrownErrorMessage = plugin.GetErrorMessage(err)
 	trace.errors = append(trace.errors, errType)
 
-	td := prepareTraceData(request, nil, trace)
+	td := prepareTraceData(ctx, request, nil, trace)
 	var traceArr []interface{}
 	traceArr = append(traceArr, td)
 	return traceArr, traceDataType
