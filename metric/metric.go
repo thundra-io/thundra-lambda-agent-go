@@ -18,8 +18,8 @@ type metric struct {
 	endGCCount        uint32
 	startPauseTotalNs uint64
 	endPauseTotalNs   uint64
-	startCPUTimeStat  cpuTimesStat
-	endCPUTimeStat    cpuTimesStat
+	startCPUTimeStat  *cpuTimesStat
+	endCPUTimeStat    *cpuTimesStat
 	process           *process.Process
 	processCpuPercent float64
 	systemCpuPercent  float64
@@ -48,7 +48,7 @@ func (metric *metric) BeforeExecution(ctx context.Context, request json.RawMessa
 	}
 
 	if !metric.disableCPUStats {
-		metric.startCPUTimeStat = *sampleCPUtimesStat()
+		metric.startCPUTimeStat = sampleCPUtimesStat()
 	}
 
 	wg.Done()
@@ -79,7 +79,7 @@ func (metric *metric) AfterExecution(ctx context.Context, request json.RawMessag
 	}
 
 	if !metric.disableCPUStats {
-		metric.endCPUTimeStat = *sampleCPUtimesStat()
+		metric.endCPUTimeStat = sampleCPUtimesStat()
 
 		metric.processCpuPercent = getProcessUsagePercent(metric)
 		metric.systemCpuPercent = getSystemUsagePercent(metric)

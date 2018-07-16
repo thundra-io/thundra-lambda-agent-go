@@ -39,6 +39,10 @@ func prepareCPUStatsData(metric *metric) cpuStatsData {
 }
 
 func getSystemUsagePercent(metric *metric) float64 {
+	// Skip test
+	if metric.startCPUTimeStat == nil {
+		return 0
+	}
 	dSysUsed := metric.endCPUTimeStat.sys_used() - metric.startCPUTimeStat.sys_used()
 	dTotal := metric.endCPUTimeStat.total() - metric.startCPUTimeStat.total()
 	s := float64(dSysUsed) / float64(dTotal)
@@ -51,6 +55,10 @@ func getSystemUsagePercent(metric *metric) float64 {
 }
 
 func getProcessUsagePercent(metric *metric) float64 {
+	// Skip test
+	if metric.startCPUTimeStat == nil {
+		return 0
+	}
 	dProcUsed := metric.endCPUTimeStat.proc_used() - metric.startCPUTimeStat.proc_used()
 	dTotal := metric.endCPUTimeStat.total() - metric.startCPUTimeStat.total()
 	p := float64(dProcUsed) / float64(dTotal)

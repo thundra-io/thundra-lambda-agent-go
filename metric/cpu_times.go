@@ -76,7 +76,6 @@ func getProcStat() *procTimesStat {
 		return nil
 	}
 	fields := strings.Fields(string(contents))
-	fmt.Println("fields: ", fields)
 	user, err := strconv.ParseUint(fields[1], 10, 64)
 	if err != nil {
 		fmt.Println("procStat[0] ", err.Error())
