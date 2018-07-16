@@ -3,11 +3,12 @@ package plugin
 import (
 	"fmt"
 	"os"
+	"reflect"
+	"strconv"
 	"time"
 
 	"github.com/satori/go.uuid"
 	"github.com/shirou/gopsutil/process"
-	"reflect"
 )
 
 // GenerateNewId generates new uuid.
@@ -31,7 +32,14 @@ func GetThisProcess() *process.Process {
 		fmt.Println(err)
 		return nil
 	}
+
 	return p
+}
+
+// GetPid returns pid of this process.
+func GetPid() string {
+	pid := os.Getpid()
+	return strconv.Itoa(pid)
 }
 
 // GetTimestamp returns current unix timestamp in msec.

@@ -7,7 +7,6 @@ import (
 	"runtime"
 	"sync"
 
-	"github.com/shirou/gopsutil/cpu"
 	"github.com/shirou/gopsutil/net"
 	"github.com/shirou/gopsutil/process"
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
@@ -19,6 +18,8 @@ type metric struct {
 	endGCCount        uint32
 	startPauseTotalNs uint64
 	endPauseTotalNs   uint64
+	startCPUTimeStat  *cpuTimesStat
+	endCPUTimeStat    *cpuTimesStat
 	process           *process.Process
 	processCpuPercent float64
 	systemCpuPercent  float64
@@ -47,10 +48,7 @@ func (metric *metric) BeforeExecution(ctx context.Context, request json.RawMessa
 	}
 
 	if !metric.disableCPUStats {
-		// We need to calculate process and system percentages here to register cpu times
-		// Later we'll use them to calculate cpu usage percentage
-		metric.process.Percent(0)
-		cpu.Percent(0, false)
+		metric.startCPUTimeStat = sampleCPUtimesStat()
 	}
 
 	wg.Done()
@@ -81,15 +79,13 @@ func (metric *metric) AfterExecution(ctx context.Context, request json.RawMessag
 	}
 
 	if !metric.disableCPUStats {
-		p, s, err := getCPUUsagePercentage(metric.process)
-		if err != nil {
-			fmt.Println(err)
-		} else {
-			metric.processCpuPercent = p
-			metric.systemCpuPercent = s
-			c := prepareCPUStatsData(metric)
-			stats = append(stats, c)
-		}
+		metric.endCPUTimeStat = sampleCPUtimesStat()
+
+		metric.processCpuPercent = getProcessUsagePercent(metric)
+		metric.systemCpuPercent = getSystemUsagePercent(metric)
+
+		c := prepareCPUStatsData(metric)
+		stats = append(stats, c)
 	}
 
 	if !metric.disableDiskStats {

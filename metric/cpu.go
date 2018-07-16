@@ -1,8 +1,6 @@
 package metric
 
 import (
-	"github.com/shirou/gopsutil/cpu"
-	"github.com/shirou/gopsutil/process"
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 )
 
@@ -17,7 +15,7 @@ type cpuStatsData struct {
 	StatName           string `json:"statName"`
 	StatTimestamp      int64  `json:"statTimestamp"`
 
-	// ProcessCPUPercent is the process usage of the total CPU time
+	// ProcessCPUPercent is the pid usage of the total CPU time
 	ProcessCPUPercent float64 `json:"procPercent"`
 
 	// SystemCPUPercent is the system usage of the total CPU time
@@ -40,16 +38,34 @@ func prepareCPUStatsData(metric *metric) cpuStatsData {
 	}
 }
 
-func getCPUUsagePercentage(p *process.Process) (float64, float64, error) {
-	sysUsage, err := cpu.Percent(0, false)
-	if err != nil {
-		return 0, 0, err
+func getSystemUsagePercent(metric *metric) float64 {
+	// Skip test
+	if metric.startCPUTimeStat == nil {
+		return 0
 	}
-
-	processUsage, err := p.Percent(0)
-	if err != nil {
-		return 0, 0, err
+	dSysUsed := metric.endCPUTimeStat.sys_used() - metric.startCPUTimeStat.sys_used()
+	dTotal := metric.endCPUTimeStat.total() - metric.startCPUTimeStat.total()
+	s := float64(dSysUsed) / float64(dTotal)
+	if s <= 0 {
+		s = 0
+	} else if s >= 1 {
+		s = 1
 	}
+	return s
+}
 
-	return processUsage, sysUsage[0], nil
+func getProcessUsagePercent(metric *metric) float64 {
+	// Skip test
+	if metric.startCPUTimeStat == nil {
+		return 0
+	}
+	dProcUsed := metric.endCPUTimeStat.proc_used() - metric.startCPUTimeStat.proc_used()
+	dTotal := metric.endCPUTimeStat.total() - metric.startCPUTimeStat.total()
+	p := float64(dProcUsed) / float64(dTotal)
+	if p <= 0 {
+		p = 0
+	} else if p >= 1 {
+		p = 1
+	}
+	return p
 }
