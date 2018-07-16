@@ -16,6 +16,8 @@ type mBuilder interface {
 	Build() *metric
 }
 
+var pid string
+
 type builder struct {
 	disableGCStats        bool
 	disableHeapStats      bool
@@ -26,11 +28,13 @@ type builder struct {
 	prevDiskStat          *process.IOCountersStat
 	prevNetStat           *net.IOCountersStat
 	process               *process.Process
+	pid                   string
 }
 
 // New initializes a new metric object which collects all types of metrics. If you want to disable a metric that
 // you don't want to collect use NewBuilder() instead.
-func New() *metric{
+func New() *metric {
+	pid = plugin.GetPid()
 	return NewBuilder().Build()
 }
 

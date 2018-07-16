@@ -1,10 +1,10 @@
 package plugin
 
 import (
+	"context"
 	"github.com/aws/aws-lambda-go/lambdacontext"
 	"os"
 	"strings"
-	"context"
 )
 
 var ApplicationName string
@@ -93,7 +93,7 @@ func GetInvokedFunctionArn(ctx context.Context) string {
 }
 
 // GetFromContext returns InvokedFunctionArn and AwsRequestID if available.
-func GetAwsRequestID(ctx context.Context) (string) {
+func GetAwsRequestID(ctx context.Context) string {
 	lc, ok := lambdacontext.FromContext(ctx)
 	if !ok {
 		// lambdaContext is not set
