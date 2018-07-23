@@ -27,9 +27,9 @@ type traceData struct {
 	Properties         map[string]interface{} `json:"properties"`
 }
 
-func prepareTraceData(ctx context.Context, request json.RawMessage, response interface{}, trace *trace) traceData {
-	props := prepareProperties(ctx, request, response)
-	ai := prepareAuditInfo(trace)
+func (tr *trace) prepareTraceData(ctx context.Context, request json.RawMessage, response interface{}) traceData {
+	props := tr.prepareProperties(ctx, request, response)
+	ai := tr.prepareAuditInfo()
 
 	return traceData{
 		Id:                 plugin.ContextId,
@@ -42,22 +42,23 @@ func prepareTraceData(ctx context.Context, request json.RawMessage, response int
 		ContextId:          plugin.ContextId,
 		ContextName:        plugin.ApplicationName,
 		ContextType:        executionContext,
-		StartTimestamp:     trace.startTime,
-		EndTimestamp:       trace.endTime,
-		Duration:           trace.duration,
-		Errors:             trace.errors,
-		ThrownError:        trace.thrownError,
-		ThrownErrorMessage: trace.thrownErrorMessage,
+		StartTimestamp:     tr.startTime,
+		EndTimestamp:       tr.endTime,
+		Duration:           tr.duration,
+		Errors:             tr.errors,
+		ThrownError:        tr.thrownError,
+		ThrownErrorMessage: tr.thrownErrorMessage,
 		AuditInfo:          ai,
 		Properties:         props,
 	}
 }
 
-func prepareProperties(ctx context.Context, request json.RawMessage, response interface{}) map[string]interface{} {
+func (tr *trace) prepareProperties(ctx context.Context, request json.RawMessage, response interface{}) map[string]interface{} {
 	coldStart := "true"
 	if invocationCount += 1; invocationCount != 1 {
 		coldStart = "false"
 	}
+	// If the agent's user doesn't want to send their request and response data, hide them.
 	if shouldHideRequest() {
 		request = nil
 	}
@@ -78,16 +79,16 @@ func prepareProperties(ctx context.Context, request json.RawMessage, response in
 	}
 }
 
-func prepareAuditInfo(trace *trace) map[string]interface{} {
+func (tr *trace) prepareAuditInfo() map[string]interface{} {
 	var auditErrors []interface{}
 	var auditThrownError interface{}
 
-	if trace.panicInfo != nil {
-		p := *trace.panicInfo
+	if tr.panicInfo != nil {
+		p := *tr.panicInfo
 		auditErrors = append(auditErrors, p)
 		auditThrownError = p
-	} else if trace.errorInfo != nil {
-		e := *trace.errorInfo
+	} else if tr.errorInfo != nil {
+		e := *tr.errorInfo
 		auditErrors = append(auditErrors, e)
 		auditThrownError = e
 	}
@@ -95,8 +96,8 @@ func prepareAuditInfo(trace *trace) map[string]interface{} {
 	return map[string]interface{}{
 		auditInfoContextName:    plugin.ApplicationName,
 		auditInfoId:             plugin.ContextId,
-		auditInfoOpenTimestamp:  trace.startTime,
-		auditInfoCloseTimestamp: trace.endTime,
+		auditInfoOpenTimestamp:  tr.startTime,
+		auditInfoCloseTimestamp: tr.endTime,
 		auditInfoErrors:         auditErrors,
 		auditInfoThrownError:    auditThrownError,
 	}
