@@ -112,7 +112,7 @@ func TestTrace(t *testing.T) {
 			r.On("Clear").Return()
 			r.On("Collect", mock.Anything).Return()
 
-			tr := &trace{}
+			tr := New()
 			th := thundra.NewBuilder().AddPlugin(tr).SetReporter(r).SetAPIKey(testApiKey).Build()
 			lambdaHandler := thundra.Wrap(testCase.handler, th)
 			h := lambdaHandler.(func(context.Context, json.RawMessage) (interface{}, error))
@@ -322,6 +322,66 @@ func TestPanic(t *testing.T) {
 			f(context.TODO(), []byte(testCase.input))
 		})
 	}
+}
+
+func TestTimeout(t *testing.T) {
+	const timeoutDuration = 1;
+	timeOutFunction := func(s string) string {
+		// Let it run longer than timeoutDuration
+		time.Sleep(time.Second * 2 * timeoutDuration)
+		return fmt.Sprintf("Happy monitoring with %s!", s)
+	}
+
+	testCases := []struct {
+		name     string
+		input    string
+		expected expectedPanic
+		handler  interface{}
+	}{
+		{
+			name:  "Timeout Test",
+			input: `"Thundra"`,
+			handler: func(name string) (string, error) {
+				return timeOutFunction(name), nil
+			},
+		},
+	}
+	for i, testCase := range testCases {
+		t.Run(fmt.Sprintf("testCase[%d] %s", i, testCase.name), func(t *testing.T) {
+			test.PrepareEnvironment()
+
+			r := new(test.MockReporter)
+			r.On("Report", testApiKey).Return()
+			r.On("Clear").Return()
+			r.On("Collect", mock.Anything).Return()
+
+			tr := New()
+			th := thundra.NewBuilder().AddPlugin(tr).SetReporter(r).SetAPIKey(testApiKey).Build()
+			lambdaHandler := thundra.Wrap(testCase.handler, th)
+			h := lambdaHandler.(func(context.Context, json.RawMessage) (interface{}, error))
+			f := lambdaFunction(h)
+
+			d := time.Now().Add(timeoutDuration * time.Second)
+			ctx, cancel := context.WithDeadline(context.TODO(), d)
+			defer cancel()
+			f(ctx, []byte(testCase.input))
+			// Code doesn't wait goroutines to finish.
+			//Monitor Data
+			msg, ok := r.MessageQueue[1].(plugin.Message)
+			if !ok {
+				fmt.Println("Collector message can't be casted to pluginMessage")
+			}
+
+			//Trace Data
+			td, ok := msg.Data.(traceData)
+			if !ok {
+				fmt.Println("Can not convert to trace data")
+			}
+
+			assert.Equal(t, "true", td.Properties[auditInfoPropertiesTimeout])
+		})
+	}
+
 }
 
 type lambdaFunction func(context.Context, json.RawMessage) (interface{}, error)
