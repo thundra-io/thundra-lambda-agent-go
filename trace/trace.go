@@ -17,6 +17,7 @@ type trace struct {
 	thrownErrorMessage interface{}
 	panicInfo          *panicInfo
 	errorInfo          *errorInfo
+	timeout            string
 }
 
 var invocationCount uint32
@@ -52,6 +53,8 @@ func (tr *trace) AfterExecution(ctx context.Context, request json.RawMessage, re
 		tr.errors = append(tr.errors, errType)
 	}
 
+	tr.timeout = isTimeout(err)
+
 	td := tr.prepareTraceData(ctx, request, response)
 	var traceArr []interface{}
 	traceArr = append(traceArr, td)
@@ -75,6 +78,9 @@ func (tr *trace) OnPanic(ctx context.Context, request json.RawMessage, err inter
 	tr.thrownErrorMessage = plugin.GetErrorMessage(err)
 	tr.errors = append(tr.errors, errType)
 
+	// since it is panicked it could not be timed out
+	tr.timeout = "false"
+
 	td := tr.prepareTraceData(ctx, request, nil)
 	var traceArr []interface{}
 	traceArr = append(traceArr, td)
@@ -83,4 +89,15 @@ func (tr *trace) OnPanic(ctx context.Context, request json.RawMessage, err inter
 
 func cleanBuffer(trace *trace) {
 	trace.errors = nil
+}
+
+// isTimeout returns if the lambda invocation is timed out.
+func isTimeout(err interface{}) string {
+	if err == nil {
+		return "false"
+	}
+	if plugin.GetErrorType(err) == "timeoutError" {
+		return "true"
+	}
+	return "false"
 }

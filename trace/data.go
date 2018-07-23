@@ -76,6 +76,7 @@ func (tr *trace) prepareProperties(ctx context.Context, request json.RawMessage,
 		auditInfoPropertiesFunctionMemoryLimit: plugin.MemorySize,
 		auditInfoPropertiesFunctionARN:         plugin.GetInvokedFunctionArn(ctx),
 		auditInfoPropertiesRequestId:           plugin.GetAwsRequestID(ctx),
+		auditInfoPropertiesTimeout:             tr.timeout,
 	}
 }
 

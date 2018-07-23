@@ -24,6 +24,7 @@ const auditInfoPropertiesFunctionMemoryLimit = "functionMemoryLimitInMB"
 const auditInfoPropertiesFunctionRegion = "functionRegion"
 const auditInfoPropertiesFunctionARN = "functionARN"
 const auditInfoPropertiesRequestId = "requestId"
+const auditInfoPropertiesTimeout = "timeout"
 
 //AWS
 const awsDefaultRegion = "AWS_DEFAULT_REGION"
