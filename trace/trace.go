@@ -17,6 +17,7 @@ type trace struct {
 	thrownErrorMessage interface{}
 	panicInfo          *panicInfo
 	errorInfo          *errorInfo
+	timeout            string
 }
 
 var invocationCount uint32
@@ -26,16 +27,16 @@ func New() *trace {
 	return &trace{}
 }
 
-func (trace *trace) BeforeExecution(ctx context.Context, request json.RawMessage, wg *sync.WaitGroup) {
-	cleanBuffer(trace)
-	trace.startTime = plugin.GetTimestamp()
+func (tr *trace) BeforeExecution(ctx context.Context, request json.RawMessage, wg *sync.WaitGroup) {
+	cleanBuffer(tr)
+	tr.startTime = plugin.GetTimestamp()
 	plugin.GenerateNewContextId()
 	wg.Done()
 }
 
-func (trace *trace) AfterExecution(ctx context.Context, request json.RawMessage, response interface{}, err interface{}) ([]interface{}, string) {
-	trace.endTime = plugin.GetTimestamp()
-	trace.duration = trace.endTime - trace.startTime
+func (tr *trace) AfterExecution(ctx context.Context, request json.RawMessage, response interface{}, err interface{}) ([]interface{}, string) {
+	tr.endTime = plugin.GetTimestamp()
+	tr.duration = tr.endTime - tr.startTime
 
 	if err != nil {
 		errMessage := plugin.GetErrorMessage(err)
@@ -46,21 +47,23 @@ func (trace *trace) AfterExecution(ctx context.Context, request json.RawMessage,
 			errType,
 		}
 
-		trace.errorInfo = ei
-		trace.thrownError = errType
-		trace.thrownErrorMessage = errMessage
-		trace.errors = append(trace.errors, errType)
+		tr.errorInfo = ei
+		tr.thrownError = errType
+		tr.thrownErrorMessage = errMessage
+		tr.errors = append(tr.errors, errType)
 	}
 
-	td := prepareTraceData(ctx, request, response, trace)
+	tr.timeout = isTimeout(err)
+
+	td := tr.prepareTraceData(ctx, request, response)
 	var traceArr []interface{}
 	traceArr = append(traceArr, td)
 	return traceArr, traceDataType
 }
 
-func (trace *trace) OnPanic(ctx context.Context, request json.RawMessage, err interface{}, stackTrace []byte) ([]interface{}, string) {
-	trace.endTime = plugin.GetTimestamp()
-	trace.duration = trace.endTime - trace.startTime
+func (tr *trace) OnPanic(ctx context.Context, request json.RawMessage, err interface{}, stackTrace []byte) ([]interface{}, string) {
+	tr.endTime = plugin.GetTimestamp()
+	tr.duration = tr.endTime - tr.startTime
 
 	errMessage := plugin.GetErrorMessage(err)
 	errType := plugin.GetErrorType(err)
@@ -70,12 +73,15 @@ func (trace *trace) OnPanic(ctx context.Context, request json.RawMessage, err in
 		errType,
 	}
 
-	trace.panicInfo = pi
-	trace.thrownError = errType
-	trace.thrownErrorMessage = plugin.GetErrorMessage(err)
-	trace.errors = append(trace.errors, errType)
+	tr.panicInfo = pi
+	tr.thrownError = errType
+	tr.thrownErrorMessage = plugin.GetErrorMessage(err)
+	tr.errors = append(tr.errors, errType)
 
-	td := prepareTraceData(ctx, request, nil, trace)
+	// since it is panicked it could not be timed out
+	tr.timeout = "false"
+
+	td := tr.prepareTraceData(ctx, request, nil)
 	var traceArr []interface{}
 	traceArr = append(traceArr, td)
 	return traceArr, traceDataType
@@ -83,4 +89,15 @@ func (trace *trace) OnPanic(ctx context.Context, request json.RawMessage, err in
 
 func cleanBuffer(trace *trace) {
 	trace.errors = nil
+}
+
+// isTimeout returns if the lambda invocation is timed out.
+func isTimeout(err interface{}) string {
+	if err == nil {
+		return "false"
+	}
+	if plugin.GetErrorType(err) == "timeoutError" {
+		return "true"
+	}
+	return "false"
 }
