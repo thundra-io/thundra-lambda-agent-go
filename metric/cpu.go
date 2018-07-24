@@ -1,6 +1,8 @@
 package metric
 
 import (
+	"math"
+
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 )
 
@@ -50,6 +52,8 @@ func getSystemUsagePercent(metric *metric) float64 {
 		s = 0
 	} else if s >= 1 {
 		s = 1
+	} else if math.IsNaN(s) {
+		s = 0;
 	}
 	return s
 }
@@ -66,6 +70,8 @@ func getProcessUsagePercent(metric *metric) float64 {
 		p = 0
 	} else if p >= 1 {
 		p = 1
+	} else if math.IsNaN(p) {
+		p = 0;
 	}
 	return p
 }
