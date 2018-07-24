@@ -11,6 +11,10 @@ import (
 	"github.com/shirou/gopsutil/process"
 )
 
+func init() {
+	DebugEnabled = isThundraDebugEnabled()
+}
+
 // GenerateNewId generates new uuid.
 func GenerateNewId() string {
 	return uuid.NewV4().String()
@@ -63,4 +67,14 @@ func GetErrorMessage(err interface{}) string {
 		return err.(string)
 	}
 	return e.Error()
+}
+
+var DebugEnabled bool
+
+func isThundraDebugEnabled() bool {
+	b, err := strconv.ParseBool(os.Getenv(thundraLambdaDebugEnable))
+	if err != nil {
+		return false
+	}
+	return b
 }
