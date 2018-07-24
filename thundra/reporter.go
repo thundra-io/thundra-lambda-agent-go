@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"os"
 	"sync"
+
+	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 )
 
 type reporter interface {
@@ -63,14 +65,17 @@ func sendAsync(msg interface{}) {
 	fmt.Println(string(b))
 }
 
-func sendHttpReq(mesageQueue []interface{}, apiKey string) {
-	b, err := json.Marshal(&mesageQueue)
+func sendHttpReq(messageQueue []interface{}, apiKey string) {
+	if plugin.DebugEnabled {
+		fmt.Println("MessageQueue:\n", messageQueue)
+	}
+	b, err := json.Marshal(&messageQueue)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("Error in marshalling ", err)
 	}
 
 	targetURL := collectorUrl + monitorDatas
-	if debugEnabled {
+	if plugin.DebugEnabled {
 		fmt.Println("Sending HTTP request to Thundra collector: " + targetURL)
 		fmt.Println(string(b))
 	}
@@ -92,7 +97,7 @@ func sendHttpReq(mesageQueue []interface{}, apiKey string) {
 	if err != nil {
 		fmt.Println("ioutil.ReadAll(resp.Body): ", err)
 	}
-	if debugEnabled {
+	if plugin.DebugEnabled {
 		fmt.Println("response Status:", resp.Status)
 		fmt.Println("response Headers:", resp.Header)
 		fmt.Println("response Body:", string(body))

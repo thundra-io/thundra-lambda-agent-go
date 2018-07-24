@@ -9,3 +9,4 @@ const ApplicationType = "go"
 
 //AWS
 const AwsDefaultRegion = "AWS_DEFAULT_REGION"
+const thundraLambdaDebugEnable = "thundra_lambda_debug_enable"
