@@ -1,7 +1,10 @@
 package metric
 
 import (
+	"fmt"
+
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
+	"github.com/shirou/gopsutil/net"
 )
 
 const all = 0
@@ -70,14 +73,18 @@ type netFrame struct {
 
 //Since lambda works continuously we should subtract io values in order to get correct results per invocation
 func takeNetFrame(metric *metric) *netFrame {
-	br := metric.span.currNetStat.BytesRecv - metric.span.prevNetStat.BytesRecv
-	bs := metric.span.currNetStat.BytesSent - metric.span.prevNetStat.BytesSent
-	ps := metric.span.currNetStat.PacketsSent - metric.span.prevNetStat.PacketsSent
-	pr := metric.span.currNetStat.PacketsRecv - metric.span.prevNetStat.PacketsRecv
-	ei := metric.span.currNetStat.Errin - metric.span.prevNetStat.Errin
-	eo := metric.span.currNetStat.Errout - metric.span.prevNetStat.Errout
+	// If nil, return an empty netFrame
+	if metric.span.endNetStat == nil || metric.span.startNetStat == nil {
+		return &netFrame{}
+	}
 
-	metric.span.prevNetStat = metric.span.currNetStat
+	br := metric.span.endNetStat.BytesRecv - metric.span.startNetStat.BytesRecv
+	bs := metric.span.endNetStat.BytesSent - metric.span.startNetStat.BytesSent
+	ps := metric.span.endNetStat.PacketsSent - metric.span.startNetStat.PacketsSent
+	pr := metric.span.endNetStat.PacketsRecv - metric.span.startNetStat.PacketsRecv
+	ei := metric.span.endNetStat.Errin - metric.span.startNetStat.Errin
+	eo := metric.span.endNetStat.Errout - metric.span.startNetStat.Errout
+
 	return &netFrame{
 		bytesRecv:   br,
 		bytesSent:   bs,
@@ -86,4 +93,13 @@ func takeNetFrame(metric *metric) *netFrame {
 		errin:       ei,
 		errout:      eo,
 	}
+}
+
+func sampleNetStat() (*net.IOCountersStat) {
+	netIOStat, err := net.IOCounters(false)
+	if err != nil {
+		fmt.Println("Error sampling net stat", err)
+		return nil
+	}
+	return &netIOStat[all]
 }

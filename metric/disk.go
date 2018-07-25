@@ -1,7 +1,10 @@
 package metric
 
 import (
+	"fmt"
+
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
+	"github.com/shirou/gopsutil/process"
 )
 
 type diskStatsData struct {
@@ -59,17 +62,27 @@ type diskFrame struct {
 //Since lambda works continuously we should subtract io values in order to get correct results per invocation
 //takeDiskFrame returns IO operations count for a specific time range
 func takeDiskFrame(metric *metric) *diskFrame {
-	rb := metric.span.currDiskStat.ReadBytes - metric.span.prevDiskStat.ReadBytes
-	wb := metric.span.currDiskStat.WriteBytes - metric.span.prevDiskStat.WriteBytes
+	if metric.span.endDiskStat == nil || metric.span.startDiskStat == nil {
+		return &diskFrame{}
+	}
+	rb := metric.span.endDiskStat.ReadBytes - metric.span.startDiskStat.ReadBytes
+	wb := metric.span.endDiskStat.WriteBytes - metric.span.startDiskStat.WriteBytes
 
-	rc := metric.span.currDiskStat.ReadCount - metric.span.prevDiskStat.ReadCount
-	wc := metric.span.currDiskStat.WriteCount - metric.span.prevDiskStat.WriteCount
+	rc := metric.span.endDiskStat.ReadCount - metric.span.startDiskStat.ReadCount
+	wc := metric.span.endDiskStat.WriteCount - metric.span.startDiskStat.WriteCount
 
-	metric.span.prevDiskStat = metric.span.currDiskStat
 	return &diskFrame{
 		readBytes:  rb,
 		writeBytes: wb,
 		readCount:  rc,
 		writeCount: wc,
 	}
+}
+
+func sampleDiskStat() *process.IOCountersStat {
+	diskStat, err := proc.IOCounters()
+	if err != nil {
+		fmt.Println("Error sampling disk stat", err)
+	}
+	return diskStat
 }

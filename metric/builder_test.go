@@ -11,9 +11,8 @@ func TestNewBuilder(t *testing.T) {
 	test.PrepareEnvironment()
 	m := NewBuilder().Build()
 
-	assert.NotNil(t, m.span.prevDiskStat)
-	assert.NotNil(t, m.span.prevNetStat)
-	assert.NotNil(t, m.span.process)
+	assert.NotNil(t, m.span)
+	assert.NotNil(t, proc)
 
 	assert.False(t, m.disableDiskStats)
 	assert.False(t, m.disableNetStats)

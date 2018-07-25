@@ -1,8 +1,6 @@
 package metric
 
 import (
-	"github.com/shirou/gopsutil/net"
-	"github.com/shirou/gopsutil/process"
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 )
 
@@ -77,30 +75,10 @@ func (b *builder) DisableNetStats() mBuilder {
 
 // Builds and returns the metric plugin that you can pass to a thundra object while building it using AddPlugin().
 func (b *builder) Build() *metric {
-	//Initialize with empty objects
-	var prevDiskStat *process.IOCountersStat
-	var prevNetStat *net.IOCountersStat
-	var proc *process.Process
-
-	if !b.disableDiskStats {
-		prevDiskStat = &process.IOCountersStat{}
-	}
-
-	if !b.disableNetStats {
-		prevNetStat = &net.IOCountersStat{}
-	}
-
-	if !b.disableCPUStats || !b.disableDiskStats || !b.disableHeapStats {
-		proc = plugin.GetThisProcess()
-	}
+	proc = plugin.GetThisProcess()
 
 	return &metric{
-		span: &metricSpan{
-			prevDiskStat: prevDiskStat,
-			prevNetStat:  prevNetStat,
-			process:      proc,
-		},
-
+		span:                  new(metricSpan),
 		disableGCStats:        b.disableGCStats,
 		disableHeapStats:      b.disableHeapStats,
 		disableGoroutineStats: b.disableGoroutineStats,
