@@ -19,7 +19,7 @@ type thundra struct {
 }
 
 func (t *thundra) executePreHooks(ctx context.Context, request json.RawMessage) {
-	t.reporter.Clear()
+	t.reporter.FlushFlag()
 	plugin.GenerateNewTransactionId()
 	var wg sync.WaitGroup
 	wg.Add(len(t.plugins))
@@ -30,6 +30,10 @@ func (t *thundra) executePreHooks(ctx context.Context, request json.RawMessage) 
 }
 
 func (t *thundra) executePostHooks(ctx context.Context, request json.RawMessage, response interface{}, error interface{}) {
+	// Skip if it is already reported
+	if *t.reporter.Reported() == 1 {
+		return
+	}
 	var wg sync.WaitGroup
 	wg.Add(len(t.plugins))
 	for _, p := range t.plugins {
@@ -42,10 +46,14 @@ func (t *thundra) executePostHooks(ctx context.Context, request json.RawMessage,
 	}
 	wg.Wait()
 	t.reporter.Report(t.apiKey)
-	t.reporter.Clear()
+	t.reporter.ClearData()
 }
 
 func (t *thundra) onPanic(ctx context.Context, request json.RawMessage, err interface{}, stackTrace []byte) {
+	// Skip if it is already reported
+	if *t.reporter.Reported() == 1 {
+		return
+	}
 	var wg sync.WaitGroup
 	wg.Add(len(t.plugins))
 	for _, p := range t.plugins {
@@ -58,7 +66,7 @@ func (t *thundra) onPanic(ctx context.Context, request json.RawMessage, err inte
 	}
 	wg.Wait()
 	t.reporter.Report(t.apiKey)
-	t.reporter.Clear()
+	t.reporter.ClearData()
 }
 
 func prepareMessages(data []interface{}, dataType string, apiKey string) []interface{} {

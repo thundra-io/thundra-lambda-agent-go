@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"sync"
+	"sync/atomic"
 
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 )
@@ -15,11 +16,16 @@ import (
 type reporter interface {
 	Collect(messages []interface{})
 	Report(apiKey string)
-	Clear()
+	ClearData()
+	Reported() *uint32
+	FlushFlag()
 }
 
 type reporterImpl struct {
 	messageQueue []interface{}
+
+	// reported is a flag to prevent system from sending data twice in case of timeout
+	reported *uint32
 }
 
 var shouldSendAsync string
@@ -35,24 +41,38 @@ func init() {
 	}
 }
 
-func (c *reporterImpl) Collect(messages []interface{}) {
+// Collect collects the data from plugins. If async is on, it sends the data immediately.
+func (r *reporterImpl) Collect(messages []interface{}) {
 	defer mutex.Unlock()
 	mutex.Lock()
 	if shouldSendAsync == "true" {
 		sendAsync(messages)
 		return
 	}
-	c.messageQueue = append(c.messageQueue, messages...)
+	r.messageQueue = append(r.messageQueue, messages...)
 }
 
-func (c *reporterImpl) Report(apiKey string) {
+// Report sends the data to collector
+func (r *reporterImpl) Report(apiKey string) {
 	if shouldSendAsync == "false" || shouldSendAsync == "" {
-		sendHttpReq(c.messageQueue, apiKey)
+		sendHttpReq(r.messageQueue, apiKey)
 	}
+	atomic.CompareAndSwapUint32(r.reported, 0, 1)
 }
 
-func (c *reporterImpl) Clear() {
-	c.messageQueue = c.messageQueue[:0]
+// ClearData clears the reporter data
+func (r *reporterImpl) ClearData() {
+	r.messageQueue = r.messageQueue[:0]
+}
+
+// Reported returns reported
+func (r *reporterImpl) Reported() *uint32 {
+	return r.reported
+}
+
+// FlushFlag flushes the reported flag
+func (r *reporterImpl) FlushFlag() {
+	atomic.CompareAndSwapUint32(r.Reported(), 1, 0)
 }
 
 func sendAsync(msg interface{}) {
