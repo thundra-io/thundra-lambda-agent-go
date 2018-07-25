@@ -332,7 +332,7 @@ func TestTimeout(t *testing.T) {
 		return fmt.Sprintf("Happy monitoring with %s!", s)
 	}
 
-	testCases := []struct {
+	testCase := []struct {
 		name     string
 		input    string
 		expected expectedPanic
@@ -346,41 +346,40 @@ func TestTimeout(t *testing.T) {
 			},
 		},
 	}
-	for i, testCase := range testCases {
-		t.Run(fmt.Sprintf("testCase[%d] %s", i, testCase.name), func(t *testing.T) {
-			test.PrepareEnvironment()
+	t.Run(fmt.Sprintf("testCase[%d] %s", 0, testCase[0].name), func(t *testing.T) {
+		test.PrepareEnvironment()
 
-			r := new(test.MockReporter)
-			r.On("Report", testApiKey).Return()
-			r.On("Clear").Return()
-			r.On("Collect", mock.Anything).Return()
+		r := new(test.MockReporter)
+		r.On("Report", testApiKey).Return()
+		r.On("Clear").Return()
+		r.On("Collect", mock.Anything).Return()
 
-			tr := New()
-			th := thundra.NewBuilder().AddPlugin(tr).SetReporter(r).SetAPIKey(testApiKey).Build()
-			lambdaHandler := thundra.Wrap(testCase.handler, th)
-			h := lambdaHandler.(func(context.Context, json.RawMessage) (interface{}, error))
-			f := lambdaFunction(h)
+		tr := New()
+		th := thundra.NewBuilder().AddPlugin(tr).SetReporter(r).SetAPIKey(testApiKey).Build()
+		lambdaHandler := thundra.Wrap(testCase[0].handler, th)
+		h := lambdaHandler.(func(context.Context, json.RawMessage) (interface{}, error))
+		f := lambdaFunction(h)
 
-			d := time.Now().Add(timeoutDuration * time.Second)
-			ctx, cancel := context.WithDeadline(context.TODO(), d)
-			defer cancel()
-			f(ctx, []byte(testCase.input))
-			// Code doesn't wait goroutines to finish.
-			//Monitor Data
-			msg, ok := r.MessageQueue[1].(plugin.Message)
-			if !ok {
-				fmt.Println("Collector message can't be casted to pluginMessage")
-			}
+		d := time.Now().Add(timeoutDuration * time.Second)
+		ctx, cancel := context.WithDeadline(context.TODO(), d)
+		defer cancel()
 
-			//Trace Data
-			td, ok := msg.Data.(traceData)
-			if !ok {
-				fmt.Println("Can not convert to trace data")
-			}
+		f(ctx, []byte(testCase[0].input))
+		// Code doesn't wait goroutines to finish.
+		//Monitor Data
+		msg, ok := r.MessageQueue[1].(plugin.Message)
+		if !ok {
+			fmt.Println("Collector message can't be casted to pluginMessage")
+		}
 
-			assert.Equal(t, "true", td.Properties[auditInfoPropertiesTimeout])
-		})
-	}
+		//Trace Data
+		td, ok := msg.Data.(traceData)
+		if !ok {
+			fmt.Println("Can not convert to trace data")
+		}
+
+		assert.Equal(t, "true", td.Properties[auditInfoPropertiesTimeout])
+	})
 
 }
 
