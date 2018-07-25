@@ -73,19 +73,19 @@ func TestExecutePostHooks(t *testing.T) {
 	var err1 error
 	var err2 error = errors.New("Error")
 
-	r := new(test.MockReporter)
+	r := test.NewMockReporter(testApiKey)
+
 	mT := new(MockPlugin)
-	th := NewBuilder().AddPlugin(mT).SetReporter(r).SetAPIKey(testApiKey).Build()
-
 	mT.On("AfterExecution", ctx, req, resp, err1, mock.Anything).Return()
-	mT.On("AfterExecution", ctx, req, resp, err2, mock.Anything).Return()
-	r.On("Report", testApiKey).Return()
-	r.On("Clear").Return()
-	r.On("Collect", mock.Anything).Return()
 
+	th := NewBuilder().AddPlugin(mT).SetReporter(r).SetAPIKey(testApiKey).Build()
 	th.executePostHooks(ctx, req, resp, err1)
 	th.executePostHooks(ctx, req, resp, err2)
+
 	mT.AssertExpectations(t)
+
+	// Should only be called once because it is already reported
+	mT.AssertNumberOfCalls(t, "AfterExecution", 1)
 	r.AssertExpectations(t)
 }
 
@@ -95,14 +95,10 @@ func TestOnPanic(t *testing.T) {
 	err := errors.New("Generated Error")
 	stackTrace := debug.Stack()
 
-	r := new(test.MockReporter)
+	r := test.NewMockReporter(testApiKey)
 	mP := new(MockPlugin)
 	th := NewBuilder().AddPlugin(mP).SetReporter(r).SetAPIKey(testApiKey).Build()
-
 	mP.On("OnPanic", ctx, req, err, stackTrace, mock.Anything).Return()
-	r.On("Report", testApiKey).Return()
-	r.On("Clear").Return()
-	r.On("Collect", mock.Anything).Return()
 
 	th.onPanic(ctx, req, err, stackTrace)
 	mP.AssertExpectations(t)

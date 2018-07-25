@@ -9,8 +9,6 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
-
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 	"github.com/thundra-io/thundra-lambda-agent-go/test"
 	"github.com/thundra-io/thundra-lambda-agent-go/thundra"
@@ -107,11 +105,7 @@ func TestTrace(t *testing.T) {
 		t.Run(fmt.Sprintf("testCase[%d] %s", i, testCase.name), func(t *testing.T) {
 			test.PrepareEnvironment()
 
-			r := new(test.MockReporter)
-			r.On("Report", testApiKey).Return()
-			r.On("Clear").Return()
-			r.On("Collect", mock.Anything).Return()
-
+			r := test.NewMockReporter(testApiKey)
 			tr := New()
 			th := thundra.NewBuilder().AddPlugin(tr).SetReporter(r).SetAPIKey(testApiKey).Build()
 			lambdaHandler := thundra.Wrap(testCase.handler, th)
@@ -240,11 +234,7 @@ func TestPanic(t *testing.T) {
 		t.Run(fmt.Sprintf("testCase[%d] %s", i, testCase.name), func(t *testing.T) {
 			test.PrepareEnvironment()
 
-			r := new(test.MockReporter)
-			r.On("Report", testApiKey).Return()
-			r.On("Clear").Return()
-			r.On("Collect", mock.Anything).Return()
-
+			r := test.NewMockReporter(testApiKey)
 			tr := New()
 			th := thundra.NewBuilder().AddPlugin(tr).SetReporter(r).SetAPIKey(testApiKey).Build()
 			lambdaHandler := thundra.Wrap(testCase.handler, th)
@@ -349,11 +339,7 @@ func TestTimeout(t *testing.T) {
 	t.Run(fmt.Sprintf("testCase[%d] %s", 0, testCase[0].name), func(t *testing.T) {
 		test.PrepareEnvironment()
 
-		r := new(test.MockReporter)
-		r.On("Report", testApiKey).Return()
-		r.On("Clear").Return()
-		r.On("Collect", mock.Anything).Return()
-
+		r := test.NewMockReporter(testApiKey)
 		tr := New()
 		th := thundra.NewBuilder().AddPlugin(tr).SetReporter(r).SetAPIKey(testApiKey).Build()
 		lambdaHandler := thundra.Wrap(testCase[0].handler, th)

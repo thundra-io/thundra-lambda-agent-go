@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"github.com/thundra-io/thundra-lambda-agent-go/test"
 )
 
@@ -116,11 +115,7 @@ func TestWrapper(t *testing.T) {
 	}
 	for i, testCase := range testCases {
 		t.Run(fmt.Sprintf("testCase[%d] %s", i, testCase.name), func(t *testing.T) {
-			r := &test.MockReporter{}
-			r.On("Report", testApiKey).Return()
-			r.On("Clear").Return()
-			r.On("Collect", mock.Anything).Return()
-
+			r := test.NewMockReporter(testApiKey)
 			th := NewBuilder().SetReporter(r).SetAPIKey(testApiKey).Build()
 			lambdaHandler := Wrap(testCase.handler, th)
 			h := lambdaHandler.(func(context.Context, json.RawMessage) (interface{}, error))
@@ -198,11 +193,7 @@ func TestInvalidWrappers(t *testing.T) {
 	}
 	for i, testCase := range testCases {
 		t.Run(fmt.Sprintf("testCase[%d] %s", i, testCase.name), func(t *testing.T) {
-			r := &test.MockReporter{}
-			r.On("Report", testApiKey).Return()
-			r.On("Clear").Return()
-			r.On("Collect", mock.Anything).Return()
-
+			r := test.NewMockReporter(testApiKey)
 			th := NewBuilder().SetReporter(r).SetAPIKey(testApiKey).Build()
 			lambdaHandler := Wrap(testCase.handler, th)
 			h, ok := lambdaHandler.(lambdaFunction)
