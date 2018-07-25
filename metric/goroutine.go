@@ -30,7 +30,7 @@ func prepareGoRoutineStatsData(metric *metric) goRoutineStatsData {
 		ApplicationProfile: plugin.ApplicationProfile,
 		ApplicationType:    plugin.ApplicationType,
 		StatName:           goroutineStat,
-		StatTimestamp:      metric.statTimestamp,
+		StatTimestamp:      metric.span.statTimestamp,
 		NumGoroutine:       uint64(runtime.NumGoroutine()),
 	}
 }

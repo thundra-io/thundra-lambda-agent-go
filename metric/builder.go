@@ -25,10 +25,6 @@ type builder struct {
 	disableCPUStats       bool
 	disableDiskStats      bool
 	disableNetStats       bool
-	prevDiskStat          *process.IOCountersStat
-	prevNetStat           *net.IOCountersStat
-	process               *process.Process
-	pid                   string
 }
 
 // New initializes a new metric object which collects all types of metrics. If you want to disable a metric that
@@ -82,22 +78,28 @@ func (b *builder) DisableNetStats() mBuilder {
 // Builds and returns the metric plugin that you can pass to a thundra object while building it using AddPlugin().
 func (b *builder) Build() *metric {
 	//Initialize with empty objects
+	var prevDiskStat *process.IOCountersStat
+	var prevNetStat *net.IOCountersStat
+	var proc *process.Process
+
 	if !b.disableDiskStats {
-		b.prevDiskStat = &process.IOCountersStat{}
+		prevDiskStat = &process.IOCountersStat{}
 	}
 
 	if !b.disableNetStats {
-		b.prevNetStat = &net.IOCountersStat{}
+		prevNetStat = &net.IOCountersStat{}
 	}
 
 	if !b.disableCPUStats || !b.disableDiskStats || !b.disableHeapStats {
-		b.process = plugin.GetThisProcess()
+		proc = plugin.GetThisProcess()
 	}
 
 	return &metric{
-		prevDiskStat: b.prevDiskStat,
-		prevNetStat:  b.prevNetStat,
-		process:      b.process,
+		span: &metricSpan{
+			prevDiskStat: prevDiskStat,
+			prevNetStat:  prevNetStat,
+			process:      proc,
+		},
 
 		disableGCStats:        b.disableGCStats,
 		disableHeapStats:      b.disableHeapStats,

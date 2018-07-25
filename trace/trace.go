@@ -12,7 +12,7 @@ type trace struct {
 	span *traceSpan
 }
 
-// traceSpan is used by plugin to collect span based information
+// traceSpan collects information related to trace plugin per invocation.
 type traceSpan struct {
 	startTime          int64
 	endTime            int64

@@ -13,6 +13,18 @@ import (
 )
 
 type metric struct {
+	span *metricSpan
+
+	disableGCStats        bool
+	disableHeapStats      bool
+	disableGoroutineStats bool
+	disableCPUStats       bool
+	disableDiskStats      bool
+	disableNetStats       bool
+}
+
+// metricSpan collects information related to metric plugin per invocation.
+type metricSpan struct {
 	statTimestamp     int64
 	startGCCount      uint32
 	endGCCount        uint32
@@ -27,28 +39,21 @@ type metric struct {
 	prevDiskStat      *process.IOCountersStat
 	currNetStat       *net.IOCountersStat
 	prevNetStat       *net.IOCountersStat
-
-	disableGCStats        bool
-	disableHeapStats      bool
-	disableGoroutineStats bool
-	disableCPUStats       bool
-	disableDiskStats      bool
-	disableNetStats       bool
 }
 
 func (metric *metric) BeforeExecution(ctx context.Context, request json.RawMessage, wg *sync.WaitGroup) {
-	metric.statTimestamp = plugin.GetTimestamp()
+	metric.span.statTimestamp = plugin.GetTimestamp()
 
 	if !metric.disableGCStats {
 		m := &runtime.MemStats{}
 		runtime.ReadMemStats(m)
 
-		metric.startGCCount = m.NumGC
-		metric.startPauseTotalNs = m.PauseTotalNs
+		metric.span.startGCCount = m.NumGC
+		metric.span.startPauseTotalNs = m.PauseTotalNs
 	}
 
 	if !metric.disableCPUStats {
-		metric.startCPUTimeStat = sampleCPUtimesStat()
+		metric.span.startCPUTimeStat = sampleCPUtimesStat()
 	}
 
 	wg.Done()
@@ -66,8 +71,8 @@ func (metric *metric) AfterExecution(ctx context.Context, request json.RawMessag
 	}
 
 	if !metric.disableGCStats {
-		metric.endGCCount = mStats.NumGC
-		metric.endPauseTotalNs = mStats.PauseTotalNs
+		metric.span.endGCCount = mStats.NumGC
+		metric.span.endPauseTotalNs = mStats.PauseTotalNs
 
 		gc := prepareGCStatsData(metric, mStats)
 		stats = append(stats, gc)
@@ -79,21 +84,21 @@ func (metric *metric) AfterExecution(ctx context.Context, request json.RawMessag
 	}
 
 	if !metric.disableCPUStats {
-		metric.endCPUTimeStat = sampleCPUtimesStat()
+		metric.span.endCPUTimeStat = sampleCPUtimesStat()
 
-		metric.processCpuPercent = getProcessUsagePercent(metric)
-		metric.systemCpuPercent = getSystemUsagePercent(metric)
+		metric.span.processCpuPercent = getProcessUsagePercent(metric)
+		metric.span.systemCpuPercent = getSystemUsagePercent(metric)
 
 		c := prepareCPUStatsData(metric)
 		stats = append(stats, c)
 	}
 
 	if !metric.disableDiskStats {
-		diskStat, err := metric.process.IOCounters()
+		diskStat, err := metric.span.process.IOCounters()
 		if err != nil {
 			fmt.Println(err)
 		} else {
-			metric.currDiskStat = diskStat
+			metric.span.currDiskStat = diskStat
 			d := prepareDiskStatsData(metric)
 			stats = append(stats, d)
 		}
@@ -104,7 +109,7 @@ func (metric *metric) AfterExecution(ctx context.Context, request json.RawMessag
 		if err != nil {
 			fmt.Println(err)
 		} else {
-			metric.currNetStat = &netIOStat[all]
+			metric.span.currNetStat = &netIOStat[all]
 			n := prepareNetStatsData(metric)
 			stats = append(stats, n)
 		}

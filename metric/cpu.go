@@ -34,19 +34,19 @@ func prepareCPUStatsData(metric *metric) cpuStatsData {
 		ApplicationProfile: plugin.ApplicationProfile,
 		ApplicationType:    plugin.ApplicationType,
 		StatName:           cpuStat,
-		StatTimestamp:      metric.statTimestamp,
-		ProcessCPUPercent:  metric.processCpuPercent,
-		SystemCPUPercent:   metric.systemCpuPercent,
+		StatTimestamp:      metric.span.statTimestamp,
+		ProcessCPUPercent:  metric.span.processCpuPercent,
+		SystemCPUPercent:   metric.span.systemCpuPercent,
 	}
 }
 
 func getSystemUsagePercent(metric *metric) float64 {
 	// Skip test
-	if metric.startCPUTimeStat == nil {
+	if metric.span.startCPUTimeStat == nil {
 		return 0
 	}
-	dSysUsed := metric.endCPUTimeStat.sys_used() - metric.startCPUTimeStat.sys_used()
-	dTotal := metric.endCPUTimeStat.total() - metric.startCPUTimeStat.total()
+	dSysUsed := metric.span.endCPUTimeStat.sys_used() - metric.span.startCPUTimeStat.sys_used()
+	dTotal := metric.span.endCPUTimeStat.total() - metric.span.startCPUTimeStat.total()
 	s := float64(dSysUsed) / float64(dTotal)
 	if s <= 0 {
 		s = 0
@@ -60,11 +60,11 @@ func getSystemUsagePercent(metric *metric) float64 {
 
 func getProcessUsagePercent(metric *metric) float64 {
 	// Skip test
-	if metric.startCPUTimeStat == nil {
+	if metric.span.startCPUTimeStat == nil {
 		return 0
 	}
-	dProcUsed := metric.endCPUTimeStat.proc_used() - metric.startCPUTimeStat.proc_used()
-	dTotal := metric.endCPUTimeStat.total() - metric.startCPUTimeStat.total()
+	dProcUsed := metric.span.endCPUTimeStat.proc_used() - metric.span.startCPUTimeStat.proc_used()
+	dTotal := metric.span.endCPUTimeStat.total() - metric.span.startCPUTimeStat.total()
 	p := float64(dProcUsed) / float64(dTotal)
 	if p <= 0 {
 		p = 0

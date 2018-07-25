@@ -40,7 +40,7 @@ func prepareDiskStatsData(metric *metric) diskStatsData {
 		ApplicationProfile: plugin.ApplicationProfile,
 		ApplicationType:    plugin.ApplicationType,
 		StatName:           diskStat,
-		StatTimestamp:      metric.statTimestamp,
+		StatTimestamp:      metric.span.statTimestamp,
 
 		ReadBytes:  df.readBytes,
 		WriteBytes: df.writeBytes,
@@ -59,13 +59,13 @@ type diskFrame struct {
 //Since lambda works continuously we should subtract io values in order to get correct results per invocation
 //takeDiskFrame returns IO operations count for a specific time range
 func takeDiskFrame(metric *metric) *diskFrame {
-	rb := metric.currDiskStat.ReadBytes - metric.prevDiskStat.ReadBytes
-	wb := metric.currDiskStat.WriteBytes - metric.prevDiskStat.WriteBytes
+	rb := metric.span.currDiskStat.ReadBytes - metric.span.prevDiskStat.ReadBytes
+	wb := metric.span.currDiskStat.WriteBytes - metric.span.prevDiskStat.WriteBytes
 
-	rc := metric.currDiskStat.ReadCount - metric.prevDiskStat.ReadCount
-	wc := metric.currDiskStat.WriteCount - metric.prevDiskStat.WriteCount
+	rc := metric.span.currDiskStat.ReadCount - metric.span.prevDiskStat.ReadCount
+	wc := metric.span.currDiskStat.WriteCount - metric.span.prevDiskStat.WriteCount
 
-	metric.prevDiskStat = metric.currDiskStat
+	metric.span.prevDiskStat = metric.span.currDiskStat
 	return &diskFrame{
 		readBytes:  rb,
 		writeBytes: wb,

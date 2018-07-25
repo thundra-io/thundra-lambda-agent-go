@@ -48,7 +48,7 @@ func prepareNetStatsData(metric *metric) netStatsData {
 		ApplicationProfile: plugin.ApplicationProfile,
 		ApplicationType:    plugin.ApplicationType,
 		StatName:           netStat,
-		StatTimestamp:      metric.statTimestamp,
+		StatTimestamp:      metric.span.statTimestamp,
 
 		BytesRecv:   nf.bytesRecv,
 		BytesSent:   nf.bytesSent,
@@ -70,14 +70,14 @@ type netFrame struct {
 
 //Since lambda works continuously we should subtract io values in order to get correct results per invocation
 func takeNetFrame(metric *metric) *netFrame {
-	br := metric.currNetStat.BytesRecv - metric.prevNetStat.BytesRecv
-	bs := metric.currNetStat.BytesSent - metric.prevNetStat.BytesSent
-	ps := metric.currNetStat.PacketsSent - metric.prevNetStat.PacketsSent
-	pr := metric.currNetStat.PacketsRecv - metric.prevNetStat.PacketsRecv
-	ei := metric.currNetStat.Errin - metric.prevNetStat.Errin
-	eo := metric.currNetStat.Errout - metric.prevNetStat.Errout
+	br := metric.span.currNetStat.BytesRecv - metric.span.prevNetStat.BytesRecv
+	bs := metric.span.currNetStat.BytesSent - metric.span.prevNetStat.BytesSent
+	ps := metric.span.currNetStat.PacketsSent - metric.span.prevNetStat.PacketsSent
+	pr := metric.span.currNetStat.PacketsRecv - metric.span.prevNetStat.PacketsRecv
+	ei := metric.span.currNetStat.Errin - metric.span.prevNetStat.Errin
+	eo := metric.span.currNetStat.Errout - metric.span.prevNetStat.Errout
 
-	metric.prevNetStat = metric.currNetStat
+	metric.span.prevNetStat = metric.span.currNetStat
 	return &netFrame{
 		bytesRecv:   br,
 		bytesSent:   bs,
