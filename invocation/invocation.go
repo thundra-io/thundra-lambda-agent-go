@@ -13,31 +13,43 @@ var invocationCount uint32
 // New initializes and returns a new invocation object.
 func New() *invocation {
 	return &invocation{
-		ApplicationName:    plugin.ApplicationName,
-		ApplicationId:      plugin.ApplicationId,
-		ApplicationVersion: plugin.ApplicationVersion,
-		ApplicationProfile: plugin.ApplicationProfile,
-		ApplicationType:    plugin.ApplicationType,
-		Region:             plugin.Region,
-		MemorySize:         plugin.MemorySize,
+		Type:                      invocationType,
+		AgentVersion:              plugin.AgentVersion,
+		DataModelVersion:          plugin.DataModelVersion,
+		ApplicationId:             plugin.ApplicationId,
+		ApplicationDomainName:     plugin.ApplicationDomainName,
+		ApplicationClassName:      plugin.ApplicationClassName,
+		ApplicationName:           plugin.FunctionName,
+		ApplicationVersion:        plugin.ApplicationVersion,
+		ApplicationStage:          plugin.ApplicationStage,
+		ApplicationRuntime:        plugin.ApplicationRuntime,
+		ApplicationRuntimeVersion: plugin.ApplicationRuntimeVersion,
+		ApplicationTags:           map[string]interface{}{}, // empty object
+
+		FunctionPlatform: functionPlatform,
+		FunctionName:     plugin.FunctionName,
+		FunctionRegion:   plugin.FunctionRegion,
+		Tags:             map[string]interface{}{}, // empty object
 	}
 }
 
 func (i *invocation) BeforeExecution(ctx context.Context, request json.RawMessage, wg *sync.WaitGroup) {
 	i.Id = plugin.GenerateNewId()
+	i.TraceId = plugin.TraceId
 	i.TransactionId = plugin.TransactionId
 	i.StartTimestamp = plugin.GetTimestamp()
 	wg.Done()
 }
 
 func (i *invocation) AfterExecution(ctx context.Context, request json.RawMessage, response interface{}, err interface{}) ([]interface{}, string) {
-	i.EndTimestamp = plugin.GetTimestamp()
-	i.Duration = i.EndTimestamp - i.StartTimestamp
+	i.FinishTimestamp = plugin.GetTimestamp()
+	i.Duration = i.FinishTimestamp - i.StartTimestamp
 
 	if err != nil {
 		i.Erroneous = true
 		i.ErrorMessage = plugin.GetErrorMessage(err)
 		i.ErrorType = plugin.GetErrorType(err)
+		i.ErrorCode = defaultErrorCode
 	}
 
 	i.ColdStart = isColdStarted()
@@ -45,15 +57,16 @@ func (i *invocation) AfterExecution(ctx context.Context, request json.RawMessage
 
 	var invocationArr []interface{}
 	invocationArr = append(invocationArr, i)
-	return invocationArr, invocationDataType
+	return invocationArr, invocationType
 }
 
 func (i *invocation) OnPanic(ctx context.Context, request json.RawMessage, err interface{}, stackTrace []byte) ([]interface{}, string) {
-	i.EndTimestamp = plugin.GetTimestamp()
-	i.Duration = i.EndTimestamp - i.StartTimestamp
+	i.FinishTimestamp = plugin.GetTimestamp()
+	i.Duration = i.FinishTimestamp - i.StartTimestamp
 	i.Erroneous = true
 	i.ErrorMessage = plugin.GetErrorMessage(err)
 	i.ErrorType = plugin.GetErrorType(err)
+	i.ErrorCode = defaultErrorCode
 	i.ColdStart = isColdStarted()
 
 	// since it is panicked it could not be timed out
@@ -61,7 +74,7 @@ func (i *invocation) OnPanic(ctx context.Context, request json.RawMessage, err i
 
 	var invocationArr []interface{}
 	invocationArr = append(invocationArr, i)
-	return invocationArr, invocationDataType
+	return invocationArr, invocationType
 }
 
 // isColdStarted returns if the lambda instance is cold started. Cold Start only happens on the first invocation.
