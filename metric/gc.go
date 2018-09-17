@@ -51,14 +51,14 @@ func prepareGCStatsData(metric *metric, memStats *runtime.MemStats) gcStatsData 
 		ApplicationProfile: plugin.ApplicationProfile,
 		ApplicationType:    plugin.ApplicationType,
 		StatName:           gcStat,
-		StatTimestamp:      metric.statTimestamp,
+		StatTimestamp:      metric.span.statTimestamp,
 
 		PauseTotalNs:      memStats.PauseTotalNs,
 		PauseNs:           memStats.PauseNs[(memStats.NumGC+255)%256],
 		NumGC:             memStats.NumGC,
 		NextGC:            memStats.NextGC,
 		GCCPUFraction:     memStats.GCCPUFraction,
-		DeltaNumGc:        metric.endGCCount - metric.startGCCount,
-		DeltaPauseTotalNs: metric.endPauseTotalNs - metric.startPauseTotalNs,
+		DeltaNumGc:        metric.span.endGCCount - metric.span.startGCCount,
+		DeltaPauseTotalNs: metric.span.endPauseTotalNs - metric.span.startPauseTotalNs,
 	}
 }

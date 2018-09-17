@@ -15,9 +15,9 @@ const defaultGoroutines = 2
 
 func TestPrepareGoroutineStatsData(t *testing.T) {
 	metric := NewBuilder().Build()
-	metric.statTimestamp = plugin.GetTimestamp()
-	metric.startGCCount = 1
-	metric.endGCCount = 2
+	metric.span.statTimestamp = plugin.GetTimestamp()
+	metric.span.startGCCount = 1
+	metric.span.endGCCount = 2
 
 	done := make(chan bool)
 	generateGoroutines(done, numGoroutines)
@@ -25,7 +25,7 @@ func TestPrepareGoroutineStatsData(t *testing.T) {
 	gcStatsData := prepareGoRoutineStatsData(metric)
 
 	assert.Equal(t, goroutineStat, gcStatsData.StatName)
-	assert.Equal(t, metric.statTimestamp, gcStatsData.StatTimestamp)
+	assert.Equal(t, metric.span.statTimestamp, gcStatsData.StatTimestamp)
 
 	assert.Equal(t, uint64(numGoroutines+defaultGoroutines), gcStatsData.NumGoroutine)
 	killGeneratedGoroutines(done, numGoroutines)

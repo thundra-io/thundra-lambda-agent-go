@@ -43,7 +43,7 @@ type heapStatsData struct {
 }
 
 func prepareHeapStatsData(metric *metric, memStats *runtime.MemStats) heapStatsData {
-	mp, err := metric.process.MemoryPercent()
+	mp, err := proc.MemoryPercent()
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -57,7 +57,7 @@ func prepareHeapStatsData(metric *metric, memStats *runtime.MemStats) heapStatsD
 		ApplicationProfile: plugin.ApplicationProfile,
 		ApplicationType:    plugin.ApplicationType,
 		StatName:           heapStat,
-		StatTimestamp:      metric.statTimestamp,
+		StatTimestamp:      metric.span.statTimestamp,
 
 		HeapAlloc:     memStats.HeapAlloc,
 		HeapSys:       memStats.HeapSys,

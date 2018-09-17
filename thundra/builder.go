@@ -69,7 +69,9 @@ func (b *builder) Build() *thundra {
 	// Invocation is the default plugin
 	b.AddPlugin(invocation.New())
 	if b.reporter == nil {
-		b.reporter = &reporterImpl{}
+		b.reporter = &reporterImpl{
+			reported: new(uint32),
+		}
 	}
 
 	k := determineApiKey(b.apiKey)

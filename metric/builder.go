@@ -1,8 +1,6 @@
 package metric
 
 import (
-	"github.com/shirou/gopsutil/net"
-	"github.com/shirou/gopsutil/process"
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 )
 
@@ -25,10 +23,6 @@ type builder struct {
 	disableCPUStats       bool
 	disableDiskStats      bool
 	disableNetStats       bool
-	prevDiskStat          *process.IOCountersStat
-	prevNetStat           *net.IOCountersStat
-	process               *process.Process
-	pid                   string
 }
 
 // New initializes a new metric object which collects all types of metrics. If you want to disable a metric that
@@ -81,24 +75,10 @@ func (b *builder) DisableNetStats() mBuilder {
 
 // Builds and returns the metric plugin that you can pass to a thundra object while building it using AddPlugin().
 func (b *builder) Build() *metric {
-	//Initialize with empty objects
-	if !b.disableDiskStats {
-		b.prevDiskStat = &process.IOCountersStat{}
-	}
-
-	if !b.disableNetStats {
-		b.prevNetStat = &net.IOCountersStat{}
-	}
-
-	if !b.disableCPUStats || !b.disableDiskStats || !b.disableHeapStats {
-		b.process = plugin.GetThisProcess()
-	}
+	proc = plugin.GetThisProcess()
 
 	return &metric{
-		prevDiskStat: b.prevDiskStat,
-		prevNetStat:  b.prevNetStat,
-		process:      b.process,
-
+		span:                  new(metricSpan),
 		disableGCStats:        b.disableGCStats,
 		disableHeapStats:      b.disableHeapStats,
 		disableGoroutineStats: b.disableGoroutineStats,

@@ -9,8 +9,6 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
-
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 	"github.com/thundra-io/thundra-lambda-agent-go/test"
 	"github.com/thundra-io/thundra-lambda-agent-go/thundra"
@@ -107,11 +105,7 @@ func TestTrace(t *testing.T) {
 		t.Run(fmt.Sprintf("testCase[%d] %s", i, testCase.name), func(t *testing.T) {
 			test.PrepareEnvironment()
 
-			r := new(test.MockReporter)
-			r.On("Report", testApiKey).Return()
-			r.On("Clear").Return()
-			r.On("Collect", mock.Anything).Return()
-
+			r := test.NewMockReporter(testApiKey)
 			tr := New()
 			th := thundra.NewBuilder().AddPlugin(tr).SetReporter(r).SetAPIKey(testApiKey).Build()
 			lambdaHandler := thundra.Wrap(testCase.handler, th)
@@ -240,11 +234,7 @@ func TestPanic(t *testing.T) {
 		t.Run(fmt.Sprintf("testCase[%d] %s", i, testCase.name), func(t *testing.T) {
 			test.PrepareEnvironment()
 
-			r := new(test.MockReporter)
-			r.On("Report", testApiKey).Return()
-			r.On("Clear").Return()
-			r.On("Collect", mock.Anything).Return()
-
+			r := test.NewMockReporter(testApiKey)
 			tr := New()
 			th := thundra.NewBuilder().AddPlugin(tr).SetReporter(r).SetAPIKey(testApiKey).Build()
 			lambdaHandler := thundra.Wrap(testCase.handler, th)
@@ -332,7 +322,7 @@ func TestTimeout(t *testing.T) {
 		return fmt.Sprintf("Happy monitoring with %s!", s)
 	}
 
-	testCases := []struct {
+	testCase := []struct {
 		name     string
 		input    string
 		expected expectedPanic
@@ -346,41 +336,36 @@ func TestTimeout(t *testing.T) {
 			},
 		},
 	}
-	for i, testCase := range testCases {
-		t.Run(fmt.Sprintf("testCase[%d] %s", i, testCase.name), func(t *testing.T) {
-			test.PrepareEnvironment()
+	t.Run(fmt.Sprintf("testCase[%d] %s", 0, testCase[0].name), func(t *testing.T) {
+		test.PrepareEnvironment()
 
-			r := new(test.MockReporter)
-			r.On("Report", testApiKey).Return()
-			r.On("Clear").Return()
-			r.On("Collect", mock.Anything).Return()
+		r := test.NewMockReporter(testApiKey)
+		tr := New()
+		th := thundra.NewBuilder().AddPlugin(tr).SetReporter(r).SetAPIKey(testApiKey).Build()
+		lambdaHandler := thundra.Wrap(testCase[0].handler, th)
+		h := lambdaHandler.(func(context.Context, json.RawMessage) (interface{}, error))
+		f := lambdaFunction(h)
 
-			tr := New()
-			th := thundra.NewBuilder().AddPlugin(tr).SetReporter(r).SetAPIKey(testApiKey).Build()
-			lambdaHandler := thundra.Wrap(testCase.handler, th)
-			h := lambdaHandler.(func(context.Context, json.RawMessage) (interface{}, error))
-			f := lambdaFunction(h)
+		d := time.Now().Add(timeoutDuration * time.Second)
+		ctx, cancel := context.WithDeadline(context.TODO(), d)
+		defer cancel()
 
-			d := time.Now().Add(timeoutDuration * time.Second)
-			ctx, cancel := context.WithDeadline(context.TODO(), d)
-			defer cancel()
-			f(ctx, []byte(testCase.input))
-			// Code doesn't wait goroutines to finish.
-			//Monitor Data
-			msg, ok := r.MessageQueue[1].(plugin.Message)
-			if !ok {
-				fmt.Println("Collector message can't be casted to pluginMessage")
-			}
+		f(ctx, []byte(testCase[0].input))
+		// Code doesn't wait goroutines to finish.
+		//Monitor Data
+		msg, ok := r.MessageQueue[1].(plugin.Message)
+		if !ok {
+			fmt.Println("Collector message can't be casted to pluginMessage")
+		}
 
-			//Trace Data
-			td, ok := msg.Data.(traceData)
-			if !ok {
-				fmt.Println("Can not convert to trace data")
-			}
+		//Trace Data
+		td, ok := msg.Data.(traceData)
+		if !ok {
+			fmt.Println("Can not convert to trace data")
+		}
 
-			assert.Equal(t, "true", td.Properties[auditInfoPropertiesTimeout])
-		})
-	}
+		assert.Equal(t, "true", td.Properties[auditInfoPropertiesTimeout])
+	})
 
 }
 

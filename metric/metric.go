@@ -3,7 +3,6 @@ package metric
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"runtime"
 	"sync"
 
@@ -12,21 +11,10 @@ import (
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 )
 
+var proc *process.Process
+
 type metric struct {
-	statTimestamp     int64
-	startGCCount      uint32
-	endGCCount        uint32
-	startPauseTotalNs uint64
-	endPauseTotalNs   uint64
-	startCPUTimeStat  *cpuTimesStat
-	endCPUTimeStat    *cpuTimesStat
-	process           *process.Process
-	processCpuPercent float64
-	systemCpuPercent  float64
-	currDiskStat      *process.IOCountersStat
-	prevDiskStat      *process.IOCountersStat
-	currNetStat       *net.IOCountersStat
-	prevNetStat       *net.IOCountersStat
+	span *metricSpan
 
 	disableGCStats        bool
 	disableHeapStats      bool
@@ -36,19 +24,45 @@ type metric struct {
 	disableNetStats       bool
 }
 
+// metricSpan collects information related to metric plugin per invocation.
+type metricSpan struct {
+	statTimestamp     int64
+	startGCCount      uint32
+	endGCCount        uint32
+	startPauseTotalNs uint64
+	endPauseTotalNs   uint64
+	startCPUTimeStat  *cpuTimesStat
+	endCPUTimeStat    *cpuTimesStat
+	processCpuPercent float64
+	systemCpuPercent  float64
+	endDiskStat       *process.IOCountersStat
+	startDiskStat     *process.IOCountersStat
+	endNetStat        *net.IOCountersStat
+	startNetStat      *net.IOCountersStat
+}
+
 func (metric *metric) BeforeExecution(ctx context.Context, request json.RawMessage, wg *sync.WaitGroup) {
-	metric.statTimestamp = plugin.GetTimestamp()
+	metric.span = new(metricSpan)
+	metric.span.statTimestamp = plugin.GetTimestamp()
 
 	if !metric.disableGCStats {
 		m := &runtime.MemStats{}
 		runtime.ReadMemStats(m)
 
-		metric.startGCCount = m.NumGC
-		metric.startPauseTotalNs = m.PauseTotalNs
+		metric.span.startGCCount = m.NumGC
+		metric.span.startPauseTotalNs = m.PauseTotalNs
 	}
 
 	if !metric.disableCPUStats {
-		metric.startCPUTimeStat = sampleCPUtimesStat()
+		metric.span.startCPUTimeStat = sampleCPUtimesStat()
+	}
+
+	if !metric.disableDiskStats {
+		metric.span.startDiskStat = sampleDiskStat()
+	}
+
+	if !metric.disableNetStats {
+		metric.span.startNetStat = sampleNetStat()
 	}
 
 	wg.Done()
@@ -60,17 +74,17 @@ func (metric *metric) AfterExecution(ctx context.Context, request json.RawMessag
 
 	var stats []interface{}
 
-	if !metric.disableHeapStats {
-		h := prepareHeapStatsData(metric, mStats)
-		stats = append(stats, h)
-	}
-
 	if !metric.disableGCStats {
-		metric.endGCCount = mStats.NumGC
-		metric.endPauseTotalNs = mStats.PauseTotalNs
+		metric.span.endGCCount = mStats.NumGC
+		metric.span.endPauseTotalNs = mStats.PauseTotalNs
 
 		gc := prepareGCStatsData(metric, mStats)
 		stats = append(stats, gc)
+	}
+
+	if !metric.disableHeapStats {
+		h := prepareHeapStatsData(metric, mStats)
+		stats = append(stats, h)
 	}
 
 	if !metric.disableGoroutineStats {
@@ -79,37 +93,27 @@ func (metric *metric) AfterExecution(ctx context.Context, request json.RawMessag
 	}
 
 	if !metric.disableCPUStats {
-		metric.endCPUTimeStat = sampleCPUtimesStat()
+		metric.span.endCPUTimeStat = sampleCPUtimesStat()
 
-		metric.processCpuPercent = getProcessUsagePercent(metric)
-		metric.systemCpuPercent = getSystemUsagePercent(metric)
+		metric.span.processCpuPercent = getProcessUsagePercent(metric)
+		metric.span.systemCpuPercent = getSystemUsagePercent(metric)
 
 		c := prepareCPUStatsData(metric)
 		stats = append(stats, c)
 	}
 
 	if !metric.disableDiskStats {
-		diskStat, err := metric.process.IOCounters()
-		if err != nil {
-			fmt.Println(err)
-		} else {
-			metric.currDiskStat = diskStat
-			d := prepareDiskStatsData(metric)
-			stats = append(stats, d)
-		}
+		metric.span.endDiskStat = sampleDiskStat()
+		d := prepareDiskStatsData(metric)
+		stats = append(stats, d)
 	}
 
 	if !metric.disableNetStats {
-		netIOStat, err := net.IOCounters(false)
-		if err != nil {
-			fmt.Println(err)
-		} else {
-			metric.currNetStat = &netIOStat[all]
-			n := prepareNetStatsData(metric)
-			stats = append(stats, n)
-		}
+		metric.span.endNetStat = sampleNetStat()
+		n := prepareNetStatsData(metric)
+		stats = append(stats, n)
 	}
-
+	metric.span = nil
 	return stats, statDataType
 }
 

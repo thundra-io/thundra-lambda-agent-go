@@ -12,5 +12,5 @@ func TestPrepareCPUStatsData(t *testing.T) {
 	cpuStatsData := prepareCPUStatsData(metric)
 
 	assert.Equal(t, cpuStat, cpuStatsData.StatName)
-	assert.Equal(t, metric.statTimestamp, cpuStatsData.StatTimestamp)
+	assert.Equal(t, metric.span.statTimestamp, cpuStatsData.StatTimestamp)
 }

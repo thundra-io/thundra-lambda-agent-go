@@ -42,12 +42,12 @@ func (tr *trace) prepareTraceData(ctx context.Context, request json.RawMessage, 
 		ContextId:          plugin.ContextId,
 		ContextName:        plugin.ApplicationName,
 		ContextType:        executionContext,
-		StartTimestamp:     tr.startTime,
-		EndTimestamp:       tr.endTime,
-		Duration:           tr.duration,
-		Errors:             tr.errors,
-		ThrownError:        tr.thrownError,
-		ThrownErrorMessage: tr.thrownErrorMessage,
+		StartTimestamp:     tr.span.startTime,
+		EndTimestamp:       tr.span.endTime,
+		Duration:           tr.span.duration,
+		Errors:             tr.span.errors,
+		ThrownError:        tr.span.thrownError,
+		ThrownErrorMessage: tr.span.thrownErrorMessage,
 		AuditInfo:          ai,
 		Properties:         props,
 	}
@@ -76,7 +76,7 @@ func (tr *trace) prepareProperties(ctx context.Context, request json.RawMessage,
 		auditInfoPropertiesFunctionMemoryLimit: plugin.MemorySize,
 		auditInfoPropertiesFunctionARN:         plugin.GetInvokedFunctionArn(ctx),
 		auditInfoPropertiesRequestId:           plugin.GetAwsRequestID(ctx),
-		auditInfoPropertiesTimeout:             tr.timeout,
+		auditInfoPropertiesTimeout:             tr.span.timeout,
 	}
 }
 
@@ -84,12 +84,12 @@ func (tr *trace) prepareAuditInfo() map[string]interface{} {
 	var auditErrors []interface{}
 	var auditThrownError interface{}
 
-	if tr.panicInfo != nil {
-		p := *tr.panicInfo
+	if tr.span.panicInfo != nil {
+		p := *tr.span.panicInfo
 		auditErrors = append(auditErrors, p)
 		auditThrownError = p
-	} else if tr.errorInfo != nil {
-		e := *tr.errorInfo
+	} else if tr.span.errorInfo != nil {
+		e := *tr.span.errorInfo
 		auditErrors = append(auditErrors, e)
 		auditThrownError = e
 	}
@@ -97,8 +97,8 @@ func (tr *trace) prepareAuditInfo() map[string]interface{} {
 	return map[string]interface{}{
 		auditInfoContextName:    plugin.ApplicationName,
 		auditInfoId:             plugin.ContextId,
-		auditInfoOpenTimestamp:  tr.startTime,
-		auditInfoCloseTimestamp: tr.endTime,
+		auditInfoOpenTimestamp:  tr.span.startTime,
+		auditInfoCloseTimestamp: tr.span.endTime,
 		auditInfoErrors:         auditErrors,
 		auditInfoThrownError:    auditThrownError,
 	}

@@ -11,8 +11,8 @@ const numGC = 5
 
 func TestPrepareGCStatsData(t *testing.T) {
 	metric := NewBuilder().Build()
-	metric.startGCCount = 0
-	metric.endGCCount = numGC
+	metric.span.startGCCount = 0
+	metric.span.endGCCount = numGC
 
 	makeMultipleGCCalls(numGC)
 	memStats := &runtime.MemStats{}
