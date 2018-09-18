@@ -15,14 +15,14 @@ import (
 )
 
 const (
-	duration       = 500
-	testApiKey     = "testApiKey"
-	generatedError = "Generated Error"
-	errorType      = "errorString"
-	generatedPanic = "Generated Panic"
+	duration     = 500
+	testApiKey   = "testApiKey"
+	errorMessage = "Error Message"
+	errorKind    = "errorString"
+	panicMessage = "Panic Message"
 )
 
-var coldStart = "true"
+var coldStart = true
 
 type expectedPanic struct {
 	val   string
@@ -70,34 +70,34 @@ func TestTrace(t *testing.T) {
 		},
 		{
 			input:    `"Thundra"`,
-			expected: expected{"", errors.New(generatedError)},
+			expected: expected{"", errors.New(errorMessage)},
 			handler: func() error {
 				time.Sleep(time.Millisecond * duration)
-				return errors.New(generatedError)
+				return errors.New(errorMessage)
 			},
 		},
 		{
 			input:    `"Thundra"`,
-			expected: expected{"", errors.New(generatedError)},
+			expected: expected{"", errors.New(errorMessage)},
 			handler: func() (interface{}, error) {
 				time.Sleep(time.Millisecond * duration)
-				return nil, errors.New(generatedError)
+				return nil, errors.New(errorMessage)
 			},
 		},
 		{
 			input:    `"Thundra"`,
-			expected: expected{"", errors.New(generatedError)},
+			expected: expected{"", errors.New(errorMessage)},
 			handler: func(e interface{}) (interface{}, error) {
 				time.Sleep(time.Millisecond * duration)
-				return nil, errors.New(generatedError)
+				return nil, errors.New(errorMessage)
 			},
 		},
 		{
 			input:    `"Thundra"`,
-			expected: expected{"", errors.New(generatedError)},
+			expected: expected{"", errors.New(errorMessage)},
 			handler: func(ctx context.Context, e interface{}) (interface{}, error) {
 				time.Sleep(time.Millisecond * duration)
-				return nil, errors.New(generatedError)
+				return nil, errors.New(errorMessage)
 			},
 		},
 	}
@@ -111,19 +111,18 @@ func TestTrace(t *testing.T) {
 			lambdaHandler := thundra.Wrap(testCase.handler, th)
 			h := lambdaHandler.(func(context.Context, json.RawMessage) (interface{}, error))
 			f := lambdaFunction(h)
-
 			invocationStartTime := plugin.GetTimestamp()
 			response, err := f(context.TODO(), []byte(testCase.input))
 			invocationEndTime := plugin.GetTimestamp()
 
 			//Monitor Data
-			msg, ok := r.MessageQueue[1].(plugin.Message)
+			msg, ok := r.MessageQueue[1].(plugin.MonitoringDataWrapper)
 			if !ok {
 				fmt.Println("Collector message can't be casted to pluginMessage")
 			}
-			assert.Equal(t, traceDataType, msg.Type)
+			assert.Equal(t, traceType, msg.Type)
 			assert.Equal(t, testApiKey, msg.ApiKey)
-			assert.Equal(t, "1.2", msg.DataFormatVersion)
+			assert.Equal(t, plugin.DataModelVersion, msg.DataModelVersion)
 
 			//Trace Data
 			td, ok := msg.Data.(traceData)
@@ -131,65 +130,53 @@ func TestTrace(t *testing.T) {
 				fmt.Println("Can not convert to trace data")
 			}
 			assert.NotNil(t, td.Id)
-			assert.Equal(t, test.FunctionName, td.ApplicationName)
+			assert.Equal(t, traceType, td.Type)
+			assert.Equal(t, plugin.AgentVersion, td.AgentVersion)
+			assert.Equal(t, plugin.DataModelVersion, td.DataModelVersion)
 			assert.Equal(t, test.AppId, td.ApplicationId)
+			assert.Equal(t, plugin.ApplicationDomainName, td.ApplicationDomainName)
+			assert.Equal(t, plugin.ApplicationClassName, td.ApplicationClassName)
+			assert.Equal(t, test.FunctionName, td.ApplicationName)
 			assert.Equal(t, test.FunctionVersion, td.ApplicationVersion)
-			assert.Equal(t, test.ApplicationProfile, td.ApplicationProfile)
-			assert.Equal(t, plugin.ApplicationType, td.ApplicationType)
-			assert.NotNil(t, td.ContextId)
-			assert.Equal(t, test.FunctionName, td.ContextName)
-			assert.Equal(t, executionContext, td.ContextType)
+			assert.Equal(t, test.ApplicationStage, td.ApplicationStage)
+			assert.Equal(t, plugin.ApplicationRuntime, td.ApplicationRuntime)
+			assert.Equal(t, plugin.ApplicationRuntimeVersion, td.ApplicationRuntimeVersion)
+			assert.NotNil(t, td.ApplicationTags)
+
+			assert.NotNil(t, td.RootSpanId)
 
 			assert.True(t, invocationStartTime <= td.StartTimestamp)
-			assert.True(t, td.StartTimestamp < td.EndTimestamp)
-			assert.True(t, td.EndTimestamp <= invocationEndTime)
+			assert.True(t, td.StartTimestamp < td.FinishTimestamp)
+			assert.True(t, td.FinishTimestamp <= invocationEndTime)
 			assert.True(t, int64(duration) <= td.Duration)
 
-			//Trace Audit Info
-			ai := td.AuditInfo
-			assert.Equal(t, test.FunctionName, ai[auditInfoContextName])
-			assert.NotNil(t, ai[auditInfoId])
-			assert.Equal(t, td.StartTimestamp, ai[auditInfoOpenTimestamp])
-			assert.Equal(t, td.EndTimestamp, ai[auditInfoCloseTimestamp])
-
-			//Trace Properties
-			props := td.Properties
-			assert.Equal(t, testCase.input, props[auditInfoPropertiesRequest])
-			assert.Equal(t, coldStart, props[auditInfoPropertiesColdStart])
-			assert.Equal(t, test.Region, props[auditInfoPropertiesFunctionRegion])
-			assert.Equal(t, test.MemoryLimit, props[auditInfoPropertiesFunctionMemoryLimit])
-			assert.Equal(t, test.LogGroupName, props[auditInfoPropertiesLogGroupName])
-			assert.Equal(t, test.LogStreamName, props[auditInfoPropertiesLogStreamName])
-			assert.NotNil(t, props[auditInfoPropertiesFunctionARN])
-			assert.NotNil(t, props[auditInfoPropertiesRequestId])
+			//Tags
+			assert.Equal(t, testCase.input, td.Tags[awsLambdaInvocationRequest])
+			assert.Equal(t, test.LogGroupName, td.Tags[awsLambdaLogGroupName])
+			assert.Equal(t, test.LogStreamName, td.Tags[awsLambdaLogStreamName])
+			assert.Equal(t, test.MemoryLimit, td.Tags[awsLambdaMemoryLimit])
+			assert.Equal(t, test.FunctionName, td.Tags[awsLambdaName])
+			assert.Equal(t, test.Region, td.Tags[awsRegion])
+			assert.Equal(t, false, td.Tags[awsLambdaInvocationTimeout])
+			assert.Equal(t, coldStart, td.Tags[awsLambdaInvocationColdStart])
 
 			if testCase.expected.err != nil {
 				assert.Equal(t, testCase.expected.err, err)
-
-				assert.Equal(t, 1, len(td.Errors))
-				assert.Equal(t, errorType, td.ThrownError)
-				assert.Equal(t, generatedError, td.ThrownErrorMessage)
-
-				assert.Equal(t, 1, len((ai[auditInfoErrors]).([]interface{})))
-				assert.Nil(t, props[auditInfoPropertiesResponse])
-
-				errorInfo := ai[auditInfoThrownError].(errorInfo)
-				assert.Equal(t, generatedError, errorInfo.ErrMessage)
-				assert.Equal(t, errorType, errorInfo.ErrType)
+				assert.Equal(t, true, td.Tags[awsError])
+				assert.Equal(t, errorKind, td.Tags[awsErrorKind])
+				assert.Equal(t, errorMessage, td.Tags[awsErrorMessage])
 			} else {
-				assert.NoError(t, err)
 				assert.Equal(t, testCase.expected.val, response)
-
-				assert.Equal(t, testCase.expected.val, props[auditInfoPropertiesResponse])
-				assert.Nil(t, td.Errors)
-				assert.Nil(t, td.ThrownError)
-				assert.Nil(t, td.ThrownErrorMessage)
-				assert.Nil(t, ai[auditInfoErrors])
-				assert.Nil(t, ai[auditInfoThrownError])
+				assert.Equal(t, testCase.expected.val, td.Tags[awsLambdaInvocationResponse])
+				assert.NoError(t, err)
+				assert.Nil(t, td.Tags[awsError])
+				assert.Nil(t, td.Tags[awsErrorKind])
+				assert.Nil(t, td.Tags[awsErrorMessage])
+				assert.Nil(t, td.Tags[awsErrorStack])
 			}
 
 			test.CleanEnvironment()
-			coldStart = "false"
+			coldStart = false
 		})
 	}
 }
@@ -197,7 +184,7 @@ func TestTrace(t *testing.T) {
 func TestPanic(t *testing.T) {
 	hello := func(s string) string {
 		time.Sleep(time.Millisecond * duration)
-		panic(errors.New(generatedPanic))
+		panic(errors.New(panicMessage))
 		return fmt.Sprintf("Happy monitoring with %s!", s)
 	}
 
@@ -210,21 +197,21 @@ func TestPanic(t *testing.T) {
 		{
 			name:     "Panic Test",
 			input:    `"Thundra"`,
-			expected: expectedPanic{"", nil, errors.New(generatedPanic)},
+			expected: expectedPanic{"", nil, errors.New(panicMessage)},
 			handler: func(name string) (string, error) {
 				return hello(name), nil
 			},
 		},
 		{
 			input:    `"Thundra"`,
-			expected: expectedPanic{"Thundra works!", nil, errors.New(generatedPanic)},
+			expected: expectedPanic{"Thundra works!", nil, errors.New(panicMessage)},
 			handler: func(name string) (string, error) {
 				return hello(name), nil
 			},
 		},
 		{
 			input:    `"Thundra"`,
-			expected: expectedPanic{"Thundra works!", nil, errors.New(generatedPanic)},
+			expected: expectedPanic{"Thundra works!", nil, errors.New(panicMessage)},
 			handler: func(ctx context.Context, name string) (string, error) {
 				return hello(name), nil
 			},
@@ -245,13 +232,13 @@ func TestPanic(t *testing.T) {
 					invocationEndTime := plugin.GetTimestamp()
 
 					//Monitor Data
-					msg, ok := r.MessageQueue[1].(plugin.Message)
+					msg, ok := r.MessageQueue[1].(plugin.MonitoringDataWrapper)
 					if !ok {
 						fmt.Println("Collector message can't be casted to pluginMessage")
 					}
-					assert.Equal(t, traceDataType, msg.Type)
+					assert.Equal(t, traceType, msg.Type)
 					assert.Equal(t, testApiKey, msg.ApiKey)
-					assert.Equal(t, "1.2", msg.DataFormatVersion)
+					assert.Equal(t, plugin.DataModelVersion, msg.DataModelVersion)
 
 					//Trace Data
 					td, ok := msg.Data.(traceData)
@@ -259,52 +246,45 @@ func TestPanic(t *testing.T) {
 						fmt.Println("Can not convert to trace data")
 					}
 					assert.NotNil(t, td.Id)
-					assert.Equal(t, test.FunctionName, td.ApplicationName)
+					assert.Equal(t, traceType, td.Type)
+					assert.Equal(t, plugin.AgentVersion, td.AgentVersion)
+					assert.Equal(t, plugin.DataModelVersion, td.DataModelVersion)
 					assert.Equal(t, test.AppId, td.ApplicationId)
+					assert.Equal(t, plugin.ApplicationDomainName, td.ApplicationDomainName)
+					assert.Equal(t, plugin.ApplicationClassName, td.ApplicationClassName)
+					assert.Equal(t, test.FunctionName, td.ApplicationName)
 					assert.Equal(t, test.FunctionVersion, td.ApplicationVersion)
-					assert.Equal(t, test.ApplicationProfile, td.ApplicationProfile)
-					assert.Equal(t, plugin.ApplicationType, td.ApplicationType)
-					assert.NotNil(t, td.ContextId)
-					assert.Equal(t, test.FunctionName, td.ContextName)
-					assert.Equal(t, executionContext, td.ContextType)
+					assert.Equal(t, test.ApplicationStage, td.ApplicationStage)
+					assert.Equal(t, plugin.ApplicationRuntime, td.ApplicationRuntime)
+					assert.Equal(t, plugin.ApplicationRuntimeVersion, td.ApplicationRuntimeVersion)
+					assert.NotNil(t, td.ApplicationTags)
+
+					assert.NotNil(t, td.RootSpanId)
 
 					assert.True(t, invocationStartTime <= td.StartTimestamp)
-					assert.True(t, td.StartTimestamp < td.EndTimestamp)
-					assert.True(t, td.EndTimestamp <= invocationEndTime)
+					assert.True(t, td.StartTimestamp < td.FinishTimestamp)
+					assert.True(t, td.FinishTimestamp <= invocationEndTime)
 					assert.True(t, int64(duration) <= td.Duration)
 
-					assert.Equal(t, 1, len(td.Errors))
-					assert.Equal(t, errorType, td.ThrownError)
-					assert.Equal(t, generatedPanic, td.ThrownErrorMessage)
+					//Tags
+					assert.Equal(t, testCase.input, td.Tags[awsLambdaInvocationRequest])
+					assert.Equal(t, test.LogGroupName, td.Tags[awsLambdaLogGroupName])
+					assert.Equal(t, test.LogStreamName, td.Tags[awsLambdaLogStreamName])
+					assert.Equal(t, test.MemoryLimit, td.Tags[awsLambdaMemoryLimit])
+					assert.Equal(t, test.FunctionName, td.Tags[awsLambdaName])
+					assert.Equal(t, test.Region, td.Tags[awsRegion])
+					assert.Equal(t, false, td.Tags[awsLambdaInvocationTimeout])
+					assert.Equal(t, coldStart, td.Tags[awsLambdaInvocationColdStart])
 
-					//Trace Audit Info
-					ai := td.AuditInfo
-					assert.Equal(t, test.FunctionName, ai[auditInfoContextName])
-					assert.NotNil(t, ai[auditInfoId])
-					assert.Equal(t, td.StartTimestamp, ai[auditInfoOpenTimestamp])
-					assert.Equal(t, td.EndTimestamp, ai[auditInfoCloseTimestamp])
-
-					panicInfo := ai[auditInfoThrownError].(panicInfo)
-					assert.Equal(t, generatedPanic, panicInfo.ErrMessage)
-					assert.Equal(t, errorType, panicInfo.ErrType)
-					assert.NotNil(t, panicInfo.StackTrace)
-
-					//Trace Properties
-					props := td.Properties
-					assert.Equal(t, testCase.input, props[auditInfoPropertiesRequest])
-					assert.Equal(t, coldStart, props[auditInfoPropertiesColdStart])
-					assert.Equal(t, test.Region, props[auditInfoPropertiesFunctionRegion])
-					assert.Equal(t, test.MemoryLimit, props[auditInfoPropertiesFunctionMemoryLimit])
-					assert.Equal(t, test.LogGroupName, props[auditInfoPropertiesLogGroupName])
-					assert.Equal(t, test.LogStreamName, props[auditInfoPropertiesLogStreamName])
-					assert.NotNil(t, props[auditInfoPropertiesFunctionARN])
-					assert.NotNil(t, props[auditInfoPropertiesRequestId])
-
-					assert.Equal(t, 1, len((ai[auditInfoErrors]).([]interface{})))
-					assert.Nil(t, props[auditInfoPropertiesResponse])
+					//Panic
+					assert.Equal(t, true, td.Tags[awsError])
+					assert.Equal(t, errorKind, td.Tags[awsErrorKind])
+					assert.Equal(t, panicMessage, td.Tags[awsErrorMessage])
+					assert.NotNil(t, td.Tags[awsErrorStack])
+					assert.Nil(t, td.Tags[awsLambdaInvocationResponse])
 
 					test.CleanEnvironment()
-					coldStart = "false"
+					coldStart = false
 				}
 			}()
 			h := lambdaHandler.(func(context.Context, json.RawMessage) (interface{}, error))
@@ -353,7 +333,7 @@ func TestTimeout(t *testing.T) {
 		f(ctx, []byte(testCase[0].input))
 		// Code doesn't wait goroutines to finish.
 		//Monitor Data
-		msg, ok := r.MessageQueue[1].(plugin.Message)
+		msg, ok := r.MessageQueue[1].(plugin.MonitoringDataWrapper)
 		if !ok {
 			fmt.Println("Collector message can't be casted to pluginMessage")
 		}
@@ -364,7 +344,7 @@ func TestTimeout(t *testing.T) {
 			fmt.Println("Can not convert to trace data")
 		}
 
-		assert.Equal(t, "true", td.Properties[auditInfoPropertiesTimeout])
+		assert.Equal(t, true, td.Tags[awsLambdaInvocationTimeout])
 	})
 
 }

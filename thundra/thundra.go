@@ -20,6 +20,7 @@ type thundra struct {
 
 func (t *thundra) executePreHooks(ctx context.Context, request json.RawMessage) {
 	t.reporter.FlushFlag()
+	plugin.GenerateNewId()
 	plugin.GenerateNewTransactionId()
 	var wg sync.WaitGroup
 	wg.Add(len(t.plugins))
@@ -72,11 +73,11 @@ func (t *thundra) onPanic(ctx context.Context, request json.RawMessage, err inte
 func prepareMessages(data []interface{}, dataType string, apiKey string) []interface{} {
 	var messages []interface{}
 	for _, d := range data {
-		m := plugin.Message{
-			Data:              d,
-			Type:              dataType,
-			ApiKey:            apiKey,
-			DataFormatVersion: dataFormatVersion,
+		m := plugin.MonitoringDataWrapper{
+			DataModelVersion: dataModelVersion,
+			Type:             dataType,
+			Data:             d,
+			ApiKey:           apiKey,
 		}
 		messages = append(messages, m)
 	}

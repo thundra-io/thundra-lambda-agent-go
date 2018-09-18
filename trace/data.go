@@ -1,105 +1,98 @@
 package trace
 
 import (
-	"encoding/json"
-	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 	"context"
+	"encoding/json"
+
+	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 )
 
 type traceData struct {
-	Id                 string                 `json:"id"`
-	TransactionId      string                 `json:"transactionId"`
-	ApplicationName    string                 `json:"applicationName"`
-	ApplicationId      string                 `json:"applicationId"`
-	ApplicationVersion string                 `json:"applicationVersion"`
-	ApplicationProfile string                 `json:"applicationProfile"`
-	ApplicationType    string                 `json:"applicationType"`
-	ContextId          string                 `json:"contextId"`
-	ContextName        string                 `json:"contextName"`
-	ContextType        string                 `json:"contextType"`
-	StartTimestamp     int64                  `json:"startTimestamp"`
-	EndTimestamp       int64                  `json:"endTimestamp"`
-	Duration           int64                  `json:"duration"`
-	Errors             []string               `json:"errors"`
-	ThrownError        interface{}            `json:"thrownError"`
-	ThrownErrorMessage interface{}            `json:"thrownErrorMessage"`
-	AuditInfo          map[string]interface{} `json:"auditInfo"`
-	Properties         map[string]interface{} `json:"properties"`
+	//Base fields
+	Id                        string                 `json:"id"`
+	Type                      string                 `json:"type"`
+	AgentVersion              string                 `json:"agentVersion"`
+	DataModelVersion          string                 `json:"dataModelVersion"`
+	ApplicationId             string                 `json:"applicationId"`
+	ApplicationDomainName     string                 `json:"applicationDomainName"`
+	ApplicationClassName      string                 `json:"applicationClassName"`
+	ApplicationName           string                 `json:"applicationName"`
+	ApplicationVersion        string                 `json:"applicationVersion"`
+	ApplicationStage          string                 `json:"applicationStage"`
+	ApplicationRuntime        string                 `json:"applicationRuntime"`
+	ApplicationRuntimeVersion string                 `json:"applicationRuntimeVersion"`
+	ApplicationTags           map[string]interface{} `json:"applicationTags"`
+
+	//Trace fields
+	RootSpanId      string                 `json:"rootSpanId"`
+	StartTimestamp  int64                  `json:"startTimestamp"`
+	FinishTimestamp int64                  `json:"finishTimestamp"`
+	Duration        int64                  `json:"duration"`
+	Tags            map[string]interface{} `json:"tags"`
 }
 
 func (tr *trace) prepareTraceData(ctx context.Context, request json.RawMessage, response interface{}) traceData {
-	props := tr.prepareProperties(ctx, request, response)
-	ai := tr.prepareAuditInfo()
-
+	tags := tr.prepareTags(ctx, request, response)
 	return traceData{
-		Id:                 plugin.ContextId,
-		TransactionId:      plugin.TransactionId,
-		ApplicationName:    plugin.ApplicationName,
-		ApplicationId:      plugin.ApplicationId,
-		ApplicationVersion: plugin.ApplicationVersion,
-		ApplicationProfile: plugin.ApplicationProfile,
-		ApplicationType:    plugin.ApplicationType,
-		ContextId:          plugin.ContextId,
-		ContextName:        plugin.ApplicationName,
-		ContextType:        executionContext,
-		StartTimestamp:     tr.span.startTime,
-		EndTimestamp:       tr.span.endTime,
-		Duration:           tr.span.duration,
-		Errors:             tr.span.errors,
-		ThrownError:        tr.span.thrownError,
-		ThrownErrorMessage: tr.span.thrownErrorMessage,
-		AuditInfo:          ai,
-		Properties:         props,
+		Id:                        plugin.Id,
+		Type:                      traceType,
+		AgentVersion:              plugin.AgentVersion,
+		DataModelVersion:          plugin.DataModelVersion,
+		ApplicationId:             plugin.ApplicationId,
+		ApplicationDomainName:     plugin.ApplicationDomainName,
+		ApplicationClassName:      plugin.ApplicationClassName,
+		ApplicationName:           plugin.FunctionName,
+		ApplicationVersion:        plugin.ApplicationVersion,
+		ApplicationStage:          plugin.ApplicationStage,
+		ApplicationRuntime:        plugin.ApplicationRuntime,
+		ApplicationRuntimeVersion: plugin.ApplicationRuntimeVersion,
+		ApplicationTags:           map[string]interface{}{},
+
+		RootSpanId:      tr.span.rootSpanId,
+		StartTimestamp:  tr.span.startTime,
+		FinishTimestamp: tr.span.finishTime,
+		Duration:        tr.span.duration,
+		Tags:            tags,
 	}
 }
 
-func (tr *trace) prepareProperties(ctx context.Context, request json.RawMessage, response interface{}) map[string]interface{} {
-	coldStart := "true"
-	if invocationCount += 1; invocationCount != 1 {
-		coldStart = "false"
-	}
+func (tr *trace) prepareTags(ctx context.Context, request json.RawMessage, response interface{}) map[string]interface{} {
+	tags := map[string]interface{}{}
+	tags[awsLambdaInvocationRequestId] = plugin.GetAwsRequestID(ctx)
+
 	// If the agent's user doesn't want to send their request and response data, hide them.
-	if shouldHideRequest() {
-		request = nil
+	if !shouldHideRequest() {
+		tags[awsLambdaInvocationRequest] = string(request)
 	}
-	if shouldHideResponse() {
-		response = nil
+	if !shouldHideResponse() {
+		tags[awsLambdaInvocationResponse] = response
 	}
 
-	return map[string]interface{}{
-		auditInfoPropertiesRequest:             string(request),
-		auditInfoPropertiesResponse:            response,
-		auditInfoPropertiesColdStart:           coldStart,
-		auditInfoPropertiesLogGroupName:        plugin.LogGroupName,
-		auditInfoPropertiesLogStreamName:       plugin.LogStreamName,
-		auditInfoPropertiesFunctionRegion:      plugin.Region,
-		auditInfoPropertiesFunctionMemoryLimit: plugin.MemorySize,
-		auditInfoPropertiesFunctionARN:         plugin.GetInvokedFunctionArn(ctx),
-		auditInfoPropertiesRequestId:           plugin.GetAwsRequestID(ctx),
-		auditInfoPropertiesTimeout:             tr.span.timeout,
-	}
-}
+	tags[awsLambdaARN] = plugin.GetInvokedFunctionArn(ctx)
+	tags[awsLambdaLogGroupName] = plugin.LogGroupName
+	tags[awsLambdaLogStreamName] = plugin.LogStreamName
+	tags[awsLambdaMemoryLimit] = plugin.MemoryLimit
+	tags[awsLambdaName] = plugin.FunctionName
+	tags[awsRegion] = plugin.FunctionRegion
+	tags[awsLambdaInvocationTimeout] = tr.span.timeout
 
-func (tr *trace) prepareAuditInfo() map[string]interface{} {
-	var auditErrors []interface{}
-	var auditThrownError interface{}
+	// If this is the first invocation, it is a cold start
+	if invocationCount == 1 {
+		tags[awsLambdaInvocationColdStart] = true
+	} else {
+		tags[awsLambdaInvocationColdStart] = false
+	}
 
 	if tr.span.panicInfo != nil {
-		p := *tr.span.panicInfo
-		auditErrors = append(auditErrors, p)
-		auditThrownError = p
+		tags[awsError] = true
+		tags[awsErrorKind] = tr.span.panicInfo.Kind
+		tags[awsErrorMessage] = tr.span.panicInfo.Message
+		tags[awsErrorStack] = tr.span.panicInfo.Stack
 	} else if tr.span.errorInfo != nil {
-		e := *tr.span.errorInfo
-		auditErrors = append(auditErrors, e)
-		auditThrownError = e
+		tags[awsError] = true
+		tags[awsErrorKind] = tr.span.errorInfo.Kind
+		tags[awsErrorMessage] = tr.span.errorInfo.Message
 	}
 
-	return map[string]interface{}{
-		auditInfoContextName:    plugin.ApplicationName,
-		auditInfoId:             plugin.ContextId,
-		auditInfoOpenTimestamp:  tr.span.startTime,
-		auditInfoCloseTimestamp: tr.span.endTime,
-		auditInfoErrors:         auditErrors,
-		auditInfoThrownError:    auditThrownError,
-	}
+	return tags
 }
