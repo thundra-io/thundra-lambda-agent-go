@@ -5,7 +5,12 @@ const DefaultProfile = "default"
 
 //Thundra Environment
 const ThundraApplicationProfile = "thundra_applicationProfile"
-const ApplicationType = "go"
+const AgentVersion = "2.0.0"
+const DataModelVersion = "2.0"
+const ApplicationDomainName = "API"
+const ApplicationClassName = "AWS-Lambda"
+const ApplicationRuntime = "Go"
+const ApplicationRuntimeVersion = "1.x"
 
 //AWS
 const AwsDefaultRegion = "AWS_DEFAULT_REGION"

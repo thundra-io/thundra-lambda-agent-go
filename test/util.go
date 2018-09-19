@@ -9,14 +9,14 @@ import (
 )
 
 const (
-	FunctionName       = "TestFunctionName"
-	LogStreamName      = "2018/01/01/[$LATEST]1234567890"
-	AppId              = "1234567890"
-	FunctionVersion    = "$Version"
-	ApplicationProfile = "TestProfile"
-	Region             = "TestRegion"
-	MemoryLimit        = 512
-	LogGroupName       = "TestLogGroupName"
+	FunctionName     = "TestFunctionName"
+	LogStreamName    = "2018/01/01/[$LATEST]1234567890"
+	AppId            = "1234567890"
+	FunctionVersion  = "$Version"
+	ApplicationStage = "TestStage"
+	Region           = "TestRegion"
+	MemoryLimit      = 512
+	LogGroupName     = "TestLogGroupName"
 )
 
 //MockReporter is used in tests for mock reporter
@@ -61,21 +61,21 @@ func NewMockReporter(testApiKey string) *MockReporter {
 
 func PrepareEnvironment() {
 	lambdacontext.LogStreamName = LogStreamName
-	plugin.ApplicationName = FunctionName
+	plugin.FunctionName = FunctionName
 	plugin.ApplicationId = AppId
 	plugin.ApplicationVersion = FunctionVersion
-	plugin.ApplicationProfile = ApplicationProfile
-	plugin.Region = Region
-	plugin.MemorySize = MemoryLimit
+	plugin.ApplicationStage = ApplicationStage
+	plugin.FunctionRegion = Region
+	plugin.MemoryLimit = MemoryLimit
 	plugin.LogGroupName = LogGroupName
 	plugin.LogStreamName = LogStreamName
 }
 
 func CleanEnvironment() {
-	plugin.ApplicationName = ""
+	plugin.FunctionName = ""
 	plugin.ApplicationId = ""
 	plugin.ApplicationVersion = ""
-	plugin.ApplicationProfile = ""
-	plugin.Region = ""
-	plugin.MemorySize = 0
+	plugin.ApplicationStage = ""
+	plugin.FunctionRegion = ""
+	plugin.MemoryLimit = 0
 }

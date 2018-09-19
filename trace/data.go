@@ -34,7 +34,7 @@ type traceData struct {
 func (tr *trace) prepareTraceData(ctx context.Context, request json.RawMessage, response interface{}) traceData {
 	tags := tr.prepareTags(ctx, request, response)
 	return traceData{
-		Id:                        plugin.Id,
+		Id:                        plugin.TraceId,
 		Type:                      traceType,
 		AgentVersion:              plugin.AgentVersion,
 		DataModelVersion:          plugin.DataModelVersion,
