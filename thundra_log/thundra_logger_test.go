@@ -18,7 +18,7 @@ const (
 func TestThundraLogger_Trace(t *testing.T) {
 	Logger.Trace(testMessage)
 	assert.Equal(t, traceLogLevel, logManager.recentLogLevel)
-	assert.Equal(t, traceLogLevelId, logManager.recentLogLevelId)
+	assert.Equal(t, traceLogLevelCode, logManager.recentLogLevelCode)
 	assert.Equal(t, expectedTestMessage, logManager.logs[0].logMessage)
 	logManager.clearLogs()
 }
@@ -26,7 +26,7 @@ func TestThundraLogger_Trace(t *testing.T) {
 func TestThundraLogger_Debug(t *testing.T) {
 	Logger.Debug(testMessage)
 	assert.Equal(t, debugLogLevel, logManager.recentLogLevel)
-	assert.Equal(t, debugLogLevelId, logManager.recentLogLevelId)
+	assert.Equal(t, debugLogLevelCode, logManager.recentLogLevelCode)
 	assert.Equal(t, expectedTestMessage, logManager.logs[0].logMessage)
 	logManager.clearLogs()
 }
@@ -34,7 +34,7 @@ func TestThundraLogger_Debug(t *testing.T) {
 func TestThundraLogger_Info(t *testing.T) {
 	Logger.Info(testMessage)
 	assert.Equal(t, infoLogLevel, logManager.recentLogLevel)
-	assert.Equal(t, infoLogLevelId, logManager.recentLogLevelId)
+	assert.Equal(t, infoLogLevelCode, logManager.recentLogLevelCode)
 	assert.Equal(t, expectedTestMessage, logManager.logs[0].logMessage)
 	logManager.clearLogs()
 }
@@ -42,7 +42,7 @@ func TestThundraLogger_Info(t *testing.T) {
 func TestThundraLogger_Warn(t *testing.T) {
 	Logger.Warn(testMessage)
 	assert.Equal(t, warnLogLevel, logManager.recentLogLevel)
-	assert.Equal(t, warnLogLevelId, logManager.recentLogLevelId)
+	assert.Equal(t, warnLogLevelCode, logManager.recentLogLevelCode)
 	assert.Equal(t, testMessage+"\n", logManager.logs[0].logMessage)
 	logManager.clearLogs()
 }
@@ -50,7 +50,7 @@ func TestThundraLogger_Warn(t *testing.T) {
 func TestThundraLogger_Error(t *testing.T) {
 	Logger.Error(testMessage)
 	assert.Equal(t, errorLogLevel, logManager.recentLogLevel)
-	assert.Equal(t, errorLogLevelId, logManager.recentLogLevelId)
+	assert.Equal(t, errorLogLevelCode, logManager.recentLogLevelCode)
 	assert.Equal(t, expectedTestMessage, logManager.logs[0].logMessage)
 	logManager.clearLogs()
 }
@@ -58,7 +58,7 @@ func TestThundraLogger_Error(t *testing.T) {
 func TestThundraLogger_Printf(t *testing.T) {
 	Logger.Printf("%s", testMessage)
 	assert.Equal(t, infoLogLevel, logManager.recentLogLevel)
-	assert.Equal(t, infoLogLevelId, logManager.recentLogLevelId)
+	assert.Equal(t, infoLogLevelCode, logManager.recentLogLevelCode)
 	assert.Equal(t, formattedTestMessage, logManager.logs[0].logMessage)
 	logManager.clearLogs()
 }
@@ -66,7 +66,7 @@ func TestThundraLogger_Printf(t *testing.T) {
 func TestThundraLogger_Print(t *testing.T) {
 	Logger.Print(testMessage)
 	assert.Equal(t, infoLogLevel, logManager.recentLogLevel)
-	assert.Equal(t, infoLogLevelId, logManager.recentLogLevelId)
+	assert.Equal(t, infoLogLevelCode, logManager.recentLogLevelCode)
 	assert.Equal(t, formattedTestMessage, logManager.logs[0].logMessage)
 	logManager.clearLogs()
 }
@@ -74,7 +74,7 @@ func TestThundraLogger_Print(t *testing.T) {
 func TestThundraLogger_Println(t *testing.T) {
 	Logger.Println(testMessage)
 	assert.Equal(t, infoLogLevel, logManager.recentLogLevel)
-	assert.Equal(t, infoLogLevelId, logManager.recentLogLevelId)
+	assert.Equal(t, infoLogLevelCode, logManager.recentLogLevelCode)
 	assert.Equal(t, formattedTestMessage, logManager.logs[0].logMessage)
 	logManager.clearLogs()
 }
@@ -85,7 +85,7 @@ func TestThundraLogger_Panicf(t *testing.T) {
 	}
 	assert.Panics(t, panicTestFunc)
 	assert.Equal(t, errorLogLevel, logManager.recentLogLevel)
-	assert.Equal(t, errorLogLevelId, logManager.recentLogLevelId)
+	assert.Equal(t, errorLogLevelCode, logManager.recentLogLevelCode)
 	assert.Equal(t, formattedTestMessage, logManager.logs[0].logMessage)
 	logManager.clearLogs()
 }
@@ -96,7 +96,7 @@ func TestThundraLogger_Panic(t *testing.T) {
 	}
 	assert.Panics(t, panicTestFunc)
 	assert.Equal(t, errorLogLevel, logManager.recentLogLevel)
-	assert.Equal(t, errorLogLevelId, logManager.recentLogLevelId)
+	assert.Equal(t, errorLogLevelCode, logManager.recentLogLevelCode)
 	assert.Equal(t, formattedTestMessage, logManager.logs[0].logMessage)
 	logManager.clearLogs()
 }
@@ -107,7 +107,7 @@ func TestThundraLogger_Panicln(t *testing.T) {
 	}
 	assert.Panics(t, panicTestFunc)
 	assert.Equal(t, errorLogLevel, logManager.recentLogLevel)
-	assert.Equal(t, errorLogLevelId, logManager.recentLogLevelId)
+	assert.Equal(t, errorLogLevelCode, logManager.recentLogLevelCode)
 	assert.Equal(t, formattedTestMessage, logManager.logs[0].logMessage)
 	logManager.clearLogs()
 }
@@ -125,12 +125,11 @@ func TestThundraLogManager_Write(t *testing.T) {
 	testMonitoredLogSetCorrectly(t, logManager.logs[1], "\"anotherTestMessage\"")
 }
 
-func testMonitoredLogSetCorrectly(t *testing.T, m *monitoredLog, expectedMessage string) {
-	assert.Equal(t, expectedMessage, m.log)
+func testMonitoredLogSetCorrectly(t *testing.T, m *monitoringLog, expectedMessage string) {
 	assert.Equal(t, expectedMessage, m.logMessage)
 
 	_, file, line, _ := runtime.Caller(3)
-	assert.Equal(t, fmt.Sprintf("%s %d", file, line), m.loggerName)
+	assert.Equal(t, fmt.Sprintf("%s %d", file, line), m.logContextName)
 	now := plugin.GetTimestamp()
 	assert.True(t, now >= m.logTimestamp)
 }

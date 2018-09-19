@@ -18,13 +18,13 @@ var (
 	// we have too add an additional calldepth for our wrapper.
 	// It is zero for other functions: trace, debug, info, warn, error.
 	additionalCalldepth int
-	logLevelId          int
+	logLevelCode        int
 )
 
 func init() {
 	logManager = &thundraLogManager{}
 	Logger = newThundraLogger(logManager)
-	logLevelId = getLogLevelId()
+	logLevelCode = getLogLevelCode()
 }
 
 type thundraLogger struct {
@@ -32,9 +32,9 @@ type thundraLogger struct {
 }
 
 type thundraLogManager struct {
-	logs             []*monitoredLog
-	recentLogLevel   string // recentLogLevel saves the level of the last log call
-	recentLogLevelId int    // recentLogLevelId saves the level id of the last log call
+	logs               []*monitoringLog
+	recentLogLevel     string // recentLogLevel saves the level of the last log call
+	recentLogLevelCode int    // recentLogLevelCode saves the level code of the last log call
 }
 
 func newThundraLogger(t *thundraLogManager) *thundraLogger {
@@ -46,51 +46,51 @@ func newThundraLogger(t *thundraLogManager) *thundraLogger {
 
 // Trace prints trace level logs to logger.
 func (l *thundraLogger) Trace(v ...interface{}) {
-	if logLevelId > traceLogLevelId {
+	if logLevelCode > traceLogLevelCode {
 		return
 	}
 	logManager.recentLogLevel = traceLogLevel
-	logManager.recentLogLevelId = traceLogLevelId
+	logManager.recentLogLevelCode = traceLogLevelCode
 	l.Output(2, fmt.Sprint(v...))
 }
 
 // Debug prints debug level logs to logger.
 func (l *thundraLogger) Debug(v ...interface{}) {
-	if logLevelId > debugLogLevelId {
+	if logLevelCode > debugLogLevelCode {
 		return
 	}
 	logManager.recentLogLevel = debugLogLevel
-	logManager.recentLogLevelId = debugLogLevelId
+	logManager.recentLogLevelCode = debugLogLevelCode
 	l.Output(2, fmt.Sprint(v...))
 }
 
 // Info prints info level logs to logger.
 func (l *thundraLogger) Info(v ...interface{}) {
-	if logLevelId > infoLogLevelId {
+	if logLevelCode > infoLogLevelCode {
 		return
 	}
 	logManager.recentLogLevel = infoLogLevel
-	logManager.recentLogLevelId = infoLogLevelId
+	logManager.recentLogLevelCode = infoLogLevelCode
 	l.Output(2, fmt.Sprint(v...))
 }
 
 // Warn prints warn level logs to logger.
 func (l *thundraLogger) Warn(v ...interface{}) {
-	if logLevelId > warnLogLevelId {
+	if logLevelCode > warnLogLevelCode {
 		return
 	}
 	logManager.recentLogLevel = warnLogLevel
-	logManager.recentLogLevelId = warnLogLevelId
+	logManager.recentLogLevelCode = warnLogLevelCode
 	l.Output(2, fmt.Sprint(v...))
 }
 
 // Error prints error level logs to logger.
 func (l *thundraLogger) Error(v ...interface{}) {
-	if logLevelId > errorLogLevelId {
+	if logLevelCode > errorLogLevelCode {
 		return
 	}
 	logManager.recentLogLevel = errorLogLevel
-	logManager.recentLogLevelId = errorLogLevelId
+	logManager.recentLogLevelCode = errorLogLevelCode
 	l.Output(2, fmt.Sprint(v...))
 }
 
@@ -98,66 +98,66 @@ func (l *thundraLogger) Error(v ...interface{}) {
 
 // Printf sets log level to info and calls standard library's Printf function.
 func (l thundraLogger) Printf(format string, v ...interface{}) {
-	if logLevelId > infoLogLevelId {
+	if logLevelCode > infoLogLevelCode {
 		return
 	}
 	logManager.recentLogLevel = infoLogLevel
-	logManager.recentLogLevelId = infoLogLevelId
+	logManager.recentLogLevelCode = infoLogLevelCode
 	additionalCalldepth = 1
 	l.Logger.Printf(format, v)
 }
 
 // Print sets log level to info and calls standard library's Print function.
 func (l thundraLogger) Print(v ...interface{}) {
-	if logLevelId > infoLogLevelId {
+	if logLevelCode > infoLogLevelCode {
 		return
 	}
 	logManager.recentLogLevel = infoLogLevel
-	logManager.recentLogLevelId = infoLogLevelId
+	logManager.recentLogLevelCode = infoLogLevelCode
 	additionalCalldepth = 1
 	l.Logger.Print(v)
 }
 
 // Println sets log level to info and calls standard library's Println function.
 func (l thundraLogger) Println(v ...interface{}) {
-	if logLevelId > infoLogLevelId {
+	if logLevelCode > infoLogLevelCode {
 		return
 	}
 	logManager.recentLogLevel = infoLogLevel
-	logManager.recentLogLevelId = infoLogLevelId
+	logManager.recentLogLevelCode = infoLogLevelCode
 	additionalCalldepth = 1
 	l.Logger.Println(v)
 }
 
 // Panicf sets log level to error and calls standard library's Panicf function.
 func (l thundraLogger) Panicf(format string, v ...interface{}) {
-	if logLevelId > errorLogLevelId {
+	if logLevelCode > errorLogLevelCode {
 		return
 	}
 	logManager.recentLogLevel = errorLogLevel
-	logManager.recentLogLevelId = errorLogLevelId
+	logManager.recentLogLevelCode = errorLogLevelCode
 	additionalCalldepth = 1
 	l.Logger.Panicf(format, v)
 }
 
 // Panic sets log level to error and calls standard library's Panic function.
 func (l thundraLogger) Panic(v ...interface{}) {
-	if logLevelId > errorLogLevelId {
+	if logLevelCode > errorLogLevelCode {
 		return
 	}
 	logManager.recentLogLevel = errorLogLevel
-	logManager.recentLogLevelId = errorLogLevelId
+	logManager.recentLogLevelCode = errorLogLevelCode
 	additionalCalldepth = 1
 	l.Logger.Panic(v)
 }
 
 // Panicln sets log level to error and calls standard library's Panicln function.
 func (l thundraLogger) Panicln(v ...interface{}) {
-	if logLevelId > errorLogLevelId {
+	if logLevelCode > errorLogLevelCode {
 		return
 	}
 	logManager.recentLogLevel = errorLogLevel
-	logManager.recentLogLevelId = errorLogLevelId
+	logManager.recentLogLevelCode = errorLogLevelCode
 	additionalCalldepth = 1
 	l.Logger.Panicln(v)
 }
@@ -172,13 +172,12 @@ func (t *thundraLogManager) Write(p []byte) (n int, err error) {
 		line = 0
 	}
 
-	mL := &monitoredLog{
-		log:          string(p),
-		logMessage:   string(p),
-		loggerName:   fmt.Sprintf("%s %d", file, line),
-		logTimestamp: plugin.GetTimestamp(),
-		logLevel:     t.recentLogLevel,
-		logLevelId:   t.recentLogLevelId,
+	mL := &monitoringLog{
+		logMessage:     string(p),
+		logContextName: fmt.Sprintf("%s %d", file, line),
+		logTimestamp:   plugin.GetTimestamp(),
+		logLevel:       t.recentLogLevel,
+		logLevelCode:   t.recentLogLevelCode,
 	}
 	t.logs = append(t.logs, mL)
 	return len(p), nil
@@ -188,27 +187,27 @@ func (t *thundraLogManager) clearLogs() {
 	t.logs = nil
 }
 
-func getLogLevelId() int {
+func getLogLevelCode() int {
 	l := os.Getenv(thundraLogLogLevel)
 	thundraLogLevel := strings.ToUpper(l)
 	if thundraLogLevel == traceLogLevel {
-		return traceLogLevelId
+		return traceLogLevelCode
 	} else if thundraLogLevel == debugLogLevel {
-		return debugLogLevelId
+		return debugLogLevelCode
 	} else if thundraLogLevel == infoLogLevel {
-		return infoLogLevelId
+		return infoLogLevelCode
 	} else if thundraLogLevel == warnLogLevel {
-		return warnLogLevelId
+		return warnLogLevelCode
 	} else if thundraLogLevel == errorLogLevel {
-		return errorLogLevelId
+		return errorLogLevelCode
 	} else if thundraLogLevel == noneLogLevel {
 		// Logging is disabled. None of the logs will be sent.
-		return noneLogLevelId
+		return noneLogLevelCode
 	} else if thundraLogLevel == "" {
 		// logLevel is not set, thundra will report all logs.
 		return 0
 	}
 
-	log.Print(errors.New("invalid thundraLogLogLevel. Logs are disabled. Use trace, debug, info, warn, error or none."))
-	return noneLogLevelId
+	log.Print(errors.New("invalid " + thundraLogLogLevel + ". Logs are disabled. Use trace, debug, info, warn, error or none."))
+	return noneLogLevelCode
 }

@@ -23,7 +23,7 @@ func (p *logPlugin) AfterExecution(ctx context.Context, request json.RawMessage,
 		data := prepareLogData(l)
 		collectedData = append(collectedData, data)
 	}
-	return collectedData, logDataType
+	return collectedData, logType
 }
 
 func (p *logPlugin) OnPanic(ctx context.Context, request json.RawMessage, err interface{}, stackTrace []byte) ([]interface{}, string) {
@@ -32,5 +32,5 @@ func (p *logPlugin) OnPanic(ctx context.Context, request json.RawMessage, err in
 		data := prepareLogData(l)
 		collectedData = append(collectedData, data)
 	}
-	return collectedData, logDataType
+	return collectedData, logType
 }
