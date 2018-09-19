@@ -9,56 +9,44 @@ import (
 
 const all = 0
 
-type netStatsData struct {
-	Id                 string `json:"id"`
-	TransactionId      string `json:"transactionId"`
-	ApplicationName    string `json:"applicationName"`
-	ApplicationId      string `json:"applicationId"`
-	ApplicationVersion string `json:"applicationVersion"`
-	ApplicationProfile string `json:"applicationProfile"`
-	ApplicationType    string `json:"applicationType"`
-	StatName           string `json:"statName"`
-	StatTimestamp      int64  `json:"statTimestamp"`
-
-	// BytesRecv is how many bytes received from network
-	BytesRecv uint64 `json:"bytesRecv"`
-
-	// BytesSent is how many bytes sent to network
-	BytesSent uint64 `json:"bytesSent"`
-
-	// PacketsRecv is how many packets received from network
-	PacketsRecv uint64 `json:"packetsRecv"`
-
-	// PacketsSent is how many packets sent to network
-	PacketsSent uint64 `json:"packetsSent"`
-
-	// ErrIn is the number of errors while sending packet
-	ErrIn uint64 `json:"errIn"`
-
-	// ErrOut is the number of errors while receiving packet
-	ErrOut uint64 `json:"errOut"`
-}
-
-func prepareNetStatsData(metric *metric) netStatsData {
+func prepareNetStatsData(metric *metric) metricData {
 	nf := takeNetFrame(metric)
+	return metricData{
+		Id:                        plugin.GenerateNewId(),
+		Type:                      metricType,
+		AgentVersion:              plugin.AgentVersion,
+		DataModelVersion:          plugin.DataModelVersion,
+		ApplicationId:             plugin.ApplicationId,
+		ApplicationDomainName:     plugin.ApplicationDomainName,
+		ApplicationClassName:      plugin.ApplicationClassName,
+		ApplicationName:           plugin.FunctionName,
+		ApplicationVersion:        plugin.ApplicationVersion,
+		ApplicationStage:          plugin.ApplicationStage,
+		ApplicationRuntime:        plugin.ApplicationRuntime,
+		ApplicationRuntimeVersion: plugin.ApplicationRuntimeVersion,
+		ApplicationTags:           map[string]interface{}{},
 
-	return netStatsData{
-		Id:                 plugin.GenerateNewId(),
-		TransactionId:      plugin.TransactionId,
-		ApplicationName:    plugin.ApplicationName,
-		ApplicationId:      plugin.ApplicationId,
-		ApplicationVersion: plugin.ApplicationVersion,
-		ApplicationProfile: plugin.ApplicationProfile,
-		ApplicationType:    plugin.ApplicationType,
-		StatName:           netStat,
-		StatTimestamp:      metric.span.statTimestamp,
+		TraceId:         plugin.TraceId,
+		TracnsactionId:  plugin.TransactionId,
+		SpanId:          plugin.SpanId,
+		MetricName:      netMetric,
+		MetricTimestamp: metric.span.metricTimestamp,
 
-		BytesRecv:   nf.bytesRecv,
-		BytesSent:   nf.bytesSent,
-		PacketsRecv: nf.packetsRecv,
-		PacketsSent: nf.packetsSent,
-		ErrIn:       nf.errin,
-		ErrOut:      nf.errout,
+		Metrics: map[string]interface{}{
+			// BytesRecv is how many bytes received from network
+			bytesRecv: nf.bytesRecv,
+			// BytesSent is how many bytes sent to network
+			bytesSent: nf.bytesSent,
+			// PacketsRecv is how many packets received from network
+			packetsRecv: nf.packetsRecv,
+			// PacketsSent is how many packets sent to network
+			packetsSent: nf.packetsSent,
+			// ErrIn is the number of errors while sending packet
+			errIn: nf.errin,
+			// ErrOut is the number of errors while receiving packet
+			errOut: nf.errout,
+		},
+		Tags: map[string]interface{}{},
 	}
 }
 

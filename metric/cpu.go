@@ -6,41 +6,37 @@ import (
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 )
 
-type cpuStatsData struct {
-	Id                 string `json:"id"`
-	TransactionId      string `json:"transactionId"`
-	ApplicationName    string `json:"applicationName"`
-	ApplicationId      string `json:"applicationId"`
-	ApplicationVersion string `json:"applicationVersion"`
-	ApplicationProfile string `json:"applicationProfile"`
-	ApplicationType    string `json:"applicationType"`
-	StatName           string `json:"statName"`
-	StatTimestamp      int64  `json:"statTimestamp"`
+func prepareCpuMetricsData(metric *metric) metricData {
+	return metricData{
+		Id:                        plugin.GenerateNewId(),
+		Type:                      metricType,
+		AgentVersion:              plugin.AgentVersion,
+		DataModelVersion:          plugin.DataModelVersion,
+		ApplicationId:             plugin.ApplicationId,
+		ApplicationDomainName:     plugin.ApplicationDomainName,
+		ApplicationClassName:      plugin.ApplicationClassName,
+		ApplicationName:           plugin.FunctionName,
+		ApplicationVersion:        plugin.ApplicationVersion,
+		ApplicationStage:          plugin.ApplicationStage,
+		ApplicationRuntime:        plugin.ApplicationRuntime,
+		ApplicationRuntimeVersion: plugin.ApplicationRuntimeVersion,
+		ApplicationTags:           map[string]interface{}{},
 
-	// ProcessCPUPercent is the pid usage of the total CPU time
-	ProcessCPUPercent float64 `json:"procPercent"`
+		TraceId:         plugin.TraceId,
+		TracnsactionId:  plugin.TransactionId,
+		SpanId:          plugin.SpanId,
+		MetricName:      cpuMetric,
+		MetricTimestamp: metric.span.metricTimestamp,
 
-	// SystemCPUPercent is the system usage of the total CPU time
-	SystemCPUPercent float64 `json:"sysPercent"`
-}
-
-func prepareCPUStatsData(metric *metric) cpuStatsData {
-	return cpuStatsData{
-		Id:                 plugin.GenerateNewId(),
-		TransactionId:      plugin.TransactionId,
-		ApplicationName:    plugin.ApplicationName,
-		ApplicationId:      plugin.ApplicationId,
-		ApplicationVersion: plugin.ApplicationVersion,
-		ApplicationProfile: plugin.ApplicationProfile,
-		ApplicationType:    plugin.ApplicationType,
-		StatName:           cpuStat,
-		StatTimestamp:      metric.span.statTimestamp,
-		ProcessCPUPercent:  metric.span.processCpuPercent,
-		SystemCPUPercent:   metric.span.systemCpuPercent,
+		Metrics: map[string]interface{}{
+			appCpuLoad: metric.span.appCpuLoad,
+			sysCpuLoad: metric.span.systemCpuLoad,
+		},
+		Tags: map[string]interface{}{},
 	}
 }
 
-func getSystemUsagePercent(metric *metric) float64 {
+func getSystemCpuLoad(metric *metric) float64 {
 	// Skip test
 	if metric.span.startCPUTimeStat == nil {
 		return 0
@@ -58,7 +54,7 @@ func getSystemUsagePercent(metric *metric) float64 {
 	return s
 }
 
-func getProcessUsagePercent(metric *metric) float64 {
+func getProcessCpuLoad(metric *metric) float64 {
 	// Skip test
 	if metric.span.startCPUTimeStat == nil {
 		return 0

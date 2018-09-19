@@ -14,10 +14,10 @@ func TestPrepareHeapStatsData(t *testing.T) {
 
 	heapStatsData := prepareHeapStatsData(metric, memStats)
 
-	assert.Equal(t, heapStat, heapStatsData.StatName)
+	assert.Equal(t, heapMetric, heapStatsData.MetricName)
 
-	assert.Equal(t, memStats.HeapAlloc, heapStatsData.HeapAlloc)
-	assert.Equal(t, memStats.HeapSys, heapStatsData.HeapSys)
-	assert.Equal(t, memStats.HeapInuse, heapStatsData.HeapInuse)
-	assert.Equal(t, memStats.HeapObjects, heapStatsData.HeapObjects)
+	assert.Equal(t, memStats.HeapAlloc, heapStatsData.Metrics[heapAlloc])
+	assert.Equal(t, memStats.HeapSys, heapStatsData.Metrics[heapSys])
+	assert.Equal(t, memStats.HeapInuse, heapStatsData.Metrics[heapInuse])
+	assert.Equal(t, memStats.HeapObjects, heapStatsData.Metrics[heapObjects])
 }

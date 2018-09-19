@@ -45,5 +45,5 @@ func TestMetric_AfterExecution(t *testing.T) {
 	}
 
 	assert.Nil(t, m.span)
-	assert.Equal(t, statDataType, dataType)
+	assert.Equal(t, metricType, dataType)
 }

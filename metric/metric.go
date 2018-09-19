@@ -26,15 +26,15 @@ type metric struct {
 
 // metricSpan collects information related to metric plugin per invocation.
 type metricSpan struct {
-	statTimestamp     int64
+	metricTimestamp   int64
 	startGCCount      uint32
 	endGCCount        uint32
 	startPauseTotalNs uint64
 	endPauseTotalNs   uint64
 	startCPUTimeStat  *cpuTimesStat
 	endCPUTimeStat    *cpuTimesStat
-	processCpuPercent float64
-	systemCpuPercent  float64
+	appCpuLoad        float64
+	systemCpuLoad     float64
 	endDiskStat       *process.IOCountersStat
 	startDiskStat     *process.IOCountersStat
 	endNetStat        *net.IOCountersStat
@@ -43,7 +43,7 @@ type metricSpan struct {
 
 func (metric *metric) BeforeExecution(ctx context.Context, request json.RawMessage, wg *sync.WaitGroup) {
 	metric.span = new(metricSpan)
-	metric.span.statTimestamp = plugin.GetTimestamp()
+	metric.span.metricTimestamp = plugin.GetTimestamp()
 
 	if !metric.disableGCStats {
 		m := &runtime.MemStats{}
@@ -78,7 +78,7 @@ func (metric *metric) AfterExecution(ctx context.Context, request json.RawMessag
 		metric.span.endGCCount = mStats.NumGC
 		metric.span.endPauseTotalNs = mStats.PauseTotalNs
 
-		gc := prepareGCStatsData(metric, mStats)
+		gc := prepareGCMetricsData(metric, mStats)
 		stats = append(stats, gc)
 	}
 
@@ -88,23 +88,23 @@ func (metric *metric) AfterExecution(ctx context.Context, request json.RawMessag
 	}
 
 	if !metric.disableGoroutineStats {
-		g := prepareGoRoutineStatsData(metric)
+		g := prepareGoRoutineMetricsData(metric)
 		stats = append(stats, g)
 	}
 
 	if !metric.disableCPUStats {
 		metric.span.endCPUTimeStat = sampleCPUtimesStat()
 
-		metric.span.processCpuPercent = getProcessUsagePercent(metric)
-		metric.span.systemCpuPercent = getSystemUsagePercent(metric)
+		metric.span.appCpuLoad = getProcessCpuLoad(metric)
+		metric.span.systemCpuLoad = getSystemCpuLoad(metric)
 
-		c := prepareCPUStatsData(metric)
+		c := prepareCpuMetricsData(metric)
 		stats = append(stats, c)
 	}
 
 	if !metric.disableDiskStats {
 		metric.span.endDiskStat = sampleDiskStat()
-		d := prepareDiskStatsData(metric)
+		d := prepareDiskMetricData(metric)
 		stats = append(stats, d)
 	}
 
@@ -114,7 +114,7 @@ func (metric *metric) AfterExecution(ctx context.Context, request json.RawMessag
 		stats = append(stats, n)
 	}
 	metric.span = nil
-	return stats, statDataType
+	return stats, metricType
 }
 
 //OnPanic just collect the metrics and send them as in the AfterExecution
