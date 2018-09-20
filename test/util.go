@@ -22,17 +22,17 @@ const (
 //MockReporter is used in tests for mock reporter
 type MockReporter struct {
 	mock.Mock
-	MessageQueue []interface{}
+	MessageQueue []plugin.MonitoringDataWrapper
 	ReportedFlag *uint32
 }
 
-func (r *MockReporter) Collect(messages []interface{}) {
+func (r *MockReporter) Collect(messages []plugin.MonitoringDataWrapper) {
 	r.MessageQueue = append(r.MessageQueue, messages...)
 	r.Called(messages)
 }
 
-func (r *MockReporter) Report(apiKey string) {
-	r.Called(apiKey)
+func (r *MockReporter) Report() {
+	r.Called()
 	atomic.CompareAndSwapUint32(r.ReportedFlag, 0, 1)
 }
 
@@ -49,11 +49,11 @@ func (r *MockReporter) FlushFlag() {
 }
 
 // NewMockReporter returns a new MockReporter
-func NewMockReporter(testApiKey string) *MockReporter {
+func NewMockReporter() *MockReporter {
 	r := &MockReporter{
 		ReportedFlag: new(uint32),
 	}
-	r.On("Report", testApiKey).Return()
+	r.On("Report").Return()
 	r.On("ClearData").Return()
 	r.On("Collect", mock.Anything).Return()
 	return r

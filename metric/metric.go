@@ -68,28 +68,28 @@ func (metric *metric) BeforeExecution(ctx context.Context, request json.RawMessa
 	wg.Done()
 }
 
-func (metric *metric) AfterExecution(ctx context.Context, request json.RawMessage, response interface{}, err interface{}) ([]interface{}, string) {
+func (metric *metric) AfterExecution(ctx context.Context, request json.RawMessage, response interface{}, err interface{}) []plugin.MonitoringDataWrapper {
 	mStats := &runtime.MemStats{}
 	runtime.ReadMemStats(mStats)
 
-	var stats []interface{}
+	var stats []plugin.MonitoringDataWrapper
 
 	if !metric.disableGCStats {
 		metric.span.endGCCount = mStats.NumGC
 		metric.span.endPauseTotalNs = mStats.PauseTotalNs
 
 		gc := prepareGCMetricsData(metric, mStats)
-		stats = append(stats, gc)
+		stats = append(stats, plugin.WrapMonitoringData(gc, metricType))
 	}
 
 	if !metric.disableHeapStats {
 		h := prepareHeapStatsData(metric, mStats)
-		stats = append(stats, h)
+		stats = append(stats, plugin.WrapMonitoringData(h, metricType))
 	}
 
 	if !metric.disableGoroutineStats {
 		g := prepareGoRoutineMetricsData(metric)
-		stats = append(stats, g)
+		stats = append(stats, plugin.WrapMonitoringData(g, metricType))
 	}
 
 	if !metric.disableCPUStats {
@@ -99,25 +99,25 @@ func (metric *metric) AfterExecution(ctx context.Context, request json.RawMessag
 		metric.span.systemCpuLoad = getSystemCpuLoad(metric)
 
 		c := prepareCpuMetricsData(metric)
-		stats = append(stats, c)
+		stats = append(stats, plugin.WrapMonitoringData(c, metricType))
 	}
 
 	if !metric.disableDiskStats {
 		metric.span.endDiskStat = sampleDiskStat()
 		d := prepareDiskMetricData(metric)
-		stats = append(stats, d)
+		stats = append(stats, plugin.WrapMonitoringData(d, metricType))
 	}
 
 	if !metric.disableNetStats {
 		metric.span.endNetStat = sampleNetStat()
 		n := prepareNetStatsData(metric)
-		stats = append(stats, n)
+		stats = append(stats, plugin.WrapMonitoringData(n, metricType))
 	}
 	metric.span = nil
-	return stats, metricType
+	return stats
 }
 
 //OnPanic just collect the metrics and send them as in the AfterExecution
-func (metric *metric) OnPanic(ctx context.Context, request json.RawMessage, err interface{}, stackTrace []byte) ([]interface{}, string) {
+func (metric *metric) OnPanic(ctx context.Context, request json.RawMessage, err interface{}, stackTrace []byte) []plugin.MonitoringDataWrapper {
 	return metric.AfterExecution(ctx, request, nil, err)
 }

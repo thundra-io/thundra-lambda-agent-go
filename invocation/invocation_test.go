@@ -64,14 +64,14 @@ func TestInvocationData_AfterExecution(t *testing.T) {
 
 	wg := sync.WaitGroup{}
 	wg.Add(1)
-	_, dataType := i.AfterExecution(context.TODO(), nil, nil, nil)
+	d := i.AfterExecution(context.TODO(), nil, nil, nil)
 	now := plugin.GetTimestamp()
 	assert.True(t, prevTime <= i.FinishTimestamp)
 	assert.True(t, i.FinishTimestamp <= now)
 	assert.True(t, i.Duration <= now-prevTime)
 	assert.True(t, i.ColdStart)
 	assert.False(t, i.Timeout)
-	assert.Equal(t, invocationType, dataType)
+	assert.Equal(t, invocationType, d[0].Type)
 }
 
 func TestInvocationData_AfterExecutionWithError(t *testing.T) {
@@ -97,7 +97,7 @@ func TestInvocationData_OnPanic(t *testing.T) {
 
 	wg := sync.WaitGroup{}
 	wg.Add(1)
-	_, dataType := i.OnPanic(context.TODO(), nil, err, nil)
+	d := i.OnPanic(context.TODO(), nil, err, nil)
 	now := plugin.GetTimestamp()
 	assert.True(t, prevTime <= i.FinishTimestamp)
 	assert.True(t, i.FinishTimestamp <= now)
@@ -107,5 +107,5 @@ func TestInvocationData_OnPanic(t *testing.T) {
 	assert.Equal(t, testErrorType, i.ErrorType)
 	assert.True(t, i.ColdStart)
 	assert.False(t, i.Timeout)
-	assert.Equal(t, invocationType, dataType)
+	assert.Equal(t, invocationType, d[0].Type)
 }

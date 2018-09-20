@@ -41,7 +41,7 @@ func (i *invocation) BeforeExecution(ctx context.Context, request json.RawMessag
 	wg.Done()
 }
 
-func (i *invocation) AfterExecution(ctx context.Context, request json.RawMessage, response interface{}, err interface{}) ([]interface{}, string) {
+func (i *invocation) AfterExecution(ctx context.Context, request json.RawMessage, response interface{}, err interface{}) []plugin.MonitoringDataWrapper {
 	i.FinishTimestamp = plugin.GetTimestamp()
 	i.Duration = i.FinishTimestamp - i.StartTimestamp
 
@@ -55,12 +55,12 @@ func (i *invocation) AfterExecution(ctx context.Context, request json.RawMessage
 	i.ColdStart = isColdStarted()
 	i.Timeout = isTimeout(err)
 
-	var invocationArr []interface{}
-	invocationArr = append(invocationArr, i)
-	return invocationArr, invocationType
+	var invocationArr []plugin.MonitoringDataWrapper
+	invocationArr = append(invocationArr, plugin.WrapMonitoringData(i, invocationType))
+	return invocationArr
 }
 
-func (i *invocation) OnPanic(ctx context.Context, request json.RawMessage, err interface{}, stackTrace []byte) ([]interface{}, string) {
+func (i *invocation) OnPanic(ctx context.Context, request json.RawMessage, err interface{}, stackTrace []byte) []plugin.MonitoringDataWrapper {
 	i.FinishTimestamp = plugin.GetTimestamp()
 	i.Duration = i.FinishTimestamp - i.StartTimestamp
 	i.Erroneous = true
@@ -72,9 +72,9 @@ func (i *invocation) OnPanic(ctx context.Context, request json.RawMessage, err i
 	// since it is panicked it could not be timed out
 	i.Timeout = false
 
-	var invocationArr []interface{}
-	invocationArr = append(invocationArr, i)
-	return invocationArr, invocationType
+	var invocationArr []plugin.MonitoringDataWrapper
+	invocationArr = append(invocationArr, plugin.WrapMonitoringData(i, invocationType))
+	return invocationArr
 }
 
 // isColdStarted returns if the lambda instance is cold started. Cold Start only happens on the first invocation.

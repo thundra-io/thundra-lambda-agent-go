@@ -13,7 +13,6 @@ import (
 type thundra struct {
 	plugins       []plugin.Plugin
 	reporter      reporter
-	apiKey        string
 	warmup        bool
 	timeoutMargin time.Duration
 }
@@ -40,14 +39,13 @@ func (t *thundra) executePostHooks(ctx context.Context, request json.RawMessage,
 	wg.Add(len(t.plugins))
 	for _, p := range t.plugins {
 		go func(plugin plugin.Plugin) {
-			data, dType := plugin.AfterExecution(ctx, request, response, error)
-			messages := prepareMessages(data, dType, t.apiKey)
+			messages := plugin.AfterExecution(ctx, request, response, error)
 			t.reporter.Collect(messages)
 			wg.Done()
 		}(p)
 	}
 	wg.Wait()
-	t.reporter.Report(t.apiKey)
+	t.reporter.Report()
 	t.reporter.ClearData()
 }
 
@@ -60,29 +58,14 @@ func (t *thundra) onPanic(ctx context.Context, request json.RawMessage, err inte
 	wg.Add(len(t.plugins))
 	for _, p := range t.plugins {
 		go func(plugin plugin.Plugin) {
-			data, dType := plugin.OnPanic(ctx, request, err, stackTrace)
-			messages := prepareMessages(data, dType, t.apiKey)
+			messages := plugin.OnPanic(ctx, request, err, stackTrace)
 			t.reporter.Collect(messages)
 			wg.Done()
 		}(p)
 	}
 	wg.Wait()
-	t.reporter.Report(t.apiKey)
+	t.reporter.Report()
 	t.reporter.ClearData()
-}
-
-func prepareMessages(data []interface{}, dataType string, apiKey string) []interface{} {
-	var messages []interface{}
-	for _, d := range data {
-		m := plugin.MonitoringDataWrapper{
-			DataModelVersion: dataModelVersion,
-			Type:             dataType,
-			Data:             d,
-			ApiKey:           apiKey,
-		}
-		messages = append(messages, m)
-	}
-	return messages
 }
 
 type timeoutError struct{}

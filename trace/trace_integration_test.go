@@ -105,7 +105,7 @@ func TestTrace(t *testing.T) {
 		t.Run(fmt.Sprintf("testCase[%d] %s", i, testCase.name), func(t *testing.T) {
 			test.PrepareEnvironment()
 
-			r := test.NewMockReporter(testApiKey)
+			r := test.NewMockReporter()
 			tr := New()
 			th := thundra.NewBuilder().AddPlugin(tr).SetReporter(r).SetAPIKey(testApiKey).Build()
 			lambdaHandler := thundra.Wrap(testCase.handler, th)
@@ -116,10 +116,7 @@ func TestTrace(t *testing.T) {
 			invocationEndTime := plugin.GetTimestamp()
 
 			//Monitor Data
-			msg, ok := r.MessageQueue[1].(plugin.MonitoringDataWrapper)
-			if !ok {
-				fmt.Println("Collector message can't be casted to pluginMessage")
-			}
+			msg := r.MessageQueue[1]
 			assert.Equal(t, traceType, msg.Type)
 			assert.Equal(t, testApiKey, msg.ApiKey)
 			assert.Equal(t, plugin.DataModelVersion, msg.DataModelVersion)
@@ -221,7 +218,7 @@ func TestPanic(t *testing.T) {
 		t.Run(fmt.Sprintf("testCase[%d] %s", i, testCase.name), func(t *testing.T) {
 			test.PrepareEnvironment()
 
-			r := test.NewMockReporter(testApiKey)
+			r := test.NewMockReporter()
 			tr := New()
 			th := thundra.NewBuilder().AddPlugin(tr).SetReporter(r).SetAPIKey(testApiKey).Build()
 			lambdaHandler := thundra.Wrap(testCase.handler, th)
@@ -232,10 +229,7 @@ func TestPanic(t *testing.T) {
 					invocationEndTime := plugin.GetTimestamp()
 
 					//Monitor Data
-					msg, ok := r.MessageQueue[1].(plugin.MonitoringDataWrapper)
-					if !ok {
-						fmt.Println("Collector message can't be casted to pluginMessage")
-					}
+					msg := r.MessageQueue[1]
 					assert.Equal(t, traceType, msg.Type)
 					assert.Equal(t, testApiKey, msg.ApiKey)
 					assert.Equal(t, plugin.DataModelVersion, msg.DataModelVersion)
@@ -319,7 +313,7 @@ func TestTimeout(t *testing.T) {
 	t.Run(fmt.Sprintf("testCase[%d] %s", 0, testCase[0].name), func(t *testing.T) {
 		test.PrepareEnvironment()
 
-		r := test.NewMockReporter(testApiKey)
+		r := test.NewMockReporter()
 		tr := New()
 		th := thundra.NewBuilder().AddPlugin(tr).SetReporter(r).SetAPIKey(testApiKey).Build()
 		lambdaHandler := thundra.Wrap(testCase[0].handler, th)
@@ -333,10 +327,7 @@ func TestTimeout(t *testing.T) {
 		f(ctx, []byte(testCase[0].input))
 		// Code doesn't wait goroutines to finish.
 		//Monitor Data
-		msg, ok := r.MessageQueue[1].(plugin.MonitoringDataWrapper)
-		if !ok {
-			fmt.Println("Collector message can't be casted to pluginMessage")
-		}
+		msg := r.MessageQueue[1]
 
 		//Trace Data
 		td, ok := msg.Data.(traceData)

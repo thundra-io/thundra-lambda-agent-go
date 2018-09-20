@@ -22,6 +22,8 @@ var TraceId string
 var TransactionId string
 var SpanId string
 
+var ApiKey string
+
 func init() {
 	FunctionName = getFunctionName()
 	ApplicationId = getAppId()

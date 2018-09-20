@@ -41,7 +41,7 @@ func (tr *trace) BeforeExecution(ctx context.Context, request json.RawMessage, w
 	wg.Done()
 }
 
-func (tr *trace) AfterExecution(ctx context.Context, request json.RawMessage, response interface{}, err interface{}) ([]interface{}, string) {
+func (tr *trace) AfterExecution(ctx context.Context, request json.RawMessage, response interface{}, err interface{}) []plugin.MonitoringDataWrapper {
 	tr.span.finishTime = plugin.GetTimestamp()
 	tr.span.duration = tr.span.finishTime - tr.span.startTime
 
@@ -66,13 +66,13 @@ func (tr *trace) AfterExecution(ctx context.Context, request json.RawMessage, re
 	s := tr.prepareSpanData(ctx, request, response)
 	tr.span = nil
 
-	var traceArr []interface{}
-	traceArr = append(traceArr, td)
-	traceArr = append(traceArr, s)
-	return traceArr, traceType
+	var traceArr []plugin.MonitoringDataWrapper
+	traceArr = append(traceArr, plugin.WrapMonitoringData(td, traceType))
+	traceArr = append(traceArr, plugin.WrapMonitoringData(s, spanType))
+	return traceArr
 }
 
-func (tr *trace) OnPanic(ctx context.Context, request json.RawMessage, err interface{}, stackTrace []byte) ([]interface{}, string) {
+func (tr *trace) OnPanic(ctx context.Context, request json.RawMessage, err interface{}, stackTrace []byte) []plugin.MonitoringDataWrapper {
 	tr.span.finishTime = plugin.GetTimestamp()
 	tr.span.duration = tr.span.finishTime - tr.span.startTime
 
@@ -96,10 +96,10 @@ func (tr *trace) OnPanic(ctx context.Context, request json.RawMessage, err inter
 	s := tr.prepareSpanData(ctx, request, nil)
 	tr.span = nil
 
-	var traceArr []interface{}
-	traceArr = append(traceArr, td)
-	traceArr = append(traceArr, s)
-	return traceArr, traceType
+	var traceArr []plugin.MonitoringDataWrapper
+	traceArr = append(traceArr, plugin.WrapMonitoringData(td, traceType))
+	traceArr = append(traceArr, plugin.WrapMonitoringData(s, spanType))
+	return traceArr
 }
 
 // isTimeout returns if the lambda invocation is timed out.

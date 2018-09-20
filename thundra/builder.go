@@ -74,13 +74,12 @@ func (b *builder) Build() *thundra {
 		}
 	}
 
-	k := determineApiKey(b.apiKey)
+	determineApiKey(b.apiKey)
 	w := determineWarmup(b.warmup)
 	g := determineTimeoutMargin()
 	return &thundra{
 		plugins:       b.plugins,
 		reporter:      b.reporter,
-		apiKey:        k,
 		warmup:        w,
 		timeoutMargin: g,
 	}
@@ -88,7 +87,7 @@ func (b *builder) Build() *thundra {
 
 // determineApiKey determines which apiKey to use. if apiKey is set from environment variable, returns that value.
 // Otherwise returns the value from builder's setApiKey method. Panic if it's not set by neither.
-func determineApiKey(builderApiKey string) string {
+func determineApiKey(builderApiKey string) {
 	k, err := checkApiKey()
 	if err != nil {
 		if builderApiKey == "" {
@@ -96,7 +95,8 @@ func determineApiKey(builderApiKey string) string {
 		}
 		k = builderApiKey
 	}
-	return k
+	// Set it globally
+	plugin.ApiKey = k
 }
 
 // checkApiKey is used to fetch the apiKey value from environment variable

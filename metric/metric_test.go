@@ -4,10 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"sync"
+	"runtime"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"runtime"
 )
 
 func TestMetric_BeforeExecution(t *testing.T) {
@@ -36,7 +36,7 @@ func TestMetric_AfterExecution(t *testing.T) {
 
 	wg := sync.WaitGroup{}
 	wg.Add(1)
-	stats, dataType := m.AfterExecution(context.TODO(), json.RawMessage{}, nil, nil)
+	stats := m.AfterExecution(context.TODO(), json.RawMessage{}, nil, nil)
 
 	// Assert all stats are collected, heap, gc, goroutine, cpu, net, disk
 	// Note that this fails on MACOSX and returns 5 instead of 6
@@ -45,5 +45,7 @@ func TestMetric_AfterExecution(t *testing.T) {
 	}
 
 	assert.Nil(t, m.span)
-	assert.Equal(t, metricType, dataType)
+	for _, stat := range stats {
+		assert.Equal(t, metricType, stat.Type)
+	}
 }

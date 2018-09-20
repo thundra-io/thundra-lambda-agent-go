@@ -82,3 +82,12 @@ func isThundraDebugEnabled() bool {
 	}
 	return b
 }
+
+func WrapMonitoringData(data interface{}, dataType string) MonitoringDataWrapper {
+	return MonitoringDataWrapper{
+		DataModelVersion: DataModelVersion,
+		Type:             dataType,
+		Data:             data,
+		ApiKey:           ApiKey,
+	}
+}
