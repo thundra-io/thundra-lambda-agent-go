@@ -58,42 +58,41 @@ func (tr *trace) prepareTraceData(ctx context.Context, request json.RawMessage, 
 
 func (tr *trace) prepareTraceTags(ctx context.Context, request json.RawMessage, response interface{}) map[string]interface{} {
 	tags := map[string]interface{}{}
-	tags[awsLambdaInvocationRequestId] = plugin.GetAwsRequestID(ctx)
+	tags[plugin.AwsLambdaInvocationRequestId] = plugin.GetAwsRequestID(ctx)
 
 	// If the agent's user doesn't want to send their request and response data, hide them.
 	if !shouldHideRequest() {
-		tags[awsLambdaInvocationRequest] = string(request)
+		tags[plugin.AwsLambdaInvocationRequest] = string(request)
 	}
 	if !shouldHideResponse() {
-		tags[awsLambdaInvocationResponse] = response
+		tags[plugin.AwsLambdaInvocationResponse] = response
 	}
 
-	tags[awsLambdaARN] = plugin.GetInvokedFunctionArn(ctx)
-	tags[awsLambdaLogGroupName] = plugin.LogGroupName
-	tags[awsLambdaLogStreamName] = plugin.LogStreamName
-	tags[awsLambdaMemoryLimit] = plugin.MemoryLimit
-	tags[awsLambdaName] = plugin.FunctionName
-	tags[awsRegion] = plugin.FunctionRegion
-	tags[awsLambdaInvocationTimeout] = tr.span.timeout
+	tags[plugin.AwsLambdaARN] = plugin.GetInvokedFunctionArn(ctx)
+	tags[plugin.AwsLambdaLogGroupName] = plugin.LogGroupName
+	tags[plugin.AwsLambdaLogStreamName] = plugin.LogStreamName
+	tags[plugin.AwsLambdaMemoryLimit] = plugin.MemoryLimit
+	tags[plugin.AwsLambdaName] = plugin.FunctionName
+	tags[plugin.AwsRegion] = plugin.FunctionRegion
+	tags[plugin.AwsLambdaInvocationTimeout] = tr.span.timeout
 
 	// If this is the first invocation, it is a cold start
 	if invocationCount == 1 {
-		tags[awsLambdaInvocationColdStart] = true
+		tags[plugin.AwsLambdaInvocationColdStart] = true
 	} else {
-		tags[awsLambdaInvocationColdStart] = false
+		tags[plugin.AwsLambdaInvocationColdStart] = false
 	}
 
 	if tr.span.panicInfo != nil {
-		tags[awsError] = true
-		tags[awsErrorKind] = tr.span.panicInfo.Kind
-		tags[awsErrorMessage] = tr.span.panicInfo.Message
-		tags[awsErrorStack] = tr.span.panicInfo.Stack
+		tags[plugin.AwsError] = true
+		tags[plugin.AwsErrorKind] = tr.span.panicInfo.Kind
+		tags[plugin.AwsErrorMessage] = tr.span.panicInfo.Message
+		tags[plugin.AwsErrorStack] = tr.span.panicInfo.Stack
 	} else if tr.span.errorInfo != nil {
-		tags[awsError] = true
-		tags[awsErrorKind] = tr.span.errorInfo.Kind
-		tags[awsErrorMessage] = tr.span.errorInfo.Message
+		tags[plugin.AwsError] = true
+		tags[plugin.AwsErrorKind] = tr.span.errorInfo.Kind
+		tags[plugin.AwsErrorMessage] = tr.span.errorInfo.Message
 	}
-
 	return tags
 }
 
@@ -172,10 +171,10 @@ func (tr *trace) prepareSpanTags(ctx context.Context, request json.RawMessage, r
 	tags := map[string]interface{}{}
 	// If the agent's user doesn't want to send their request and response data, hide them.
 	if !shouldHideRequest() {
-		tags[awsLambdaInvocationRequest] = string(request)
+		tags[plugin.AwsLambdaInvocationRequest] = string(request)
 	}
 	if !shouldHideResponse() {
-		tags[awsLambdaInvocationResponse] = response
+		tags[plugin.AwsLambdaInvocationResponse] = response
 	}
 	return tags
 }

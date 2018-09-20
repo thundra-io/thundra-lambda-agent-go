@@ -87,7 +87,7 @@ func sendAsync(msg interface{}) {
 
 func sendHttpReq(messageQueue []plugin.MonitoringDataWrapper) {
 	if plugin.DebugEnabled {
-		fmt.Println("MessageQueue:\n %+v", messageQueue)
+		fmt.Printf("MessageQueue:\n %+v \n", messageQueue)
 	}
 	b, err := json.Marshal(&messageQueue)
 	if err != nil {

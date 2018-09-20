@@ -148,28 +148,28 @@ func TestTrace(t *testing.T) {
 			assert.True(t, int64(duration) <= td.Duration)
 
 			//Tags
-			assert.Equal(t, testCase.input, td.Tags[awsLambdaInvocationRequest])
-			assert.Equal(t, test.LogGroupName, td.Tags[awsLambdaLogGroupName])
-			assert.Equal(t, test.LogStreamName, td.Tags[awsLambdaLogStreamName])
-			assert.Equal(t, test.MemoryLimit, td.Tags[awsLambdaMemoryLimit])
-			assert.Equal(t, test.FunctionName, td.Tags[awsLambdaName])
-			assert.Equal(t, test.Region, td.Tags[awsRegion])
-			assert.Equal(t, false, td.Tags[awsLambdaInvocationTimeout])
-			assert.Equal(t, coldStart, td.Tags[awsLambdaInvocationColdStart])
+			assert.Equal(t, testCase.input, td.Tags[plugin.AwsLambdaInvocationRequest])
+			assert.Equal(t, test.LogGroupName, td.Tags[plugin.AwsLambdaLogGroupName])
+			assert.Equal(t, test.LogStreamName, td.Tags[plugin.AwsLambdaLogStreamName])
+			assert.Equal(t, test.MemoryLimit, td.Tags[plugin.AwsLambdaMemoryLimit])
+			assert.Equal(t, test.FunctionName, td.Tags[plugin.AwsLambdaName])
+			assert.Equal(t, test.Region, td.Tags[plugin.AwsRegion])
+			assert.Equal(t, false, td.Tags[plugin.AwsLambdaInvocationTimeout])
+			assert.Equal(t, coldStart, td.Tags[plugin.AwsLambdaInvocationColdStart])
 
 			if testCase.expected.err != nil {
 				assert.Equal(t, testCase.expected.err, err)
-				assert.Equal(t, true, td.Tags[awsError])
-				assert.Equal(t, errorKind, td.Tags[awsErrorKind])
-				assert.Equal(t, errorMessage, td.Tags[awsErrorMessage])
+				assert.Equal(t, true, td.Tags[plugin.AwsError])
+				assert.Equal(t, errorKind, td.Tags[plugin.AwsErrorKind])
+				assert.Equal(t, errorMessage, td.Tags[plugin.AwsErrorMessage])
 			} else {
 				assert.Equal(t, testCase.expected.val, response)
-				assert.Equal(t, testCase.expected.val, td.Tags[awsLambdaInvocationResponse])
+				assert.Equal(t, testCase.expected.val, td.Tags[plugin.AwsLambdaInvocationResponse])
 				assert.NoError(t, err)
-				assert.Nil(t, td.Tags[awsError])
-				assert.Nil(t, td.Tags[awsErrorKind])
-				assert.Nil(t, td.Tags[awsErrorMessage])
-				assert.Nil(t, td.Tags[awsErrorStack])
+				assert.Nil(t, td.Tags[plugin.AwsError])
+				assert.Nil(t, td.Tags[plugin.AwsErrorKind])
+				assert.Nil(t, td.Tags[plugin.AwsErrorMessage])
+				assert.Nil(t, td.Tags[plugin.AwsErrorStack])
 			}
 
 			test.CleanEnvironment()
@@ -261,21 +261,21 @@ func TestPanic(t *testing.T) {
 					assert.True(t, int64(duration) <= td.Duration)
 
 					//Tags
-					assert.Equal(t, testCase.input, td.Tags[awsLambdaInvocationRequest])
-					assert.Equal(t, test.LogGroupName, td.Tags[awsLambdaLogGroupName])
-					assert.Equal(t, test.LogStreamName, td.Tags[awsLambdaLogStreamName])
-					assert.Equal(t, test.MemoryLimit, td.Tags[awsLambdaMemoryLimit])
-					assert.Equal(t, test.FunctionName, td.Tags[awsLambdaName])
-					assert.Equal(t, test.Region, td.Tags[awsRegion])
-					assert.Equal(t, false, td.Tags[awsLambdaInvocationTimeout])
-					assert.Equal(t, coldStart, td.Tags[awsLambdaInvocationColdStart])
+					assert.Equal(t, testCase.input, td.Tags[plugin.AwsLambdaInvocationRequest])
+					assert.Equal(t, test.LogGroupName, td.Tags[plugin.AwsLambdaLogGroupName])
+					assert.Equal(t, test.LogStreamName, td.Tags[plugin.AwsLambdaLogStreamName])
+					assert.Equal(t, test.MemoryLimit, td.Tags[plugin.AwsLambdaMemoryLimit])
+					assert.Equal(t, test.FunctionName, td.Tags[plugin.AwsLambdaName])
+					assert.Equal(t, test.Region, td.Tags[plugin.AwsRegion])
+					assert.Equal(t, false, td.Tags[plugin.AwsLambdaInvocationTimeout])
+					assert.Equal(t, coldStart, td.Tags[plugin.AwsLambdaInvocationColdStart])
 
 					//Panic
-					assert.Equal(t, true, td.Tags[awsError])
-					assert.Equal(t, errorKind, td.Tags[awsErrorKind])
-					assert.Equal(t, panicMessage, td.Tags[awsErrorMessage])
-					assert.NotNil(t, td.Tags[awsErrorStack])
-					assert.Nil(t, td.Tags[awsLambdaInvocationResponse])
+					assert.Equal(t, true, td.Tags[plugin.AwsError])
+					assert.Equal(t, errorKind, td.Tags[plugin.AwsErrorKind])
+					assert.Equal(t, panicMessage, td.Tags[plugin.AwsErrorMessage])
+					assert.NotNil(t, td.Tags[plugin.AwsErrorStack])
+					assert.Nil(t, td.Tags[plugin.AwsLambdaInvocationResponse])
 
 					test.CleanEnvironment()
 					coldStart = false
@@ -335,7 +335,7 @@ func TestTimeout(t *testing.T) {
 			fmt.Println("Can not convert to trace data")
 		}
 
-		assert.Equal(t, true, td.Tags[awsLambdaInvocationTimeout])
+		assert.Equal(t, true, td.Tags[plugin.AwsLambdaInvocationTimeout])
 	})
 
 }
