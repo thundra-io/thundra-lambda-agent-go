@@ -63,10 +63,12 @@ func (tr *trace) AfterExecution(ctx context.Context, request json.RawMessage, re
 	tr.span.timeout = isTimeout(err)
 
 	td := tr.prepareTraceData(ctx, request, response)
+	s := tr.prepareSpanData(ctx, request, response)
 	tr.span = nil
 
 	var traceArr []interface{}
 	traceArr = append(traceArr, td)
+	traceArr = append(traceArr, s)
 	return traceArr, traceType
 }
 
@@ -91,10 +93,12 @@ func (tr *trace) OnPanic(ctx context.Context, request json.RawMessage, err inter
 	tr.span.timeout = false
 
 	td := tr.prepareTraceData(ctx, request, nil)
+	s := tr.prepareSpanData(ctx, request, nil)
 	tr.span = nil
 
 	var traceArr []interface{}
 	traceArr = append(traceArr, td)
+	traceArr = append(traceArr, s)
 	return traceArr, traceType
 }
 

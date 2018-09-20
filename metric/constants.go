@@ -1,7 +1,7 @@
 package metric
 
 const metricType = "Metric"
-const cpuMetric = "CpuMetric"
+const cpuMetric = "CPUMetric"
 const gcMetric = "GcMetric"
 const goroutineMetric = "GoroutineMetric"
 const heapMetric = "HeapMetric"

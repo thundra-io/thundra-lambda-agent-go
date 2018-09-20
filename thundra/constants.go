@@ -1,7 +1,7 @@
 package thundra
 
 const defaultCollectorUrl = "https://collector.thundra.io/api"
-const monitorDatas = "/monitor-datas"
+const monitoringDataPath = "/monitoring-data"
 const dataModelVersion = "2.0"
 const defaultTimeoutMargin = 200
 

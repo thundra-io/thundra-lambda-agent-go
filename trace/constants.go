@@ -24,5 +24,8 @@ const awsErrorKind = "error.kind"
 const awsErrorMessage = "error.message"
 const awsErrorStack = "error.stack"
 
+// Span
+const spanType = "Span"
+
 //AWS
 const awsDefaultRegion = "AWS_DEFAULT_REGION"

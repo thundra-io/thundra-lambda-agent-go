@@ -32,5 +32,5 @@ type invocation struct {
 	ErrorCode        string                 `json:"errorCode"`       // Numeric code of the error, such as 404 for HttpError
 	ColdStart        bool                   `json:"coldStart"`       // Shows if the invocation is cold started
 	Timeout          bool                   `json:"timeout"`         // Shows if the invocation is timed out
-	Tags             map[string]interface{} `json:"Tags"`
+	Tags             map[string]interface{} `json:"tags"`
 }

@@ -9,7 +9,7 @@ const AgentVersion = "2.0.0"
 const DataModelVersion = "2.0"
 const ApplicationDomainName = "API"
 const ApplicationClassName = "AWS-Lambda"
-const ApplicationRuntime = "Go"
+const ApplicationRuntime = "go"
 const ApplicationRuntimeVersion = "1.x"
 
 //AWS

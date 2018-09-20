@@ -94,10 +94,10 @@ func sendHttpReq(messageQueue []interface{}, apiKey string) {
 		fmt.Println("Error in marshalling ", err)
 	}
 
-	targetURL := collectorUrl + monitorDatas
+	targetURL := collectorUrl + monitoringDataPath
 	if plugin.DebugEnabled {
 		fmt.Println("Sending HTTP request to Thundra collector: " + targetURL)
-		fmt.Println(string(b))
+		fmt.Println("%+v", messageQueue)
 	}
 
 	req, err := http.NewRequest("POST", targetURL, bytes.NewBuffer(b))
@@ -112,6 +112,7 @@ func sendHttpReq(messageQueue []interface{}, apiKey string) {
 	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Println("Error client.Do(req): ", err)
+		return
 	}
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
