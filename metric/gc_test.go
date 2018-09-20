@@ -9,7 +9,7 @@ import (
 
 const garbageCollectionCount = 5
 
-func TestPrepareGCStatsData(t *testing.T) {
+func TestPrepareGCMetricsData(t *testing.T) {
 	metric := NewBuilder().Build()
 	metric.span.startGCCount = 0
 	metric.span.endGCCount = garbageCollectionCount

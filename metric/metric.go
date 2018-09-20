@@ -16,12 +16,13 @@ var proc *process.Process
 type metric struct {
 	span *metricSpan
 
-	disableGCStats        bool
-	disableHeapStats      bool
-	disableGoroutineStats bool
-	disableCPUStats       bool
-	disableDiskStats      bool
-	disableNetStats       bool
+	disableGCMetrics        bool
+	disableHeapMetrics      bool
+	disableGoroutineMetrics bool
+	disableCPUMetrics       bool
+	disableDiskMetrics      bool
+	disableNetMetrics       bool
+	disableMemoryMetrics    bool
 }
 
 // metricSpan collects information related to metric plugin per invocation.
@@ -45,7 +46,7 @@ func (metric *metric) BeforeExecution(ctx context.Context, request json.RawMessa
 	metric.span = new(metricSpan)
 	metric.span.metricTimestamp = plugin.GetTimestamp()
 
-	if !metric.disableGCStats {
+	if !metric.disableGCMetrics {
 		m := &runtime.MemStats{}
 		runtime.ReadMemStats(m)
 
@@ -53,15 +54,15 @@ func (metric *metric) BeforeExecution(ctx context.Context, request json.RawMessa
 		metric.span.startPauseTotalNs = m.PauseTotalNs
 	}
 
-	if !metric.disableCPUStats {
+	if !metric.disableCPUMetrics {
 		metric.span.startCPUTimeStat = sampleCPUtimesStat()
 	}
 
-	if !metric.disableDiskStats {
+	if !metric.disableDiskMetrics {
 		metric.span.startDiskStat = sampleDiskStat()
 	}
 
-	if !metric.disableNetStats {
+	if !metric.disableNetMetrics {
 		metric.span.startNetStat = sampleNetStat()
 	}
 
@@ -74,7 +75,7 @@ func (metric *metric) AfterExecution(ctx context.Context, request json.RawMessag
 
 	var stats []plugin.MonitoringDataWrapper
 
-	if !metric.disableGCStats {
+	if !metric.disableGCMetrics {
 		metric.span.endGCCount = mStats.NumGC
 		metric.span.endPauseTotalNs = mStats.PauseTotalNs
 
@@ -82,17 +83,17 @@ func (metric *metric) AfterExecution(ctx context.Context, request json.RawMessag
 		stats = append(stats, plugin.WrapMonitoringData(gc, metricType))
 	}
 
-	if !metric.disableHeapStats {
-		h := prepareHeapStatsData(metric, mStats)
+	if !metric.disableHeapMetrics {
+		h := prepareHeapMetricsData(metric, mStats)
 		stats = append(stats, plugin.WrapMonitoringData(h, metricType))
 	}
 
-	if !metric.disableGoroutineStats {
+	if !metric.disableGoroutineMetrics {
 		g := prepareGoRoutineMetricsData(metric)
 		stats = append(stats, plugin.WrapMonitoringData(g, metricType))
 	}
 
-	if !metric.disableCPUStats {
+	if !metric.disableCPUMetrics {
 		metric.span.endCPUTimeStat = sampleCPUtimesStat()
 
 		metric.span.appCpuLoad = getProcessCpuLoad(metric)
@@ -102,16 +103,21 @@ func (metric *metric) AfterExecution(ctx context.Context, request json.RawMessag
 		stats = append(stats, plugin.WrapMonitoringData(c, metricType))
 	}
 
-	if !metric.disableDiskStats {
+	if !metric.disableDiskMetrics {
 		metric.span.endDiskStat = sampleDiskStat()
-		d := prepareDiskMetricData(metric)
+		d := prepareDiskMetricsData(metric)
 		stats = append(stats, plugin.WrapMonitoringData(d, metricType))
 	}
 
-	if !metric.disableNetStats {
+	if !metric.disableNetMetrics {
 		metric.span.endNetStat = sampleNetStat()
-		n := prepareNetStatsData(metric)
+		n := prepareNetMetricsData(metric)
 		stats = append(stats, plugin.WrapMonitoringData(n, metricType))
+	}
+
+	if !metric.disableMemoryMetrics {
+		mm := prepareMemoryMetricsData(metric)
+		stats = append(stats, plugin.WrapMonitoringData(mm, metricType))
 	}
 	metric.span = nil
 	return stats

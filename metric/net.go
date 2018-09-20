@@ -9,7 +9,7 @@ import (
 
 const all = 0
 
-func prepareNetStatsData(metric *metric) metricData {
+func prepareNetMetricsData(metric *metric) metricData {
 	nf := takeNetFrame(metric)
 	return metricData{
 		Id:                        plugin.GenerateNewId(),

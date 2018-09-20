@@ -7,7 +7,7 @@ import (
 	"github.com/shirou/gopsutil/process"
 )
 
-func prepareDiskMetricData(metric *metric) metricData {
+func prepareDiskMetricsData(metric *metric) metricData {
 	df := takeDiskFrame(metric)
 	return metricData{
 		Id:                        plugin.GenerateNewId(),

@@ -5,6 +5,7 @@ const cpuMetric = "CPUMetric"
 const gcMetric = "GcMetric"
 const goroutineMetric = "GoroutineMetric"
 const heapMetric = "HeapMetric"
+const memoryMetric = "MemoryMetric"
 const diskMetric = "DiskMetric"
 const netMetric = "NetMetric"
 
@@ -44,3 +45,9 @@ const packetsRecv = "packetsRecv"
 const packetsSent = "packetsSent"
 const errIn = "errIn"
 const errOut = "errOut"
+
+// Memory Metrics
+const appUsedMemory = "app.usedMemory"
+const appMaxMemory = "app.maxMemory"
+const sysUsedMemory = "sys.usedMemory"
+const sysMaxMemory = "sys.maxMemory"

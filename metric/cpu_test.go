@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestPrepareCPUStatsData(t *testing.T) {
+func TestPrepareCPUMetricsData(t *testing.T) {
 	metric := NewBuilder().Build()
 
 	cpuStatsData := prepareCpuMetricsData(metric)
