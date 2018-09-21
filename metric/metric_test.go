@@ -39,9 +39,9 @@ func TestMetric_AfterExecution(t *testing.T) {
 	stats := m.AfterExecution(context.TODO(), json.RawMessage{}, nil, nil)
 
 	// Assert all stats are collected, heap, gc, goroutine, cpu, net, disk
-	// Note that this fails on MACOSX and returns 5 instead of 6
+	// Note that this fails on MACOSX and returns 6 instead of 7
 	if runtime.GOOS != "darwin" {
-		assert.Equal(t, 6, len(stats))
+		assert.Equal(t, 7, len(stats))
 	}
 
 	assert.Nil(t, m.span)
