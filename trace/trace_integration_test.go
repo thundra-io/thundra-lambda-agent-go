@@ -112,11 +112,15 @@ func TestTrace(t *testing.T) {
 			h := lambdaHandler.(func(context.Context, json.RawMessage) (interface{}, error))
 			f := lambdaFunction(h)
 			invocationStartTime := plugin.GetTimestamp()
-			response, err := f(context.TODO(), []byte(testCase.input))
+			response, errVal := f(context.TODO(), []byte(testCase.input))
 			invocationEndTime := plugin.GetTimestamp()
 
 			//Monitor Data
-			msg := r.MessageQueue[1]
+			msg, err := getWrappedTraceData(r.MessageQueue)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
 			assert.Equal(t, traceType, msg.Type)
 			assert.Equal(t, testApiKey, msg.ApiKey)
 			assert.Equal(t, plugin.DataModelVersion, msg.DataModelVersion)
@@ -158,14 +162,14 @@ func TestTrace(t *testing.T) {
 			assert.Equal(t, coldStart, td.Tags[plugin.AwsLambdaInvocationColdStart])
 
 			if testCase.expected.err != nil {
-				assert.Equal(t, testCase.expected.err, err)
+				assert.Equal(t, testCase.expected.err, errVal)
 				assert.Equal(t, true, td.Tags[plugin.AwsError])
 				assert.Equal(t, errorKind, td.Tags[plugin.AwsErrorKind])
 				assert.Equal(t, errorMessage, td.Tags[plugin.AwsErrorMessage])
 			} else {
 				assert.Equal(t, testCase.expected.val, response)
 				assert.Equal(t, testCase.expected.val, td.Tags[plugin.AwsLambdaInvocationResponse])
-				assert.NoError(t, err)
+				assert.NoError(t, errVal)
 				assert.Nil(t, td.Tags[plugin.AwsError])
 				assert.Nil(t, td.Tags[plugin.AwsErrorKind])
 				assert.Nil(t, td.Tags[plugin.AwsErrorMessage])
@@ -229,7 +233,11 @@ func TestPanic(t *testing.T) {
 					invocationEndTime := plugin.GetTimestamp()
 
 					//Monitor Data
-					msg := r.MessageQueue[1]
+					msg, err := getWrappedTraceData(r.MessageQueue)
+					if err != nil {
+						fmt.Println(err)
+						return
+					}
 					assert.Equal(t, traceType, msg.Type)
 					assert.Equal(t, testApiKey, msg.ApiKey)
 					assert.Equal(t, plugin.DataModelVersion, msg.DataModelVersion)
@@ -338,6 +346,15 @@ func TestTimeout(t *testing.T) {
 		assert.Equal(t, true, td.Tags[plugin.AwsLambdaInvocationTimeout])
 	})
 
+}
+
+func getWrappedTraceData(monitoringDataWrappers []plugin.MonitoringDataWrapper) (*plugin.MonitoringDataWrapper, error) {
+	for _, m := range monitoringDataWrappers {
+		if m.Type == traceType {
+			return &m, nil
+		}
+	}
+	return nil, errors.New("Trace Data Wrapper is not found.")
 }
 
 type lambdaFunction func(context.Context, json.RawMessage) (interface{}, error)
