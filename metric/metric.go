@@ -16,25 +16,26 @@ var proc *process.Process
 type metric struct {
 	span *metricSpan
 
-	disableGCStats        bool
-	disableHeapStats      bool
-	disableGoroutineStats bool
-	disableCPUStats       bool
-	disableDiskStats      bool
-	disableNetStats       bool
+	disableGCMetrics        bool
+	disableHeapMetrics      bool
+	disableGoroutineMetrics bool
+	disableCPUMetrics       bool
+	disableDiskMetrics      bool
+	disableNetMetrics       bool
+	disableMemoryMetrics    bool
 }
 
 // metricSpan collects information related to metric plugin per invocation.
 type metricSpan struct {
-	statTimestamp     int64
+	metricTimestamp   int64
 	startGCCount      uint32
 	endGCCount        uint32
 	startPauseTotalNs uint64
 	endPauseTotalNs   uint64
 	startCPUTimeStat  *cpuTimesStat
 	endCPUTimeStat    *cpuTimesStat
-	processCpuPercent float64
-	systemCpuPercent  float64
+	appCpuLoad        float64
+	systemCpuLoad     float64
 	endDiskStat       *process.IOCountersStat
 	startDiskStat     *process.IOCountersStat
 	endNetStat        *net.IOCountersStat
@@ -43,9 +44,9 @@ type metricSpan struct {
 
 func (metric *metric) BeforeExecution(ctx context.Context, request json.RawMessage, wg *sync.WaitGroup) {
 	metric.span = new(metricSpan)
-	metric.span.statTimestamp = plugin.GetTimestamp()
+	metric.span.metricTimestamp = plugin.GetTimestamp()
 
-	if !metric.disableGCStats {
+	if !metric.disableGCMetrics {
 		m := &runtime.MemStats{}
 		runtime.ReadMemStats(m)
 
@@ -53,71 +54,76 @@ func (metric *metric) BeforeExecution(ctx context.Context, request json.RawMessa
 		metric.span.startPauseTotalNs = m.PauseTotalNs
 	}
 
-	if !metric.disableCPUStats {
+	if !metric.disableCPUMetrics {
 		metric.span.startCPUTimeStat = sampleCPUtimesStat()
 	}
 
-	if !metric.disableDiskStats {
+	if !metric.disableDiskMetrics {
 		metric.span.startDiskStat = sampleDiskStat()
 	}
 
-	if !metric.disableNetStats {
+	if !metric.disableNetMetrics {
 		metric.span.startNetStat = sampleNetStat()
 	}
 
 	wg.Done()
 }
 
-func (metric *metric) AfterExecution(ctx context.Context, request json.RawMessage, response interface{}, err interface{}) ([]interface{}, string) {
+func (metric *metric) AfterExecution(ctx context.Context, request json.RawMessage, response interface{}, err interface{}) []plugin.MonitoringDataWrapper {
 	mStats := &runtime.MemStats{}
 	runtime.ReadMemStats(mStats)
 
-	var stats []interface{}
+	var stats []plugin.MonitoringDataWrapper
 
-	if !metric.disableGCStats {
+	if !metric.disableGCMetrics {
 		metric.span.endGCCount = mStats.NumGC
 		metric.span.endPauseTotalNs = mStats.PauseTotalNs
 
-		gc := prepareGCStatsData(metric, mStats)
-		stats = append(stats, gc)
+		gc := prepareGCMetricsData(metric, mStats)
+		stats = append(stats, plugin.WrapMonitoringData(gc, metricType))
 	}
 
-	if !metric.disableHeapStats {
-		h := prepareHeapStatsData(metric, mStats)
-		stats = append(stats, h)
+	if !metric.disableHeapMetrics {
+		h := prepareHeapMetricsData(metric, mStats)
+		stats = append(stats, plugin.WrapMonitoringData(h, metricType))
 	}
 
-	if !metric.disableGoroutineStats {
-		g := prepareGoRoutineStatsData(metric)
-		stats = append(stats, g)
+	if !metric.disableGoroutineMetrics {
+		g := prepareGoRoutineMetricsData(metric)
+		stats = append(stats, plugin.WrapMonitoringData(g, metricType))
 	}
 
-	if !metric.disableCPUStats {
+	if !metric.disableCPUMetrics {
 		metric.span.endCPUTimeStat = sampleCPUtimesStat()
 
-		metric.span.processCpuPercent = getProcessUsagePercent(metric)
-		metric.span.systemCpuPercent = getSystemUsagePercent(metric)
+		metric.span.appCpuLoad = getProcessCpuLoad(metric)
+		metric.span.systemCpuLoad = getSystemCpuLoad(metric)
 
-		c := prepareCPUStatsData(metric)
-		stats = append(stats, c)
+		c := prepareCpuMetricsData(metric)
+		stats = append(stats, plugin.WrapMonitoringData(c, metricType))
 	}
 
-	if !metric.disableDiskStats {
+	if !metric.disableDiskMetrics {
 		metric.span.endDiskStat = sampleDiskStat()
-		d := prepareDiskStatsData(metric)
-		stats = append(stats, d)
+		d := prepareDiskMetricsData(metric)
+		stats = append(stats, plugin.WrapMonitoringData(d, metricType))
 	}
 
-	if !metric.disableNetStats {
+	if !metric.disableNetMetrics {
 		metric.span.endNetStat = sampleNetStat()
-		n := prepareNetStatsData(metric)
-		stats = append(stats, n)
+		n := prepareNetMetricsData(metric)
+		stats = append(stats, plugin.WrapMonitoringData(n, metricType))
+	}
+
+	if !metric.disableMemoryMetrics {
+		mm := prepareMemoryMetricsData(metric)
+		stats = append(stats, plugin.WrapMonitoringData(mm, metricType))
 	}
 	metric.span = nil
-	return stats, statDataType
+	return stats
 }
 
 //OnPanic just collect the metrics and send them as in the AfterExecution
-func (metric *metric) OnPanic(ctx context.Context, request json.RawMessage, err interface{}, stackTrace []byte) ([]interface{}, string) {
+func (metric *metric) OnPanic(ctx context.Context, request json.RawMessage, err interface{}, stackTrace []byte) []plugin.MonitoringDataWrapper {
 	return metric.AfterExecution(ctx, request, nil, err)
 }

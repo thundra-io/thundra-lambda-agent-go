@@ -2,13 +2,18 @@ package metric
 
 import (
 	"fmt"
-	"runtime"
 
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
+	"github.com/shirou/gopsutil/mem"
 )
 
-func prepareHeapMetricsData(metric *metric, memStats *runtime.MemStats) metricData {
-	mp, err := proc.MemoryPercent()
+func prepareMemoryMetricsData(metric *metric) metricData {
+	memInfo, err := mem.VirtualMemory()
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	procMemInfo, err := proc.MemoryInfo()
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -31,27 +36,14 @@ func prepareHeapMetricsData(metric *metric, memStats *runtime.MemStats) metricDa
 		TraceId:         plugin.TraceId,
 		TracnsactionId:  plugin.TransactionId,
 		SpanId:          plugin.SpanId,
-		MetricName:      heapMetric,
+		MetricName:      memoryMetric,
 		MetricTimestamp: metric.span.metricTimestamp,
 
 		Metrics: map[string]interface{}{
-			// heapAlloc is bytes of allocated heap objects.
-			//
-			// "Allocated" heap objects include all reachable objects, as
-			// well as unreachable objects that the garbage collector has
-			// not yet freed.
-			heapAlloc: memStats.HeapAlloc,
-			// heapSys estimates the largest size the heap has had.
-			heapSys: memStats.HeapSys,
-			// heapInuse is bytes in in-use spans.
-			// In-use spans have at least one object in them. These spans
-			// can only be used for other objects of roughly the same
-			// size.
-			heapInuse: memStats.HeapInuse,
-			// heapObjects is the number of allocated heap objects.
-			heapObjects: memStats.HeapObjects,
-			// memoryPercent returns how many percent of the total RAM this process uses
-			memoryPercent: mp,
+			appUsedMemory: procMemInfo.RSS,
+			appMaxMemory:  plugin.MemoryLimit * 1024 * 1024,
+			sysUsedMemory: memInfo.Used,
+			sysMaxMemory:  memInfo.Total,
 		},
 		Tags: map[string]interface{}{},
 	}

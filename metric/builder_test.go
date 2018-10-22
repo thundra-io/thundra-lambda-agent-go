@@ -14,11 +14,11 @@ func TestNewBuilder(t *testing.T) {
 	assert.NotNil(t, m.span)
 	assert.NotNil(t, proc)
 
-	assert.False(t, m.disableDiskStats)
-	assert.False(t, m.disableNetStats)
-	assert.False(t, m.disableCPUStats)
-	assert.False(t, m.disableGoroutineStats)
-	assert.False(t, m.disableHeapStats)
-	assert.False(t, m.disableGCStats)
+	assert.False(t, m.disableDiskMetrics)
+	assert.False(t, m.disableNetMetrics)
+	assert.False(t, m.disableCPUMetrics)
+	assert.False(t, m.disableGoroutineMetrics)
+	assert.False(t, m.disableHeapMetrics)
+	assert.False(t, m.disableGCMetrics)
 	test.CleanEnvironment()
 }

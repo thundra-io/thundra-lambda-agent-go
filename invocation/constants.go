@@ -1,3 +1,6 @@
 package invocation
 
-const invocationDataType = "InvocationData"
+const invocationType = "Invocation"
+const functionPlatform = "AWS Lambda"
+
+const defaultErrorCode = "-1"

@@ -11,6 +11,7 @@ import (
 
 	"github.com/stretchr/testify/mock"
 	"github.com/thundra-io/thundra-lambda-agent-go/test"
+	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 )
 
 const (
@@ -27,13 +28,13 @@ func (t *MockPlugin) BeforeExecution(ctx context.Context, request json.RawMessag
 	defer wg.Done()
 	t.Called(ctx, request, wg)
 }
-func (t *MockPlugin) AfterExecution(ctx context.Context, request json.RawMessage, response interface{}, err interface{}) ([]interface{}, string) {
+func (t *MockPlugin) AfterExecution(ctx context.Context, request json.RawMessage, response interface{}, err interface{}) []plugin.MonitoringDataWrapper {
 	t.Called(ctx, request, response, err)
-	return []interface{}{}, testDataType
+	return []plugin.MonitoringDataWrapper{}
 }
-func (t *MockPlugin) OnPanic(ctx context.Context, request json.RawMessage, err interface{}, stackTrace []byte) ([]interface{}, string) {
+func (t *MockPlugin) OnPanic(ctx context.Context, request json.RawMessage, err interface{}, stackTrace []byte) []plugin.MonitoringDataWrapper {
 	t.Called(ctx, request, err, stackTrace)
-	return []interface{}{}, testDataType
+	return []plugin.MonitoringDataWrapper{}
 }
 
 func TestExecutePreHooks(t *testing.T) {
@@ -73,7 +74,7 @@ func TestExecutePostHooks(t *testing.T) {
 	var err1 error
 	var err2 error = errors.New("Error")
 
-	r := test.NewMockReporter(testApiKey)
+	r := test.NewMockReporter()
 
 	mT := new(MockPlugin)
 	mT.On("AfterExecution", ctx, req, resp, err1, mock.Anything).Return()
@@ -95,7 +96,7 @@ func TestOnPanic(t *testing.T) {
 	err := errors.New("Generated Error")
 	stackTrace := debug.Stack()
 
-	r := test.NewMockReporter(testApiKey)
+	r := test.NewMockReporter()
 	mP := new(MockPlugin)
 	th := NewBuilder().AddPlugin(mP).SetReporter(r).SetAPIKey(testApiKey).Build()
 	mP.On("OnPanic", ctx, req, err, stackTrace, mock.Anything).Return()

@@ -5,24 +5,25 @@ import (
 )
 
 type mBuilder interface {
-	DisableGCStats() mBuilder
-	DisableHeapStats() mBuilder
-	DisableGoroutineStats() mBuilder
-	DisableCPUStats() mBuilder
-	DisableDiskStats() mBuilder
-	DisableNetStats() mBuilder
+	DisableGCMetrics() mBuilder
+	DisableHeapMetrics() mBuilder
+	DisableGoroutineMetrics() mBuilder
+	DisableCPUMetrics() mBuilder
+	DisableDiskMetrics() mBuilder
+	DisableNetMetrics() mBuilder
 	Build() *metric
 }
 
 var pid string
 
 type builder struct {
-	disableGCStats        bool
-	disableHeapStats      bool
-	disableGoroutineStats bool
-	disableCPUStats       bool
-	disableDiskStats      bool
-	disableNetStats       bool
+	disableGCMetrics        bool
+	disableHeapMetrics      bool
+	disableGoroutineMetrics bool
+	disableCPUMetrics       bool
+	disableDiskMetrics      bool
+	disableNetMetrics       bool
+	disableMemoryMetrics    bool
 }
 
 // New initializes a new metric object which collects all types of metrics. If you want to disable a metric that
@@ -37,39 +38,45 @@ func NewBuilder() mBuilder {
 	return &builder{}
 }
 
-// DisableGCStats disables gc metrics collection. Check gcStatsData to see which metrics are collected.
-func (b *builder) DisableGCStats() mBuilder {
-	b.disableGCStats = true
+// DisableGCMetrics disables gc metrics collection. Check gcMetricsData to see which metrics are collected.
+func (b *builder) DisableGCMetrics() mBuilder {
+	b.disableGCMetrics = true
 	return b
 }
 
-// DisableHeapStats disables heap stats collection. Check heapStatsData to see which metrics are collected.
-func (b *builder) DisableHeapStats() mBuilder {
-	b.disableHeapStats = true
+// DisableHeapMetrics disables heap metrics collection. Check heapMetricsData to see which metrics are collected.
+func (b *builder) DisableHeapMetrics() mBuilder {
+	b.disableHeapMetrics = true
 	return b
 }
 
-// DisableGoroutineStats disables heap stats collection. Check goRoutineStatsData to see which metrics are collected.
-func (b *builder) DisableGoroutineStats() mBuilder {
-	b.disableGoroutineStats = true
+// DisableGoroutineMetrics disables goroutines metrics collection. Check goRoutineMetricsData to see which metrics are collected.
+func (b *builder) DisableGoroutineMetrics() mBuilder {
+	b.disableGoroutineMetrics = true
 	return b
 }
 
-// DisableCPUStats disables cpu stats collection. Check cpuStatsData to see which metrics are collected.
-func (b *builder) DisableCPUStats() mBuilder {
-	b.disableCPUStats = true
+// DisableCPUMetrics disables cpu metrics collection. Check cpuMetricsData to see which metrics are collected.
+func (b *builder) DisableCPUMetrics() mBuilder {
+	b.disableCPUMetrics = true
 	return b
 }
 
-// DisableDiskStats disables disk stats collection. Check diskStatsData to see which metrics are collected.
-func (b *builder) DisableDiskStats() mBuilder {
-	b.disableDiskStats = true
+// DisableDiskMetrics disables disk metrics collection. Check diskMetricsData to see which metrics are collected.
+func (b *builder) DisableDiskMetrics() mBuilder {
+	b.disableDiskMetrics = true
 	return b
 }
 
-// DisableNetStats disables net stats collection. Check netStatsData to see which metrics are collected.
-func (b *builder) DisableNetStats() mBuilder {
-	b.disableNetStats = true
+// DisableNetMetrics disables net metrics collection. Check netMetricsData to see which metrics are collected.
+func (b *builder) DisableNetMetrics() mBuilder {
+	b.disableNetMetrics = true
+	return b
+}
+
+// DisableMemoryMetrics disables memory metrics collection. Check memoryMetricsData to see which metrics are collected.
+func (b *builder) DisableMemoryMetrics() mBuilder {
+	b.disableMemoryMetrics = true
 	return b
 }
 
@@ -78,12 +85,13 @@ func (b *builder) Build() *metric {
 	proc = plugin.GetThisProcess()
 
 	return &metric{
-		span:                  new(metricSpan),
-		disableGCStats:        b.disableGCStats,
-		disableHeapStats:      b.disableHeapStats,
-		disableGoroutineStats: b.disableGoroutineStats,
-		disableCPUStats:       b.disableCPUStats,
-		disableDiskStats:      b.disableDiskStats,
-		disableNetStats:       b.disableNetStats,
+		span:                    new(metricSpan),
+		disableGCMetrics:        b.disableGCMetrics,
+		disableHeapMetrics:      b.disableHeapMetrics,
+		disableGoroutineMetrics: b.disableGoroutineMetrics,
+		disableCPUMetrics:       b.disableCPUMetrics,
+		disableDiskMetrics:      b.disableDiskMetrics,
+		disableNetMetrics:       b.disableNetMetrics,
+		disableMemoryMetrics:    b.disableMemoryMetrics,
 	}
 }

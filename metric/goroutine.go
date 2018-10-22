@@ -5,32 +5,32 @@ import (
 	"runtime"
 )
 
-type goRoutineStatsData struct {
-	Id                 string `json:"id"`
-	TransactionId      string `json:"transactionId"`
-	ApplicationName    string `json:"applicationName"`
-	ApplicationId      string `json:"applicationId"`
-	ApplicationVersion string `json:"applicationVersion"`
-	ApplicationProfile string `json:"applicationProfile"`
-	ApplicationType    string `json:"applicationType"`
-	StatName           string `json:"statName"`
-	StatTimestamp      int64  `json:"statTimestamp"`
+func prepareGoRoutineMetricsData(metric *metric) metricData {
+	return metricData{
+		Id:                        plugin.GenerateNewId(),
+		Type:                      metricType,
+		AgentVersion:              plugin.AgentVersion,
+		DataModelVersion:          plugin.DataModelVersion,
+		ApplicationId:             plugin.ApplicationId,
+		ApplicationDomainName:     plugin.ApplicationDomainName,
+		ApplicationClassName:      plugin.ApplicationClassName,
+		ApplicationName:           plugin.FunctionName,
+		ApplicationVersion:        plugin.ApplicationVersion,
+		ApplicationStage:          plugin.ApplicationStage,
+		ApplicationRuntime:        plugin.ApplicationRuntime,
+		ApplicationRuntimeVersion: plugin.ApplicationRuntimeVersion,
+		ApplicationTags:           map[string]interface{}{},
 
-	// NumGoroutine is the number of goroutines on execution
-	NumGoroutine uint64 `json:"numGoroutine"`
-}
+		TraceId:         plugin.TraceId,
+		TracnsactionId:  plugin.TransactionId,
+		SpanId:          plugin.SpanId,
+		MetricName:      goroutineMetric,
+		MetricTimestamp: metric.span.metricTimestamp,
 
-func prepareGoRoutineStatsData(metric *metric) goRoutineStatsData {
-	return goRoutineStatsData{
-		Id:                 plugin.GenerateNewId(),
-		TransactionId:      plugin.TransactionId,
-		ApplicationName:    plugin.ApplicationName,
-		ApplicationId:      plugin.ApplicationId,
-		ApplicationVersion: plugin.ApplicationVersion,
-		ApplicationProfile: plugin.ApplicationProfile,
-		ApplicationType:    plugin.ApplicationType,
-		StatName:           goroutineStat,
-		StatTimestamp:      metric.span.statTimestamp,
-		NumGoroutine:       uint64(runtime.NumGoroutine()),
+		Metrics: map[string]interface{}{
+			// NumGoroutine is the number of goroutines on execution
+			numGoroutine: uint64(runtime.NumGoroutine()),
+		},
+		Tags: map[string]interface{}{},
 	}
 }

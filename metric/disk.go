@@ -7,48 +7,40 @@ import (
 	"github.com/shirou/gopsutil/process"
 )
 
-type diskStatsData struct {
-	Id                 string `json:"id"`
-	TransactionId      string `json:"transactionId"`
-	ApplicationName    string `json:"applicationName"`
-	ApplicationId      string `json:"applicationId"`
-	ApplicationVersion string `json:"applicationVersion"`
-	ApplicationProfile string `json:"applicationProfile"`
-	ApplicationType    string `json:"applicationType"`
-	StatName           string `json:"statName"`
-	StatTimestamp      int64  `json:"statTimestamp"`
-
-	// ReadBytes is the number of bytes read from disk
-	ReadBytes uint64 `json:"readBytes"`
-
-	// WriteBytes is the number of bytes write to disk
-	WriteBytes uint64 `json:"writeBytes"`
-
-	// ReadCount is the number read operations from disk
-	ReadCount uint64 `json:"readCount"`
-
-	// WriteCount is the number write operations to disk
-	WriteCount uint64 `json:"writeCount"`
-}
-
-func prepareDiskStatsData(metric *metric) diskStatsData {
+func prepareDiskMetricsData(metric *metric) metricData {
 	df := takeDiskFrame(metric)
+	return metricData{
+		Id:                        plugin.GenerateNewId(),
+		Type:                      metricType,
+		AgentVersion:              plugin.AgentVersion,
+		DataModelVersion:          plugin.DataModelVersion,
+		ApplicationId:             plugin.ApplicationId,
+		ApplicationDomainName:     plugin.ApplicationDomainName,
+		ApplicationClassName:      plugin.ApplicationClassName,
+		ApplicationName:           plugin.FunctionName,
+		ApplicationVersion:        plugin.ApplicationVersion,
+		ApplicationStage:          plugin.ApplicationStage,
+		ApplicationRuntime:        plugin.ApplicationRuntime,
+		ApplicationRuntimeVersion: plugin.ApplicationRuntimeVersion,
+		ApplicationTags:           map[string]interface{}{},
 
-	return diskStatsData{
-		Id:                 plugin.GenerateNewId(),
-		TransactionId:      plugin.TransactionId,
-		ApplicationName:    plugin.ApplicationName,
-		ApplicationId:      plugin.ApplicationId,
-		ApplicationVersion: plugin.ApplicationVersion,
-		ApplicationProfile: plugin.ApplicationProfile,
-		ApplicationType:    plugin.ApplicationType,
-		StatName:           diskStat,
-		StatTimestamp:      metric.span.statTimestamp,
+		TraceId:         plugin.TraceId,
+		TracnsactionId:  plugin.TransactionId,
+		SpanId:          plugin.SpanId,
+		MetricName:      diskMetric,
+		MetricTimestamp: metric.span.metricTimestamp,
 
-		ReadBytes:  df.readBytes,
-		WriteBytes: df.writeBytes,
-		ReadCount:  df.readCount,
-		WriteCount: df.writeCount,
+		Metrics: map[string]interface{}{
+			// ReadBytes is the number of bytes read from disk
+			readBytes: df.readBytes,
+			// WriteBytes is the number of bytes write to disk
+			writeBytes: df.writeBytes,
+			// ReadCount is the number read operations from disk
+			readCount: df.readCount,
+			// WriteCount is the number write operations to disk
+			writeCount: df.writeCount,
+		},
+		Tags: map[string]interface{}{},
 	}
 }
 

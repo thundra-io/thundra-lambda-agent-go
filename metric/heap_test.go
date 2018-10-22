@@ -7,17 +7,17 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestPrepareHeapStatsData(t *testing.T) {
+func TestPrepareHeapMetricsData(t *testing.T) {
 	metric := NewBuilder().Build()
 
 	memStats := &runtime.MemStats{}
 
-	heapStatsData := prepareHeapStatsData(metric, memStats)
+	heapMetricsData := prepareHeapMetricsData(metric, memStats)
 
-	assert.Equal(t, heapStat, heapStatsData.StatName)
+	assert.Equal(t, heapMetric, heapMetricsData.MetricName)
 
-	assert.Equal(t, memStats.HeapAlloc, heapStatsData.HeapAlloc)
-	assert.Equal(t, memStats.HeapSys, heapStatsData.HeapSys)
-	assert.Equal(t, memStats.HeapInuse, heapStatsData.HeapInuse)
-	assert.Equal(t, memStats.HeapObjects, heapStatsData.HeapObjects)
+	assert.Equal(t, memStats.HeapAlloc, heapMetricsData.Metrics[heapAlloc])
+	assert.Equal(t, memStats.HeapSys, heapMetricsData.Metrics[heapSys])
+	assert.Equal(t, memStats.HeapInuse, heapMetricsData.Metrics[heapInuse])
+	assert.Equal(t, memStats.HeapObjects, heapMetricsData.Metrics[heapObjects])
 }

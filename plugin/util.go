@@ -20,12 +20,16 @@ func GenerateNewId() string {
 	return uuid.NewV4().String()
 }
 
+func GenerateNewTraceId() {
+	TraceId = GenerateNewId()
+}
+
 func GenerateNewTransactionId() {
 	TransactionId = GenerateNewId()
 }
 
-func GenerateNewContextId() {
-	ContextId = GenerateNewId()
+func GenerateNewSpanId() {
+	SpanId = GenerateNewId()
 }
 
 // GetThisProcess returns process info about this process.
@@ -77,4 +81,13 @@ func isThundraDebugEnabled() bool {
 		return false
 	}
 	return b
+}
+
+func WrapMonitoringData(data interface{}, dataType string) MonitoringDataWrapper {
+	return MonitoringDataWrapper{
+		DataModelVersion: DataModelVersion,
+		Type:             dataType,
+		Data:             data,
+		ApiKey:           ApiKey,
+	}
 }

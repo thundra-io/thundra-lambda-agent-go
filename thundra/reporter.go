@@ -14,15 +14,15 @@ import (
 )
 
 type reporter interface {
-	Collect(messages []interface{})
-	Report(apiKey string)
+	Collect(messages []plugin.MonitoringDataWrapper)
+	Report()
 	ClearData()
 	Reported() *uint32
 	FlushFlag()
 }
 
 type reporterImpl struct {
-	messageQueue []interface{}
+	messageQueue []plugin.MonitoringDataWrapper
 
 	// reported is a flag to prevent system from sending data twice in case of timeout
 	reported *uint32
@@ -42,7 +42,7 @@ func init() {
 }
 
 // Collect collects the data from plugins. If async is on, it sends the data immediately.
-func (r *reporterImpl) Collect(messages []interface{}) {
+func (r *reporterImpl) Collect(messages []plugin.MonitoringDataWrapper) {
 	defer mutex.Unlock()
 	mutex.Lock()
 	if shouldSendAsync == "true" {
@@ -53,9 +53,9 @@ func (r *reporterImpl) Collect(messages []interface{}) {
 }
 
 // Report sends the data to collector
-func (r *reporterImpl) Report(apiKey string) {
+func (r *reporterImpl) Report() {
 	if shouldSendAsync == "false" || shouldSendAsync == "" {
-		sendHttpReq(r.messageQueue, apiKey)
+		sendHttpReq(r.messageQueue)
 	}
 	atomic.CompareAndSwapUint32(r.reported, 0, 1)
 }
@@ -85,19 +85,18 @@ func sendAsync(msg interface{}) {
 	fmt.Println(string(b))
 }
 
-func sendHttpReq(messageQueue []interface{}, apiKey string) {
+func sendHttpReq(messageQueue []plugin.MonitoringDataWrapper) {
 	if plugin.DebugEnabled {
-		fmt.Println("MessageQueue:\n", messageQueue)
+		fmt.Printf("MessageQueue:\n %+v \n", messageQueue)
 	}
 	b, err := json.Marshal(&messageQueue)
 	if err != nil {
 		fmt.Println("Error in marshalling ", err)
 	}
 
-	targetURL := collectorUrl + monitorDatas
+	targetURL := collectorUrl + monitoringDataPath
 	if plugin.DebugEnabled {
 		fmt.Println("Sending HTTP request to Thundra collector: " + targetURL)
-		fmt.Println(string(b))
 	}
 
 	req, err := http.NewRequest("POST", targetURL, bytes.NewBuffer(b))
@@ -105,13 +104,14 @@ func sendHttpReq(messageQueue []interface{}, apiKey string) {
 		fmt.Println("Error http.NewRequest: ", err)
 	}
 	req.Close = true
-	req.Header.Set("Authorization", "ApiKey "+apiKey)
+	req.Header.Set("Authorization", "ApiKey "+plugin.ApiKey)
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Println("Error client.Do(req): ", err)
+		return
 	}
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {

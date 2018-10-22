@@ -2,37 +2,41 @@ package plugin
 
 import (
 	"context"
-	"github.com/aws/aws-lambda-go/lambdacontext"
 	"os"
 	"strings"
+
+	"github.com/aws/aws-lambda-go/lambdacontext"
 )
 
-var ApplicationName string
+var FunctionName string
 var ApplicationId string
 var ApplicationVersion string
-var ApplicationProfile string
-var Region string
-var MemorySize int
+var ApplicationStage string
+var FunctionRegion string
+var MemoryLimit int
 var LogGroupName string
 var LogStreamName string
 var FunctionARN string
 
+var TraceId string
 var TransactionId string
-var ContextId string
+var SpanId string
+
+var ApiKey string
 
 func init() {
-	ApplicationName = getApplicationName()
+	FunctionName = getFunctionName()
 	ApplicationId = getAppId()
 	ApplicationVersion = getApplicationVersion()
-	ApplicationProfile = getApplicationProfile()
-	Region = getRegion()
-	MemorySize = getMemorySize()
+	ApplicationStage = getApplicationStage()
+	FunctionRegion = getFunctionRegion()
+	MemoryLimit = getMemoryLimit()
 	LogGroupName = getLogGroupName()
 	LogStreamName = getLogStreamName()
 }
 
-// getApplicationName returns function name.
-func getApplicationName() string {
+// getFunctionName returns function name.
+func getFunctionName() string {
 	return lambdacontext.FunctionName
 }
 
@@ -55,8 +59,8 @@ func getApplicationVersion() string {
 	return lambdacontext.FunctionVersion
 }
 
-// getApplicationProfile returns profile.
-func getApplicationProfile() string {
+// getApplicationStage returns profile.
+func getApplicationStage() string {
 	p := os.Getenv(ThundraApplicationProfile)
 	if p == "" {
 		p = DefaultProfile
@@ -64,13 +68,13 @@ func getApplicationProfile() string {
 	return p
 }
 
-// getRegion returns AWS region's name
-func getRegion() string {
+// getFunctionRegion returns AWS region's name
+func getFunctionRegion() string {
 	return os.Getenv(AwsDefaultRegion)
 }
 
-// getMemorySize returns configured memory limit for the current instance of the Lambda Function
-func getMemorySize() int {
+// getMemoryLimit returns configured memory limit for the current instance of the Lambda Function
+func getMemoryLimit() int {
 	return lambdacontext.MemoryLimitInMB
 }
 
