@@ -21,7 +21,7 @@ type logData struct {
 	ApplicationTags           map[string]interface{} `json:"applicationTags"`
 
 	TraceId        string                 `json:"traceId"`
-	TracnsactionId string                 `json:"transactionId"`
+	TransactionId string                 `json:"transactionId"`
 	SpanId         string                 `json:"spanId"`
 	LogMessage     string                 `json:"logMessage"`
 	LogContextName string                 `json:"logContextName"`
@@ -56,7 +56,7 @@ func prepareLogData(log *monitoringLog) logData {
 		ApplicationTags:           map[string]interface{}{},
 
 		TraceId:        plugin.TraceId,
-		TracnsactionId: plugin.TransactionId,
+		TransactionId: plugin.TransactionId,
 		SpanId:         plugin.SpanId,
 		LogMessage:     log.logMessage,
 		LogContextName: log.logContextName,

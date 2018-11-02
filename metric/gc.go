@@ -23,7 +23,7 @@ func prepareGCMetricsData(metric *metric, memStats *runtime.MemStats) metricData
 		ApplicationTags:           map[string]interface{}{},
 
 		TraceId:         plugin.TraceId,
-		TracnsactionId:  plugin.TransactionId,
+		TransactionId:  plugin.TransactionId,
 		SpanId:          plugin.SpanId,
 		MetricName:      gcMetric,
 		MetricTimestamp: metric.span.metricTimestamp,
