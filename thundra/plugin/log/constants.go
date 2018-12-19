@@ -1,4 +1,4 @@
-package thundra_log
+package log
 
 const logType = "Log"
 const thundraLogLogLevel = "thundra_log_logLevel"

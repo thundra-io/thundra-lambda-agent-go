@@ -1,4 +1,4 @@
-package thundra
+package test
 
 import (
 	"reflect"

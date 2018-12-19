@@ -1,4 +1,4 @@
-package thundra_log
+package log
 
 import (
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
