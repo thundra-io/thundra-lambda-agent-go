@@ -37,7 +37,7 @@ func NewBuilder() tBuilder {
 }
 
 // AddPlugin is used to enable plugins on thundra. You can use Trace, Metrics and Log plugins.
-// You need to initialize a plugin object and pass it as a parameter in order to enable it.
+// You need to initialize a plugins object and pass it as a parameter in order to enable it.
 // e.g. AddPlugin(trace.New())
 func (b *builder) AddPlugin(plugin plugin.Plugin) tBuilder {
 	b.plugins = append(b.plugins, plugin)
@@ -66,7 +66,7 @@ func (b *builder) EnableWarmup() tBuilder {
 
 // Builds and returns the thundra object that you will pass to thundra.Wrap() function.
 func (b *builder) Build() *thundra {
-	// Invocation is the default plugin
+	// Invocation is the default plugins
 	b.AddPlugin(invocation.New())
 	if b.reporter == nil {
 		b.reporter = &reporterImpl{

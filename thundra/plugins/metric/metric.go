@@ -25,7 +25,7 @@ type metric struct {
 	disableMemoryMetrics    bool
 }
 
-// metricSpan collects information related to metric plugin per invocation.
+// metricSpan collects information related to metric plugins per invocation.
 type metricSpan struct {
 	metricTimestamp   int64
 	startGCCount      uint32

@@ -80,7 +80,7 @@ func (b *builder) DisableMemoryMetrics() mBuilder {
 	return b
 }
 
-// Builds and returns the metric plugin that you can pass to a thundra object while building it using AddPlugin().
+// Builds and returns the metric plugins that you can pass to a thundra object while building it using AddPlugin().
 func (b *builder) Build() *metric {
 	proc = plugin.GetThisProcess()
 

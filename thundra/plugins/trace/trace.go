@@ -12,7 +12,7 @@ type trace struct {
 	span *traceSpan
 }
 
-// traceSpan collects information related to trace plugin per invocation.
+// traceSpan collects information related to trace plugins per invocation.
 type traceSpan struct {
 	rootSpanId         string
 	startTime          int64
