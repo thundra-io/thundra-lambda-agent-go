@@ -29,7 +29,7 @@ func prepareHeapMetricsData(metric *metric, memStats *runtime.MemStats) metricDa
 		ApplicationTags:           map[string]interface{}{},
 
 		TraceId:         plugin.TraceId,
-		TracnsactionId:  plugin.TransactionId,
+		TransactionId:  plugin.TransactionId,
 		SpanId:          plugin.SpanId,
 		MetricName:      heapMetric,
 		MetricTimestamp: metric.span.metricTimestamp,

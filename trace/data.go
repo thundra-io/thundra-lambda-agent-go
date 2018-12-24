@@ -113,7 +113,7 @@ type spanData struct {
 	ApplicationTags           map[string]interface{} `json:"applicationTags"`
 
 	TraceId        string `json:"traceId"`
-	TracnsactionId string `json:"transactionId"`
+	TransactionId string `json:"transactionId"`
 	ParentSpanId   string `json:"parentSpanId"`
 
 	SpanOrder       int64                  `json:"spanOrder"`
@@ -152,7 +152,7 @@ func (tr *trace) prepareSpanData(ctx context.Context, request json.RawMessage, r
 		ApplicationTags:           map[string]interface{}{},
 
 		TraceId:        plugin.TraceId,
-		TracnsactionId: plugin.TransactionId,
+		TransactionId: plugin.TransactionId,
 		//ParentSpanId:    Only root span exist right now
 
 		DomainName:    plugin.ApplicationDomainName,

@@ -23,7 +23,7 @@ func prepareCpuMetricsData(metric *metric) metricData {
 		ApplicationTags:           map[string]interface{}{},
 
 		TraceId:         plugin.TraceId,
-		TracnsactionId:  plugin.TransactionId,
+		TransactionId:  plugin.TransactionId,
 		SpanId:          plugin.SpanId,
 		MetricName:      cpuMetric,
 		MetricTimestamp: metric.span.metricTimestamp,

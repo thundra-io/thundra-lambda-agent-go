@@ -27,7 +27,7 @@ func prepareNetMetricsData(metric *metric) metricData {
 		ApplicationTags:           map[string]interface{}{},
 
 		TraceId:         plugin.TraceId,
-		TracnsactionId:  plugin.TransactionId,
+		TransactionId:  plugin.TransactionId,
 		SpanId:          plugin.SpanId,
 		MetricName:      netMetric,
 		MetricTimestamp: metric.span.metricTimestamp,
