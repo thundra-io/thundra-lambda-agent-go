@@ -20,6 +20,10 @@ func GenerateNewId() string {
 	return uuid.NewV4().String()
 }
 
+func Generate2NewId() (string, string) {
+	return GenerateNewId(), GenerateNewId()
+}
+
 func GenerateNewTraceId() {
 	TraceId = GenerateNewId()
 }
