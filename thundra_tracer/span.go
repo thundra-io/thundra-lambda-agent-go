@@ -16,59 +16,6 @@ type spanImpl struct {
 	numDroppedLogs int
 }
 
-func newSpan(operationName string, tracer *tracerImpl, sso []ot.StartSpanOption) *spanImpl {
-	opts := newStartSpanOptions(sso)
-
-	// Start time.
-	startTimestamp := plugin.GetTimestamp()
-
-	// Build the new span. This is the only allocation: We'll return this as
-	// an opentracing.Span.
-	sp := &spanImpl{}
-
-	// Look for a parent in the list of References.
-ReferencesLoop:
-	for _, ref := range opts.Options.References {
-		switch ref.Type {
-		case ot.ChildOfRef,
-			ot.FollowsFromRef:
-			//TODO traverse map, find parent from parentId, then add as a child
-			refCtx := ref.ReferencedContext.(SpanContext)
-			sp.raw.Context.TraceID = refCtx.TraceID
-			sp.raw.ParentSpanID = refCtx.SpanID
-			sp.raw.Context.SpanID = plugin.GenerateNewId()
-
-			if l := len(refCtx.Baggage); l > 0 {
-				sp.raw.Context.Baggage = make(map[string]string, l)
-				for k, v := range refCtx.Baggage {
-					sp.raw.Context.Baggage[k] = v
-				}
-			}
-			break ReferencesLoop
-		}
-	}
-
-	if sp.raw.Context.TraceID == "" {
-		// TraceID not set by parent reference or explicitly
-		sp.raw.Context.TraceID, sp.raw.Context.SpanID = plugin.Generate2NewId()
-	} else if sp.raw.Context.SpanID == "" {
-		// TraceID set but SpanID not set
-		sp.raw.Context.SpanID = plugin.GenerateNewId()
-	}
-
-	sp.tracer = tracer
-	sp.raw.Operation = operationName
-	sp.raw.StartTimestamp = startTimestamp
-	sp.raw.Duration = -1
-	sp.raw.operationType = opts.operationType
-	sp.raw.operationGroup = opts.operationGroup
-	sp.raw.Tags = opts.Options.Tags
-
-	sp.tracer.opts.Recorder.RecordSpanStarted(&sp.raw)
-
-	return sp
-}
-
 // Finish is the last call that is made
 func (s *spanImpl) Finish() {
 	s.FinishWithOptions(ot.FinishOptions{})
