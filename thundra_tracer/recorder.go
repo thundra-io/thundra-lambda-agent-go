@@ -7,51 +7,42 @@ import (
 // ThundraRecorder handles all of the `RawSpan` data generated via an
 // associated `Tracer`
 type ThundraRecorder interface {
-	Record(event SpanEvent, span *RawSpan)
-	GetRootSpan() *RawSpan
+	RecordSpan(span RawSpan)
 	Reset()
 }
 
-// TreeSpanRecorder is a simple thread-safe implementation of
-// SpanRecorder that stores all reported spans in a tree and pushes last started span into stack.
-type recorderImpl struct {
+// InMemorySpanRecorder is a simple thread-safe implementation of
+// SpanRecorder that stores all reported spans in memory, accessible
+// via reporter.GetSpans(). It is primarily intended for testing purposes.
+type InMemorySpanRecorder struct {
 	sync.RWMutex
-	activeStack        *spanStack
-	finishedStack	   *spanStack
+	spans []RawSpan
 }
 
-// NewThundraRecorder creates new recorder to use in tracer
-func NewThundraRecorder() *recorderImpl {
-	r := new(recorderImpl)
-	return r
+// NewInMemoryRecorder creates new InMemorySpanRecorder
+func NewInMemoryRecorder() *InMemorySpanRecorder {
+	return new(InMemorySpanRecorder)
 }
 
-// Record is called when a new span is started.
-// When a span starts, a spantree is created and holds information about span and its children spans.
-// Then it pushes this spantree into stack to actively hold information about which spantree is currently running.
-func (r *recorderImpl) Record(event SpanEvent, span *RawSpan) {
+// RecordSpan implements the respective method of SpanRecorder.
+func (r *InMemorySpanRecorder) RecordSpan(span RawSpan) {
 	r.Lock()
 	defer r.Unlock()
-
-	if event == SpanStartEvent {
-		r.recordStartSpan(span *RawSpan)
-	} else if event == SpanFinishEvent {
-		r.recordFinishSpan(span *RawSpan)
-	}
+	r.spans = append(r.spans, span)
 }
 
-func (r *recorderImpl) recordStartSpan(span *RawSpan) {
-	r.activeStack.Push(span)
+// GetSpans returns a copy of the array of spans accumulated so far.
+func (r *InMemorySpanRecorder) GetSpans() []RawSpan {
+	r.RLock()
+	defer r.RUnlock()
+	spans := make([]RawSpan, len(r.spans))
+	copy(spans, r.spans)
+	return spans
 }
 
-func (r *recorderImpl) recordFinishSpan(span *RawSpan) {
-	r.activeStack.Pop()
-	r.finishedStack.Push(span)
-}
-
-// Reset flushes data
-func (r *recorderImpl) Reset() {
+// Reset clears the internal array of spans.
+func (r *InMemorySpanRecorder) Reset() {
 	r.Lock()
 	defer r.Unlock()
-	r.finishedStack.Clear()
+	r.spans = nil
 }

@@ -13,7 +13,7 @@ func NewWithOptions(opts Options) ot.Tracer {
 
 // New creates and returns a standard Tracer which defers completed Spans to
 // `recorder`.
-func New(recorder SpanRecorder) ot.Tracer {
+func New(recorder ThundraRecorder) ot.Tracer {
 	opts := DefaultOptions()
 	opts.Recorder = recorder
 	return NewWithOptions(opts)
@@ -29,13 +29,13 @@ func (t *tracerImpl) StartSpan(operationName string, sso ...ot.StartSpanOption) 
 }
 
 // TODO Will be implemented
-func (tracer *tracerImpl) Inject(sc ot.SpanContext, format interface{}, carrier interface{}) error {
+func (t *tracerImpl) Inject(sc ot.SpanContext, format interface{}, carrier interface{}) error {
 	panic(errors.New("Inject has not been supported yet"))
 	return errors.New("Inject has not been supported yet")
 }
 
 // TODO Will be implemented
-func (tracer *tracerImpl) Extract(format interface{}, carrier interface{}) (ot.SpanContext, error) {
+func (t *tracerImpl) Extract(format interface{}, carrier interface{}) (ot.SpanContext, error) {
 	panic(errors.New("Inject has not been supported yet"))
 	return nil, errors.New("Extract has not been supported yet")
 }

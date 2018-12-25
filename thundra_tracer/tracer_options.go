@@ -12,7 +12,7 @@ type Options struct {
 	// This value is ignored if DropAllLogs is true.
 	MaxLogsPerSpan int
 	// Recorder receives Spans when they have been started or finished.
-	Recorder SpanRecorder
+	Recorder ThundraRecorder
 	// DropAllLogs turns log events on all Spans into no-ops.
 	DropAllLogs bool
 }
