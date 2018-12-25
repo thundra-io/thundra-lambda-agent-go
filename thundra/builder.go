@@ -1,14 +1,14 @@
 package thundra
 
 import (
-	"errors"
-	"fmt"
-	"os"
-	"strconv"
-	"time"
+"errors"
+"fmt"
+"os"
+"strconv"
+"time"
 
-	"github.com/thundra-io/thundra-lambda-agent-go/invocation"
-	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
+"github.com/thundra-io/thundra-lambda-agent-go/invocation"
+"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 )
 
 type tBuilder interface {

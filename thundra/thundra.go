@@ -21,7 +21,7 @@ func (t *thundra) executePreHooks(ctx context.Context, request json.RawMessage) 
 	t.reporter.FlushFlag()
 	plugin.GenerateNewTraceId()
 	plugin.GenerateNewTransactionId()
-	plugin.GenerateNewSpanId()
+	plugin.GenerateNewSpanId()					// Root Span
 	var wg sync.WaitGroup
 	wg.Add(len(t.plugins))
 	for _, p := range t.plugins {

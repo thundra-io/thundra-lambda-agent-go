@@ -60,7 +60,7 @@ func (i *invocation) prepareData(ctx context.Context) invocationData {
 
 		TraceId:       plugin.TraceId,
 		TransactionId: plugin.TransactionId,
-		// SpanId:"" Optional,
+		SpanId:		   plugin.SpanId , //Optional
 
 		FunctionPlatform: functionPlatform,
 		FunctionName:     plugin.FunctionName,

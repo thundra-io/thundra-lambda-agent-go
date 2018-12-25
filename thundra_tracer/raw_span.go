@@ -18,6 +18,12 @@ type RawSpan struct {
 	// name" in some implementations)
 	Operation string
 
+	TraceId 	   string
+	SpanOrder	   int64
+	DomainName 	   string
+	ClassName      string
+	ServiceName    string
+	OperationName  string
 	StartTimestamp int64
 	EndTimestamp   int64
 	Duration       int64
@@ -34,4 +40,26 @@ type RawSpan struct {
 
 	// The span's "microlog".
 	Logs []ot.LogRecord
+}
+
+type SpanData struct {
+	TraceId          string                 		`json:"traceId"`
+	TransactionId    string							`json:"transactionId"`
+	SpanOrder		 int64							`json:"spanOrder"`
+	DomainName		 string							`json:"domainName"`
+	ClassName		 string							`json:"className"`
+	ServiceName		 string							`json:"serviceName"`
+	OperationName	 string							`json:"operationName"`
+	StartTimeStamp   int64							`json:"startTimeStamp"`
+	FinishTimeStamp  int64							`json:"finishTimeStamp"`
+	Tags 			 map[string]interface{} 		`json:"tags"`
+	Logs 			 map[string]interface{} 		`json:"logs"`
+
+}
+
+func PrepareSpanData(raw RawSpan) SpanData{
+	return SpanData{
+		TraceId: raw.TraceId,
+		TransactionId: "",
+	}
 }

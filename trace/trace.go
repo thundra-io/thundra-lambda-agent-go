@@ -35,7 +35,8 @@ func New() *trace {
 
 func (tr *trace) BeforeExecution(ctx context.Context, request json.RawMessage, wg *sync.WaitGroup) {
 	tr.span = new(traceSpan)
-	tr.span.rootSpanId = plugin.GenerateNewId()
+	//tr.span.rootSpanId = plugin.GenerateNewId()
+	tr.span.rootSpanId = plugin.SpanId
 	tr.span.startTime = plugin.GetTimestamp()
 	invocationCount += 1
 	wg.Done()

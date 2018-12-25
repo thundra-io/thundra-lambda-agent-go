@@ -17,7 +17,7 @@ type metricData struct {
 	ApplicationTags           map[string]interface{} `json:"applicationTags"`
 
 	TraceId         string                 `json:"traceId"`
-	TransactionId  string                 `json:"transactionId"`
+	TransactionId   string                 `json:"transactionId"`
 	SpanId          string                 `json:"spanId"`
 	MetricName      string                 `json:"metricName"`
 	MetricTimestamp int64                  `json:"metricTimestamp"`
