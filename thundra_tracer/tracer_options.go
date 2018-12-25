@@ -1,4 +1,4 @@
-package thundra_tracer
+package ttracer
 
 // Options allows creating a customized Tracer via NewWithOptions.
 type Options struct {

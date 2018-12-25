@@ -1,4 +1,4 @@
-package thundra_tracer
+package ttracer
 
 //
 type RawSpanTree struct {

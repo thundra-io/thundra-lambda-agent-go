@@ -1,4 +1,4 @@
-package thundra_tracer
+package ttracer
 
 import (
 	"errors"
@@ -8,49 +8,57 @@ import (
 // spanTreeStack holds rawspantrees in a stack.
 // stack is used to hold activity records of functions, but uses references of spantrees instead of spans
 // in order to further manipulate them if a new child span is added
-type spanTreeStack struct {
+type spanStack struct {
 	lock sync.Mutex
-	t    []*RawSpanTree
+	slice    []*RawSpan
 }
 
-// NewStack returns a new spanTreeStack
-func NewStack() *spanTreeStack {
-	return &spanTreeStack{sync.Mutex{}, make([]*RawSpanTree, 0)}
+// NewSpanStack returns a new stack to store spans
+func NewSpanStack() *spanTreeStack {
+	return &spanStack{sync.Mutex{}, make([]*RawSpan, 0)}
 }
 
 // Push pushes on top of stack.
-func (s *spanTreeStack) Push(v *RawSpanTree) {
+func (s *spanStack) Push(v *RawSpan) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
-	s.t = append(s.t, v)
+	s.slice = append(s.slice, v)
 }
 
 // Pop pops top of stack and returns it.
-func (s *spanTreeStack) Pop() (*RawSpanTree, error) {
+func (s *spanStack) Pop() (*RawSpan, error) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
-	l := len(s.t)
+	l := len(s.slice)
 	if l == 0 {
 		return nil, errors.New("Empty Stack")
 	}
 
-	res := s.t[l-1]
-	s.t = s.t[:l-1]
+	res := s.slice[l-1]
+	s.slice = s.slice[:l-1]
 	return res, nil
 }
 
 // Top returns top of stack.
-func (s *spanTreeStack) Top() (*RawSpanTree, error) {
+func (s *spanStack) Top() (*RawSpan, error) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
-	l := len(s.t)
+	l := len(s.slice)
 	if l == 0 {
 		return nil, errors.New("Empty Stack")
 	}
 
-	res := s.t[l-1]
+	res := s.slice[l-1]
 	return res, nil
+}
+
+// Clear clears the stack
+func (s *spanStack) Clear() {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	s.slice = nil
 }

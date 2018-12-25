@@ -1,4 +1,4 @@
-package thundra_tracer
+package ttracer
 
 import (
 	ot "github.com/opentracing/opentracing-go"
