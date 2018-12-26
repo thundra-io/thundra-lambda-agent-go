@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 	"reflect"
 	"runtime/debug"
 )
@@ -51,8 +52,11 @@ func Wrap(handler interface{}, agent *thundra) interface{} {
 		go agent.catchTimeout(ctx, payload)
 
 		var args []reflect.Value
+
+		agent.executePreHooks(ctx, payload)
+
 		if takesContext {
-			args = append(args, reflect.ValueOf(ctx))
+			args = append(args, reflect.ValueOf(plugin.CtxWithRootSpan))
 		}
 
 		if (handlerType.NumIn() == 1 && !takesContext) || handlerType.NumIn() == 2 {
@@ -72,7 +76,6 @@ func Wrap(handler interface{}, agent *thundra) interface{} {
 			args = append(args, elem)
 		}
 
-		agent.executePreHooks(ctx, payload)
 		response := handlerValue.Call(args)
 
 		var err error

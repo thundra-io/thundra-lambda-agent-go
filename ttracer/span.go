@@ -8,11 +8,6 @@ import (
 	"time"
 )
 
-type Span interface {
-	ot.Span
-	Duration() uint64
-}
-
 type spanImpl struct {
 	tracer     *tracerImpl
 	sync.Mutex // protects the fields below
@@ -63,14 +58,6 @@ func (s *spanImpl) FinishWithOptions(opts ot.FinishOptions) {
 	}
 
 	s.raw.EndTimestamp = finishTimestamp
-}
-
-func (s *spanImpl) Duration() int64 {
-	if s.raw.EndTimestamp != 0 {
-		return s.raw.EndTimestamp - s.raw.StartTimestamp
-	}
-
-	return time.Now().Unix() - s.raw.StartTimestamp
 }
 
 // Deprecated: use LogFields or LogKV.

@@ -44,11 +44,11 @@ type invocationData struct {
 func (i *invocation) prepareData(ctx context.Context) invocationData {
 	tags := i.prepareTags(ctx)
 	return invocationData{
-		Id:                        plugin.GenerateNewId(),
+		Id:                        plugin.GenerateNewID(),
 		Type:                      invocationType,
 		AgentVersion:              plugin.AgentVersion,
 		DataModelVersion:          plugin.DataModelVersion,
-		ApplicationId:             plugin.ApplicationId,
+		ApplicationId:             plugin.ApplicationID,
 		ApplicationDomainName:     plugin.ApplicationDomainName,
 		ApplicationClassName:      plugin.ApplicationClassName,
 		ApplicationName:           plugin.FunctionName,
@@ -58,8 +58,8 @@ func (i *invocation) prepareData(ctx context.Context) invocationData {
 		ApplicationRuntimeVersion: plugin.ApplicationRuntimeVersion,
 		ApplicationTags:           map[string]interface{}{}, // empty object
 
-		TraceId:       plugin.TraceId,
-		TransactionId: plugin.TransactionId,
+		TraceId:       plugin.TraceID,
+		TransactionId: plugin.TransactionID,
 		// SpanId:"" Optional,
 
 		FunctionPlatform: functionPlatform,

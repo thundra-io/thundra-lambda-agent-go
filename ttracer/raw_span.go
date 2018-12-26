@@ -1,6 +1,8 @@
 package ttracer
 
 import (
+	"time"
+
 	ot "github.com/opentracing/opentracing-go"
 )
 
@@ -33,4 +35,13 @@ type RawSpan struct {
 
 	// The span's "microlog".
 	Logs []ot.LogRecord
+}
+
+// Duration calculates the spans duration
+func (s *RawSpan) Duration() int64 {
+	if s.EndTimestamp != 0 {
+		return s.EndTimestamp - s.StartTimestamp
+	}
+
+	return time.Now().Unix() - s.StartTimestamp
 }

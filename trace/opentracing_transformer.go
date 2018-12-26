@@ -33,15 +33,15 @@ package trace
 // 	return parent
 // }
 
-// func transformToAuditData(span *ttracer.RawSpan) map[string]interface{} {
+// func transformToAuditData(data *ttracer.RawSpan) map[string]interface{} {
 // 	return map[string]interface{}{
-// 		auditInfoContextName:    span.Operation,
-// 		auditInfoId:             span.Context.SpanID,
-// 		auditInfoOpenTimestamp:  span.StartTimestamp,
-// 		auditInfoCloseTimestamp: span.EndTimestamp,
+// 		auditInfoContextName:    data.Operation,
+// 		auditInfoId:             data.Context.SpanID,
+// 		auditInfoOpenTimestamp:  data.StartTimestamp,
+// 		auditInfoCloseTimestamp: data.EndTimestamp,
 // 		auditInfoErrors:         nil,
 // 		auditInfoThrownError:    nil,
 // 		auditInfoChildren:       make([]map[string]interface{}, 0),
-// 		auditInfoProps:          span.Tags,
+// 		auditInfoProps:          data.Tags,
 // 	}
 // }

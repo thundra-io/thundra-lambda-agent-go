@@ -9,7 +9,7 @@ import (
 )
 
 var FunctionName string
-var ApplicationId string
+var ApplicationID string
 var ApplicationVersion string
 var ApplicationStage string
 var FunctionRegion string
@@ -18,15 +18,17 @@ var LogGroupName string
 var LogStreamName string
 var FunctionARN string
 
-var TraceId string
-var TransactionId string
-var SpanId string
+var TraceID string
+var TransactionID string
+var SpanID string
 
 var ApiKey string
 
+var CtxWithRootSpan context.Context
+
 func init() {
 	FunctionName = getFunctionName()
-	ApplicationId = getAppId()
+	ApplicationID = getAppID()
 	ApplicationVersion = getApplicationVersion()
 	ApplicationStage = getApplicationStage()
 	FunctionRegion = getFunctionRegion()
@@ -40,13 +42,13 @@ func getFunctionName() string {
 	return lambdacontext.FunctionName
 }
 
-// getAppId returns application id.
-func getAppId() string {
-	return getAppIdFromStreamName(lambdacontext.LogStreamName)
+// getAppID returns application id.
+func getAppID() string {
+	return getAppIDFromStreamName(lambdacontext.LogStreamName)
 }
 
-// getAppIdFromStreamName returns application id. AppId starts after ']' in logstreamname.
-func getAppIdFromStreamName(logStreamName string) string {
+// getAppIDFromStreamName returns application id. AppId starts after ']' in logstreamname.
+func getAppIDFromStreamName(logStreamName string) string {
 	s := strings.Split(logStreamName, "]")
 	if len(s) > 1 {
 		return s[1]

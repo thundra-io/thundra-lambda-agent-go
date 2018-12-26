@@ -11,13 +11,13 @@ import (
 )
 
 type trace struct {
-	span *traceSpan // Not opentracing span just to construct trace plugin data
+	data     *traceData // Not opentracing data just to construct trace plugin data
+	rootSpan opentracing.Span
 	recorder ttracer.SpanRecorder
 }
 
-// traceSpan collects information related to trace plugin per invocation.
-type traceSpan struct {
-	rootSpanId         string
+// traceData collects information related to trace plugin per invocation.
+type traceData struct {
 	startTime          int64
 	finishTime         int64
 	duration           int64
@@ -42,16 +42,22 @@ func New() *trace {
 }
 
 func (tr *trace) BeforeExecution(ctx context.Context, request json.RawMessage, wg *sync.WaitGroup) {
-	tr.span = new(traceSpan)
-	tr.span.rootSpanId = plugin.GenerateNewId()
-	tr.span.startTime = plugin.GetTimestamp()
-	invocationCount ++
+	rootSpan, ctxWithRootSpan := opentracing.StartSpanFromContext(ctx, plugin.FunctionName)
+	plugin.CtxWithRootSpan = ctxWithRootSpan
+	invocationCount++
+
+	tr.rootSpan = rootSpan
+	tr.data = &traceData{
+		startTime: plugin.GetTimestamp(),
+	}
+
 	wg.Done()
 }
 
 func (tr *trace) AfterExecution(ctx context.Context, request json.RawMessage, response interface{}, err interface{}) []plugin.MonitoringDataWrapper {
-	tr.span.finishTime = plugin.GetTimestamp()
-	tr.span.duration = tr.span.finishTime - tr.span.startTime
+	tr.rootSpan.Finish()
+	tr.data.finishTime = plugin.GetTimestamp()
+	tr.data.duration = tr.data.finishTime - tr.data.startTime
 
 	if err != nil {
 		errMessage := plugin.GetErrorMessage(err)
@@ -62,27 +68,31 @@ func (tr *trace) AfterExecution(ctx context.Context, request json.RawMessage, re
 			errType,
 		}
 
-		tr.span.errorInfo = ei
-		tr.span.thrownError = errType
-		tr.span.thrownErrorMessage = errMessage
-		tr.span.errors = append(tr.span.errors, errType)
+		tr.data.errorInfo = ei
+		tr.data.thrownError = errType
+		tr.data.thrownErrorMessage = errMessage
+		tr.data.errors = append(tr.data.errors, errType)
 	}
-
-	tr.span.timeout = isTimeout(err)
-
-	td := tr.prepareTraceData(ctx, request, response)
-	s := tr.prepareSpanData(ctx, request, response)
-	tr.span = nil
+	tr.data.timeout = isTimeout(err)
 
 	var traceArr []plugin.MonitoringDataWrapper
+	td := tr.prepareTraceDataModel(ctx, request, response)
 	traceArr = append(traceArr, plugin.WrapMonitoringData(td, traceType))
-	traceArr = append(traceArr, plugin.WrapMonitoringData(s, spanType))
+
+	spanList := tr.recorder.GetSpans()
+	for _, s := range spanList {
+		sd := tr.prepareSpanDataModel(ctx, s)
+		traceArr = append(traceArr, plugin.WrapMonitoringData(sd, spanType))
+	}
+	tr.data = nil
+
 	return traceArr
 }
 
 func (tr *trace) OnPanic(ctx context.Context, request json.RawMessage, err interface{}, stackTrace []byte) []plugin.MonitoringDataWrapper {
-	tr.span.finishTime = plugin.GetTimestamp()
-	tr.span.duration = tr.span.finishTime - tr.span.startTime
+	tr.rootSpan.Finish()
+	tr.data.finishTime = plugin.GetTimestamp()
+	tr.data.duration = tr.data.finishTime - tr.data.startTime
 
 	errMessage := plugin.GetErrorMessage(err)
 	errType := plugin.GetErrorType(err)
@@ -92,21 +102,25 @@ func (tr *trace) OnPanic(ctx context.Context, request json.RawMessage, err inter
 		errType,
 	}
 
-	tr.span.panicInfo = pi
-	tr.span.thrownError = errType
-	tr.span.thrownErrorMessage = plugin.GetErrorMessage(err)
-	tr.span.errors = append(tr.span.errors, errType)
-
-	// since it is panicked it could not be timed out
-	tr.span.timeout = false
-
-	td := tr.prepareTraceData(ctx, request, nil)
-	s := tr.prepareSpanData(ctx, request, nil)
-	tr.span = nil
+	tr.data.panicInfo = pi
+	tr.data.thrownError = errType
+	tr.data.thrownErrorMessage = plugin.GetErrorMessage(err)
+	tr.data.errors = append(tr.data.errors, errType)
+	// Since it is panicked it could not be timed out
+	tr.data.timeout = false
 
 	var traceArr []plugin.MonitoringDataWrapper
+	td := tr.prepareTraceDataModel(ctx, request, nil)
 	traceArr = append(traceArr, plugin.WrapMonitoringData(td, traceType))
-	traceArr = append(traceArr, plugin.WrapMonitoringData(s, spanType))
+
+	spanList := tr.recorder.GetSpans()
+	for _, s := range spanList {
+		sd := tr.prepareSpanDataModel(ctx, s)
+		traceArr = append(traceArr, plugin.WrapMonitoringData(sd, spanType))
+	}
+
+	tr.data = nil
+
 	return traceArr
 }
 

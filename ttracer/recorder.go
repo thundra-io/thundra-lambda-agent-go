@@ -7,6 +7,7 @@ import (
 // SpanRecorder handles all of the `RawSpan` data generated via an
 // associated `Tracer`
 type SpanRecorder interface {
+	GetSpans() []*RawSpan
 	RecordSpan(span *RawSpan)
 	Reset()
 }

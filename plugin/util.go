@@ -15,25 +15,25 @@ func init() {
 	DebugEnabled = isThundraDebugEnabled()
 }
 
-// GenerateNewId generates new uuid.
-func GenerateNewId() string {
+// GenerateNewID generates new uuid.
+func GenerateNewID() string {
 	return uuid.NewV4().String()
 }
 
-func Generate2NewId() (string, string) {
-	return GenerateNewId(), GenerateNewId()
+func Generate2NewID() (string, string) {
+	return GenerateNewID(), GenerateNewID()
 }
 
-func GenerateNewTraceId() {
-	TraceId = GenerateNewId()
+func GenerateNewTraceID() {
+	TraceID = GenerateNewID()
 }
 
-func GenerateNewTransactionId() {
-	TransactionId = GenerateNewId()
+func GenerateNewTransactionID() {
+	TransactionID = GenerateNewID()
 }
 
-func GenerateNewSpanId() {
-	SpanId = GenerateNewId()
+func GenerateNewSpanID() {
+	SpanID = GenerateNewID()
 }
 
 // GetThisProcess returns process info about this process.

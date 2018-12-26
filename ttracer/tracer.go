@@ -6,6 +6,7 @@ import (
 	ot "github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	uuid "github.com/satori/go.uuid"
+	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 )
 
 // NewWithOptions creates a customized Tracer.
@@ -43,6 +44,9 @@ func (t *tracerImpl) StartSpanWithOptions(operationName string, opts ot.StartSpa
 		startTime = time.Now()
 	}
 	tags := opts.Tags
+	if tags == nil {
+		tags = map[string]interface{}{}
+	}
 
 	newSpan := t.getSpan()
 	for _, ref := range opts.References {
@@ -67,7 +71,7 @@ func (t *tracerImpl) StartSpanWithOptions(operationName string, opts ot.StartSpa
 	}
 
 	newSpan.tracer = t
-	newSpan.raw.StartTimestamp = startTime.Unix()
+	newSpan.raw.StartTimestamp = plugin.GetTimestamp()
 	newSpan.raw.Tags = tags
 
 	// Add to recorder

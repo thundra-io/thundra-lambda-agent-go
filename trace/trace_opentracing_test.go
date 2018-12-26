@@ -25,23 +25,23 @@ package trace
 
 // // EXAMPLE HANDLERS
 // func handler1(s string) (string, error) {
-// 	span := opentracing.GlobalTracer().StartSpan("test-operation")
-// 	defer span.Finish()
-// 	span.SetTag("tagKey", "tagValue")
+// 	data := opentracing.GlobalTracer().StartSpan("test-operation")
+// 	defer data.Finish()
+// 	data.SetTag("tagKey", "tagValue")
 // 	time.Sleep(time.Millisecond * mainDuration)
 // 	return fmt.Sprintf("Happy monitoring with %s!", s), nil
 // }
 
 // func handler2(s string) (string, error) {
-// 	span := opentracing.GlobalTracer().StartSpan("test-operation")
-// 	defer span.Finish()
-// 	span.SetTag("tagKey", "tagValue")
+// 	data := opentracing.GlobalTracer().StartSpan("test-operation")
+// 	defer data.Finish()
+// 	data.SetTag("tagKey", "tagValue")
 
-// 	ctx := opentracing.ContextWithSpan(context.Background(), span)
+// 	ctx := opentracing.ContextWithSpan(context.Background(), data)
 
 // 	f := func(ctx context.Context, operationName string, duration time.Duration) {
-// 		span, ctx := opentracing.StartSpanFromContext(ctx, operationName)
-// 		defer span.Finish()
+// 		data, ctx := opentracing.StartSpanFromContext(ctx, operationName)
+// 		defer data.Finish()
 // 		time.Sleep(time.Millisecond * duration)
 // 	}
 // 	f(ctx, "f1", f1Duration)
@@ -60,7 +60,7 @@ package trace
 // 		handler  interface{}
 // 	}{
 // 		{
-// 			name:     "Span test with root span only",
+// 			name:     "Span test with root data only",
 // 			input:    `"Thundra"`,
 // 			expected: expected{"Thundra works!", nil},
 // 			handler:  handler1,

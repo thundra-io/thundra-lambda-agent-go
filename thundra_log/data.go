@@ -41,7 +41,7 @@ type monitoringLog struct {
 
 func prepareLogData(log *monitoringLog) logData {
 	return logData{
-		Id:                        plugin.GenerateNewId(),
+		Id:                        plugin.GenerateNewID(),
 		Type:                      logType,
 		AgentVersion:              plugin.AgentVersion,
 		DataModelVersion:          plugin.DataModelVersion,
