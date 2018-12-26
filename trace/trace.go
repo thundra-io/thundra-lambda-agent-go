@@ -5,11 +5,14 @@ import (
 	"encoding/json"
 	"sync"
 
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
+	"github.com/thundra-io/thundra-lambda-agent-go/ttracer"
 )
 
 type trace struct {
-	span *traceSpan
+	span *traceSpan // Not opentracing span just to construct trace plugin data
+	recorder ttracer.SpanRecorder
 }
 
 // traceSpan collects information related to trace plugin per invocation.
@@ -30,14 +33,19 @@ var invocationCount uint32
 
 // New returns a new trace object.
 func New() *trace {
-	return new(trace)
+	recorder := ttracer.NewInMemoryRecorder()
+	tracer := ttracer.New(recorder)
+	opentracing.SetGlobalTracer(tracer)
+	return &trace{
+		recorder: recorder,
+	}
 }
 
 func (tr *trace) BeforeExecution(ctx context.Context, request json.RawMessage, wg *sync.WaitGroup) {
 	tr.span = new(traceSpan)
 	tr.span.rootSpanId = plugin.GenerateNewId()
 	tr.span.startTime = plugin.GetTimestamp()
-	invocationCount += 1
+	invocationCount ++
 	wg.Done()
 }
 

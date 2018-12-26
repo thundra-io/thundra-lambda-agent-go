@@ -20,7 +20,6 @@ type RawSpan struct {
 
 	StartTimestamp int64
 	EndTimestamp   int64
-	Duration       int64
 
 	// operationGroup is lambda execution group
 	operationGroup operationGroup

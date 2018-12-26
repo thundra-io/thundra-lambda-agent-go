@@ -8,6 +8,11 @@ import (
 	"time"
 )
 
+type Span interface {
+	ot.Span
+	Duration() uint64
+}
+
 type spanImpl struct {
 	tracer     *tracerImpl
 	sync.Mutex // protects the fields below
@@ -24,7 +29,6 @@ func (s *spanImpl) Finish() {
 // FinishWithOptions finishes span and adds the given options to it
 func (s *spanImpl) FinishWithOptions(opts ot.FinishOptions) {
 	finishTimestamp := plugin.GetTimestamp()
-	duration := finishTimestamp - s.StartTimestamp()
 
 	s.Lock()
 	defer s.Unlock()
@@ -58,10 +62,15 @@ func (s *spanImpl) FinishWithOptions(opts ot.FinishOptions) {
 		}
 	}
 
-	s.raw.Duration = duration
 	s.raw.EndTimestamp = finishTimestamp
+}
 
-	s.tracer.opts.Recorder.RecordSpanEnded()
+func (s *spanImpl) Duration() int64 {
+	if s.raw.EndTimestamp != 0 {
+		return s.raw.EndTimestamp - s.raw.StartTimestamp
+	}
+
+	return time.Now().Unix() - s.raw.StartTimestamp
 }
 
 // Deprecated: use LogFields or LogKV.
@@ -83,7 +92,7 @@ func (s *spanImpl) LogEventWithPayload(event string, payload interface{}) {
 func (s *spanImpl) Log(ld ot.LogData) {
 	s.Lock()
 	defer s.Unlock()
-	if s.tracer.opts.DropAllLogs {
+	if s.tracer.options.DropAllLogs {
 		return
 	}
 
@@ -142,7 +151,7 @@ func (s *spanImpl) LogKV(keyValues ...interface{}) {
 }
 
 func (s *spanImpl) appendLog(lr ot.LogRecord) {
-	maxLogs := s.tracer.opts.MaxLogsPerSpan
+	maxLogs := s.tracer.options.MaxLogsPerSpan
 	if maxLogs == 0 || len(s.raw.Logs) < maxLogs {
 		s.raw.Logs = append(s.raw.Logs, lr)
 		return
@@ -163,7 +172,7 @@ func (s *spanImpl) LogFields(fields ...log.Field) {
 	}
 	s.Lock()
 	defer s.Unlock()
-	if s.tracer.opts.DropAllLogs {
+	if s.tracer.options.DropAllLogs {
 		return
 	}
 	if lr.Timestamp.IsZero() {

@@ -16,7 +16,7 @@ func NewWithOptions(opts Options) ot.Tracer {
 
 // New creates and returns a standard Tracer which defers completed Spans to
 // `recorder`.
-func New(recorder ThundraRecorder) ot.Tracer {
+func New(recorder SpanRecorder) ot.Tracer {
 	opts := DefaultOptions()
 	opts.Recorder = recorder
 	return NewWithOptions(opts)
@@ -70,6 +70,8 @@ func (t *tracerImpl) StartSpanWithOptions(operationName string, opts ot.StartSpa
 	newSpan.raw.StartTimestamp = startTime.Unix()
 	newSpan.raw.Tags = tags
 
+	// Add to recorder
+	t.options.Recorder.RecordSpan(&newSpan.raw)
 	return newSpan
 }
 
