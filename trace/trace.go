@@ -59,10 +59,18 @@ func (tr *trace) AfterExecution(ctx context.Context, request json.RawMessage, re
 	tr.data.finishTime = plugin.GetTimestamp()
 	tr.data.duration = tr.data.finishTime - tr.data.startTime
 
-	// Adding tags
+	// Adding tags related to the root span
 	tr.rootSpan.SetTag(plugin.AwsLambdaName, plugin.FunctionName)
-	tr.rootSpan.SetTag(plugin.AwsLambdaARN, plugin.FunctionARN)
+	tr.rootSpan.SetTag(plugin.AwsLambdaARN, plugin.GetInvokedFunctionArn(ctx))
 	tr.rootSpan.SetTag(plugin.AwsRegion, plugin.FunctionRegion)
+	tr.rootSpan.SetTag(plugin.AwsLambdaMemoryLimit, plugin.MemoryLimit)
+	tr.rootSpan.SetTag(plugin.AwsLambdaLogGroupName, plugin.LogGroupName)
+	tr.rootSpan.SetTag(plugin.AwsLambdaLogStreamName, plugin.LogStreamName)
+	tr.rootSpan.SetTag(plugin.AwsLambdaInvocationColdStart, invocationCount == 1)
+	tr.rootSpan.SetTag(plugin.AwsLambdaInvocationTimeout, plugin.IsTimeout(err))
+	tr.rootSpan.SetTag(plugin.AwsLambdaInvocationRequestId, plugin.GetAwsRequestID(ctx))
+	tr.rootSpan.SetTag(plugin.AwsLambdaInvocationRequest, request)
+	tr.rootSpan.SetTag(plugin.AwsLambdaInvocationResponse, response)
 
 	if err != nil {
 		errMessage := plugin.GetErrorMessage(err)
@@ -73,13 +81,20 @@ func (tr *trace) AfterExecution(ctx context.Context, request json.RawMessage, re
 			errType,
 		}
 
+		// Add error related tags to the root span
+		tr.rootSpan.SetTag(plugin.AwsError, true)
+		tr.rootSpan.SetTag(plugin.AwsErrorKind, errType)
+		tr.rootSpan.SetTag(plugin.AwsErrorMessage, errMessage)
+
 		tr.data.errorInfo = ei
 		tr.data.thrownError = errType
 		tr.data.thrownErrorMessage = errMessage
 		tr.data.errors = append(tr.data.errors, errType)
 	}
-	tr.data.timeout = isTimeout(err)
+	
+	tr.data.timeout = plugin.IsTimeout(err)
 
+	// Prepare report data
 	var traceArr []plugin.MonitoringDataWrapper
 	td := tr.prepareTraceDataModel(ctx, request, response)
 	traceArr = append(traceArr, plugin.WrapMonitoringData(td, traceType))
@@ -89,6 +104,8 @@ func (tr *trace) AfterExecution(ctx context.Context, request json.RawMessage, re
 		sd := tr.prepareSpanDataModel(ctx, s)
 		traceArr = append(traceArr, plugin.WrapMonitoringData(sd, spanType))
 	}
+
+	// Clear trace plugin data for next invocation
 	tr.data = nil
 
 	return traceArr
@@ -127,15 +144,4 @@ func (tr *trace) OnPanic(ctx context.Context, request json.RawMessage, err inter
 	tr.data = nil
 
 	return traceArr
-}
-
-// isTimeout returns if the lambda invocation is timed out.
-func isTimeout(err interface{}) bool {
-	if err == nil {
-		return false
-	}
-	if plugin.GetErrorType(err) == "timeoutError" {
-		return true
-	}
-	return false
 }

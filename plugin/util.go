@@ -68,6 +68,16 @@ func GetErrorType(err interface{}) string {
 	return errorType.Name()
 }
 
+func IsTimeout(err interface{}) bool {
+	if err == nil {
+		return false
+	}
+	if GetErrorType(err) == "timeoutError" {
+		return true
+	}
+	return false
+}
+
 // GetErrorMessage returns error message
 func GetErrorMessage(err interface{}) string {
 	e, ok := err.(error)

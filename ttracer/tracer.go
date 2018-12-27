@@ -73,6 +73,7 @@ func (t *tracerImpl) StartSpanWithOptions(operationName string, opts ot.StartSpa
 	newSpan.raw.OperationName = operationName
 	newSpan.raw.StartTimestamp = GetTimestamp()
 	newSpan.raw.Tags = tags
+	newSpan.raw.Logs = []ot.LogRecord{}
 
 	// Add to recorder
 	t.options.Recorder.RecordSpan(&newSpan.raw)

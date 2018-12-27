@@ -52,7 +52,7 @@ func (i *invocation) AfterExecution(ctx context.Context, request json.RawMessage
 	}
 
 	i.span.coldStart = isColdStarted()
-	i.span.timeout = isTimeout(err)
+	i.span.timeout = plugin.IsTimeout(err)
 
 	data := i.prepareData(ctx)
 	i.span = nil
@@ -84,19 +84,8 @@ func (i *invocation) OnPanic(ctx context.Context, request json.RawMessage, err i
 
 // isColdStarted returns if the lambda instance is cold started. Cold Start only happens on the first invocation.
 func isColdStarted() (coldStart bool) {
-	if invocationCount += 1; invocationCount == 1 {
+	if invocationCount++; invocationCount == 1 {
 		coldStart = true
 	}
 	return coldStart
-}
-
-// isTimeout returns if the lambda invocation is timed out.
-func isTimeout(err interface{}) bool {
-	if err == nil {
-		return false
-	}
-	if plugin.GetErrorType(err) == "timeoutError" {
-		return true
-	}
-	return false
 }
