@@ -107,6 +107,7 @@ func (tr *trace) AfterExecution(ctx context.Context, request json.RawMessage, re
 
 	// Clear trace plugin data for next invocation
 	tr.data = nil
+	tr.recorder.Reset()
 
 	return traceArr
 }
