@@ -56,7 +56,13 @@ func Wrap(handler interface{}, agent *thundra) interface{} {
 		agent.executePreHooks(ctx, payload)
 
 		if takesContext {
-			args = append(args, reflect.ValueOf(plugin.CtxWithRootSpan))
+			var ctxToPass context.Context
+			if plugin.CtxWithRootSpan != nil {
+				ctxToPass = plugin.CtxWithRootSpan
+			} else {
+				ctxToPass = ctx
+			}
+			args = append(args, reflect.ValueOf(ctxToPass))
 		}
 
 		if (handlerType.NumIn() == 1 && !takesContext) || handlerType.NumIn() == 2 {

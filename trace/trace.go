@@ -75,7 +75,6 @@ func (tr *trace) AfterExecution(ctx context.Context, request json.RawMessage, re
 	if err != nil {
 		errMessage := plugin.GetErrorMessage(err)
 		errType := plugin.GetErrorType(err)
-
 		ei := &errorInfo{
 			errMessage,
 			errType,
@@ -91,7 +90,7 @@ func (tr *trace) AfterExecution(ctx context.Context, request json.RawMessage, re
 		tr.data.thrownErrorMessage = errMessage
 		tr.data.errors = append(tr.data.errors, errType)
 	}
-	
+
 	tr.data.timeout = plugin.IsTimeout(err)
 
 	// Prepare report data
@@ -106,8 +105,7 @@ func (tr *trace) AfterExecution(ctx context.Context, request json.RawMessage, re
 	}
 
 	// Clear trace plugin data for next invocation
-	tr.data = nil
-	tr.recorder.Reset()
+	tr.Reset()
 
 	return traceArr
 }
@@ -145,4 +143,9 @@ func (tr *trace) OnPanic(ctx context.Context, request json.RawMessage, err inter
 	tr.data = nil
 
 	return traceArr
+}
+
+func (tr *trace) Reset() {
+	tr.data = nil
+	tr.recorder.Reset()
 }

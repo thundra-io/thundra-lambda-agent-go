@@ -16,7 +16,7 @@ import (
 
 const (
 	duration     = 500
-	testApiKey   = "testApiKey"
+	testAPIKey   = "testApiKey"
 	errorMessage = "Error Message"
 	errorKind    = "errorString"
 	panicMessage = "Panic Message"
@@ -107,7 +107,7 @@ func TestTrace(t *testing.T) {
 
 			r := test.NewMockReporter()
 			tr := New()
-			th := thundra.NewBuilder().AddPlugin(tr).SetReporter(r).SetAPIKey(testApiKey).Build()
+			th := thundra.NewBuilder().AddPlugin(tr).SetReporter(r).SetAPIKey(testAPIKey).Build()
 			lambdaHandler := thundra.Wrap(testCase.handler, th)
 			h := lambdaHandler.(func(context.Context, json.RawMessage) (interface{}, error))
 			f := lambdaFunction(h)
@@ -122,19 +122,19 @@ func TestTrace(t *testing.T) {
 				return
 			}
 			assert.Equal(t, traceType, msg.Type)
-			assert.Equal(t, testApiKey, msg.ApiKey)
+			assert.Equal(t, testAPIKey, msg.ApiKey)
 			assert.Equal(t, plugin.DataModelVersion, msg.DataModelVersion)
 
 			//Trace Data
-			td, ok := msg.Data.(traceData)
+			td, ok := msg.Data.(traceDataModel)
 			if !ok {
 				fmt.Println("Can not convert to trace data")
 			}
-			assert.NotNil(t, td.Id)
+			assert.NotNil(t, td.ID)
 			assert.Equal(t, traceType, td.Type)
 			assert.Equal(t, plugin.AgentVersion, td.AgentVersion)
 			assert.Equal(t, plugin.DataModelVersion, td.DataModelVersion)
-			assert.Equal(t, test.AppId, td.ApplicationId)
+			assert.Equal(t, test.AppId, td.ApplicationID)
 			assert.Equal(t, plugin.ApplicationDomainName, td.ApplicationDomainName)
 			assert.Equal(t, plugin.ApplicationClassName, td.ApplicationClassName)
 			assert.Equal(t, test.FunctionName, td.ApplicationName)
@@ -144,7 +144,7 @@ func TestTrace(t *testing.T) {
 			assert.Equal(t, plugin.ApplicationRuntimeVersion, td.ApplicationRuntimeVersion)
 			assert.NotNil(t, td.ApplicationTags)
 
-			assert.NotNil(t, td.RootSpanId)
+			assert.NotNil(t, td.RootSpanID)
 
 			assert.True(t, invocationStartTime <= td.StartTimestamp)
 			assert.True(t, td.StartTimestamp < td.FinishTimestamp)
@@ -224,7 +224,7 @@ func TestPanic(t *testing.T) {
 
 			r := test.NewMockReporter()
 			tr := New()
-			th := thundra.NewBuilder().AddPlugin(tr).SetReporter(r).SetAPIKey(testApiKey).Build()
+			th := thundra.NewBuilder().AddPlugin(tr).SetReporter(r).SetAPIKey(testAPIKey).Build()
 			lambdaHandler := thundra.Wrap(testCase.handler, th)
 			invocationStartTime := plugin.GetTimestamp()
 
@@ -239,19 +239,19 @@ func TestPanic(t *testing.T) {
 						return
 					}
 					assert.Equal(t, traceType, msg.Type)
-					assert.Equal(t, testApiKey, msg.ApiKey)
+					assert.Equal(t, testAPIKey, msg.ApiKey)
 					assert.Equal(t, plugin.DataModelVersion, msg.DataModelVersion)
 
 					//Trace Data
-					td, ok := msg.Data.(traceData)
+					td, ok := msg.Data.(traceDataModel)
 					if !ok {
 						fmt.Println("Can not convert to trace data")
 					}
-					assert.NotNil(t, td.Id)
+					assert.NotNil(t, td.ID)
 					assert.Equal(t, traceType, td.Type)
 					assert.Equal(t, plugin.AgentVersion, td.AgentVersion)
 					assert.Equal(t, plugin.DataModelVersion, td.DataModelVersion)
-					assert.Equal(t, test.AppId, td.ApplicationId)
+					assert.Equal(t, test.AppId, td.ApplicationID)
 					assert.Equal(t, plugin.ApplicationDomainName, td.ApplicationDomainName)
 					assert.Equal(t, plugin.ApplicationClassName, td.ApplicationClassName)
 					assert.Equal(t, test.FunctionName, td.ApplicationName)
@@ -261,7 +261,7 @@ func TestPanic(t *testing.T) {
 					assert.Equal(t, plugin.ApplicationRuntimeVersion, td.ApplicationRuntimeVersion)
 					assert.NotNil(t, td.ApplicationTags)
 
-					assert.NotNil(t, td.RootSpanId)
+					assert.NotNil(t, td.RootSpanID)
 
 					assert.True(t, invocationStartTime <= td.StartTimestamp)
 					assert.True(t, td.StartTimestamp < td.FinishTimestamp)
@@ -323,7 +323,7 @@ func TestTimeout(t *testing.T) {
 
 		r := test.NewMockReporter()
 		tr := New()
-		th := thundra.NewBuilder().AddPlugin(tr).SetReporter(r).SetAPIKey(testApiKey).Build()
+		th := thundra.NewBuilder().AddPlugin(tr).SetReporter(r).SetAPIKey(testAPIKey).Build()
 		lambdaHandler := thundra.Wrap(testCase[0].handler, th)
 		h := lambdaHandler.(func(context.Context, json.RawMessage) (interface{}, error))
 		f := lambdaFunction(h)
@@ -338,7 +338,7 @@ func TestTimeout(t *testing.T) {
 		msg := r.MessageQueue[1]
 
 		//Trace Data
-		td, ok := msg.Data.(traceData)
+		td, ok := msg.Data.(traceDataModel)
 		if !ok {
 			fmt.Println("Can not convert to trace data")
 		}

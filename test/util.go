@@ -62,7 +62,7 @@ func NewMockReporter() *MockReporter {
 func PrepareEnvironment() {
 	lambdacontext.LogStreamName = LogStreamName
 	plugin.FunctionName = FunctionName
-	plugin.ApplicationId = AppId
+	plugin.ApplicationID = AppId
 	plugin.ApplicationVersion = FunctionVersion
 	plugin.ApplicationStage = ApplicationStage
 	plugin.FunctionRegion = Region
@@ -73,7 +73,7 @@ func PrepareEnvironment() {
 
 func CleanEnvironment() {
 	plugin.FunctionName = ""
-	plugin.ApplicationId = ""
+	plugin.ApplicationID = ""
 	plugin.ApplicationVersion = ""
 	plugin.ApplicationStage = ""
 	plugin.FunctionRegion = ""
