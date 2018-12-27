@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"sync"
 
-	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go"
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 	"github.com/thundra-io/thundra-lambda-agent-go/ttracer"
 )
@@ -58,6 +58,11 @@ func (tr *trace) AfterExecution(ctx context.Context, request json.RawMessage, re
 	tr.rootSpan.Finish()
 	tr.data.finishTime = plugin.GetTimestamp()
 	tr.data.duration = tr.data.finishTime - tr.data.startTime
+
+	// Adding tags
+	tr.rootSpan.SetTag(plugin.AwsLambdaName, plugin.FunctionName)
+	tr.rootSpan.SetTag(plugin.AwsLambdaARN, plugin.FunctionARN)
+	tr.rootSpan.SetTag(plugin.AwsRegion, plugin.FunctionRegion)
 
 	if err != nil {
 		errMessage := plugin.GetErrorMessage(err)

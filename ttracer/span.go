@@ -3,7 +3,6 @@ package ttracer
 import (
 	ot "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
-	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 	"sync"
 	"time"
 )
@@ -23,7 +22,7 @@ func (s *spanImpl) Finish() {
 
 // FinishWithOptions finishes span and adds the given options to it
 func (s *spanImpl) FinishWithOptions(opts ot.FinishOptions) {
-	finishTimestamp := plugin.GetTimestamp()
+	finishTimestamp := GetTimestamp()
 
 	s.Lock()
 	defer s.Unlock()
@@ -111,7 +110,7 @@ func rotateLogBuffer(buf []ot.LogRecord, pos int) {
 func (s *spanImpl) SetOperationName(operationName string) ot.Span {
 	s.Lock()
 	defer s.Unlock()
-	s.raw.Operation = operationName
+	s.raw.OperationName = operationName
 	return s
 }
 
@@ -194,8 +193,8 @@ func (s *spanImpl) BaggageItem(key string) string {
 }
 
 // Operation returns the name of the "operation" this span is an instance of
-func (s *spanImpl) Operation() string {
-	return s.raw.Operation
+func (s *spanImpl) OperationName() string {
+	return s.raw.OperationName
 }
 
 // StartTimestamp returns StartTimestamp

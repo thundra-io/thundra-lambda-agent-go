@@ -18,7 +18,7 @@ type RawSpan struct {
 
 	// The name of the "operation" this span is an instance of. (Called a "span
 	// name" in some implementations)
-	Operation string
+	OperationName string
 
 	StartTimestamp int64
 	EndTimestamp   int64

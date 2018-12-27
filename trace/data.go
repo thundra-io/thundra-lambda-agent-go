@@ -159,7 +159,7 @@ func (tr *trace) prepareSpanDataModel(ctx context.Context, span *ttracer.RawSpan
 		DomainName:    plugin.ApplicationDomainName,
 		ClassName:     plugin.ApplicationClassName,
 		ServiceName:   plugin.FunctionName, //TODO implement it with Opentracing
-		OperationName: plugin.FunctionName, //TODO implement it with Opentracing
+		OperationName: span.OperationName,
 
 		StartTimestamp:  span.StartTimestamp,
 		FinishTimestamp: span.EndTimestamp,
