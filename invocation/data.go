@@ -45,7 +45,7 @@ func (i *invocation) prepareData(ctx context.Context) invocationData {
 	tags := i.prepareTags(ctx)
 	return invocationData{
 		ID:                        plugin.GenerateNewID(),
-		Type:                      invocationType,
+		Type:                      "Invocation",
 		AgentVersion:              plugin.AgentVersion,
 		DataModelVersion:          plugin.DataModelVersion,
 		ApplicationID:             plugin.ApplicationID,
@@ -62,18 +62,18 @@ func (i *invocation) prepareData(ctx context.Context) invocationData {
 		TransactionID: plugin.TransactionID,
 		// SpanId:"" Optional,
 
-		FunctionPlatform: functionPlatform,
+		FunctionPlatform: "AWS Lambda",
 		FunctionName:     plugin.FunctionName,
 		FunctionRegion:   plugin.FunctionRegion,
-		StartTimestamp:   i.span.startTimestamp,
-		FinishTimestamp:  i.span.finishTimestamp,
-		Duration:         i.span.duration,
-		Erroneous:        i.span.erroneous,
-		ErrorType:        i.span.errorType,
-		ErrorMessage:     i.span.errorMessage,
-		ErrorCode:        i.span.errorCode,
-		ColdStart:        i.span.coldStart,
-		Timeout:          i.span.timeout,
+		StartTimestamp:   i.startTimestamp,
+		FinishTimestamp:  i.finishTimestamp,
+		Duration:         i.duration,
+		Erroneous:        i.erroneous,
+		ErrorType:        i.errorType,
+		ErrorMessage:     i.errorMessage,
+		ErrorCode:        i.errorCode,
+		ColdStart:        i.coldStart,
+		Timeout:          i.timeout,
 		Tags:             tags,
 	}
 }
@@ -81,7 +81,7 @@ func (i *invocation) prepareData(ctx context.Context) invocationData {
 func (i *invocation) prepareTags(ctx context.Context) map[string]interface{} {
 	tags := map[string]interface{}{}
 	tags[plugin.AwsLambdaARN] = plugin.GetInvokedFunctionArn(ctx)
-	tags[plugin.AwsLambdaInvocationColdStart] = i.span.coldStart
+	tags[plugin.AwsLambdaInvocationColdStart] = i.coldStart
 	tags[plugin.AwsLambdaInvocationRequestId] = plugin.GetAwsRequestID(ctx)
 	tags[plugin.AwsLambdaLogGroupName] = plugin.LogGroupName
 	tags[plugin.AwsLambdaLogStreamName] = plugin.LogStreamName

@@ -25,14 +25,14 @@ func TestInvocationData_BeforeExecution(t *testing.T) {
 	wg.Add(1)
 	i.BeforeExecution(context.TODO(), nil, &wg)
 
-	assert.True(t, prevTime <= i.span.startTimestamp)
+	assert.True(t, prevTime <= i.startTimestamp)
 }
 
 func TestInvocationData_AfterExecution(t *testing.T) {
 	i := New()
 	invocationCount = 0
 	prevTime := plugin.GetTimestamp()
-	i.span.startTimestamp = prevTime
+	i.startTimestamp = prevTime
 
 	wg := sync.WaitGroup{}
 	wg.Add(1)
@@ -48,7 +48,7 @@ func TestInvocationData_AfterExecution(t *testing.T) {
 	assert.True(t, d.Duration <= now-prevTime)
 	assert.True(t, d.ColdStart)
 	assert.False(t, d.Timeout)
-	assert.Equal(t, invocationType, data[0].Type)
+	assert.Equal(t, "Invocation", data[0].Type)
 }
 
 func TestInvocationData_AfterExecutionWithError(t *testing.T) {
@@ -74,7 +74,7 @@ func TestInvocationData_OnPanic(t *testing.T) {
 	i := New()
 	invocationCount = 0
 	prevTime := plugin.GetTimestamp()
-	i.span.startTimestamp = prevTime
+	i.startTimestamp = prevTime
 	err := errors.New(testErrorMessage)
 
 	wg := sync.WaitGroup{}
@@ -94,7 +94,7 @@ func TestInvocationData_OnPanic(t *testing.T) {
 	assert.Equal(t, testErrorType, d.ErrorType)
 	assert.True(t, d.ColdStart)
 	assert.False(t, d.Timeout)
-	assert.Equal(t, invocationType, data[0].Type)
+	assert.Equal(t, "Invocation", data[0].Type)
 }
 
 
@@ -103,7 +103,7 @@ func TestPrepareDataStaticFields(t *testing.T) {
 	i := New()
 	data := i.prepareData(context.TODO())
 	assert.NotNil(t, data.ID)
-	assert.Equal(t, invocationType, data.Type)
+	assert.Equal(t, "Invocation", data.Type)
 	assert.Equal(t, plugin.AgentVersion, data.AgentVersion)
 	assert.Equal(t, plugin.DataModelVersion, data.DataModelVersion)
 	assert.Equal(t, test.AppId, data.ApplicationID)
@@ -116,7 +116,7 @@ func TestPrepareDataStaticFields(t *testing.T) {
 	assert.Equal(t, plugin.ApplicationRuntimeVersion, data.ApplicationRuntimeVersion)
 	assert.NotNil(t, data.ApplicationTags)
 
-	assert.Equal(t, functionPlatform, data.FunctionPlatform)
+	assert.Equal(t, "AWS Lambda", data.FunctionPlatform)
 	assert.Equal(t, plugin.FunctionName, data.FunctionName)
 	assert.Equal(t, plugin.FunctionRegion, data.FunctionRegion)
 	assert.NotNil(t, data.Tags)

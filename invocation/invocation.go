@@ -10,8 +10,7 @@ import (
 
 var invocationCount uint32
 
-// invocationSpan collects raw information related to invocation.
-type invocationSpan struct {
+type invocation struct {
 	startTimestamp  int64
 	finishTimestamp int64
 	duration        int64
@@ -23,62 +22,56 @@ type invocationSpan struct {
 	timeout         bool
 }
 
-type invocation struct {
-	span *invocationSpan
-}
-
 // New initializes and returns a new invocation object.
 func New() *invocation {
 	i := new(invocation)
-	i.span = new(invocationSpan)
 	return i
 }
 
 func (i *invocation) BeforeExecution(ctx context.Context, request json.RawMessage, wg *sync.WaitGroup) {
-	i.span = new(invocationSpan)
-	i.span.startTimestamp = plugin.GetTimestamp()
+	i.startTimestamp = plugin.GetTimestamp()
 	wg.Done()
 }
 
 func (i *invocation) AfterExecution(ctx context.Context, request json.RawMessage, response interface{}, err interface{}) []plugin.MonitoringDataWrapper {
-	i.span.finishTimestamp = plugin.GetTimestamp()
-	i.span.duration = i.span.finishTimestamp - i.span.startTimestamp
+	i.finishTimestamp = plugin.GetTimestamp()
+	i.duration = i.finishTimestamp - i.startTimestamp
 
 	if err != nil {
-		i.span.erroneous = true
-		i.span.errorMessage = plugin.GetErrorMessage(err)
-		i.span.errorType = plugin.GetErrorType(err)
-		i.span.errorCode = defaultErrorCode
+		i.erroneous = true
+		i.errorMessage = plugin.GetErrorMessage(err)
+		i.errorType = plugin.GetErrorType(err)
+		i.errorCode = defaultErrorCode
 	}
 
-	i.span.coldStart = isColdStarted()
-	i.span.timeout = plugin.IsTimeout(err)
+	i.coldStart = isColdStarted()
+	i.timeout = plugin.IsTimeout(err)
 
 	data := i.prepareData(ctx)
-	i.span = nil
+	i = nil
 
 	var invocationArr []plugin.MonitoringDataWrapper
-	invocationArr = append(invocationArr, plugin.WrapMonitoringData(data, invocationType))
+	invocationArr = append(invocationArr, plugin.WrapMonitoringData(data, "Invocation"))
 	return invocationArr
 }
 
 func (i *invocation) OnPanic(ctx context.Context, request json.RawMessage, err interface{}, stackTrace []byte) []plugin.MonitoringDataWrapper {
-	i.span.finishTimestamp = plugin.GetTimestamp()
-	i.span.duration = i.span.finishTimestamp - i.span.startTimestamp
-	i.span.erroneous = true
-	i.span.errorMessage = plugin.GetErrorMessage(err)
-	i.span.errorType = plugin.GetErrorType(err)
-	i.span.errorCode = defaultErrorCode
-	i.span.coldStart = isColdStarted()
+	i.finishTimestamp = plugin.GetTimestamp()
+	i.duration = i.finishTimestamp - i.startTimestamp
+	i.erroneous = true
+	i.errorMessage = plugin.GetErrorMessage(err)
+	i.errorType = plugin.GetErrorType(err)
+	i.errorCode = defaultErrorCode
+	i.coldStart = isColdStarted()
 
 	// since it is panicked it could not be timed out
-	i.span.timeout = false
+	i.timeout = false
 
 	data := i.prepareData(ctx)
-	i.span = nil
+	i = nil
 
 	var invocationArr []plugin.MonitoringDataWrapper
-	invocationArr = append(invocationArr, plugin.WrapMonitoringData(data, invocationType))
+	invocationArr = append(invocationArr, plugin.WrapMonitoringData(data, "Invocation"))
 	return invocationArr
 }
 
