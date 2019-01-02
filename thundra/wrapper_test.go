@@ -120,7 +120,7 @@ func TestWrapper(t *testing.T) {
 			lambdaHandler := Wrap(testCase.handler, th)
 			h := lambdaHandler.(func(context.Context, json.RawMessage) (interface{}, error))
 			f := lambdaFunction(h)
-			response, err := f.invoke(context.Background(), []byte(testCase.input))
+			response, err := f.invoke(context.TODO(), []byte(testCase.input))
 
 			if testCase.expected.err != nil {
 				assert.Equal(t, testCase.expected.err, err)

@@ -96,12 +96,12 @@ func (tr *trace) AfterExecution(ctx context.Context, request json.RawMessage, re
 	// Prepare report data
 	var traceArr []plugin.MonitoringDataWrapper
 	td := tr.prepareTraceDataModel(ctx, request, response)
-	traceArr = append(traceArr, plugin.WrapMonitoringData(td, traceType))
+	traceArr = append(traceArr, plugin.WrapMonitoringData(td, "Trace"))
 
 	spanList := tr.recorder.GetSpans()
 	for _, s := range spanList {
 		sd := tr.prepareSpanDataModel(ctx, s)
-		traceArr = append(traceArr, plugin.WrapMonitoringData(sd, spanType))
+		traceArr = append(traceArr, plugin.WrapMonitoringData(sd, "Span"))
 	}
 
 	// Clear trace plugin data for next invocation
@@ -132,12 +132,12 @@ func (tr *trace) OnPanic(ctx context.Context, request json.RawMessage, err inter
 
 	var traceArr []plugin.MonitoringDataWrapper
 	td := tr.prepareTraceDataModel(ctx, request, nil)
-	traceArr = append(traceArr, plugin.WrapMonitoringData(td, traceType))
+	traceArr = append(traceArr, plugin.WrapMonitoringData(td, "Trace"))
 
 	spanList := tr.recorder.GetSpans()
 	for _, s := range spanList {
 		sd := tr.prepareSpanDataModel(ctx, s)
-		traceArr = append(traceArr, plugin.WrapMonitoringData(sd, spanType))
+		traceArr = append(traceArr, plugin.WrapMonitoringData(sd, "Span"))
 	}
 
 	tr.data = nil

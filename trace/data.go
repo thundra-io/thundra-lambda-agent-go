@@ -37,7 +37,7 @@ func (tr *trace) prepareTraceDataModel(ctx context.Context, request json.RawMess
 	tags := tr.prepareTraceTags(ctx, request, response)
 	return traceDataModel{
 		ID:                        plugin.TraceID,
-		Type:                      traceType,
+		Type:                      "Trace",
 		AgentVersion:              plugin.AgentVersion,
 		DataModelVersion:          plugin.DataModelVersion,
 		ApplicationID:             plugin.ApplicationID,
@@ -139,7 +139,7 @@ type spanLog struct {
 func (tr *trace) prepareSpanDataModel(ctx context.Context, span *ttracer.RawSpan) spanDataModel {
 	return spanDataModel{
 		ID:                        span.Context.SpanID,
-		Type:                      spanType,
+		Type:                      "Span",
 		AgentVersion:              plugin.AgentVersion,
 		DataModelVersion:          plugin.DataModelVersion,
 		ApplicationID:             plugin.ApplicationID,
