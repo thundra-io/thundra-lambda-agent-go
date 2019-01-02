@@ -7,11 +7,11 @@ import (
 
 func prepareGoRoutineMetricsData(metric *metric) metricData {
 	return metricData{
-		Id:                        plugin.GenerateNewID(),
+		ID:                        plugin.GenerateNewID(),
 		Type:                      metricType,
 		AgentVersion:              plugin.AgentVersion,
 		DataModelVersion:          plugin.DataModelVersion,
-		ApplicationId:             plugin.ApplicationID,
+		ApplicationID:             plugin.ApplicationID,
 		ApplicationDomainName:     plugin.ApplicationDomainName,
 		ApplicationClassName:      plugin.ApplicationClassName,
 		ApplicationName:           plugin.FunctionName,
@@ -21,9 +21,9 @@ func prepareGoRoutineMetricsData(metric *metric) metricData {
 		ApplicationRuntimeVersion: plugin.ApplicationRuntimeVersion,
 		ApplicationTags:           map[string]interface{}{},
 
-		TraceId:         plugin.TraceID,
-		TransactionId:  plugin.TransactionID,
-		SpanId:          plugin.SpanID,
+		TraceID:         plugin.TraceID,
+		TransactionID:  plugin.TransactionID,
+		SpanID:          plugin.SpanID,
 		MetricName:      goroutineMetric,
 		MetricTimestamp: metric.span.metricTimestamp,
 

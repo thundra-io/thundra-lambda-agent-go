@@ -19,9 +19,8 @@ type thundra struct {
 
 func (t *thundra) executePreHooks(ctx context.Context, request json.RawMessage) {
 	t.reporter.FlushFlag()
-	plugin.GenerateNewTraceID()
-	plugin.GenerateNewTransactionID()
-	plugin.GenerateNewSpanID()
+	plugin.TraceID = plugin.GenerateNewID()
+	plugin.TransactionID = plugin.GenerateNewID()
 	var wg sync.WaitGroup
 	wg.Add(len(t.plugins))
 	for _, p := range t.plugins {

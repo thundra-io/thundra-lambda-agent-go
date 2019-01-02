@@ -9,11 +9,11 @@ import (
 // invocation is the simplest form of data collected from lambda functions. It is collected for any case.
 type invocationData struct {
 	//Base fields
-	Id                        string                 `json:"id"`
+	ID                        string                 `json:"id"`
 	Type                      string                 `json:"type"`
 	AgentVersion              string                 `json:"agentVersion"`
 	DataModelVersion          string                 `json:"dataModelVersion"`
-	ApplicationId             string                 `json:"applicationId"`
+	ApplicationID             string                 `json:"applicationId"`
 	ApplicationDomainName     string                 `json:"applicationDomainName"`
 	ApplicationClassName      string                 `json:"applicationClassName"`
 	ApplicationName           string                 `json:"applicationName"`
@@ -23,9 +23,9 @@ type invocationData struct {
 	ApplicationRuntimeVersion string                 `json:"applicationRuntimeVersion"`
 	ApplicationTags           map[string]interface{} `json:"applicationTags"`
 
-	TraceId          string                 `json:"traceId"`
-	TransactionId    string                 `json:"transactionId"`
-	SpanId           string                 `json:"spanId"`
+	TraceID          string                 `json:"traceId"`
+	TransactionID    string                 `json:"transactionId"`
+	SpanID           string                 `json:"spanId"`
 	FunctionPlatform string                 `json:"functionPlatform"`
 	FunctionName     string                 `json:"functionName"`
 	FunctionRegion   string                 `json:"functionRegion"`
@@ -44,11 +44,11 @@ type invocationData struct {
 func (i *invocation) prepareData(ctx context.Context) invocationData {
 	tags := i.prepareTags(ctx)
 	return invocationData{
-		Id:                        plugin.GenerateNewID(),
+		ID:                        plugin.GenerateNewID(),
 		Type:                      invocationType,
 		AgentVersion:              plugin.AgentVersion,
 		DataModelVersion:          plugin.DataModelVersion,
-		ApplicationId:             plugin.ApplicationID,
+		ApplicationID:             plugin.ApplicationID,
 		ApplicationDomainName:     plugin.ApplicationDomainName,
 		ApplicationClassName:      plugin.ApplicationClassName,
 		ApplicationName:           plugin.FunctionName,
@@ -58,8 +58,8 @@ func (i *invocation) prepareData(ctx context.Context) invocationData {
 		ApplicationRuntimeVersion: plugin.ApplicationRuntimeVersion,
 		ApplicationTags:           map[string]interface{}{}, // empty object
 
-		TraceId:       plugin.TraceID,
-		TransactionId: plugin.TransactionID,
+		TraceID:       plugin.TraceID,
+		TransactionID: plugin.TransactionID,
 		// SpanId:"" Optional,
 
 		FunctionPlatform: functionPlatform,

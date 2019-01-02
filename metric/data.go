@@ -2,11 +2,11 @@ package metric
 
 type metricData struct {
 	//Base fields
-	Id                        string                 `json:"id"`
+	ID                        string                 `json:"id"`
 	Type                      string                 `json:"type"`
 	AgentVersion              string                 `json:"agentVersion"`
 	DataModelVersion          string                 `json:"dataModelVersion"`
-	ApplicationId             string                 `json:"applicationId"`
+	ApplicationID             string                 `json:"applicationId"`
 	ApplicationDomainName     string                 `json:"applicationDomainName"`
 	ApplicationClassName      string                 `json:"applicationClassName"`
 	ApplicationName           string                 `json:"applicationName"`
@@ -16,9 +16,9 @@ type metricData struct {
 	ApplicationRuntimeVersion string                 `json:"applicationRuntimeVersion"`
 	ApplicationTags           map[string]interface{} `json:"applicationTags"`
 
-	TraceId         string                 `json:"traceId"`
-	TransactionId  string                 `json:"transactionId"`
-	SpanId          string                 `json:"spanId"`
+	TraceID         string                 `json:"traceId"`
+	TransactionID  string                 `json:"transactionId"`
+	SpanID          string                 `json:"spanId"`
 	MetricName      string                 `json:"metricName"`
 	MetricTimestamp int64                  `json:"metricTimestamp"`
 	Metrics         map[string]interface{} `json:"metrics"`

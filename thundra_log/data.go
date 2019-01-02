@@ -6,11 +6,11 @@ import (
 
 type logData struct {
 	//Base fields
-	Id                        string                 `json:"id"`
+	ID                        string                 `json:"id"`
 	Type                      string                 `json:"type"`
 	AgentVersion              string                 `json:"agentVersion"`
 	DataModelVersion          string                 `json:"dataModelVersion"`
-	ApplicationId             string                 `json:"applicationId"`
+	ApplicationID             string                 `json:"applicationId"`
 	ApplicationDomainName     string                 `json:"applicationDomainName"`
 	ApplicationClassName      string                 `json:"applicationClassName"`
 	ApplicationName           string                 `json:"applicationName"`
@@ -20,9 +20,9 @@ type logData struct {
 	ApplicationRuntimeVersion string                 `json:"applicationRuntimeVersion"`
 	ApplicationTags           map[string]interface{} `json:"applicationTags"`
 
-	TraceId        string                 `json:"traceId"`
-	TransactionId string                 `json:"transactionId"`
-	SpanId         string                 `json:"spanId"`
+	TraceID        string                 `json:"traceId"`
+	TransactionID string                 `json:"transactionId"`
+	SpanID         string                 `json:"spanId"`
 	LogMessage     string                 `json:"logMessage"`
 	LogContextName string                 `json:"logContextName"`
 	LogTimestamp   int64                  `json:"logTimestamp"`
@@ -41,11 +41,11 @@ type monitoringLog struct {
 
 func prepareLogData(log *monitoringLog) logData {
 	return logData{
-		Id:                        plugin.GenerateNewID(),
+		ID:                        plugin.GenerateNewID(),
 		Type:                      logType,
 		AgentVersion:              plugin.AgentVersion,
 		DataModelVersion:          plugin.DataModelVersion,
-		ApplicationId:             plugin.ApplicationId,
+		ApplicationID:             plugin.ApplicationID,
 		ApplicationDomainName:     plugin.ApplicationDomainName,
 		ApplicationClassName:      plugin.ApplicationClassName,
 		ApplicationName:           plugin.FunctionName,
@@ -55,9 +55,9 @@ func prepareLogData(log *monitoringLog) logData {
 		ApplicationRuntimeVersion: plugin.ApplicationRuntimeVersion,
 		ApplicationTags:           map[string]interface{}{},
 
-		TraceId:        plugin.TraceId,
-		TransactionId: plugin.TransactionId,
-		SpanId:         plugin.SpanId,
+		TraceID:        plugin.TraceID,
+		TransactionID: plugin.TransactionID,
+		SpanID:         plugin.SpanID,
 		LogMessage:     log.logMessage,
 		LogContextName: log.logContextName,
 		LogTimestamp:   log.logTimestamp,

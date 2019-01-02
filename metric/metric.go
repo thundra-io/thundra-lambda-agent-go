@@ -96,10 +96,10 @@ func (metric *metric) AfterExecution(ctx context.Context, request json.RawMessag
 	if !metric.disableCPUMetrics {
 		metric.span.endCPUTimeStat = sampleCPUtimesStat()
 
-		metric.span.appCpuLoad = getProcessCpuLoad(metric)
-		metric.span.systemCpuLoad = getSystemCpuLoad(metric)
+		metric.span.appCpuLoad = getProcessCPULoad(metric)
+		metric.span.systemCpuLoad = getSystemCPULoad(metric)
 
-		c := prepareCpuMetricsData(metric)
+		c := prepareCPUMetricsData(metric)
 		stats = append(stats, plugin.WrapMonitoringData(c, metricType))
 	}
 

@@ -6,13 +6,13 @@ import (
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 )
 
-func prepareCpuMetricsData(metric *metric) metricData {
+func prepareCPUMetricsData(metric *metric) metricData {
 	return metricData{
-		Id:                        plugin.GenerateNewID(),
+		ID:                        plugin.GenerateNewID(),
 		Type:                      metricType,
 		AgentVersion:              plugin.AgentVersion,
 		DataModelVersion:          plugin.DataModelVersion,
-		ApplicationId:             plugin.ApplicationID,
+		ApplicationID:             plugin.ApplicationID,
 		ApplicationDomainName:     plugin.ApplicationDomainName,
 		ApplicationClassName:      plugin.ApplicationClassName,
 		ApplicationName:           plugin.FunctionName,
@@ -22,9 +22,9 @@ func prepareCpuMetricsData(metric *metric) metricData {
 		ApplicationRuntimeVersion: plugin.ApplicationRuntimeVersion,
 		ApplicationTags:           map[string]interface{}{},
 
-		TraceId:         plugin.TraceID,
-		TransactionId:  plugin.TransactionID,
-		SpanId:          plugin.SpanID,
+		TraceID:         plugin.TraceID,
+		TransactionID:  plugin.TransactionID,
+		// SpanId:          "", // Optional
 		MetricName:      cpuMetric,
 		MetricTimestamp: metric.span.metricTimestamp,
 
@@ -36,7 +36,7 @@ func prepareCpuMetricsData(metric *metric) metricData {
 	}
 }
 
-func getSystemCpuLoad(metric *metric) float64 {
+func getSystemCPULoad(metric *metric) float64 {
 	// Skip test
 	if metric.span.startCPUTimeStat == nil {
 		return 0
@@ -54,7 +54,7 @@ func getSystemCpuLoad(metric *metric) float64 {
 	return s
 }
 
-func getProcessCpuLoad(metric *metric) float64 {
+func getProcessCPULoad(metric *metric) float64 {
 	// Skip test
 	if metric.span.startCPUTimeStat == nil {
 		return 0

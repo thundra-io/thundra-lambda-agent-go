@@ -12,11 +12,11 @@ const all = 0
 func prepareNetMetricsData(metric *metric) metricData {
 	nf := takeNetFrame(metric)
 	return metricData{
-		Id:                        plugin.GenerateNewID(),
+		ID:                        plugin.GenerateNewID(),
 		Type:                      metricType,
 		AgentVersion:              plugin.AgentVersion,
 		DataModelVersion:          plugin.DataModelVersion,
-		ApplicationId:             plugin.ApplicationID,
+		ApplicationID:             plugin.ApplicationID,
 		ApplicationDomainName:     plugin.ApplicationDomainName,
 		ApplicationClassName:      plugin.ApplicationClassName,
 		ApplicationName:           plugin.FunctionName,
@@ -26,9 +26,9 @@ func prepareNetMetricsData(metric *metric) metricData {
 		ApplicationRuntimeVersion: plugin.ApplicationRuntimeVersion,
 		ApplicationTags:           map[string]interface{}{},
 
-		TraceId:         plugin.TraceID,
-		TransactionId:  plugin.TransactionID,
-		SpanId:          plugin.SpanID,
+		TraceID:         plugin.TraceID,
+		TransactionID:  plugin.TransactionID,
+		// SpanID:          plugin.SpanID, // Optional
 		MetricName:      netMetric,
 		MetricTimestamp: metric.span.metricTimestamp,
 

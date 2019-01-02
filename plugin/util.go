@@ -20,22 +20,6 @@ func GenerateNewID() string {
 	return uuid.NewV4().String()
 }
 
-func Generate2NewID() (string, string) {
-	return GenerateNewID(), GenerateNewID()
-}
-
-func GenerateNewTraceID() {
-	TraceID = GenerateNewID()
-}
-
-func GenerateNewTransactionID() {
-	TransactionID = GenerateNewID()
-}
-
-func GenerateNewSpanID() {
-	SpanID = GenerateNewID()
-}
-
 // GetThisProcess returns process info about this process.
 func GetThisProcess() *process.Process {
 	pid := os.Getpid()
@@ -68,6 +52,7 @@ func GetErrorType(err interface{}) string {
 	return errorType.Name()
 }
 
+// IsTimeout returns whether or not an err is a timeout error
 func IsTimeout(err interface{}) bool {
 	if err == nil {
 		return false
