@@ -7,7 +7,7 @@ import (
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 )
 
-func prepareHeapMetricsData(metric *metric, memStats *runtime.MemStats) metricData {
+func prepareHeapMetricsData(metric *metricPlugin, memStats *runtime.MemStats) metricData {
 	mp, err := proc.MemoryPercent()
 	if err != nil {
 		fmt.Println(err)
@@ -32,7 +32,7 @@ func prepareHeapMetricsData(metric *metric, memStats *runtime.MemStats) metricDa
 		TransactionID:  plugin.TransactionID,
 		// SpanID:          plugin.SpanID, // Optional
 		MetricName:      heapMetric,
-		MetricTimestamp: metric.span.metricTimestamp,
+		MetricTimestamp: metric.metricTimestamp,
 
 		Metrics: map[string]interface{}{
 			// heapAlloc is bytes of allocated heap objects.

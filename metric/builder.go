@@ -11,7 +11,7 @@ type mBuilder interface {
 	DisableCPUMetrics() mBuilder
 	DisableDiskMetrics() mBuilder
 	DisableNetMetrics() mBuilder
-	Build() *metric
+	Build() *metricPlugin
 }
 
 var pid string
@@ -28,7 +28,7 @@ type builder struct {
 
 // New initializes a new metric object which collects all types of metrics. If you want to disable a metric that
 // you don't want to collect use NewBuilder() instead.
-func New() *metric {
+func New() *metricPlugin {
 	pid = plugin.GetPid()
 	return NewBuilder().Build()
 }
@@ -81,11 +81,10 @@ func (b *builder) DisableMemoryMetrics() mBuilder {
 }
 
 // Builds and returns the metric plugin that you can pass to a thundra object while building it using AddPlugin().
-func (b *builder) Build() *metric {
+func (b *builder) Build() *metricPlugin {
 	proc = plugin.GetThisProcess()
 
-	return &metric{
-		span:                    new(metricSpan),
+	return &metricPlugin{
 		disableGCMetrics:        b.disableGCMetrics,
 		disableHeapMetrics:      b.disableHeapMetrics,
 		disableGoroutineMetrics: b.disableGoroutineMetrics,

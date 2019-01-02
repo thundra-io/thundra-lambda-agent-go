@@ -9,16 +9,15 @@ import (
 
 func TestNewBuilder(t *testing.T) {
 	test.PrepareEnvironment()
-	m := NewBuilder().Build()
+	mp := NewBuilder().Build()
 
-	assert.NotNil(t, m.span)
 	assert.NotNil(t, proc)
 
-	assert.False(t, m.disableDiskMetrics)
-	assert.False(t, m.disableNetMetrics)
-	assert.False(t, m.disableCPUMetrics)
-	assert.False(t, m.disableGoroutineMetrics)
-	assert.False(t, m.disableHeapMetrics)
-	assert.False(t, m.disableGCMetrics)
+	assert.False(t, mp.disableDiskMetrics)
+	assert.False(t, mp.disableNetMetrics)
+	assert.False(t, mp.disableCPUMetrics)
+	assert.False(t, mp.disableGoroutineMetrics)
+	assert.False(t, mp.disableHeapMetrics)
+	assert.False(t, mp.disableGCMetrics)
 	test.CleanEnvironment()
 }

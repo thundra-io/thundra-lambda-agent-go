@@ -10,15 +10,15 @@ import (
 const garbageCollectionCount = 5
 
 func TestPrepareGCMetricsData(t *testing.T) {
-	metric := NewBuilder().Build()
-	metric.span.startGCCount = 0
-	metric.span.endGCCount = garbageCollectionCount
+	mp := NewBuilder().Build()
+	mp.startGCCount = 0
+	mp.endGCCount = garbageCollectionCount
 
 	makeMultipleGCCalls(garbageCollectionCount)
 	memStats := &runtime.MemStats{}
 	runtime.ReadMemStats(memStats)
 
-	gcStatsData := prepareGCMetricsData(metric, memStats)
+	gcStatsData := prepareGCMetricsData(mp, memStats)
 
 	assert.Equal(t, gcMetric, gcStatsData.MetricName)
 	assert.Equal(t, memStats.PauseTotalNs, gcStatsData.Metrics[pauseTotalNs])
@@ -26,7 +26,7 @@ func TestPrepareGCMetricsData(t *testing.T) {
 
 	assert.Equal(t, uint32(garbageCollectionCount), gcStatsData.Metrics[numGc])
 	assert.Equal(t, memStats.NextGC, gcStatsData.Metrics[nextGc])
-	assert.Equal(t, memStats.GCCPUFraction, gcStatsData.Metrics[gcCpuFraction])
+	assert.Equal(t, memStats.GCCPUFraction, gcStatsData.Metrics[gcCPUFraction])
 
 	//DeltaGCCount equals to endGCCount - startGCCount
 	assert.Equal(t, uint32(garbageCollectionCount), gcStatsData.Metrics[deltaNumGc])

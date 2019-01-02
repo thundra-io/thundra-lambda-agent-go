@@ -29,7 +29,7 @@ func (t *thundra) executePreHooks(ctx context.Context, request json.RawMessage) 
 	wg.Wait()
 }
 
-func (t *thundra) executePostHooks(ctx context.Context, request json.RawMessage, response interface{}, error interface{}) {
+func (t *thundra) executePostHooks(ctx context.Context, request json.RawMessage, response interface{}, err interface{}) {
 	// Skip if it is already reported
 	if *t.reporter.Reported() == 1 {
 		return
@@ -38,7 +38,7 @@ func (t *thundra) executePostHooks(ctx context.Context, request json.RawMessage,
 	wg.Add(len(t.plugins))
 	for _, p := range t.plugins {
 		go func(plugin plugin.Plugin) {
-			messages := plugin.AfterExecution(ctx, request, response, error)
+			messages := plugin.AfterExecution(ctx, request, response, err)
 			t.reporter.Collect(messages)
 			wg.Done()
 		}(p)

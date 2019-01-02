@@ -8,11 +8,11 @@ import (
 )
 
 func TestPrepareHeapMetricsData(t *testing.T) {
-	metric := NewBuilder().Build()
+	mp := NewBuilder().Build()
 
 	memStats := &runtime.MemStats{}
 
-	heapMetricsData := prepareHeapMetricsData(metric, memStats)
+	heapMetricsData := prepareHeapMetricsData(mp, memStats)
 
 	assert.Equal(t, heapMetric, heapMetricsData.MetricName)
 

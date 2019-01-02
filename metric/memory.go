@@ -7,7 +7,7 @@ import (
 	"github.com/shirou/gopsutil/mem"
 )
 
-func prepareMemoryMetricsData(metric *metric) metricData {
+func prepareMemoryMetricsData(mp *metricPlugin) metricData {
 	memInfo, err := mem.VirtualMemory()
 	if err != nil {
 		fmt.Println(err)
@@ -37,7 +37,7 @@ func prepareMemoryMetricsData(metric *metric) metricData {
 		TransactionID:  plugin.TransactionID,
 		// SpanID:          plugin.SpanID, // Optional
 		MetricName:      memoryMetric,
-		MetricTimestamp: metric.span.metricTimestamp,
+		MetricTimestamp: mp.metricTimestamp,
 
 		Metrics: map[string]interface{}{
 			appUsedMemory: procMemInfo.RSS,

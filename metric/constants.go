@@ -10,15 +10,15 @@ const diskMetric = "DiskMetric"
 const netMetric = "NetMetric"
 
 // CPU Metrics
-const appCpuLoad = "app.cpuLoad"
-const sysCpuLoad = "sys.cpuLoad"
+const appCPULoad = "app.cpuLoad"
+const sysCPULoad = "sys.cpuLoad"
 
 // GC Metrics
 const pauseTotalNs = "pauseTotalNs"
 const pauseNs = "pauseNs"
 const numGc = "numGC"
 const nextGc = "nextGC"
-const gcCpuFraction = "gcCPUFraction"
+const gcCPUFraction = "gcCPUFraction"
 const deltaNumGc = "deltaNumGC"
 const deltaPauseTotalNs = "deltaPauseTotalNs"
 
