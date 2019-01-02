@@ -168,15 +168,3 @@ func (tr *trace) prepareSpanDataModel(ctx context.Context, span *ttracer.RawSpan
 		Logs:            map[string]spanLog{}, // TO DO get logs
 	}
 }
-
-// func (tr *trace) prepareSpanTags(ctx context.Context,) map[string]interface{} {
-// 	tags := map[string]interface{}{}
-// 	// If the agent's user doesn't want to send their request and response data, hide them.
-// 	if !shouldHideRequest() {
-// 		tags[plugin.AwsLambdaInvocationRequest] = string(request)
-// 	}
-// 	if !shouldHideResponse() {
-// 		tags[plugin.AwsLambdaInvocationResponse] = response
-// 	}
-// 	return tags
-// }

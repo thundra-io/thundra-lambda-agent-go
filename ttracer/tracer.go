@@ -34,7 +34,6 @@ func (t *tracerImpl) StartSpan(operationName string, opts ...ot.StartSpanOption)
 	}
 
 	return t.StartSpanWithOptions(operationName, sso)
-	// return newSpan(operationName, t, sso)
 }
 
 func (t *tracerImpl) StartSpanWithOptions(operationName string, opts ot.StartSpanOptions) ot.Span {
@@ -66,7 +65,8 @@ func (t *tracerImpl) StartSpanWithOptions(operationName string, opts ot.StartSpa
 
 	if newSpan.raw.Context.TraceID == "" {
 		// Couldn't find a parent span then create a new trace and span id
-		newSpan.raw.Context.TraceID, newSpan.raw.Context.SpanID = uuid.NewV4().String(), uuid.NewV4().String()
+		newSpan.raw.Context.TraceID = uuid.NewV4().String()
+		newSpan.raw.Context.SpanID = uuid.NewV4().String()
 	}
 
 	newSpan.tracer = t
@@ -86,12 +86,10 @@ func (t *tracerImpl) getSpan() *spanImpl {
 
 // TODO Will be implemented
 func (t *tracerImpl) Inject(sc ot.SpanContext, format interface{}, carrier interface{}) error {
-	panic(errors.New("Inject has not been supported yet"))
 	return errors.New("Inject has not been supported yet")
 }
 
 // TODO Will be implemented
 func (t *tracerImpl) Extract(format interface{}, carrier interface{}) (ot.SpanContext, error) {
-	panic(errors.New("Inject has not been supported yet"))
 	return nil, errors.New("Extract has not been supported yet")
 }
