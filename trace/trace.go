@@ -41,6 +41,7 @@ func New() *trace {
 	}
 }
 
+// BeforeExecution executes the necessary tasks before the invocation
 func (tr *trace) BeforeExecution(ctx context.Context, request json.RawMessage, wg *sync.WaitGroup) {
 	rootSpan, ctxWithRootSpan := opentracing.StartSpanFromContext(ctx, plugin.FunctionName)
 	plugin.CtxWithRootSpan = ctxWithRootSpan
@@ -53,7 +54,7 @@ func (tr *trace) BeforeExecution(ctx context.Context, request json.RawMessage, w
 
 	wg.Done()
 }
-
+// AfterExecution executes the necessary tasks after the invocation
 func (tr *trace) AfterExecution(ctx context.Context, request json.RawMessage, response interface{}, err interface{}) []plugin.MonitoringDataWrapper {
 	tr.rootSpan.Finish()
 	tr.data.finishTime = plugin.GetTimestamp()
@@ -110,6 +111,7 @@ func (tr *trace) AfterExecution(ctx context.Context, request json.RawMessage, re
 	return traceArr
 }
 
+// OnPanic prepares and sends data in case of a panic
 func (tr *trace) OnPanic(ctx context.Context, request json.RawMessage, err interface{}, stackTrace []byte) []plugin.MonitoringDataWrapper {
 	tr.rootSpan.Finish()
 	tr.data.finishTime = plugin.GetTimestamp()
@@ -145,6 +147,7 @@ func (tr *trace) OnPanic(ctx context.Context, request json.RawMessage, err inter
 	return traceArr
 }
 
+// Reset clears the recorded data for the next invocation
 func (tr *trace) Reset() {
 	tr.data = nil
 	tr.recorder.Reset()
