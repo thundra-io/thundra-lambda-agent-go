@@ -6,8 +6,8 @@ import (
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 )
 
-func prepareGoRoutineMetricsData(mp *metricPlugin) metricData {
-	return metricData{
+func prepareGoRoutineMetricsData(mp *metricPlugin) metricDataModel {
+	return metricDataModel{
 		ID:                        plugin.GenerateNewID(),
 		Type:                      metricType,
 		AgentVersion:              plugin.AgentVersion,
@@ -26,7 +26,7 @@ func prepareGoRoutineMetricsData(mp *metricPlugin) metricData {
 		TransactionID:   plugin.TransactionID,
 		SpanID:          plugin.SpanID,
 		MetricName:      goroutineMetric,
-		MetricTimestamp: mp.metricTimestamp,
+		MetricTimestamp: mp.data.metricTimestamp,
 
 		Metrics: map[string]interface{}{
 			// NumGoroutine is the number of goroutines on execution

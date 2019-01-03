@@ -6,8 +6,8 @@ import (
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 )
 
-func prepareCPUMetricsData(mp *metricPlugin) metricData {
-	return metricData{
+func prepareCPUMetricsData(mp *metricPlugin) metricDataModel {
+	return metricDataModel{
 		ID:                        plugin.GenerateNewID(),
 		Type:                      metricType,
 		AgentVersion:              plugin.AgentVersion,
@@ -26,11 +26,11 @@ func prepareCPUMetricsData(mp *metricPlugin) metricData {
 		TransactionID:  plugin.TransactionID,
 		// SpanId:          "", // Optional
 		MetricName:      cpuMetric,
-		MetricTimestamp: mp.metricTimestamp,
+		MetricTimestamp: mp.data.metricTimestamp,
 
 		Metrics: map[string]interface{}{
-			appCPULoad: mp.appCPULoad,
-			sysCPULoad: mp.systemCPULoad,
+			appCPULoad: mp.data.appCPULoad,
+			sysCPULoad: mp.data.systemCPULoad,
 		},
 		Tags: map[string]interface{}{},
 	}
@@ -38,11 +38,11 @@ func prepareCPUMetricsData(mp *metricPlugin) metricData {
 
 func getSystemCPULoad(mp *metricPlugin) float64 {
 	// Skip test
-	if mp.startCPUTimeStat == nil {
+	if mp.data.startCPUTimeStat == nil {
 		return 0
 	}
-	dSysUsed := mp.endCPUTimeStat.sysUsed() - mp.startCPUTimeStat.sysUsed()
-	dTotal := mp.endCPUTimeStat.total() - mp.startCPUTimeStat.total()
+	dSysUsed := mp.data.endCPUTimeStat.sysUsed() - mp.data.startCPUTimeStat.sysUsed()
+	dTotal := mp.data.endCPUTimeStat.total() - mp.data.startCPUTimeStat.total()
 	s := float64(dSysUsed) / float64(dTotal)
 	if s <= 0 {
 		s = 0
@@ -56,11 +56,11 @@ func getSystemCPULoad(mp *metricPlugin) float64 {
 
 func getProcessCPULoad(mp *metricPlugin) float64 {
 	// Skip test
-	if mp.startCPUTimeStat == nil {
+	if mp.data.startCPUTimeStat == nil {
 		return 0
 	}
-	dProcUsed := mp.endCPUTimeStat.procUsed() - mp.startCPUTimeStat.procUsed()
-	dTotal := mp.endCPUTimeStat.total() - mp.startCPUTimeStat.total()
+	dProcUsed := mp.data.endCPUTimeStat.procUsed() - mp.data.startCPUTimeStat.procUsed()
+	dTotal := mp.data.endCPUTimeStat.total() - mp.data.startCPUTimeStat.total()
 	p := float64(dProcUsed) / float64(dTotal)
 	if p <= 0 {
 		p = 0

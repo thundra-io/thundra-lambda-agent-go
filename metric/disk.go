@@ -7,9 +7,9 @@ import (
 	"github.com/shirou/gopsutil/process"
 )
 
-func prepareDiskMetricsData(mp *metricPlugin) metricData {
+func prepareDiskMetricsData(mp *metricPlugin) metricDataModel {
 	df := takeDiskFrame(mp)
-	return metricData{
+	return metricDataModel{
 		ID:                        plugin.GenerateNewID(),
 		Type:                      metricType,
 		AgentVersion:              plugin.AgentVersion,
@@ -28,7 +28,7 @@ func prepareDiskMetricsData(mp *metricPlugin) metricData {
 		TransactionID:  plugin.TransactionID,
 		// SpanID:          plugin.SpanID, // Optional
 		MetricName:      diskMetric,
-		MetricTimestamp: mp.metricTimestamp,
+		MetricTimestamp: mp.data.metricTimestamp,
 
 		Metrics: map[string]interface{}{
 			// ReadBytes is the number of bytes read from disk
@@ -54,14 +54,14 @@ type diskFrame struct {
 //Since lambda works continuously we should subtract io values in order to get correct results per invocation
 //takeDiskFrame returns IO operations count for a specific time range
 func takeDiskFrame(mp *metricPlugin) *diskFrame {
-	if mp.endDiskStat == nil || mp.startDiskStat == nil {
+	if mp.data.endDiskStat == nil || mp.data.startDiskStat == nil {
 		return &diskFrame{}
 	}
-	rb := mp.endDiskStat.ReadBytes - mp.startDiskStat.ReadBytes
-	wb := mp.endDiskStat.WriteBytes - mp.startDiskStat.WriteBytes
+	rb := mp.data.endDiskStat.ReadBytes - mp.data.startDiskStat.ReadBytes
+	wb := mp.data.endDiskStat.WriteBytes - mp.data.startDiskStat.WriteBytes
 
-	rc := mp.endDiskStat.ReadCount - mp.startDiskStat.ReadCount
-	wc := mp.endDiskStat.WriteCount - mp.startDiskStat.WriteCount
+	rc := mp.data.endDiskStat.ReadCount - mp.data.startDiskStat.ReadCount
+	wc := mp.data.endDiskStat.WriteCount - mp.data.startDiskStat.WriteCount
 
 	return &diskFrame{
 		readBytes:  rb,

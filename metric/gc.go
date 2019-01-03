@@ -6,8 +6,8 @@ import (
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 )
 
-func prepareGCMetricsData(mp *metricPlugin, memStats *runtime.MemStats) metricData {
-	return metricData{
+func prepareGCMetricsData(mp *metricPlugin, memStats *runtime.MemStats) metricDataModel {
+	return metricDataModel{
 		ID:                        plugin.GenerateNewID(),
 		Type:                      metricType,
 		AgentVersion:              plugin.AgentVersion,
@@ -26,7 +26,7 @@ func prepareGCMetricsData(mp *metricPlugin, memStats *runtime.MemStats) metricDa
 		TransactionID:  plugin.TransactionID,
 		SpanID:          plugin.SpanID,
 		MetricName:      gcMetric,
-		MetricTimestamp: mp.metricTimestamp,
+		MetricTimestamp: mp.data.metricTimestamp,
 
 		Metrics: map[string]interface{}{
 			// PauseTotalNs is the cumulative nanoseconds in GC
@@ -42,9 +42,9 @@ func prepareGCMetricsData(mp *metricPlugin, memStats *runtime.MemStats) metricDa
 			// CPU time used by the GC since the program started.
 			gcCPUFraction: memStats.GCCPUFraction,
 			//DeltaNumGc is the change in NUMGC from before execution to after execution.
-			deltaNumGc: mp.endGCCount - mp.startGCCount,
+			deltaNumGc: mp.data.endGCCount - mp.data.startGCCount,
 			//DeltaPauseTotalNs is pause total change from before execution to after execution.
-			deltaPauseTotalNs: mp.endPauseTotalNs - mp.startPauseTotalNs,
+			deltaPauseTotalNs: mp.data.endPauseTotalNs - mp.data.startPauseTotalNs,
 		},
 		Tags: map[string]interface{}{},
 	}

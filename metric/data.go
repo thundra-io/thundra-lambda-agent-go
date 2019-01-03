@@ -1,6 +1,6 @@
 package metric
 
-type metricData struct {
+type metricDataModel struct {
 	//Base fields
 	ID                        string                 `json:"id"`
 	Type                      string                 `json:"type"`

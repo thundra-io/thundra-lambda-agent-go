@@ -15,8 +15,8 @@ func TestMetric_BeforeExecution(t *testing.T) {
 	const MaxUint64 = ^uint64(0)
 
 	mp := NewBuilder().Build()
-	mp.startGCCount = MaxUint32
-	mp.startPauseTotalNs = MaxUint64
+	mp.data.startGCCount = MaxUint32
+	mp.data.startPauseTotalNs = MaxUint64
 
 	wg := sync.WaitGroup{}
 	wg.Add(1)
@@ -26,8 +26,8 @@ func TestMetric_BeforeExecution(t *testing.T) {
 	// In order to ensure startGCCount and startPauseTotalNs are assigned,
 	// check it's initial value is changed.
 	// Initial values are the maximum numbers to eliminate unlucky conditions from happenning.
-	assert.NotEqual(t, MaxUint32, mp.startGCCount)
-	assert.NotEqual(t, MaxUint64, mp.startPauseTotalNs)
+	assert.NotEqual(t, MaxUint32, mp.data.startGCCount)
+	assert.NotEqual(t, MaxUint64, mp.data.startPauseTotalNs)
 }
 
 func TestMetric_AfterExecution(t *testing.T) {

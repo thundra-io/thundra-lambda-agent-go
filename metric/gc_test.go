@@ -11,8 +11,8 @@ const garbageCollectionCount = 5
 
 func TestPrepareGCMetricsData(t *testing.T) {
 	mp := NewBuilder().Build()
-	mp.startGCCount = 0
-	mp.endGCCount = garbageCollectionCount
+	mp.data.startGCCount = 0
+	mp.data.endGCCount = garbageCollectionCount
 
 	makeMultipleGCCalls(garbageCollectionCount)
 	memStats := &runtime.MemStats{}

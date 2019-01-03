@@ -54,6 +54,7 @@ func (tr *trace) BeforeExecution(ctx context.Context, request json.RawMessage, w
 
 	wg.Done()
 }
+
 // AfterExecution executes the necessary tasks after the invocation
 func (tr *trace) AfterExecution(ctx context.Context, request json.RawMessage, response interface{}, err interface{}) []plugin.MonitoringDataWrapper {
 	tr.rootSpan.Finish()

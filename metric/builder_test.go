@@ -12,6 +12,7 @@ func TestNewBuilder(t *testing.T) {
 	mp := NewBuilder().Build()
 
 	assert.NotNil(t, proc)
+	assert.NotNil(t, mp.data)
 
 	assert.False(t, mp.disableDiskMetrics)
 	assert.False(t, mp.disableNetMetrics)

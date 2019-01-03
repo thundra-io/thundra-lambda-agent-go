@@ -85,6 +85,7 @@ func (b *builder) Build() *metricPlugin {
 	proc = plugin.GetThisProcess()
 
 	return &metricPlugin{
+		data:                    new(metricData),
 		disableGCMetrics:        b.disableGCMetrics,
 		disableHeapMetrics:      b.disableHeapMetrics,
 		disableGoroutineMetrics: b.disableGoroutineMetrics,

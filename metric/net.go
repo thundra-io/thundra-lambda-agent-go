@@ -9,9 +9,9 @@ import (
 
 const all = 0
 
-func prepareNetMetricsData(mp *metricPlugin) metricData {
+func prepareNetMetricsData(mp *metricPlugin) metricDataModel {
 	nf := takeNetFrame(mp)
-	return metricData{
+	return metricDataModel{
 		ID:                        plugin.GenerateNewID(),
 		Type:                      metricType,
 		AgentVersion:              plugin.AgentVersion,
@@ -30,7 +30,7 @@ func prepareNetMetricsData(mp *metricPlugin) metricData {
 		TransactionID:  plugin.TransactionID,
 		// SpanID:          plugin.SpanID, // Optional
 		MetricName:      netMetric,
-		MetricTimestamp: mp.metricTimestamp,
+		MetricTimestamp: mp.data.metricTimestamp,
 
 		Metrics: map[string]interface{}{
 			// BytesRecv is how many bytes received from network
@@ -62,16 +62,16 @@ type netFrame struct {
 //Since lambda works continuously we should subtract io values in order to get correct results per invocation
 func takeNetFrame(mp *metricPlugin) *netFrame {
 	// If nil, return an empty netFrame
-	if mp.endNetStat == nil || mp.startNetStat == nil {
+	if mp.data.endNetStat == nil || mp.data.startNetStat == nil {
 		return &netFrame{}
 	}
 
-	br := mp.endNetStat.BytesRecv - mp.startNetStat.BytesRecv
-	bs := mp.endNetStat.BytesSent - mp.startNetStat.BytesSent
-	ps := mp.endNetStat.PacketsSent - mp.startNetStat.PacketsSent
-	pr := mp.endNetStat.PacketsRecv - mp.startNetStat.PacketsRecv
-	ei := mp.endNetStat.Errin - mp.startNetStat.Errin
-	eo := mp.endNetStat.Errout - mp.startNetStat.Errout
+	br := mp.data.endNetStat.BytesRecv - mp.data.startNetStat.BytesRecv
+	bs := mp.data.endNetStat.BytesSent - mp.data.startNetStat.BytesSent
+	ps := mp.data.endNetStat.PacketsSent - mp.data.startNetStat.PacketsSent
+	pr := mp.data.endNetStat.PacketsRecv - mp.data.startNetStat.PacketsRecv
+	ei := mp.data.endNetStat.Errin - mp.data.startNetStat.Errin
+	eo := mp.data.endNetStat.Errout - mp.data.startNetStat.Errout
 
 	return &netFrame{
 		bytesRecv:   br,

@@ -14,6 +14,18 @@ import (
 var proc *process.Process
 
 type metricPlugin struct {
+	data *metricData
+
+	disableGCMetrics        bool
+	disableHeapMetrics      bool
+	disableGoroutineMetrics bool
+	disableCPUMetrics       bool
+	disableDiskMetrics      bool
+	disableNetMetrics       bool
+	disableMemoryMetrics    bool
+}
+
+type metricData struct {
 	metricTimestamp   int64
 	startGCCount      uint32
 	endGCCount        uint32
@@ -27,38 +39,30 @@ type metricPlugin struct {
 	startDiskStat     *process.IOCountersStat
 	endNetStat        *net.IOCountersStat
 	startNetStat      *net.IOCountersStat
-
-	disableGCMetrics        bool
-	disableHeapMetrics      bool
-	disableGoroutineMetrics bool
-	disableCPUMetrics       bool
-	disableDiskMetrics      bool
-	disableNetMetrics       bool
-	disableMemoryMetrics    bool
 }
 
 func (mp *metricPlugin) BeforeExecution(ctx context.Context, request json.RawMessage, wg *sync.WaitGroup) {
-	mp = new(metricPlugin)
-	mp.metricTimestamp = plugin.GetTimestamp()
+	mp.data = new(metricData)
+	mp.data.metricTimestamp = plugin.GetTimestamp()
 
 	if !mp.disableGCMetrics {
 		m := &runtime.MemStats{}
 		runtime.ReadMemStats(m)
 
-		mp.startGCCount = m.NumGC
-		mp.startPauseTotalNs = m.PauseTotalNs
+		mp.data.startGCCount = m.NumGC
+		mp.data.startPauseTotalNs = m.PauseTotalNs
 	}
 
 	if !mp.disableCPUMetrics {
-		mp.startCPUTimeStat = sampleCPUtimesStat()
+		mp.data.startCPUTimeStat = sampleCPUtimesStat()
 	}
 
 	if !mp.disableDiskMetrics {
-		mp.startDiskStat = sampleDiskStat()
+		mp.data.startDiskStat = sampleDiskStat()
 	}
 
 	if !mp.disableNetMetrics {
-		mp.startNetStat = sampleNetStat()
+		mp.data.startNetStat = sampleNetStat()
 	}
 
 	wg.Done()
@@ -71,8 +75,8 @@ func (mp *metricPlugin) AfterExecution(ctx context.Context, request json.RawMess
 	var stats []plugin.MonitoringDataWrapper
 
 	if !mp.disableGCMetrics {
-		mp.endGCCount = mStats.NumGC
-		mp.endPauseTotalNs = mStats.PauseTotalNs
+		mp.data.endGCCount = mStats.NumGC
+		mp.data.endPauseTotalNs = mStats.PauseTotalNs
 
 		gc := prepareGCMetricsData(mp, mStats)
 		stats = append(stats, plugin.WrapMonitoringData(gc, metricType))
@@ -89,23 +93,23 @@ func (mp *metricPlugin) AfterExecution(ctx context.Context, request json.RawMess
 	}
 
 	if !mp.disableCPUMetrics {
-		mp.endCPUTimeStat = sampleCPUtimesStat()
+		mp.data.endCPUTimeStat = sampleCPUtimesStat()
 
-		mp.appCPULoad = getProcessCPULoad(mp)
-		mp.systemCPULoad = getSystemCPULoad(mp)
+		mp.data.appCPULoad = getProcessCPULoad(mp)
+		mp.data.systemCPULoad = getSystemCPULoad(mp)
 
 		c := prepareCPUMetricsData(mp)
 		stats = append(stats, plugin.WrapMonitoringData(c, metricType))
 	}
 
 	if !mp.disableDiskMetrics {
-		mp.endDiskStat = sampleDiskStat()
+		mp.data.endDiskStat = sampleDiskStat()
 		d := prepareDiskMetricsData(mp)
 		stats = append(stats, plugin.WrapMonitoringData(d, metricType))
 	}
 
 	if !mp.disableNetMetrics {
-		mp.endNetStat = sampleNetStat()
+		mp.data.endNetStat = sampleNetStat()
 		n := prepareNetMetricsData(mp)
 		stats = append(stats, plugin.WrapMonitoringData(n, metricType))
 	}
@@ -114,7 +118,7 @@ func (mp *metricPlugin) AfterExecution(ctx context.Context, request json.RawMess
 		mm := prepareMemoryMetricsData(mp)
 		stats = append(stats, plugin.WrapMonitoringData(mm, metricType))
 	}
-	mp = nil
+	mp.data = nil
 	return stats
 }
 
