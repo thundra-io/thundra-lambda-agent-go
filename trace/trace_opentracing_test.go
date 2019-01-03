@@ -1,137 +1,135 @@
 package trace
 
-// import (
-// 	"context"
-// 	"encoding/json"
-// 	"fmt"
-// 	"testing"
-// 	"time"
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"testing"
+	"time"
 
-// 	"github.com/opentracing/opentracing-go"
-// 	"github.com/stretchr/testify/assert"
-// 	"github.com/stretchr/testify/mock"
-// 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
-// 	"github.com/thundra-io/thundra-lambda-agent-go/test"
-// 	"github.com/thundra-io/thundra-lambda-agent-go/thundra"
-// )
+	"github.com/opentracing/opentracing-go"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"github.com/thundra-io/thundra-lambda-agent-go/test"
+	"github.com/thundra-io/thundra-lambda-agent-go/thundra"
+)
 
-// const (
-// 	mainDuration = 100
-// 	f1Duration   = 50
-// 	f1Name       = "f1"
-// 	f2Duration   = 30
-// 	f2Name       = "f2"
-// )
+const (
+	mainDuration = 100
+	f1Duration   = 50
+	f1Name       = "f1"
+	f2Duration   = 30
+	f2Name       = "f2"
+)
 
-// // EXAMPLE HANDLERS
-// func handler1(s string) (string, error) {
-// 	data := opentracing.GlobalTracer().StartSpan("test-operation")
-// 	defer data.Finish()
-// 	data.SetTag("tagKey", "tagValue")
-// 	time.Sleep(time.Millisecond * mainDuration)
-// 	return fmt.Sprintf("Happy monitoring with %s!", s), nil
-// }
+// EXAMPLE HANDLERS
+func handler1(ctx context.Context, s string) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "test-operation")
+	defer span.Finish()
 
-// func handler2(s string) (string, error) {
-// 	data := opentracing.GlobalTracer().StartSpan("test-operation")
-// 	defer data.Finish()
-// 	data.SetTag("tagKey", "tagValue")
+	span.SetTag("tagKey", "tagValue")
+	time.Sleep(time.Millisecond * mainDuration)
+	return fmt.Sprintf("Happy monitoring with %s!", s), nil
+}
 
-// 	ctx := opentracing.ContextWithSpan(context.Background(), data)
+func handler2(ctx context.Context, s string) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "test-operation")
+	defer span.Finish()
 
-// 	f := func(ctx context.Context, operationName string, duration time.Duration) {
-// 		data, ctx := opentracing.StartSpanFromContext(ctx, operationName)
-// 		defer data.Finish()
-// 		time.Sleep(time.Millisecond * duration)
-// 	}
-// 	f(ctx, "f1", f1Duration)
-// 	f(ctx, "f2", f2Duration)
+	span.SetTag("tagKey", "tagValue")
 
-// 	time.Sleep(time.Millisecond * mainDuration)
-// 	return fmt.Sprintf("Happy monitoring with %s!", s), nil
-// }
+	f := func(ctx context.Context, operationName string, duration time.Duration) {
+		data, ctx := opentracing.StartSpanFromContext(ctx, operationName)
+		defer data.Finish()
+		time.Sleep(time.Millisecond * duration)
+	}
+	f(ctx, "f1", f1Duration)
+	f(ctx, "f2", f2Duration)
 
-// func TestSpanTransformation(t *testing.T) {
-// 	t.Skip("skipping TestSpanTransformation")
-// 	testCases := []struct {
-// 		name     string
-// 		input    string
-// 		expected expected
-// 		handler  interface{}
-// 	}{
-// 		{
-// 			name:     "Span test with root data only",
-// 			input:    `"Thundra"`,
-// 			expected: expected{"Thundra works!", nil},
-// 			handler:  handler1,
-// 		},
-// 		{
-// 			name:     "Span test with multiple children",
-// 			input:    `"Thundra"`,
-// 			expected: expected{"Thundra works!", nil},
-// 			handler:  handler2,
-// 		},
-// 	}
+	time.Sleep(time.Millisecond * mainDuration)
+	return fmt.Sprintf("Happy monitoring with %s!", s), nil
+}
 
-// 	for i, testCase := range testCases {
-// 		t.Run(fmt.Sprintf("testCase[%d] %s", i, testCase.name), func(t *testing.T) {
-// 			r := new(test.MockReporter)
-// 			r.On("Report", testApiKey).Return()
-// 			r.On("Clear").Return()
-// 			r.On("Collect", mock.Anything).Return()
+func TestSpanTransformation(t *testing.T) {
+	// t.Skip("skipping TestSpanTransformation")
+	testCases := []struct {
+		name     string
+		input    string
+		expected expected
+		handler  interface{}
+	}{
+		{
+			name:     "Span test with root data only",
+			input:    `"Thundra"`,
+			expected: expected{"Thundra works!", nil},
+			handler:  handler1,
+		},
+		{
+			name:     "Span test with multiple children",
+			input:    `"Thundra"`,
+			expected: expected{"Thundra works!", nil},
+			handler:  handler2,
+		},
+	}
 
-// 			tr := New()
-// 			th := thundra.NewBuilder().AddPlugin(tr).SetReporter(r).SetAPIKey(testApiKey).Build()
-// 			lambdaHandler := thundra.Wrap(testCase.handler, th)
-// 			h := lambdaHandler.(func(context.Context, json.RawMessage) (interface{}, error))
-// 			f := lambdaFunction(h)
-// 			f(context.TODO(), []byte(testCase.input))
+	for i, testCase := range testCases {
+		t.Run(fmt.Sprintf("testCase[%d] %s", i, testCase.name), func(t *testing.T) {
+			r := test.NewMockReporter()
+			r.On("Report", testAPIKey).Return()
+			r.On("Clear").Return()
+			r.On("Collect", mock.Anything).Return()
 
-// 			//Monitor Data
-// 			msg, ok := r.MessageQueue[1].(plugin.Message)
-// 			if !ok {
-// 				fmt.Println("Collector message can't be casted to pluginMessage")
-// 			}
+			tr := New()
+			th := thundra.NewBuilder().AddPlugin(tr).SetReporter(r).SetAPIKey(testAPIKey).Build()
+			lambdaHandler := thundra.Wrap(testCase.handler, th)
+			h := lambdaHandler.(func(context.Context, json.RawMessage) (interface{}, error))
+			f := lambdaFunction(h)
+			f(context.TODO(), []byte(testCase.input))
 
-// 			//Trace Data
-// 			td, ok := msg.Data.(traceData)
-// 			if !ok {
-// 				fmt.Println("Can not convert to trace data")
-// 			}
+			//Monitor Data
+			msg := r.MessageQueue[1]
 
-// 			//Trace Audit Info
-// 			ai := td.AuditInfo
-// 			aiChildren, ok := ai[auditInfoChildren].([]map[string]interface{})
-// 			if !ok {
-// 				fmt.Println("Can not convert auditInfoChildren to []map[string]interface{}")
-// 			}
-// 			root := aiChildren[0]
-// 			assert.Equal(t, "test-operation", root[auditInfoContextName])
+			// Trace Data
+			_, ok := msg.Data.(traceDataModel)
+			if !ok {
+				fmt.Println("Can not convert to trace data")
+			}
 
-// 			durationMain := root[auditInfoCloseTimestamp].(int64) - root[auditInfoOpenTimestamp].(int64)
-// 			assert.True(t, durationMain >= mainDuration)
-// 			props, ok := root[auditInfoProps].(opentracing.Tags)
-// 			if !ok {
-// 				fmt.Println("auditInfoChildren to opentracing.Tags")
-// 			}
-// 			assert.Equal(t, "tagValue", props["tagKey"])
+			msg = r.MessageQueue[3]
+			// Root Span Data
+			rsd, ok := msg.Data.(spanDataModel)
+			if !ok {
+				fmt.Println("Can not convert to span data")
+			}
+			assert.Equal(t, "test-operation", rsd.OperationName)
 
-// 			if i == 1 {
-// 				secondLevelChildren, _ := root[auditInfoChildren].([]map[string]interface{})
-// 				if !ok {
-// 					fmt.Println("Can not convert to secondLevelChildren")
-// 				}
-// 				assert.Equal(t, f1Name, secondLevelChildren[0][auditInfoContextName])
-// 				assert.Equal(t, f2Name, secondLevelChildren[1][auditInfoContextName])
+			durationMain := rsd.Duration
+			assert.True(t, durationMain >= mainDuration)
 
-// 				// Calculate each functions' duration by endtime - starttime
-// 				duration1 := secondLevelChildren[0][auditInfoCloseTimestamp].(int64) - secondLevelChildren[0][auditInfoOpenTimestamp].(int64)
-// 				duration2 := secondLevelChildren[1][auditInfoCloseTimestamp].(int64) - secondLevelChildren[1][auditInfoOpenTimestamp].(int64)
-// 				assert.True(t, duration1 >= f1Duration)
-// 				assert.True(t, duration2 >= f2Duration)
-// 				assert.True(t, durationMain >= mainDuration+f1Duration+f2Duration)
-// 			}
-// 		})
-// 	}
+			tags := rsd.Tags
+			assert.Equal(t, "tagValue", tags["tagKey"])
 
-// }
+			if i == 1 {
+				f1Msg := r.MessageQueue[4]
+				f2Msg := r.MessageQueue[5]
+				// Child span data
+				f1Span, ok := f1Msg.Data.(spanDataModel)
+				if !ok {
+					fmt.Println("Can not convert f1 span data")
+				}
+
+				f2Span, ok := f2Msg.Data.(spanDataModel)
+				if !ok {
+					fmt.Println("Can not convert f2 span data")
+				}
+				
+				assert.Equal(t, "f1", f1Span.OperationName)
+				assert.Equal(t, "f2", f2Span.OperationName)
+				assert.True(t, f1Span.Duration >= f1Duration)
+				assert.True(t, f2Span.Duration >= f2Duration)
+			}
+
+		})
+	}
+
+}
