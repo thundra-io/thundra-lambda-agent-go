@@ -10,7 +10,11 @@ import (
 
 var invocationCount uint32
 
-type invocation struct {
+type invocationPlugin struct {
+	data *invocationData
+}
+
+type invocationData struct {
 	startTimestamp  int64
 	finishTimestamp int64
 	duration        int64
@@ -22,60 +26,61 @@ type invocation struct {
 	timeout         bool
 }
 
-// New initializes and returns a new invocation object.
-func New() *invocation {
-	i := new(invocation)
-	return i
+// New initializes and returns a new invocationPlugin object.
+func New() *invocationPlugin {
+	ip := new(invocationPlugin)
+	ip.data = new(invocationData)
+	return ip
 }
 
-func (i *invocation) BeforeExecution(ctx context.Context, request json.RawMessage, wg *sync.WaitGroup) {
-	i.startTimestamp = plugin.GetTimestamp()
+func (ip *invocationPlugin) BeforeExecution(ctx context.Context, request json.RawMessage, wg *sync.WaitGroup) {
+	ip.data = new(invocationData)
+	ip.data.startTimestamp = plugin.GetTimestamp()
 	wg.Done()
 }
 
-func (i *invocation) AfterExecution(ctx context.Context, request json.RawMessage, response interface{}, err interface{}) []plugin.MonitoringDataWrapper {
-	i.finishTimestamp = plugin.GetTimestamp()
-	i.duration = i.finishTimestamp - i.startTimestamp
+func (ip *invocationPlugin) AfterExecution(ctx context.Context, request json.RawMessage, response interface{}, err interface{}) []plugin.MonitoringDataWrapper {
+	ip.data.finishTimestamp = plugin.GetTimestamp()
+	ip.data.duration = ip.data.finishTimestamp - ip.data.startTimestamp
 
 	if err != nil {
-		i.erroneous = true
-		i.errorMessage = plugin.GetErrorMessage(err)
-		i.errorType = plugin.GetErrorType(err)
-		i.errorCode = defaultErrorCode
+		ip.data.erroneous = true
+		ip.data.errorMessage = plugin.GetErrorMessage(err)
+		ip.data.errorType = plugin.GetErrorType(err)
+		ip.data.errorCode = defaultErrorCode
 	}
 
-	i.coldStart = isColdStarted()
-	i.timeout = plugin.IsTimeout(err)
+	ip.data.coldStart = isColdStarted()
+	ip.data.timeout = plugin.IsTimeout(err)
 
-	data := i.prepareData(ctx)
-	i = nil
-
+	data := ip.prepareData(ctx)
+	ip.data = nil
 	var invocationArr []plugin.MonitoringDataWrapper
 	invocationArr = append(invocationArr, plugin.WrapMonitoringData(data, "Invocation"))
 	return invocationArr
 }
 
-func (i *invocation) OnPanic(ctx context.Context, request json.RawMessage, err interface{}, stackTrace []byte) []plugin.MonitoringDataWrapper {
-	i.finishTimestamp = plugin.GetTimestamp()
-	i.duration = i.finishTimestamp - i.startTimestamp
-	i.erroneous = true
-	i.errorMessage = plugin.GetErrorMessage(err)
-	i.errorType = plugin.GetErrorType(err)
-	i.errorCode = defaultErrorCode
-	i.coldStart = isColdStarted()
+func (ip *invocationPlugin) OnPanic(ctx context.Context, request json.RawMessage, err interface{}, stackTrace []byte) []plugin.MonitoringDataWrapper {
+	ip.data.finishTimestamp = plugin.GetTimestamp()
+	ip.data.duration = ip.data.finishTimestamp - ip.data.startTimestamp
+	ip.data.erroneous = true
+	ip.data.errorMessage = plugin.GetErrorMessage(err)
+	ip.data.errorType = plugin.GetErrorType(err)
+	ip.data.errorCode = defaultErrorCode
+	ip.data.coldStart = isColdStarted()
 
 	// since it is panicked it could not be timed out
-	i.timeout = false
+	ip.data.timeout = false
 
-	data := i.prepareData(ctx)
-	i = nil
+	data := ip.prepareData(ctx)
+	ip.data = nil
 
 	var invocationArr []plugin.MonitoringDataWrapper
 	invocationArr = append(invocationArr, plugin.WrapMonitoringData(data, "Invocation"))
 	return invocationArr
 }
 
-// isColdStarted returns if the lambda instance is cold started. Cold Start only happens on the first invocation.
+// isColdStarted returns if the lambda instance is cold started. Cold Start only happens on the first invocationPlugin.
 func isColdStarted() (coldStart bool) {
 	if invocationCount++; invocationCount == 1 {
 		coldStart = true

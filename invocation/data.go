@@ -6,8 +6,8 @@ import (
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 )
 
-// invocation is the simplest form of data collected from lambda functions. It is collected for any case.
-type invocationData struct {
+// invocationPlugin is the simplest form of data collected from lambda functions. It is collected for any case.
+type invocationDataModel struct {
 	//Base fields
 	ID                        string                 `json:"id"`
 	Type                      string                 `json:"type"`
@@ -32,20 +32,20 @@ type invocationData struct {
 	StartTimestamp   int64                  `json:"startTimestamp"`  // Invocation start time in UNIX Epoch milliseconds
 	FinishTimestamp  int64                  `json:"finishTimestamp"` // Invocation end time in UNIX Epoch milliseconds
 	Duration         int64                  `json:"duration"`        // Invocation time in milliseconds
-	Erroneous        bool                   `json:"erroneous"`       // Shows if the invocation failed with an error
+	Erroneous        bool                   `json:"erroneous"`       // Shows if the invocationPlugin failed with an error
 	ErrorType        string                 `json:"errorType"`       // Type of the thrown error
 	ErrorMessage     string                 `json:"errorMessage"`    // Message of the thrown error
 	ErrorCode        string                 `json:"errorCode"`       // Numeric code of the error, such as 404 for HttpError
-	ColdStart        bool                   `json:"coldStart"`       // Shows if the invocation is cold started
-	Timeout          bool                   `json:"timeout"`         // Shows if the invocation is timed out
+	ColdStart        bool                   `json:"coldStart"`       // Shows if the invocationPlugin is cold started
+	Timeout          bool                   `json:"timeout"`         // Shows if the invocationPlugin is timed out
 	Tags             map[string]interface{} `json:"tags"`
 }
 
-func (i *invocation) prepareData(ctx context.Context) invocationData {
-	tags := i.prepareTags(ctx)
-	return invocationData{
+func (ip *invocationPlugin) prepareData(ctx context.Context) invocationDataModel {
+	tags := ip.prepareTags(ctx)
+	return invocationDataModel{
 		ID:                        plugin.GenerateNewID(),
-		Type:                      "Invocation",
+		Type:                      invocationType,
 		AgentVersion:              plugin.AgentVersion,
 		DataModelVersion:          plugin.DataModelVersion,
 		ApplicationID:             plugin.ApplicationID,
@@ -62,26 +62,26 @@ func (i *invocation) prepareData(ctx context.Context) invocationData {
 		TransactionID: plugin.TransactionID,
 		// SpanId:"" Optional,
 
-		FunctionPlatform: "AWS Lambda",
+		FunctionPlatform: functionPlatform,
 		FunctionName:     plugin.FunctionName,
 		FunctionRegion:   plugin.FunctionRegion,
-		StartTimestamp:   i.startTimestamp,
-		FinishTimestamp:  i.finishTimestamp,
-		Duration:         i.duration,
-		Erroneous:        i.erroneous,
-		ErrorType:        i.errorType,
-		ErrorMessage:     i.errorMessage,
-		ErrorCode:        i.errorCode,
-		ColdStart:        i.coldStart,
-		Timeout:          i.timeout,
+		StartTimestamp:   ip.data.startTimestamp,
+		FinishTimestamp:  ip.data.finishTimestamp,
+		Duration:         ip.data.duration,
+		Erroneous:        ip.data.erroneous,
+		ErrorType:        ip.data.errorType,
+		ErrorMessage:     ip.data.errorMessage,
+		ErrorCode:        ip.data.errorCode,
+		ColdStart:        ip.data.coldStart,
+		Timeout:          ip.data.timeout,
 		Tags:             tags,
 	}
 }
 
-func (i *invocation) prepareTags(ctx context.Context) map[string]interface{} {
+func (ip *invocationPlugin) prepareTags(ctx context.Context) map[string]interface{} {
 	tags := map[string]interface{}{}
 	tags[plugin.AwsLambdaARN] = plugin.GetInvokedFunctionArn(ctx)
-	tags[plugin.AwsLambdaInvocationColdStart] = i.coldStart
+	tags[plugin.AwsLambdaInvocationColdStart] = ip.data.coldStart
 	tags[plugin.AwsLambdaInvocationRequestId] = plugin.GetAwsRequestID(ctx)
 	tags[plugin.AwsLambdaLogGroupName] = plugin.LogGroupName
 	tags[plugin.AwsLambdaLogStreamName] = plugin.LogStreamName

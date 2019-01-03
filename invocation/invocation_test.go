@@ -18,28 +18,28 @@ const (
 )
 
 func TestInvocationData_BeforeExecution(t *testing.T) {
-	i := New()
+	ip := New()
 	prevTime := plugin.GetTimestamp()
 
 	wg := sync.WaitGroup{}
 	wg.Add(1)
-	i.BeforeExecution(context.TODO(), nil, &wg)
+	ip.BeforeExecution(context.TODO(), nil, &wg)
 
-	assert.True(t, prevTime <= i.startTimestamp)
+	assert.True(t, prevTime <= ip.data.startTimestamp)
 }
 
 func TestInvocationData_AfterExecution(t *testing.T) {
-	i := New()
+	ip := New()
 	invocationCount = 0
 	prevTime := plugin.GetTimestamp()
-	i.startTimestamp = prevTime
+	ip.data.startTimestamp = prevTime
 
 	wg := sync.WaitGroup{}
 	wg.Add(1)
-	data := i.AfterExecution(context.TODO(), nil, nil, nil)
-	d,ok := data[0].Data.(invocationData)
+	data := ip.AfterExecution(context.TODO(), nil, nil, nil)
+	d,ok := data[0].Data.(invocationDataModel)
 	if !ok{
-		fmt.Println("Can not convert to invocationData")
+		fmt.Println("Can not convert to invocationDataModel")
 	}
 
 	now := plugin.GetTimestamp()
@@ -54,15 +54,15 @@ func TestInvocationData_AfterExecution(t *testing.T) {
 func TestInvocationData_AfterExecutionWithError(t *testing.T) {
 	const testErrorMessage = "test Error"
 	const testErrorType = "errorString"
-	i := New()
+	ip := New()
 	err := errors.New(testErrorMessage)
 
 	wg := sync.WaitGroup{}
 	wg.Add(1)
-	data := i.AfterExecution(context.TODO(), nil, nil, err)
-	d,ok := data[0].Data.(invocationData)
+	data := ip.AfterExecution(context.TODO(), nil, nil, err)
+	d,ok := data[0].Data.(invocationDataModel)
 	if !ok{
-		fmt.Println("Can not convert to invocationData")
+		fmt.Println("Can not convert to invocationDataModel")
 	}
 
 	assert.True(t, d.Erroneous)
@@ -71,18 +71,18 @@ func TestInvocationData_AfterExecutionWithError(t *testing.T) {
 }
 
 func TestInvocationData_OnPanic(t *testing.T) {
-	i := New()
+	ip := New()
 	invocationCount = 0
 	prevTime := plugin.GetTimestamp()
-	i.startTimestamp = prevTime
+	ip.data.startTimestamp = prevTime
 	err := errors.New(testErrorMessage)
 
 	wg := sync.WaitGroup{}
 	wg.Add(1)
-	data := i.OnPanic(context.TODO(), nil, err, nil)
-	d,ok := data[0].Data.(invocationData)
+	data := ip.OnPanic(context.TODO(), nil, err, nil)
+	d,ok := data[0].Data.(invocationDataModel)
 	if !ok{
-		fmt.Println("Can not convert to invocationData")
+		fmt.Println("Can not convert to invocationDataModel")
 	}
 
 	now := plugin.GetTimestamp()
