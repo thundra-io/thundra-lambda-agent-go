@@ -22,12 +22,13 @@ func TestPrepareGoroutineMetricsData(t *testing.T) {
 	done := make(chan bool)
 	generateGoroutines(done, numGoroutines)
 	base := mp.prepareMetricsData()
-	gcStatsData := prepareGoRoutineMetricsData(mp, base)
+	grMetric := prepareGoRoutineMetricsData(mp, base)
 
-	assert.Equal(t, goroutineMetric, gcStatsData.MetricName)
-	assert.Equal(t, mp.data.metricTimestamp, gcStatsData.MetricTimestamp)
+	assert.True(t, len(grMetric.ID) != 0)
+	assert.Equal(t, goroutineMetric, grMetric.MetricName)
+	assert.Equal(t, mp.data.metricTimestamp, grMetric.MetricTimestamp)
 
-	assert.Equal(t, uint64(numGoroutines+defaultGoroutines), gcStatsData.Metrics[numGoroutine])
+	assert.Equal(t, uint64(numGoroutines+defaultGoroutines), grMetric.Metrics[numGoroutine])
 	killGeneratedGoroutines(done, numGoroutines)
 }
 

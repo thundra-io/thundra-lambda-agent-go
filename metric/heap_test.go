@@ -14,6 +14,7 @@ func TestPrepareHeapMetricsData(t *testing.T) {
 	base := mp.prepareMetricsData()
 	heapMetricsData := prepareHeapMetricsData(mp, memStats, base)
 
+	assert.True(t, len(heapMetricsData.ID) != 0)
 	assert.Equal(t, heapMetric, heapMetricsData.MetricName)
 
 	assert.Equal(t, memStats.HeapAlloc, heapMetricsData.Metrics[heapAlloc])

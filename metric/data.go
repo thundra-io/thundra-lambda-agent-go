@@ -31,7 +31,6 @@ type metricDataModel struct {
 
 func (mp *metricPlugin) prepareMetricsData() metricDataModel {
 	return metricDataModel{
-		ID:                        plugin.GenerateNewID(),
 		Type:                      metricType,
 		AgentVersion:              plugin.AgentVersion,
 		DataModelVersion:          plugin.DataModelVersion,
@@ -45,10 +44,9 @@ func (mp *metricPlugin) prepareMetricsData() metricDataModel {
 		ApplicationRuntimeVersion: plugin.ApplicationRuntimeVersion,
 		ApplicationTags:           map[string]interface{}{},
 
-		TraceID:       plugin.TraceID,
-		TransactionID: plugin.TransactionID,
-		// SpanID:          plugin.SpanID, // Optional
-		MetricName:      heapMetric,
+		TraceID:         plugin.TraceID,
+		TransactionID:   plugin.TransactionID,
+		SpanID:          "", // Optional
 		MetricTimestamp: mp.data.metricTimestamp,
 
 		Metrics: map[string]interface{}{},

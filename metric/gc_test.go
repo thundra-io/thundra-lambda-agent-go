@@ -20,6 +20,7 @@ func TestPrepareGCMetricsData(t *testing.T) {
 	base := mp.prepareMetricsData()
 	gcStatsData := prepareGCMetricsData(mp, memStats, base)
 
+	assert.True(t, len(gcStatsData.ID) != 0)
 	assert.Equal(t, gcMetric, gcStatsData.MetricName)
 	assert.Equal(t, memStats.PauseTotalNs, gcStatsData.Metrics[pauseTotalNs])
 	assert.Equal(t, memStats.PauseNs[(memStats.NumGC+255)%256], gcStatsData.Metrics[pauseNs])
