@@ -37,7 +37,7 @@ func (tr *trace) prepareTraceDataModel(ctx context.Context, request json.RawMess
 	tags := tr.prepareTraceTags(ctx, request, response)
 	return traceDataModel{
 		ID:                        plugin.TraceID,
-		Type:                      "Trace",
+		Type:                      traceType,
 		AgentVersion:              plugin.AgentVersion,
 		DataModelVersion:          plugin.DataModelVersion,
 		ApplicationID:             plugin.ApplicationID,
@@ -139,7 +139,7 @@ type spanLog struct {
 func (tr *trace) prepareSpanDataModel(ctx context.Context, span *ttracer.RawSpan) spanDataModel {
 	return spanDataModel{
 		ID:                        span.Context.SpanID,
-		Type:                      "Span",
+		Type:                      spanType,
 		AgentVersion:              plugin.AgentVersion,
 		DataModelVersion:          plugin.DataModelVersion,
 		ApplicationID:             plugin.ApplicationID,
@@ -156,8 +156,8 @@ func (tr *trace) prepareSpanDataModel(ctx context.Context, span *ttracer.RawSpan
 		TransactionID: plugin.TransactionID,
 		ParentSpanID:  span.ParentSpanID,
 
-		DomainName:    plugin.ApplicationDomainName,
-		ClassName:     plugin.ApplicationClassName,
+		DomainName:    span.DomainName,
+		ClassName:     span.ClassName,
 		ServiceName:   plugin.FunctionName, //TODO implement it with Opentracing
 		OperationName: span.OperationName,
 

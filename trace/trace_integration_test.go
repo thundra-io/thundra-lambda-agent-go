@@ -121,7 +121,7 @@ func TestTrace(t *testing.T) {
 				fmt.Println(err)
 				return
 			}
-			assert.Equal(t, "Trace", msg.Type)
+			assert.Equal(t, traceType, msg.Type)
 			assert.Equal(t, testAPIKey, msg.ApiKey)
 			assert.Equal(t, plugin.DataModelVersion, msg.DataModelVersion)
 
@@ -131,7 +131,7 @@ func TestTrace(t *testing.T) {
 				fmt.Println("Can not convert to trace data")
 			}
 			assert.NotNil(t, td.ID)
-			assert.Equal(t, "Trace", td.Type)
+			assert.Equal(t, traceType, td.Type)
 			assert.Equal(t, plugin.AgentVersion, td.AgentVersion)
 			assert.Equal(t, plugin.DataModelVersion, td.DataModelVersion)
 			assert.Equal(t, test.AppId, td.ApplicationID)
@@ -238,7 +238,7 @@ func TestPanic(t *testing.T) {
 						fmt.Println(err)
 						return
 					}
-					assert.Equal(t, "Trace", msg.Type)
+					assert.Equal(t, traceType, msg.Type)
 					assert.Equal(t, testAPIKey, msg.ApiKey)
 					assert.Equal(t, plugin.DataModelVersion, msg.DataModelVersion)
 
@@ -248,7 +248,7 @@ func TestPanic(t *testing.T) {
 						fmt.Println("Can not convert to trace data")
 					}
 					assert.NotNil(t, td.ID)
-					assert.Equal(t, "Trace", td.Type)
+					assert.Equal(t, traceType, td.Type)
 					assert.Equal(t, plugin.AgentVersion, td.AgentVersion)
 					assert.Equal(t, plugin.DataModelVersion, td.DataModelVersion)
 					assert.Equal(t, test.AppId, td.ApplicationID)
@@ -337,6 +337,10 @@ func TestTimeout(t *testing.T) {
 		//Monitor Data
 		msg := r.MessageQueue[1]
 
+		fmt.Println("Current message types in the stack:")
+		for _, m := range(r.MessageQueue) {
+			fmt.Println(m.Type)
+		}
 		//Trace Data
 		td, ok := msg.Data.(traceDataModel)
 		if !ok {
@@ -350,7 +354,7 @@ func TestTimeout(t *testing.T) {
 
 func getWrappedTraceData(monitoringDataWrappers []plugin.MonitoringDataWrapper) (*plugin.MonitoringDataWrapper, error) {
 	for _, m := range monitoringDataWrappers {
-		if m.Type == "Trace" {
+		if m.Type == traceType {
 			return &m, nil
 		}
 	}

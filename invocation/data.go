@@ -60,9 +60,9 @@ func (ip *invocationPlugin) prepareData(ctx context.Context) invocationDataModel
 
 		TraceID:       plugin.TraceID,
 		TransactionID: plugin.TransactionID,
-		// SpanId:"" Optional,
+		SpanID: "", // Optional Field
 
-		FunctionPlatform: functionPlatform,
+		FunctionPlatform: plugin.AwsFunctionPlatform,
 		FunctionName:     plugin.FunctionName,
 		FunctionRegion:   plugin.FunctionRegion,
 		StartTimestamp:   ip.data.startTimestamp,
@@ -80,6 +80,13 @@ func (ip *invocationPlugin) prepareData(ctx context.Context) invocationDataModel
 
 func (ip *invocationPlugin) prepareTags(ctx context.Context) map[string]interface{} {
 	tags := map[string]interface{}{}
+
+	// Put error related tags
+	if ip.data.erroneous {
+		tags["error"] = true
+		tags["error.kind"] = ip.data.errorType
+		tags["error.message"] = ip.data.errorMessage
+	}
 	tags[plugin.AwsLambdaARN] = plugin.GetInvokedFunctionArn(ctx)
 	tags[plugin.AwsLambdaInvocationColdStart] = ip.data.coldStart
 	tags[plugin.AwsLambdaInvocationRequestId] = plugin.GetAwsRequestID(ctx)

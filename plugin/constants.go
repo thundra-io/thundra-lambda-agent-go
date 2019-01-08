@@ -8,11 +8,14 @@ const ThundraApplicationProfile = "thundra_applicationProfile"
 const AgentVersion = "2.0.0"
 const DataModelVersion = "2.0"
 const ApplicationDomainName = "API"
-const ApplicationClassName = ""
+const ApplicationClassName = "AWS-Lambda"
+const DefaultClassName = "Method"
+const DefaultDomainName = ""
 const ApplicationRuntime = "go"
 const ApplicationRuntimeVersion = "1.x"
 
 //AWS
+const AwsFunctionPlatform = "AWS Lambda"
 const AwsDefaultRegion = "AWS_DEFAULT_REGION"
 const thundraLambdaDebugEnable = "thundra_lambda_debug_enable"
 

@@ -24,10 +24,10 @@ type RawSpan struct {
 	EndTimestamp   int64
 
 	// operationGroup is lambda execution group
-	operationGroup operationGroup
+	DomainName string
 
 	// operationType is lambda execution type
-	operationType operationType
+	ClassName string
 
 	// Essentially an extension mechanism. Can be used for many purposes,
 	// not to be enumerated here.
