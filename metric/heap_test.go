@@ -11,8 +11,8 @@ func TestPrepareHeapMetricsData(t *testing.T) {
 	mp := NewBuilder().Build()
 
 	memStats := &runtime.MemStats{}
-
-	heapMetricsData := prepareHeapMetricsData(mp, memStats)
+	base := mp.prepareMetricsData()
+	heapMetricsData := prepareHeapMetricsData(mp, memStats, base)
 
 	assert.Equal(t, heapMetric, heapMetricsData.MetricName)
 

@@ -3,37 +3,18 @@ package metric
 import (
 	"math"
 
-	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
+	uuid "github.com/satori/go.uuid"
 )
 
-func prepareCPUMetricsData(mp *metricPlugin) metricDataModel {
-	return metricDataModel{
-		ID:                        plugin.GenerateNewID(),
-		Type:                      metricType,
-		AgentVersion:              plugin.AgentVersion,
-		DataModelVersion:          plugin.DataModelVersion,
-		ApplicationID:             plugin.ApplicationID,
-		ApplicationDomainName:     plugin.ApplicationDomainName,
-		ApplicationClassName:      plugin.ApplicationClassName,
-		ApplicationName:           plugin.FunctionName,
-		ApplicationVersion:        plugin.ApplicationVersion,
-		ApplicationStage:          plugin.ApplicationStage,
-		ApplicationRuntime:        plugin.ApplicationRuntime,
-		ApplicationRuntimeVersion: plugin.ApplicationRuntimeVersion,
-		ApplicationTags:           map[string]interface{}{},
-
-		TraceID:         plugin.TraceID,
-		TransactionID:  plugin.TransactionID,
-		// SpanId:          "", // Optional
-		MetricName:      cpuMetric,
-		MetricTimestamp: mp.data.metricTimestamp,
-
-		Metrics: map[string]interface{}{
-			appCPULoad: mp.data.appCPULoad,
-			sysCPULoad: mp.data.systemCPULoad,
-		},
-		Tags: map[string]interface{}{},
+func prepareCPUMetricsData(mp *metricPlugin, base metricDataModel) metricDataModel {
+	base.ID = uuid.NewV4().String()
+	base.MetricName = cpuMetric
+	base.Metrics = map[string]interface{}{
+		appCPULoad: mp.data.appCPULoad,
+		sysCPULoad: mp.data.systemCPULoad,
 	}
+
+	return base
 }
 
 func getSystemCPULoad(mp *metricPlugin) float64 {
@@ -49,7 +30,7 @@ func getSystemCPULoad(mp *metricPlugin) float64 {
 	} else if s >= 1 {
 		s = 1
 	} else if math.IsNaN(s) {
-		s = 0;
+		s = 0
 	}
 	return s
 }
@@ -67,7 +48,7 @@ func getProcessCPULoad(mp *metricPlugin) float64 {
 	} else if p >= 1 {
 		p = 1
 	} else if math.IsNaN(p) {
-		p = 0;
+		p = 0
 	}
 	return p
 }

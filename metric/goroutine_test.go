@@ -21,8 +21,8 @@ func TestPrepareGoroutineMetricsData(t *testing.T) {
 
 	done := make(chan bool)
 	generateGoroutines(done, numGoroutines)
-
-	gcStatsData := prepareGoRoutineMetricsData(mp)
+	base := mp.prepareMetricsData()
+	gcStatsData := prepareGoRoutineMetricsData(mp, base)
 
 	assert.Equal(t, goroutineMetric, gcStatsData.MetricName)
 	assert.Equal(t, mp.data.metricTimestamp, gcStatsData.MetricTimestamp)

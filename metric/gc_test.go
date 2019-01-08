@@ -17,8 +17,8 @@ func TestPrepareGCMetricsData(t *testing.T) {
 	makeMultipleGCCalls(garbageCollectionCount)
 	memStats := &runtime.MemStats{}
 	runtime.ReadMemStats(memStats)
-
-	gcStatsData := prepareGCMetricsData(mp, memStats)
+	base := mp.prepareMetricsData()
+	gcStatsData := prepareGCMetricsData(mp, memStats, base)
 
 	assert.Equal(t, gcMetric, gcStatsData.MetricName)
 	assert.Equal(t, memStats.PauseTotalNs, gcStatsData.Metrics[pauseTotalNs])

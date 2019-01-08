@@ -3,51 +3,32 @@ package metric
 import (
 	"fmt"
 
-	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
+	uuid "github.com/satori/go.uuid"
 	"github.com/shirou/gopsutil/net"
 )
 
 const all = 0
 
-func prepareNetMetricsData(mp *metricPlugin) metricDataModel {
+func prepareNetMetricsData(mp *metricPlugin, base metricDataModel) metricDataModel {
+	base.ID = uuid.NewV4().String()
+	base.MetricName = netMetric
 	nf := takeNetFrame(mp)
-	return metricDataModel{
-		ID:                        plugin.GenerateNewID(),
-		Type:                      metricType,
-		AgentVersion:              plugin.AgentVersion,
-		DataModelVersion:          plugin.DataModelVersion,
-		ApplicationID:             plugin.ApplicationID,
-		ApplicationDomainName:     plugin.ApplicationDomainName,
-		ApplicationClassName:      plugin.ApplicationClassName,
-		ApplicationName:           plugin.FunctionName,
-		ApplicationVersion:        plugin.ApplicationVersion,
-		ApplicationStage:          plugin.ApplicationStage,
-		ApplicationRuntime:        plugin.ApplicationRuntime,
-		ApplicationRuntimeVersion: plugin.ApplicationRuntimeVersion,
-		ApplicationTags:           map[string]interface{}{},
-
-		TraceID:         plugin.TraceID,
-		TransactionID:  plugin.TransactionID,
-		// SpanID:          plugin.SpanID, // Optional
-		MetricName:      netMetric,
-		MetricTimestamp: mp.data.metricTimestamp,
-
-		Metrics: map[string]interface{}{
-			// BytesRecv is how many bytes received from network
-			bytesRecv: nf.bytesRecv,
-			// BytesSent is how many bytes sent to network
-			bytesSent: nf.bytesSent,
-			// PacketsRecv is how many packets received from network
-			packetsRecv: nf.packetsRecv,
-			// PacketsSent is how many packets sent to network
-			packetsSent: nf.packetsSent,
-			// ErrIn is the number of errors while sending packet
-			errIn: nf.errin,
-			// ErrOut is the number of errors while receiving packet
-			errOut: nf.errout,
-		},
-		Tags: map[string]interface{}{},
+	base.Metrics = map[string]interface{}{
+		// BytesRecv is how many bytes received from network
+		bytesRecv: nf.bytesRecv,
+		// BytesSent is how many bytes sent to network
+		bytesSent: nf.bytesSent,
+		// PacketsRecv is how many packets received from network
+		packetsRecv: nf.packetsRecv,
+		// PacketsSent is how many packets sent to network
+		packetsSent: nf.packetsSent,
+		// ErrIn is the number of errors while sending packet
+		errIn: nf.errin,
+		// ErrOut is the number of errors while receiving packet
+		errOut: nf.errout,
 	}
+
+	return base
 }
 
 type netFrame struct {
@@ -83,7 +64,7 @@ func takeNetFrame(mp *metricPlugin) *netFrame {
 	}
 }
 
-func sampleNetStat() (*net.IOCountersStat) {
+func sampleNetStat() *net.IOCountersStat {
 	netIOStat, err := net.IOCounters(false)
 	if err != nil {
 		fmt.Println("Error sampling net stat", err)

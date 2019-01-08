@@ -74,21 +74,23 @@ func (mp *metricPlugin) AfterExecution(ctx context.Context, request json.RawMess
 
 	var stats []plugin.MonitoringDataWrapper
 
+	base := mp.prepareMetricsData()
+
 	if !mp.disableGCMetrics {
 		mp.data.endGCCount = mStats.NumGC
 		mp.data.endPauseTotalNs = mStats.PauseTotalNs
 
-		gc := prepareGCMetricsData(mp, mStats)
+		gc := prepareGCMetricsData(mp, mStats, base)
 		stats = append(stats, plugin.WrapMonitoringData(gc, metricType))
 	}
 
 	if !mp.disableHeapMetrics {
-		h := prepareHeapMetricsData(mp, mStats)
+		h := prepareHeapMetricsData(mp, mStats, base)
 		stats = append(stats, plugin.WrapMonitoringData(h, metricType))
 	}
 
 	if !mp.disableGoroutineMetrics {
-		g := prepareGoRoutineMetricsData(mp)
+		g := prepareGoRoutineMetricsData(mp, base)
 		stats = append(stats, plugin.WrapMonitoringData(g, metricType))
 	}
 
@@ -98,24 +100,24 @@ func (mp *metricPlugin) AfterExecution(ctx context.Context, request json.RawMess
 		mp.data.appCPULoad = getProcessCPULoad(mp)
 		mp.data.systemCPULoad = getSystemCPULoad(mp)
 
-		c := prepareCPUMetricsData(mp)
+		c := prepareCPUMetricsData(mp, base)
 		stats = append(stats, plugin.WrapMonitoringData(c, metricType))
 	}
 
 	if !mp.disableDiskMetrics {
 		mp.data.endDiskStat = sampleDiskStat()
-		d := prepareDiskMetricsData(mp)
+		d := prepareDiskMetricsData(mp, base)
 		stats = append(stats, plugin.WrapMonitoringData(d, metricType))
 	}
 
 	if !mp.disableNetMetrics {
 		mp.data.endNetStat = sampleNetStat()
-		n := prepareNetMetricsData(mp)
+		n := prepareNetMetricsData(mp, base)
 		stats = append(stats, plugin.WrapMonitoringData(n, metricType))
 	}
 
 	if !mp.disableMemoryMetrics {
-		mm := prepareMemoryMetricsData(mp)
+		mm := prepareMemoryMetricsData(mp, base)
 		stats = append(stats, plugin.WrapMonitoringData(mm, metricType))
 	}
 	mp.data = nil
