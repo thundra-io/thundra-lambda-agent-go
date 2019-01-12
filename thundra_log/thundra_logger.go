@@ -104,7 +104,7 @@ func (l thundraLogger) Printf(format string, v ...interface{}) {
 	logManager.recentLogLevel = infoLogLevel
 	logManager.recentLogLevelCode = infoLogLevelCode
 	additionalCalldepth = 1
-	l.Logger.Printf(format, v)
+	l.Logger.Printf(format, v...)
 }
 
 // Print sets log level to info and calls standard library's Print function.
@@ -115,7 +115,7 @@ func (l thundraLogger) Print(v ...interface{}) {
 	logManager.recentLogLevel = infoLogLevel
 	logManager.recentLogLevelCode = infoLogLevelCode
 	additionalCalldepth = 1
-	l.Logger.Print(v)
+	l.Logger.Print(v...)
 }
 
 // Println sets log level to info and calls standard library's Println function.
@@ -126,7 +126,7 @@ func (l thundraLogger) Println(v ...interface{}) {
 	logManager.recentLogLevel = infoLogLevel
 	logManager.recentLogLevelCode = infoLogLevelCode
 	additionalCalldepth = 1
-	l.Logger.Println(v)
+	l.Logger.Println(v...)
 }
 
 // Panicf sets log level to error and calls standard library's Panicf function.
@@ -137,7 +137,7 @@ func (l thundraLogger) Panicf(format string, v ...interface{}) {
 	logManager.recentLogLevel = errorLogLevel
 	logManager.recentLogLevelCode = errorLogLevelCode
 	additionalCalldepth = 1
-	l.Logger.Panicf(format, v)
+	l.Logger.Panicf(format, v...)
 }
 
 // Panic sets log level to error and calls standard library's Panic function.
@@ -148,7 +148,7 @@ func (l thundraLogger) Panic(v ...interface{}) {
 	logManager.recentLogLevel = errorLogLevel
 	logManager.recentLogLevelCode = errorLogLevelCode
 	additionalCalldepth = 1
-	l.Logger.Panic(v)
+	l.Logger.Panic(v...)
 }
 
 // Panicln sets log level to error and calls standard library's Panicln function.
@@ -159,7 +159,7 @@ func (l thundraLogger) Panicln(v ...interface{}) {
 	logManager.recentLogLevel = errorLogLevel
 	logManager.recentLogLevelCode = errorLogLevelCode
 	additionalCalldepth = 1
-	l.Logger.Panicln(v)
+	l.Logger.Panicln(v...)
 }
 
 // Write stores the log into logs array which will later be used to send monitoredLogs to Thundra collector.
