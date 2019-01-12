@@ -113,21 +113,19 @@ type spanDataModel struct {
 	ApplicationRuntime        string                 `json:"applicationRuntime"`
 	ApplicationRuntimeVersion string                 `json:"applicationRuntimeVersion"`
 	ApplicationTags           map[string]interface{} `json:"applicationTags"`
-
-	TraceID       string `json:"traceId"`
-	TransactionID string `json:"transactionId"`
-	ParentSpanID  string `json:"parentSpanId"`
-
-	SpanOrder       int64                  `json:"spanOrder"`
-	DomainName      string                 `json:"domainName"`
-	ClassName       string                 `json:"className"`
-	ServiceName     string                 `json:"serviceName"`
-	OperationName   string                 `json:"operationName"`
-	StartTimestamp  int64                  `json:"startTimestamp"`
-	FinishTimestamp int64                  `json:"finishTimestamp"`
-	Duration        int64                  `json:"duration"`
-	Tags            map[string]interface{} `json:"tags"`
-	Logs            map[string]spanLog     `json:"logs"`
+	TraceID                   string                 `json:"traceId"`
+	TransactionID             string                 `json:"transactionId"`
+	ParentSpanID              string                 `json:"parentSpanId"`
+	SpanOrder                 int64                  `json:"spanOrder"`
+	DomainName                string                 `json:"domainName"`
+	ClassName                 string                 `json:"className"`
+	ServiceName               string                 `json:"serviceName"`
+	OperationName             string                 `json:"operationName"`
+	StartTimestamp            int64                  `json:"startTimestamp"`
+	FinishTimestamp           int64                  `json:"finishTimestamp"`
+	Duration                  int64                  `json:"duration"`
+	Tags                      map[string]interface{} `json:"tags"`
+	Logs                      map[string]spanLog     `json:"logs"`
 }
 
 type spanLog struct {
@@ -164,7 +162,7 @@ func (tr *trace) prepareSpanDataModel(ctx context.Context, span *ttracer.RawSpan
 		StartTimestamp:  span.StartTimestamp,
 		FinishTimestamp: span.EndTimestamp,
 		Duration:        span.Duration(),
-		Tags:            span.Tags,
+		Tags:            span.GetTags(),
 		Logs:            map[string]spanLog{}, // TO DO get logs
 	}
 }

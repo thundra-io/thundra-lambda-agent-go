@@ -1,7 +1,10 @@
 package ttracer
 
 import (
+	"strings"
 	"time"
+
+	"github.com/thundra-io/thundra-lambda-agent-go/ext"
 
 	ot "github.com/opentracing/opentracing-go"
 )
@@ -44,4 +47,17 @@ func (s *RawSpan) Duration() int64 {
 	}
 
 	return time.Now().Unix() - s.StartTimestamp
+}
+
+// GetTags filters the thundra tags and returns the remainings
+func (s *RawSpan) GetTags() ot.Tags {
+	ft := ot.Tags{}
+
+	for k, v := range s.Tags {
+		if !strings.HasPrefix(k, ext.ThundraTagPrefix) {
+			ft[k] = v
+		}
+	}
+
+	return ft
 }

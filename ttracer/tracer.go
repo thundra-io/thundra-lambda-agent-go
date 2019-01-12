@@ -1,6 +1,7 @@
 package ttracer
 
 import (
+	"github.com/thundra-io/thundra-lambda-agent-go/ext"
 	ot "github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	uuid "github.com/satori/go.uuid"
@@ -66,11 +67,23 @@ func (t *tracerImpl) StartSpanWithOptions(operationName string, opts ot.StartSpa
 
 	newSpan.tracer = t
 	newSpan.raw.OperationName = operationName
-	newSpan.raw.ClassName = plugin.DefaultClassName
-	newSpan.raw.DomainName = plugin.DefaultDomainName
 	newSpan.raw.StartTimestamp = GetTimestamp()
 	newSpan.raw.Tags = tags
 	newSpan.raw.Logs = []ot.LogRecord{}
+	
+	className, ok := tags[ext.ClassNameKey]
+	if !ok {
+		newSpan.raw.ClassName = plugin.DefaultClassName
+	} else {
+		newSpan.raw.ClassName = className.(string)
+	}
+
+	domainName, ok := tags[ext.DomainNameKey]
+	if !ok {
+		newSpan.raw.DomainName = plugin.DefaultDomainName
+	} else {
+		newSpan.raw.DomainName = domainName.(string)
+	}
 
 	// Add to recorder
 	t.options.Recorder.RecordSpan(&newSpan.raw)
