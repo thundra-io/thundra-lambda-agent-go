@@ -3,45 +3,26 @@ package metric
 import (
 	"fmt"
 
-	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
+	uuid "github.com/satori/go.uuid"
 	"github.com/shirou/gopsutil/process"
 )
 
-func prepareDiskMetricsData(mp *metricPlugin) metricDataModel {
+func prepareDiskMetricsData(mp *metricPlugin, base metricDataModel) metricDataModel {
+	base.ID = uuid.NewV4().String()
+	base.MetricName = diskMetric
 	df := takeDiskFrame(mp)
-	return metricDataModel{
-		ID:                        plugin.GenerateNewID(),
-		Type:                      metricType,
-		AgentVersion:              plugin.AgentVersion,
-		DataModelVersion:          plugin.DataModelVersion,
-		ApplicationID:             plugin.ApplicationID,
-		ApplicationDomainName:     plugin.ApplicationDomainName,
-		ApplicationClassName:      plugin.ApplicationClassName,
-		ApplicationName:           plugin.FunctionName,
-		ApplicationVersion:        plugin.ApplicationVersion,
-		ApplicationStage:          plugin.ApplicationStage,
-		ApplicationRuntime:        plugin.ApplicationRuntime,
-		ApplicationRuntimeVersion: plugin.ApplicationRuntimeVersion,
-		ApplicationTags:           map[string]interface{}{},
-
-		TraceID:         plugin.TraceID,
-		TransactionID:  plugin.TransactionID,
-		// SpanID:          plugin.SpanID, // Optional
-		MetricName:      diskMetric,
-		MetricTimestamp: mp.data.metricTimestamp,
-
-		Metrics: map[string]interface{}{
-			// ReadBytes is the number of bytes read from disk
-			readBytes: df.readBytes,
-			// WriteBytes is the number of bytes write to disk
-			writeBytes: df.writeBytes,
-			// ReadCount is the number read operations from disk
-			readCount: df.readCount,
-			// WriteCount is the number write operations to disk
-			writeCount: df.writeCount,
-		},
-		Tags: map[string]interface{}{},
+	base.Metrics = map[string]interface{}{
+		// ReadBytes is the number of bytes read from disk
+		readBytes: df.readBytes,
+		// WriteBytes is the number of bytes write to disk
+		writeBytes: df.writeBytes,
+		// ReadCount is the number read operations from disk
+		readCount: df.readCount,
+		// WriteCount is the number write operations to disk
+		writeCount: df.writeCount,
 	}
+
+	return base
 }
 
 type diskFrame struct {

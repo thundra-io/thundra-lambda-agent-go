@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"sync"
 
-	"github.com/opentracing/opentracing-go"
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 	"github.com/thundra-io/thundra-lambda-agent-go/ttracer"
 )
@@ -61,6 +61,13 @@ func (tr *trace) AfterExecution(ctx context.Context, request json.RawMessage, re
 	tr.data.finishTime = plugin.GetTimestamp()
 	tr.data.duration = tr.data.finishTime - tr.data.startTime
 
+	// Add root span data
+	rawRootSpan, ok := ttracer.GetRaw(tr.rootSpan)
+	if ok {
+		rawRootSpan.ClassName = "AWS-Lambda"
+		rawRootSpan.DomainName = "API"
+	}
+
 	// Adding tags related to the root span
 	tr.rootSpan.SetTag(plugin.AwsLambdaName, plugin.FunctionName)
 	tr.rootSpan.SetTag(plugin.AwsLambdaARN, plugin.GetInvokedFunctionArn(ctx))
@@ -98,12 +105,12 @@ func (tr *trace) AfterExecution(ctx context.Context, request json.RawMessage, re
 	// Prepare report data
 	var traceArr []plugin.MonitoringDataWrapper
 	td := tr.prepareTraceDataModel(ctx, request, response)
-	traceArr = append(traceArr, plugin.WrapMonitoringData(td, "Trace"))
+	traceArr = append(traceArr, plugin.WrapMonitoringData(td, traceType))
 
 	spanList := tr.recorder.GetSpans()
 	for _, s := range spanList {
 		sd := tr.prepareSpanDataModel(ctx, s)
-		traceArr = append(traceArr, plugin.WrapMonitoringData(sd, "Span"))
+		traceArr = append(traceArr, plugin.WrapMonitoringData(sd, spanType))
 	}
 
 	// Clear trace plugin data for next invocation
@@ -135,12 +142,12 @@ func (tr *trace) OnPanic(ctx context.Context, request json.RawMessage, err inter
 
 	var traceArr []plugin.MonitoringDataWrapper
 	td := tr.prepareTraceDataModel(ctx, request, nil)
-	traceArr = append(traceArr, plugin.WrapMonitoringData(td, "Trace"))
+	traceArr = append(traceArr, plugin.WrapMonitoringData(td, traceType))
 
 	spanList := tr.recorder.GetSpans()
 	for _, s := range spanList {
 		sd := tr.prepareSpanDataModel(ctx, s)
-		traceArr = append(traceArr, plugin.WrapMonitoringData(sd, "Span"))
+		traceArr = append(traceArr, plugin.WrapMonitoringData(sd, spanType))
 	}
 
 	tr.data = nil

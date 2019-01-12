@@ -201,3 +201,10 @@ func (s *spanImpl) OperationName() string {
 func (s *spanImpl) StartTimestamp() int64 {
 	return s.raw.StartTimestamp
 }
+
+// GetRaw casts opentracing span interface to spanImpl struct
+func GetRaw(ots ot.Span) (*RawSpan, bool) {
+	s, ok := ots.(*spanImpl)
+
+	return &s.raw, ok
+}

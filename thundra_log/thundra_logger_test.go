@@ -3,10 +3,11 @@ package thundra_log
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/stretchr/testify/assert"
-	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 	"runtime"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 )
 
 const (
@@ -56,7 +57,7 @@ func TestThundraLogger_Error(t *testing.T) {
 }
 
 func TestThundraLogger_Printf(t *testing.T) {
-	Logger.Printf("%s", testMessage)
+	Logger.Printf("[%s]", testMessage)
 	assert.Equal(t, infoLogLevel, logManager.recentLogLevel)
 	assert.Equal(t, infoLogLevelCode, logManager.recentLogLevelCode)
 	assert.Equal(t, formattedTestMessage, logManager.logs[0].logMessage)
@@ -67,7 +68,7 @@ func TestThundraLogger_Print(t *testing.T) {
 	Logger.Print(testMessage)
 	assert.Equal(t, infoLogLevel, logManager.recentLogLevel)
 	assert.Equal(t, infoLogLevelCode, logManager.recentLogLevelCode)
-	assert.Equal(t, formattedTestMessage, logManager.logs[0].logMessage)
+	assert.Equal(t, expectedTestMessage, logManager.logs[0].logMessage)
 	logManager.clearLogs()
 }
 
@@ -75,13 +76,13 @@ func TestThundraLogger_Println(t *testing.T) {
 	Logger.Println(testMessage)
 	assert.Equal(t, infoLogLevel, logManager.recentLogLevel)
 	assert.Equal(t, infoLogLevelCode, logManager.recentLogLevelCode)
-	assert.Equal(t, formattedTestMessage, logManager.logs[0].logMessage)
+	assert.Equal(t, expectedTestMessage, logManager.logs[0].logMessage)
 	logManager.clearLogs()
 }
 
 func TestThundraLogger_Panicf(t *testing.T) {
 	panicTestFunc := func() {
-		Logger.Panicf("%s", testMessage)
+		Logger.Panicf("[%s]", testMessage)
 	}
 	assert.Panics(t, panicTestFunc)
 	assert.Equal(t, errorLogLevel, logManager.recentLogLevel)
@@ -97,7 +98,7 @@ func TestThundraLogger_Panic(t *testing.T) {
 	assert.Panics(t, panicTestFunc)
 	assert.Equal(t, errorLogLevel, logManager.recentLogLevel)
 	assert.Equal(t, errorLogLevelCode, logManager.recentLogLevelCode)
-	assert.Equal(t, formattedTestMessage, logManager.logs[0].logMessage)
+	assert.Equal(t, expectedTestMessage, logManager.logs[0].logMessage)
 	logManager.clearLogs()
 }
 
@@ -108,7 +109,7 @@ func TestThundraLogger_Panicln(t *testing.T) {
 	assert.Panics(t, panicTestFunc)
 	assert.Equal(t, errorLogLevel, logManager.recentLogLevel)
 	assert.Equal(t, errorLogLevelCode, logManager.recentLogLevelCode)
-	assert.Equal(t, formattedTestMessage, logManager.logs[0].logMessage)
+	assert.Equal(t, expectedTestMessage, logManager.logs[0].logMessage)
 	logManager.clearLogs()
 }
 

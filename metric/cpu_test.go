@@ -8,9 +8,10 @@ import (
 
 func TestPrepareCPUMetricsData(t *testing.T) {
 	mp := NewBuilder().Build()
+	base := mp.prepareMetricsData()
+	cpuStatsData := prepareCPUMetricsData(mp, base)
 
-	cpuStatsData := prepareCPUMetricsData(mp)
-
+	assert.True(t, len(cpuStatsData.ID) != 0)
 	assert.Equal(t, cpuMetric, cpuStatsData.MetricName)
 	assert.Equal(t, mp.data.metricTimestamp, cpuStatsData.MetricTimestamp)
 }

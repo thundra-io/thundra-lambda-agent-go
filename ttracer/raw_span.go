@@ -1,7 +1,10 @@
 package ttracer
 
 import (
+	"strings"
 	"time"
+
+	"github.com/thundra-io/thundra-lambda-agent-go/ext"
 
 	ot "github.com/opentracing/opentracing-go"
 )
@@ -24,10 +27,10 @@ type RawSpan struct {
 	EndTimestamp   int64
 
 	// operationGroup is lambda execution group
-	operationGroup operationGroup
+	DomainName string
 
 	// operationType is lambda execution type
-	operationType operationType
+	ClassName string
 
 	// Essentially an extension mechanism. Can be used for many purposes,
 	// not to be enumerated here.
@@ -44,4 +47,17 @@ func (s *RawSpan) Duration() int64 {
 	}
 
 	return time.Now().Unix() - s.StartTimestamp
+}
+
+// GetTags filters the thundra tags and returns the remainings
+func (s *RawSpan) GetTags() ot.Tags {
+	ft := ot.Tags{}
+
+	for k, v := range s.Tags {
+		if !strings.HasPrefix(k, ext.ThundraTagPrefix) {
+			ft[k] = v
+		}
+	}
+
+	return ft
 }
