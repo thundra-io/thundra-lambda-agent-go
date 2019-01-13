@@ -17,3 +17,10 @@ func DomainName(domainName string) ot.StartSpanOption {
 		Value: domainName,
 	}
 }
+
+func OperationType(operationType string) ot.StartSpanOption {
+	return ot.Tag {
+		Key: OperationTypeKey,
+		Value: operationType,
+	}
+}

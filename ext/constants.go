@@ -6,4 +6,5 @@ const (
 	// ClassNameKey defines class name 
 	ClassNameKey = ThundraTagPrefix + ".className"
 	DomainNameKey = ThundraTagPrefix + ".domainName"
+	OperationTypeKey = "operation.type"
 )
