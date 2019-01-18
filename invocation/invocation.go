@@ -33,6 +33,10 @@ func New() *invocationPlugin {
 	return ip
 }
 
+func (ip *invocationPlugin) IsEnabled() bool {
+	return true
+}
+
 func (ip *invocationPlugin) BeforeExecution(ctx context.Context, request json.RawMessage, wg *sync.WaitGroup) {
 	ip.data = new(invocationData)
 	ip.data.startTimestamp = plugin.GetTimestamp()

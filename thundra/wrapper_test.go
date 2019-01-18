@@ -116,8 +116,8 @@ func TestWrapper(t *testing.T) {
 	for i, testCase := range testCases {
 		t.Run(fmt.Sprintf("testCase[%d] %s", i, testCase.name), func(t *testing.T) {
 			r := test.NewMockReporter()
-			th := NewBuilder().SetReporter(r).SetAPIKey(testApiKey).Build()
-			lambdaHandler := Wrap(testCase.handler, th)
+			GetAgent().SetReporter(r)
+			lambdaHandler := Wrap(testCase.handler)
 			h := lambdaHandler.(func(context.Context, json.RawMessage) (interface{}, error))
 			f := lambdaFunction(h)
 			response, err := f.invoke(context.TODO(), []byte(testCase.input))
@@ -194,8 +194,8 @@ func TestInvalidWrappers(t *testing.T) {
 	for i, testCase := range testCases {
 		t.Run(fmt.Sprintf("testCase[%d] %s", i, testCase.name), func(t *testing.T) {
 			r := test.NewMockReporter()
-			th := NewBuilder().SetReporter(r).SetAPIKey(testApiKey).Build()
-			lambdaHandler := Wrap(testCase.handler, th)
+			GetAgent().SetReporter(r)
+			lambdaHandler := Wrap(testCase.handler)
 			h, ok := lambdaHandler.(lambdaFunction)
 			if !ok {
 				h = lambdaHandler.(func(context.Context, json.RawMessage) (interface{}, error))

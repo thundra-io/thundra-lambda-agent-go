@@ -3,6 +3,7 @@ package metric
 import (
 	"context"
 	"encoding/json"
+	"os"
 	"runtime"
 	"sync"
 
@@ -39,6 +40,14 @@ type metricData struct {
 	startDiskStat     *process.IOCountersStat
 	endNetStat        *net.IOCountersStat
 	startNetStat      *net.IOCountersStat
+}
+
+func (mp *metricPlugin) IsEnabled() bool {
+	if os.Getenv(plugin.ThundraDisableMetric) == "true" {
+		return false
+	}
+
+	return true
 }
 
 func (mp *metricPlugin) BeforeExecution(ctx context.Context, request json.RawMessage, wg *sync.WaitGroup) {

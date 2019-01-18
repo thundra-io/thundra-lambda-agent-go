@@ -40,6 +40,11 @@ func (t *cpuTimesStat) procUsed() uint64 {
 func sampleCPUtimesStat() *cpuTimesStat {
 	pps := getProcPidStat()
 	ps := getProcStat()
+
+	if pps == nil || ps == nil {
+		return nil
+	}
+	
 	return &cpuTimesStat{
 		procPidTimesStat: pps,
 		procTimesStat:    ps,

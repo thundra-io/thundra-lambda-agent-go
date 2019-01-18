@@ -24,6 +24,9 @@ type MockPlugin struct {
 	mock.Mock
 }
 
+func (t *MockPlugin) IsEnabled() bool {
+	return true
+}
 func (t *MockPlugin) BeforeExecution(ctx context.Context, request json.RawMessage, wg *sync.WaitGroup) {
 	defer wg.Done()
 	t.Called(ctx, request, wg)
@@ -39,7 +42,7 @@ func (t *MockPlugin) OnPanic(ctx context.Context, request json.RawMessage, err i
 
 func TestExecutePreHooks(t *testing.T) {
 	mT := new(MockPlugin)
-	th := NewBuilder().AddPlugin(mT).SetAPIKey(testApiKey).Build()
+	th := New().AddPlugin(mT)
 
 	ctx := context.TODO()
 	req := createRawMessage()
@@ -72,14 +75,14 @@ func TestExecutePostHooks(t *testing.T) {
 	req := createRawMessage()
 	resp := response{"Thundra"}
 	var err1 error
-	var err2 error = errors.New("Error")
+	var err2 = errors.New("Error")
 
 	r := test.NewMockReporter()
 
 	mT := new(MockPlugin)
 	mT.On("AfterExecution", ctx, req, resp, err1, mock.Anything).Return()
 
-	th := NewBuilder().AddPlugin(mT).SetReporter(r).SetAPIKey(testApiKey).Build()
+	th := New().AddPlugin(mT).SetReporter(r)
 	th.executePostHooks(ctx, req, resp, err1)
 	th.executePostHooks(ctx, req, resp, err2)
 
@@ -98,7 +101,7 @@ func TestOnPanic(t *testing.T) {
 
 	r := test.NewMockReporter()
 	mP := new(MockPlugin)
-	th := NewBuilder().AddPlugin(mP).SetReporter(r).SetAPIKey(testApiKey).Build()
+	th := New().AddPlugin(mP).SetReporter(r)
 	mP.On("OnPanic", ctx, req, err, stackTrace, mock.Anything).Return()
 
 	th.onPanic(ctx, req, err, stackTrace)

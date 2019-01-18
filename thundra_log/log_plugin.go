@@ -3,7 +3,9 @@ package thundra_log
 import (
 	"context"
 	"encoding/json"
+	"os"
 	"sync"
+
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 )
 
@@ -11,6 +13,14 @@ type logPlugin struct{}
 
 func New() *logPlugin {
 	return &logPlugin{}
+}
+
+func (p *logPlugin) IsEnabled() bool {
+	if os.Getenv(plugin.ThundraDisableLog) == "true" {
+		return false
+	}
+
+	return true
 }
 
 func (p *logPlugin) BeforeExecution(ctx context.Context, request json.RawMessage, wg *sync.WaitGroup) {
