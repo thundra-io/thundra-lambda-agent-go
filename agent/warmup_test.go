@@ -1,4 +1,4 @@
-package thundra
+package agent
 
 import (
 	"reflect"

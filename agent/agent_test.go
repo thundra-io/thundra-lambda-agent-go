@@ -1,4 +1,4 @@
-package thundra
+package agent
 
 import (
 	"context"
@@ -10,13 +10,12 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/mock"
-	"github.com/thundra-io/thundra-lambda-agent-go/test"
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
+	"github.com/thundra-io/thundra-lambda-agent-go/test"
 )
 
 const (
 	generatedError = "Generated Error"
-	testApiKey     = "TestApiKey"
 	testDataType   = "TestDataType"
 )
 
@@ -48,7 +47,7 @@ func TestExecutePreHooks(t *testing.T) {
 	req := createRawMessage()
 
 	mT.On("BeforeExecution", ctx, req, mock.Anything, mock.Anything).Return()
-	th.executePreHooks(ctx, req)
+	th.ExecutePreHooks(ctx, req)
 	mT.AssertExpectations(t)
 }
 
@@ -83,8 +82,8 @@ func TestExecutePostHooks(t *testing.T) {
 	mT.On("AfterExecution", ctx, req, resp, err1, mock.Anything).Return()
 
 	th := New().AddPlugin(mT).SetReporter(r)
-	th.executePostHooks(ctx, req, resp, err1)
-	th.executePostHooks(ctx, req, resp, err2)
+	th.ExecutePostHooks(ctx, req, resp, err1)
+	th.ExecutePostHooks(ctx, req, resp, err2)
 
 	mT.AssertExpectations(t)
 
@@ -104,26 +103,7 @@ func TestOnPanic(t *testing.T) {
 	th := New().AddPlugin(mP).SetReporter(r)
 	mP.On("OnPanic", ctx, req, err, stackTrace, mock.Anything).Return()
 
-	th.onPanic(ctx, req, err, stackTrace)
+	th.OnPanic(ctx, req, err, stackTrace)
 	mP.AssertExpectations(t)
 	r.AssertExpectations(t)
-}
-
-func (handler lambdaFunction) invoke(ctx context.Context, payload []byte) ([]byte, error) {
-	response, err := handler(ctx, payload)
-	if err != nil {
-		return nil, err
-	}
-
-	responseBytes, err := json.Marshal(response)
-	if err != nil {
-		return nil, err
-	}
-
-	return responseBytes, nil
-}
-
-type expected struct {
-	val string
-	err error
 }
