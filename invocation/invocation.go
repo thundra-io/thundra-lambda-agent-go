@@ -64,26 +64,6 @@ func (ip *invocationPlugin) AfterExecution(ctx context.Context, request json.Raw
 	return invocationArr
 }
 
-func (ip *invocationPlugin) OnPanic(ctx context.Context, request json.RawMessage, err interface{}, stackTrace []byte) []plugin.MonitoringDataWrapper {
-	ip.data.finishTimestamp = plugin.GetTimestamp()
-	ip.data.duration = ip.data.finishTimestamp - ip.data.startTimestamp
-	ip.data.erroneous = true
-	ip.data.errorMessage = plugin.GetErrorMessage(err)
-	ip.data.errorType = plugin.GetErrorType(err)
-	ip.data.errorCode = defaultErrorCode
-	ip.data.coldStart = isColdStarted()
-
-	// since it is panicked it could not be timed out
-	ip.data.timeout = false
-
-	data := ip.prepareData(ctx)
-	ip.data = nil
-
-	var invocationArr []plugin.MonitoringDataWrapper
-	invocationArr = append(invocationArr, plugin.WrapMonitoringData(data, "Invocation"))
-	return invocationArr
-}
-
 // isColdStarted returns if the lambda instance is cold started. Cold Start only happens on the first invocationPlugin.
 func isColdStarted() (coldStart bool) {
 	if invocationCount++; invocationCount == 1 {

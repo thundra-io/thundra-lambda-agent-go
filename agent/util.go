@@ -1,11 +1,12 @@
 package agent
 
 import (
-	"context"
-	"encoding/json"
 	"fmt"
 	"os"
 	"strconv"
+	"time"
+
+	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 )
 
 func isThundraDisabled() bool {
@@ -20,21 +21,54 @@ func isThundraDisabled() bool {
 	return disabled
 }
 
-func (handler lambdaFunction) invoke(ctx context.Context, payload []byte) ([]byte, error) {
-	response, err := handler(ctx, payload)
-	if err != nil {
-		return nil, err
-	}
+type timeoutError struct{}
 
-	responseBytes, err := json.Marshal(response)
-	if err != nil {
-		return nil, err
-	}
-
-	return responseBytes, nil
+func (e timeoutError) Error() string {
+	return fmt.Sprintf("Lambda is timed out")
 }
 
-type expected struct {
-	val string
-	err error
+// determineTimeoutMargin fetches thundraLambdaTimeoutMargin if it exist, if not returns default timegap value
+func determineTimeoutMargin() time.Duration {
+	t := os.Getenv(thundraLambdaTimeoutMargin)
+	// environment variable is not set
+	if t == "" {
+		return time.Duration(defaultTimeoutMargin)
+	}
+
+	i, err := strconv.ParseInt(t, 10, 32)
+
+	// environment variable is not set in the correct format
+	if err != nil {
+		fmt.Println(err, " "+thundraLambdaTimeoutMargin+" should be set with an integer.")
+		return time.Duration(defaultTimeoutMargin)
+	}
+
+	return time.Duration(i) * time.Millisecond
+}
+
+// determineWarmup determines which warmup value to use. if warmup is set from environment variable, returns that value.
+// Otherwise returns true if it's enabled by builder's enableWarmup method. Default value is false.
+func determineWarmup() bool {
+	w := os.Getenv(thundraLambdaWarmupWarmupAware)
+	b, err := strconv.ParseBool(w)
+	if err != nil {
+		if w != "" {
+			fmt.Println(err, " thundra_lambda_warmup_warmupAware should be set with a boolean.")
+		}
+		return false
+	}
+	return b
+}
+
+// determineApiKey determines which apiKey to use. if apiKey is set from environment variable, returns that value.
+// Otherwise returns the value from builder's setApiKey method. Panic if it's not set by neither.
+func determineAPIKey() {
+	k := os.Getenv(thundraAPIKey)
+	if k == "" {
+		// TODO remove panics just log
+		fmt.Println("Error no APIKey in env variables")
+	}
+
+	// Set it globally
+	plugin.ApiKey = k
 }

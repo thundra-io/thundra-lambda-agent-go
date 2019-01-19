@@ -4,8 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"os"
-	"strconv"
 	"sync"
 	"time"
 
@@ -55,52 +53,7 @@ func (a *Agent) SetReporter(r reporter) *Agent {
 	return a
 }
 
-// determineApiKey determines which apiKey to use. if apiKey is set from environment variable, returns that value.
-// Otherwise returns the value from builder's setApiKey method. Panic if it's not set by neither.
-func determineAPIKey() {
-	k := os.Getenv(thundraApiKey)
-	if k == "" {
-		// TODO remove panics just log
-		fmt.Println("Error no APIKey in env variables")
-	}
-
-	// Set it globally
-	plugin.ApiKey = k
-}
-
-// determineWarmup determines which warmup value to use. if warmup is set from environment variable, returns that value.
-// Otherwise returns true if it's enabled by builder's enableWarmup method. Default value is false.
-func determineWarmup() bool {
-	w := os.Getenv(thundraLambdaWarmupWarmupAware)
-	b, err := strconv.ParseBool(w)
-	if err != nil {
-		if w != "" {
-			fmt.Println(err, " thundra_lambda_warmup_warmupAware should be set with a boolean.")
-		}
-		return false
-	}
-	return b
-}
-
-// determineTimeoutMargin fetches thundraLambdaTimeoutMargin if it exist, if not returns default timegap value
-func determineTimeoutMargin() time.Duration {
-	t := os.Getenv(thundraLambdaTimeoutMargin)
-	// environment variable is not set
-	if t == "" {
-		return time.Duration(defaultTimeoutMargin)
-	}
-
-	i, err := strconv.ParseInt(t, 10, 32)
-
-	// environment variable is not set in the correct format
-	if err != nil {
-		fmt.Println(err, " "+thundraLambdaTimeoutMargin+" should be set with an integer.")
-		return time.Duration(defaultTimeoutMargin)
-	}
-
-	return time.Duration(i) * time.Millisecond
-}
-
+// ExecutePreHooks contains necessary works that should be done before user's handler
 func (a *Agent) ExecutePreHooks(ctx context.Context, request json.RawMessage) {
 	a.Reporter.FlushFlag()
 	plugin.TraceID = plugin.GenerateNewID()
@@ -113,6 +66,7 @@ func (a *Agent) ExecutePreHooks(ctx context.Context, request json.RawMessage) {
 	wg.Wait()
 }
 
+// ExecutePostHooks contains necessary works that should be done after user's handler
 func (a *Agent) ExecutePostHooks(ctx context.Context, request json.RawMessage, response interface{}, err interface{}) {
 	// Skip if it is already reported
 	if *a.Reporter.Reported() == 1 {
@@ -130,31 +84,6 @@ func (a *Agent) ExecutePostHooks(ctx context.Context, request json.RawMessage, r
 	wg.Wait()
 	a.Reporter.Report()
 	a.Reporter.ClearData()
-}
-
-func (a *Agent) OnPanic(ctx context.Context, request json.RawMessage, err interface{}, stackTrace []byte) {
-	// Skip if it is already reported
-	if *a.Reporter.Reported() == 1 {
-		return
-	}
-	var wg sync.WaitGroup
-	wg.Add(len(a.Plugins))
-	for _, p := range a.Plugins {
-		go func(plugin plugin.Plugin) {
-			messages := plugin.OnPanic(ctx, request, err, stackTrace)
-			a.Reporter.Collect(messages)
-			wg.Done()
-		}(p)
-	}
-	wg.Wait()
-	a.Reporter.Report()
-	a.Reporter.ClearData()
-}
-
-type timeoutError struct{}
-
-func (e timeoutError) Error() string {
-	return fmt.Sprintf("Lambda is timed out")
 }
 
 // CatchTimeout is checks for a timeout event and sends report if lambda is timedout

@@ -206,3 +206,22 @@ func TestInvalidWrappers(t *testing.T) {
 		})
 	}
 }
+
+func (handler lambdaFunction) invoke(ctx context.Context, payload []byte) ([]byte, error) {
+	response, err := handler(ctx, payload)
+	if err != nil {
+		return nil, err
+	}
+
+	responseBytes, err := json.Marshal(response)
+	if err != nil {
+		return nil, err
+	}
+
+	return responseBytes, nil
+}
+
+type expected struct {
+	val string
+	err error
+}

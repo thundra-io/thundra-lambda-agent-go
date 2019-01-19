@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
-	"runtime/debug"
 
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 )
@@ -43,8 +42,7 @@ func (a *Agent) Wrap(handler interface{}) interface{} {
 	return func(ctx context.Context, payload json.RawMessage) (interface{}, error) {
 		defer func() {
 			if err := recover(); err != nil {
-				stackTrace := debug.Stack()
-				a.OnPanic(ctx, payload, err, stackTrace)
+				a.ExecutePostHooks(ctx, payload, nil, err)
 				panic(err)
 			}
 		}()

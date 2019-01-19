@@ -128,42 +128,6 @@ func (tr *tracePlugin) AfterExecution(ctx context.Context, request json.RawMessa
 	return traceArr
 }
 
-// OnPanic prepares and sends data in case of a panic
-func (tr *tracePlugin) OnPanic(ctx context.Context, request json.RawMessage, err interface{}, stackTrace []byte) []plugin.MonitoringDataWrapper {
-	tr.rootSpan.Finish()
-	tr.data.finishTime = plugin.GetTimestamp()
-	tr.data.duration = tr.data.finishTime - tr.data.startTime
-
-	errMessage := plugin.GetErrorMessage(err)
-	errType := plugin.GetErrorType(err)
-	pi := &panicInfo{
-		errMessage,
-		string(stackTrace),
-		errType,
-	}
-
-	tr.data.panicInfo = pi
-	tr.data.thrownError = errType
-	tr.data.thrownErrorMessage = plugin.GetErrorMessage(err)
-	tr.data.errors = append(tr.data.errors, errType)
-	// Since it is panicked it could not be timed out
-	tr.data.timeout = false
-
-	var traceArr []plugin.MonitoringDataWrapper
-	td := tr.prepareTraceDataModel(ctx, request, nil)
-	traceArr = append(traceArr, plugin.WrapMonitoringData(td, traceType))
-
-	spanList := tr.recorder.GetSpans()
-	for _, s := range spanList {
-		sd := tr.prepareSpanDataModel(ctx, s)
-		traceArr = append(traceArr, plugin.WrapMonitoringData(sd, spanType))
-	}
-
-	tr.data = nil
-
-	return traceArr
-}
-
 // Reset clears the recorded data for the next invocation
 func (tr *tracePlugin) Reset() {
 	tr.data = nil

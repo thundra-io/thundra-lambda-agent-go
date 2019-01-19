@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"runtime/debug"
 	"sync"
 	"testing"
 
@@ -89,21 +88,5 @@ func TestExecutePostHooks(t *testing.T) {
 
 	// Should only be called once because it is already reported
 	mT.AssertNumberOfCalls(t, "AfterExecution", 1)
-	r.AssertExpectations(t)
-}
-
-func TestOnPanic(t *testing.T) {
-	ctx := context.TODO()
-	req := createRawMessage()
-	err := errors.New("Generated Error")
-	stackTrace := debug.Stack()
-
-	r := test.NewMockReporter()
-	mP := new(MockPlugin)
-	th := New().AddPlugin(mP).SetReporter(r)
-	mP.On("OnPanic", ctx, req, err, stackTrace, mock.Anything).Return()
-
-	th.OnPanic(ctx, req, err, stackTrace)
-	mP.AssertExpectations(t)
 	r.AssertExpectations(t)
 }

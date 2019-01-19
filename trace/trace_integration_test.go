@@ -280,7 +280,6 @@ func TestPanic(t *testing.T) {
 					assert.Equal(t, true, td.Tags[plugin.AwsError])
 					assert.Equal(t, errorKind, td.Tags[plugin.AwsErrorKind])
 					assert.Equal(t, panicMessage, td.Tags[plugin.AwsErrorMessage])
-					assert.NotNil(t, td.Tags[plugin.AwsErrorStack])
 					assert.Nil(t, td.Tags[plugin.AwsLambdaInvocationResponse])
 
 					test.CleanEnvironment()

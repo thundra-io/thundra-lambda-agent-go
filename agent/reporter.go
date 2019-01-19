@@ -29,15 +29,15 @@ type reporterImpl struct {
 }
 
 var shouldSendAsync string
-var collectorUrl string
+var collectorURL string
 var mutex = &sync.Mutex{}
 
 func init() {
 	shouldSendAsync = os.Getenv(thundraLambdaPublishCloudwatchEnable)
-	if url := os.Getenv(thundraLambdaPublishRestBaseUrl); url != "" {
-		collectorUrl = url
+	if url := os.Getenv(thundraLambdaPublishRestBaseURL); url != "" {
+		collectorURL = url
 	} else {
-		collectorUrl = defaultCollectorUrl
+		collectorURL = defaultCollectorURL
 	}
 }
 
@@ -55,7 +55,7 @@ func (r *reporterImpl) Collect(messages []plugin.MonitoringDataWrapper) {
 // Report sends the data to collector
 func (r *reporterImpl) Report() {
 	if shouldSendAsync == "false" || shouldSendAsync == "" {
-		sendHttpReq(r.messageQueue)
+		sendHTTPReq(r.messageQueue)
 	}
 	atomic.CompareAndSwapUint32(r.reported, 0, 1)
 }
@@ -85,7 +85,7 @@ func sendAsync(msg interface{}) {
 	fmt.Println(string(b))
 }
 
-func sendHttpReq(messageQueue []plugin.MonitoringDataWrapper) {
+func sendHTTPReq(messageQueue []plugin.MonitoringDataWrapper) {
 	if plugin.DebugEnabled {
 		fmt.Printf("MessageQueue:\n %+v \n", messageQueue)
 	}
@@ -94,7 +94,7 @@ func sendHttpReq(messageQueue []plugin.MonitoringDataWrapper) {
 		fmt.Println("Error in marshalling ", err)
 	}
 
-	targetURL := collectorUrl + monitoringDataPath
+	targetURL := collectorURL + monitoringDataPath
 	if plugin.DebugEnabled {
 		fmt.Println("Sending HTTP request to Thundra collector: " + targetURL)
 	}

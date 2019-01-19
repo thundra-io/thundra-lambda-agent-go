@@ -37,8 +37,8 @@ func TestInvocationData_AfterExecution(t *testing.T) {
 	wg := sync.WaitGroup{}
 	wg.Add(1)
 	data := ip.AfterExecution(context.TODO(), nil, nil, nil)
-	d,ok := data[0].Data.(invocationDataModel)
-	if !ok{
+	d, ok := data[0].Data.(invocationDataModel)
+	if !ok {
 		fmt.Println("Can not convert to invocationDataModel")
 	}
 
@@ -60,8 +60,8 @@ func TestInvocationData_AfterExecutionWithError(t *testing.T) {
 	wg := sync.WaitGroup{}
 	wg.Add(1)
 	data := ip.AfterExecution(context.TODO(), nil, nil, err)
-	d,ok := data[0].Data.(invocationDataModel)
-	if !ok{
+	d, ok := data[0].Data.(invocationDataModel)
+	if !ok {
 		fmt.Println("Can not convert to invocationDataModel")
 	}
 
@@ -69,34 +69,6 @@ func TestInvocationData_AfterExecutionWithError(t *testing.T) {
 	assert.Equal(t, testErrorMessage, d.ErrorMessage)
 	assert.Equal(t, testErrorType, d.ErrorType)
 }
-
-func TestInvocationData_OnPanic(t *testing.T) {
-	ip := New()
-	invocationCount = 0
-	prevTime := plugin.GetTimestamp()
-	ip.data.startTimestamp = prevTime
-	err := errors.New(testErrorMessage)
-
-	wg := sync.WaitGroup{}
-	wg.Add(1)
-	data := ip.OnPanic(context.TODO(), nil, err, nil)
-	d,ok := data[0].Data.(invocationDataModel)
-	if !ok{
-		fmt.Println("Can not convert to invocationDataModel")
-	}
-
-	now := plugin.GetTimestamp()
-	assert.True(t, prevTime <= d.FinishTimestamp)
-	assert.True(t, d.FinishTimestamp <= now)
-	assert.True(t, d.Duration <= now-prevTime)
-	assert.True(t, d.Erroneous)
-	assert.Equal(t, testErrorMessage, d.ErrorMessage)
-	assert.Equal(t, testErrorType, d.ErrorType)
-	assert.True(t, d.ColdStart)
-	assert.False(t, d.Timeout)
-	assert.Equal(t, "Invocation", data[0].Type)
-}
-
 
 func TestPrepareDataStaticFields(t *testing.T) {
 	test.PrepareEnvironment()

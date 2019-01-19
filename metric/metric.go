@@ -132,8 +132,3 @@ func (mp *metricPlugin) AfterExecution(ctx context.Context, request json.RawMess
 	mp.data = nil
 	return stats
 }
-
-//OnPanic just collect the metrics and send them as in the AfterExecution
-func (mp *metricPlugin) OnPanic(ctx context.Context, request json.RawMessage, err interface{}, stackTrace []byte) []plugin.MonitoringDataWrapper {
-	return mp.AfterExecution(ctx, request, nil, err)
-}
