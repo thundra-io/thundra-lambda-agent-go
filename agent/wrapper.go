@@ -1,12 +1,12 @@
-package thundra
+package agent
 
 import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 	"reflect"
-	"runtime/debug"
+
+	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 )
 
 type lambdaFunction func(context.Context, json.RawMessage) (interface{}, error)
@@ -14,7 +14,7 @@ type lambdaFunction func(context.Context, json.RawMessage) (interface{}, error)
 // Wrap is used for wrapping your lambda functions and start monitoring it by following the thundra objects settings
 // It wraps your lambda function and return a new lambda function. By that, AWS will be able to run this function
 // and Thundra will be able to collect monitoring data from your function.
-func Wrap(handler interface{}, agent *thundra) interface{} {
+func (a *Agent) Wrap(handler interface{}) interface{} {
 	if isThundraDisabled() {
 		return handler
 	}
@@ -42,18 +42,17 @@ func Wrap(handler interface{}, agent *thundra) interface{} {
 	return func(ctx context.Context, payload json.RawMessage) (interface{}, error) {
 		defer func() {
 			if err := recover(); err != nil {
-				stackTrace := debug.Stack()
-				agent.onPanic(ctx, payload, err, stackTrace)
+				a.ExecutePostHooks(ctx, payload, nil, err)
 				panic(err)
 			}
 		}()
 
 		// Timeout handler
-		go agent.catchTimeout(ctx, payload)
+		go a.CatchTimeout(ctx, payload)
 
 		var args []reflect.Value
 
-		agent.executePreHooks(ctx, payload)
+		a.ExecutePreHooks(ctx, payload)
 
 		if takesContext {
 			var ctxToPass context.Context
@@ -75,7 +74,7 @@ func Wrap(handler interface{}, agent *thundra) interface{} {
 
 			elem := newEvent.Elem()
 
-			if agent.warmup && checkAndHandleWarmupRequest(elem, newEventType) {
+			if a.WarmUp && checkAndHandleWarmupRequest(elem, newEventType) {
 				return nil, nil
 			}
 
@@ -99,7 +98,7 @@ func Wrap(handler interface{}, agent *thundra) interface{} {
 			val = nil
 		}
 
-		agent.executePostHooks(ctx, payload, val, err)
+		a.ExecutePostHooks(ctx, payload, val, err)
 
 		return val, err
 	}

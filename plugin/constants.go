@@ -13,6 +13,9 @@ const DefaultClassName = "Method"
 const DefaultDomainName = ""
 const ApplicationRuntime = "go"
 const ApplicationRuntimeVersion = "1.x"
+const ThundraDisableTrace = "thundra_agent_lambda_trace_disable"
+const ThundraDisableMetric = "thundra_agent_lambda_metric_disable"
+const ThundraDisableLog = "thundra_agent_lambda_log_disable"
 
 //AWS
 const AwsFunctionPlatform = "AWS Lambda"

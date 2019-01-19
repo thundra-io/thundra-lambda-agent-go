@@ -7,11 +7,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/opentracing/opentracing-go"
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/thundra-io/thundra-lambda-agent-go/agent"
 	"github.com/thundra-io/thundra-lambda-agent-go/test"
-	"github.com/thundra-io/thundra-lambda-agent-go/thundra"
 )
 
 const (
@@ -80,14 +80,14 @@ func TestSpanTransformation(t *testing.T) {
 			r.On("Collect", mock.Anything).Return()
 
 			tr := New()
-			th := thundra.NewBuilder().AddPlugin(tr).SetReporter(r).SetAPIKey(testAPIKey).Build()
-			lambdaHandler := thundra.Wrap(testCase.handler, th)
+			a := agent.New().AddPlugin(tr).SetReporter(r)
+			lambdaHandler := a.Wrap(testCase.handler)
 			h := lambdaHandler.(func(context.Context, json.RawMessage) (interface{}, error))
 			f := lambdaFunction(h)
 			f(context.TODO(), []byte(testCase.input))
 
 			//Monitor Data
-			msg := r.MessageQueue[1]
+			msg := r.MessageQueue[0]
 
 			// Trace Data
 			_, ok := msg.Data.(traceDataModel)
@@ -95,7 +95,7 @@ func TestSpanTransformation(t *testing.T) {
 				fmt.Println("Can not convert to trace data")
 			}
 
-			msg = r.MessageQueue[3]
+			msg = r.MessageQueue[2]
 			// Root Span Data
 			rsd, ok := msg.Data.(spanDataModel)
 			if !ok {
@@ -110,8 +110,8 @@ func TestSpanTransformation(t *testing.T) {
 			assert.Equal(t, "tagValue", tags["tagKey"])
 
 			if i == 1 {
-				f1Msg := r.MessageQueue[4]
-				f2Msg := r.MessageQueue[5]
+				f1Msg := r.MessageQueue[3]
+				f2Msg := r.MessageQueue[4]
 				// Child span data
 				f1Span, ok := f1Msg.Data.(spanDataModel)
 				if !ok {
@@ -122,7 +122,7 @@ func TestSpanTransformation(t *testing.T) {
 				if !ok {
 					fmt.Println("Can not convert f2 span data")
 				}
-				
+
 				assert.Equal(t, "f1", f1Span.OperationName)
 				assert.Equal(t, "f2", f2Span.OperationName)
 				assert.True(t, f1Span.Duration >= f1Duration)

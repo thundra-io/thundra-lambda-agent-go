@@ -14,7 +14,7 @@ func TestMetric_BeforeExecution(t *testing.T) {
 	const MaxUint32 = ^uint32(0)
 	const MaxUint64 = ^uint64(0)
 
-	mp := NewBuilder().Build()
+	mp := New()
 	mp.data.startGCCount = MaxUint32
 	mp.data.startPauseTotalNs = MaxUint64
 
@@ -32,7 +32,7 @@ func TestMetric_BeforeExecution(t *testing.T) {
 
 func TestMetric_AfterExecution(t *testing.T) {
 
-	mp := NewBuilder().Build()
+	mp := New()
 
 	wg := sync.WaitGroup{}
 	wg.Add(1)

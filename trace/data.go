@@ -33,7 +33,7 @@ type traceDataModel struct {
 	Tags            map[string]interface{} `json:"tags"`
 }
 
-func (tr *trace) prepareTraceDataModel(ctx context.Context, request json.RawMessage, response interface{}) traceDataModel {
+func (tr *tracePlugin) prepareTraceDataModel(ctx context.Context, request json.RawMessage, response interface{}) traceDataModel {
 	tags := tr.prepareTraceTags(ctx, request, response)
 	return traceDataModel{
 		ID:                        plugin.TraceID,
@@ -58,7 +58,7 @@ func (tr *trace) prepareTraceDataModel(ctx context.Context, request json.RawMess
 	}
 }
 
-func (tr *trace) prepareTraceTags(ctx context.Context, request json.RawMessage, response interface{}) map[string]interface{} {
+func (tr *tracePlugin) prepareTraceTags(ctx context.Context, request json.RawMessage, response interface{}) map[string]interface{} {
 	tags := map[string]interface{}{}
 	tags[plugin.AwsLambdaInvocationRequestId] = plugin.GetAwsRequestID(ctx)
 
@@ -134,7 +134,7 @@ type spanLog struct {
 	Timestamp int64       `json:"timestamp"`
 }
 
-func (tr *trace) prepareSpanDataModel(ctx context.Context, span *ttracer.RawSpan) spanDataModel {
+func (tr *tracePlugin) prepareSpanDataModel(ctx context.Context, span *ttracer.RawSpan) spanDataModel {
 	return spanDataModel{
 		ID:                        span.Context.SpanID,
 		Type:                      spanType,

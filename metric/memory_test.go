@@ -7,7 +7,7 @@ import (
 )
 
 func TestPrepareMemoryMetricsData(t *testing.T) {
-	mp := NewBuilder().Build()
+	mp := New()
 
 	base := mp.prepareMetricsData()
 	memoryMetricsData := prepareMemoryMetricsData(mp, base)

@@ -9,9 +9,9 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/thundra-io/thundra-lambda-agent-go/agent"
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 	"github.com/thundra-io/thundra-lambda-agent-go/test"
-	"github.com/thundra-io/thundra-lambda-agent-go/thundra"
 )
 
 const (
@@ -107,8 +107,8 @@ func TestTrace(t *testing.T) {
 
 			r := test.NewMockReporter()
 			tr := New()
-			th := thundra.NewBuilder().AddPlugin(tr).SetReporter(r).SetAPIKey(testAPIKey).Build()
-			lambdaHandler := thundra.Wrap(testCase.handler, th)
+			a := agent.New().AddPlugin(tr).SetReporter(r)
+			lambdaHandler := a.Wrap(testCase.handler)
 			h := lambdaHandler.(func(context.Context, json.RawMessage) (interface{}, error))
 			f := lambdaFunction(h)
 			invocationStartTime := plugin.GetTimestamp()
@@ -122,7 +122,6 @@ func TestTrace(t *testing.T) {
 				return
 			}
 			assert.Equal(t, traceType, msg.Type)
-			assert.Equal(t, testAPIKey, msg.ApiKey)
 			assert.Equal(t, plugin.DataModelVersion, msg.DataModelVersion)
 
 			//Trace Data
@@ -224,8 +223,8 @@ func TestPanic(t *testing.T) {
 
 			r := test.NewMockReporter()
 			tr := New()
-			th := thundra.NewBuilder().AddPlugin(tr).SetReporter(r).SetAPIKey(testAPIKey).Build()
-			lambdaHandler := thundra.Wrap(testCase.handler, th)
+			a := agent.New().AddPlugin(tr).SetReporter(r)
+			lambdaHandler := a.Wrap(testCase.handler)
 			invocationStartTime := plugin.GetTimestamp()
 
 			defer func() {
@@ -239,7 +238,6 @@ func TestPanic(t *testing.T) {
 						return
 					}
 					assert.Equal(t, traceType, msg.Type)
-					assert.Equal(t, testAPIKey, msg.ApiKey)
 					assert.Equal(t, plugin.DataModelVersion, msg.DataModelVersion)
 
 					//Trace Data
@@ -282,7 +280,6 @@ func TestPanic(t *testing.T) {
 					assert.Equal(t, true, td.Tags[plugin.AwsError])
 					assert.Equal(t, errorKind, td.Tags[plugin.AwsErrorKind])
 					assert.Equal(t, panicMessage, td.Tags[plugin.AwsErrorMessage])
-					assert.NotNil(t, td.Tags[plugin.AwsErrorStack])
 					assert.Nil(t, td.Tags[plugin.AwsLambdaInvocationResponse])
 
 					test.CleanEnvironment()
@@ -297,7 +294,7 @@ func TestPanic(t *testing.T) {
 }
 
 func TestTimeout(t *testing.T) {
-	const timeoutDuration = 1;
+	const timeoutDuration = 1
 	timeOutFunction := func(s string) string {
 		// Let it run longer than timeoutDuration
 		time.Sleep(time.Second * 2 * timeoutDuration)
@@ -323,8 +320,8 @@ func TestTimeout(t *testing.T) {
 
 		r := test.NewMockReporter()
 		tr := New()
-		th := thundra.NewBuilder().AddPlugin(tr).SetReporter(r).SetAPIKey(testAPIKey).Build()
-		lambdaHandler := thundra.Wrap(testCase[0].handler, th)
+		a := agent.New().AddPlugin(tr).SetReporter(r)
+		lambdaHandler := a.Wrap(testCase[0].handler)
 		h := lambdaHandler.(func(context.Context, json.RawMessage) (interface{}, error))
 		f := lambdaFunction(h)
 
@@ -335,10 +332,14 @@ func TestTimeout(t *testing.T) {
 		f(ctx, []byte(testCase[0].input))
 		// Code doesn't wait goroutines to finish.
 		//Monitor Data
-		msg := r.MessageQueue[1]
+		msg, err := getWrappedTraceData(r.MessageQueue)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
 
 		fmt.Println("Current message types in the stack:")
-		for _, m := range(r.MessageQueue) {
+		for _, m := range r.MessageQueue {
 			fmt.Println(m.Type)
 		}
 		//Trace Data
@@ -358,7 +359,7 @@ func getWrappedTraceData(monitoringDataWrappers []plugin.MonitoringDataWrapper) 
 			return &m, nil
 		}
 	}
-	return nil, errors.New("Trace Data Wrapper is not found.")
+	return nil, errors.New("trace Data Wrapper is not found")
 }
 
 type lambdaFunction func(context.Context, json.RawMessage) (interface{}, error)

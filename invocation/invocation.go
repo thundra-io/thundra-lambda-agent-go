@@ -33,6 +33,10 @@ func New() *invocationPlugin {
 	return ip
 }
 
+func (ip *invocationPlugin) IsEnabled() bool {
+	return true
+}
+
 func (ip *invocationPlugin) BeforeExecution(ctx context.Context, request json.RawMessage, wg *sync.WaitGroup) {
 	ip.data = new(invocationData)
 	ip.data.startTimestamp = plugin.GetTimestamp()
@@ -55,26 +59,6 @@ func (ip *invocationPlugin) AfterExecution(ctx context.Context, request json.Raw
 
 	data := ip.prepareData(ctx)
 	ip.data = nil
-	var invocationArr []plugin.MonitoringDataWrapper
-	invocationArr = append(invocationArr, plugin.WrapMonitoringData(data, "Invocation"))
-	return invocationArr
-}
-
-func (ip *invocationPlugin) OnPanic(ctx context.Context, request json.RawMessage, err interface{}, stackTrace []byte) []plugin.MonitoringDataWrapper {
-	ip.data.finishTimestamp = plugin.GetTimestamp()
-	ip.data.duration = ip.data.finishTimestamp - ip.data.startTimestamp
-	ip.data.erroneous = true
-	ip.data.errorMessage = plugin.GetErrorMessage(err)
-	ip.data.errorType = plugin.GetErrorType(err)
-	ip.data.errorCode = defaultErrorCode
-	ip.data.coldStart = isColdStarted()
-
-	// since it is panicked it could not be timed out
-	ip.data.timeout = false
-
-	data := ip.prepareData(ctx)
-	ip.data = nil
-
 	var invocationArr []plugin.MonitoringDataWrapper
 	invocationArr = append(invocationArr, plugin.WrapMonitoringData(data, "Invocation"))
 	return invocationArr

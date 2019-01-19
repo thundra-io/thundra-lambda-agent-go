@@ -1,22 +1,20 @@
-package thundra
+package agent
 
 import (
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"runtime/debug"
 	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/mock"
-	"github.com/thundra-io/thundra-lambda-agent-go/test"
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
+	"github.com/thundra-io/thundra-lambda-agent-go/test"
 )
 
 const (
 	generatedError = "Generated Error"
-	testApiKey     = "TestApiKey"
 	testDataType   = "TestDataType"
 )
 
@@ -24,6 +22,9 @@ type MockPlugin struct {
 	mock.Mock
 }
 
+func (t *MockPlugin) IsEnabled() bool {
+	return true
+}
 func (t *MockPlugin) BeforeExecution(ctx context.Context, request json.RawMessage, wg *sync.WaitGroup) {
 	defer wg.Done()
 	t.Called(ctx, request, wg)
@@ -39,13 +40,13 @@ func (t *MockPlugin) OnPanic(ctx context.Context, request json.RawMessage, err i
 
 func TestExecutePreHooks(t *testing.T) {
 	mT := new(MockPlugin)
-	th := NewBuilder().AddPlugin(mT).SetAPIKey(testApiKey).Build()
+	th := New().AddPlugin(mT)
 
 	ctx := context.TODO()
 	req := createRawMessage()
 
 	mT.On("BeforeExecution", ctx, req, mock.Anything, mock.Anything).Return()
-	th.executePreHooks(ctx, req)
+	th.ExecutePreHooks(ctx, req)
 	mT.AssertExpectations(t)
 }
 
@@ -72,55 +73,20 @@ func TestExecutePostHooks(t *testing.T) {
 	req := createRawMessage()
 	resp := response{"Thundra"}
 	var err1 error
-	var err2 error = errors.New("Error")
+	var err2 = errors.New("Error")
 
 	r := test.NewMockReporter()
 
 	mT := new(MockPlugin)
 	mT.On("AfterExecution", ctx, req, resp, err1, mock.Anything).Return()
 
-	th := NewBuilder().AddPlugin(mT).SetReporter(r).SetAPIKey(testApiKey).Build()
-	th.executePostHooks(ctx, req, resp, err1)
-	th.executePostHooks(ctx, req, resp, err2)
+	th := New().AddPlugin(mT).SetReporter(r)
+	th.ExecutePostHooks(ctx, req, resp, err1)
+	th.ExecutePostHooks(ctx, req, resp, err2)
 
 	mT.AssertExpectations(t)
 
 	// Should only be called once because it is already reported
 	mT.AssertNumberOfCalls(t, "AfterExecution", 1)
 	r.AssertExpectations(t)
-}
-
-func TestOnPanic(t *testing.T) {
-	ctx := context.TODO()
-	req := createRawMessage()
-	err := errors.New("Generated Error")
-	stackTrace := debug.Stack()
-
-	r := test.NewMockReporter()
-	mP := new(MockPlugin)
-	th := NewBuilder().AddPlugin(mP).SetReporter(r).SetAPIKey(testApiKey).Build()
-	mP.On("OnPanic", ctx, req, err, stackTrace, mock.Anything).Return()
-
-	th.onPanic(ctx, req, err, stackTrace)
-	mP.AssertExpectations(t)
-	r.AssertExpectations(t)
-}
-
-func (handler lambdaFunction) invoke(ctx context.Context, payload []byte) ([]byte, error) {
-	response, err := handler(ctx, payload)
-	if err != nil {
-		return nil, err
-	}
-
-	responseBytes, err := json.Marshal(response)
-	if err != nil {
-		return nil, err
-	}
-
-	return responseBytes, nil
-}
-
-type expected struct {
-	val string
-	err error
 }

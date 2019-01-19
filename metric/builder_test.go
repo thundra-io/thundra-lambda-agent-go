@@ -9,7 +9,7 @@ import (
 
 func TestNewBuilder(t *testing.T) {
 	test.PrepareEnvironment()
-	mp := NewBuilder().Build()
+	mp := New()
 
 	assert.NotNil(t, proc)
 	assert.NotNil(t, mp.data)

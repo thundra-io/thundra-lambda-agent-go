@@ -1,4 +1,4 @@
-package thundra
+package agent
 
 import (
 	"context"
@@ -116,8 +116,8 @@ func TestWrapper(t *testing.T) {
 	for i, testCase := range testCases {
 		t.Run(fmt.Sprintf("testCase[%d] %s", i, testCase.name), func(t *testing.T) {
 			r := test.NewMockReporter()
-			th := NewBuilder().SetReporter(r).SetAPIKey(testApiKey).Build()
-			lambdaHandler := Wrap(testCase.handler, th)
+			a := New().SetReporter(r)
+			lambdaHandler := a.Wrap(testCase.handler)
 			h := lambdaHandler.(func(context.Context, json.RawMessage) (interface{}, error))
 			f := lambdaFunction(h)
 			response, err := f.invoke(context.TODO(), []byte(testCase.input))
@@ -194,8 +194,8 @@ func TestInvalidWrappers(t *testing.T) {
 	for i, testCase := range testCases {
 		t.Run(fmt.Sprintf("testCase[%d] %s", i, testCase.name), func(t *testing.T) {
 			r := test.NewMockReporter()
-			th := NewBuilder().SetReporter(r).SetAPIKey(testApiKey).Build()
-			lambdaHandler := Wrap(testCase.handler, th)
+			a := New().SetReporter(r)
+			lambdaHandler := a.Wrap(testCase.handler)
 			h, ok := lambdaHandler.(lambdaFunction)
 			if !ok {
 				h = lambdaHandler.(func(context.Context, json.RawMessage) (interface{}, error))
@@ -205,4 +205,23 @@ func TestInvalidWrappers(t *testing.T) {
 			assert.Equal(t, testCase.expected, err)
 		})
 	}
+}
+
+func (handler lambdaFunction) invoke(ctx context.Context, payload []byte) ([]byte, error) {
+	response, err := handler(ctx, payload)
+	if err != nil {
+		return nil, err
+	}
+
+	responseBytes, err := json.Marshal(response)
+	if err != nil {
+		return nil, err
+	}
+
+	return responseBytes, nil
+}
+
+type expected struct {
+	val string
+	err error
 }
