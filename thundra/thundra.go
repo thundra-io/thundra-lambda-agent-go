@@ -12,7 +12,7 @@ import (
 
 var agentInstance *agent.Agent
 
-func AddDefaultPlugins(a *agent.Agent) *agent.Agent {
+func addDefaultPlugins(a *agent.Agent) *agent.Agent {
 	a.AddPlugin(ip.New()).
 		AddPlugin(mp.New()).
 		AddPlugin(tp.New()).
@@ -21,19 +21,22 @@ func AddDefaultPlugins(a *agent.Agent) *agent.Agent {
 	return a
 }
 
+// GetAgent returns the current agent instance
 func GetAgent() *agent.Agent {
 	return agentInstance
 }
 
+// Wrap wraps the given handler function so that the thundra agent integrates
+// with given handler
 func Wrap(handler interface{}) interface{} {
 	if agentInstance == nil {
 		fmt.Println("thundra.go: agentInstance is nil")
-		return nil
+		return handler
 	}
 
 	return agentInstance.Wrap(handler)
 }
 
 func init() {
-	agentInstance = AddDefaultPlugins(agent.New())
+	agentInstance = addDefaultPlugins(agent.New())
 }
