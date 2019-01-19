@@ -13,6 +13,7 @@ import (
 )
 
 var proc *process.Process
+var pid string
 
 type metricPlugin struct {
 	data *metricData
@@ -40,6 +41,16 @@ type metricData struct {
 	startDiskStat     *process.IOCountersStat
 	endNetStat        *net.IOCountersStat
 	startNetStat      *net.IOCountersStat
+}
+
+// New returns new metric plugin initialized with empty metrics data
+func New() *metricPlugin {
+	pid = plugin.GetPid()
+	proc = plugin.GetThisProcess()
+
+	return &metricPlugin{
+		data: new(metricData),
+	}
 }
 
 func (mp *metricPlugin) IsEnabled() bool {
