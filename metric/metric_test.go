@@ -3,12 +3,29 @@ package metric
 import (
 	"context"
 	"encoding/json"
-	"sync"
 	"runtime"
+	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/thundra-io/thundra-lambda-agent-go/test"
 )
+
+func TestNewMetricPlugin(t *testing.T) {
+	test.PrepareEnvironment()
+	mp := New()
+
+	assert.NotNil(t, proc)
+	assert.NotNil(t, mp.data)
+
+	assert.False(t, mp.disableDiskMetrics)
+	assert.False(t, mp.disableNetMetrics)
+	assert.False(t, mp.disableCPUMetrics)
+	assert.False(t, mp.disableGoroutineMetrics)
+	assert.False(t, mp.disableHeapMetrics)
+	assert.False(t, mp.disableGCMetrics)
+	test.CleanEnvironment()
+}
 
 func TestMetric_BeforeExecution(t *testing.T) {
 	const MaxUint32 = ^uint32(0)
