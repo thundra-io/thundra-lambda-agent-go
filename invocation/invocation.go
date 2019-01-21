@@ -3,7 +3,6 @@ package invocation
 import (
 	"context"
 	"encoding/json"
-	"sync"
 
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 )
@@ -37,10 +36,10 @@ func (ip *invocationPlugin) IsEnabled() bool {
 	return true
 }
 
-func (ip *invocationPlugin) BeforeExecution(ctx context.Context, request json.RawMessage, wg *sync.WaitGroup) {
+func (ip *invocationPlugin) BeforeExecution(ctx context.Context, request json.RawMessage) context.Context {
 	ip.data = new(invocationData)
 	ip.data.startTimestamp = plugin.GetTimestamp()
-	wg.Done()
+	return ctx
 }
 
 func (ip *invocationPlugin) AfterExecution(ctx context.Context, request json.RawMessage, response interface{}, err interface{}) []plugin.MonitoringDataWrapper {

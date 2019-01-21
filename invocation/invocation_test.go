@@ -23,7 +23,7 @@ func TestInvocationData_BeforeExecution(t *testing.T) {
 
 	wg := sync.WaitGroup{}
 	wg.Add(1)
-	ip.BeforeExecution(context.TODO(), nil, &wg)
+	ip.BeforeExecution(context.TODO(), nil)
 
 	assert.True(t, prevTime <= ip.data.startTimestamp)
 }

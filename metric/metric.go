@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"os"
 	"runtime"
-	"sync"
 
 	"github.com/shirou/gopsutil/net"
 	"github.com/shirou/gopsutil/process"
@@ -61,7 +60,7 @@ func (mp *metricPlugin) IsEnabled() bool {
 	return true
 }
 
-func (mp *metricPlugin) BeforeExecution(ctx context.Context, request json.RawMessage, wg *sync.WaitGroup) {
+func (mp *metricPlugin) BeforeExecution(ctx context.Context, request json.RawMessage) context.Context {
 	mp.data = new(metricData)
 	mp.data.metricTimestamp = plugin.GetTimestamp()
 
@@ -85,7 +84,7 @@ func (mp *metricPlugin) BeforeExecution(ctx context.Context, request json.RawMes
 		mp.data.startNetStat = sampleNetStat()
 	}
 
-	wg.Done()
+	return ctx
 }
 
 func (mp *metricPlugin) AfterExecution(ctx context.Context, request json.RawMessage, response interface{}, err interface{}) []plugin.MonitoringDataWrapper {

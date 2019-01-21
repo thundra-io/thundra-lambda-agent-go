@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/mock"
@@ -25,9 +24,9 @@ type MockPlugin struct {
 func (t *MockPlugin) IsEnabled() bool {
 	return true
 }
-func (t *MockPlugin) BeforeExecution(ctx context.Context, request json.RawMessage, wg *sync.WaitGroup) {
-	defer wg.Done()
-	t.Called(ctx, request, wg)
+func (t *MockPlugin) BeforeExecution(ctx context.Context, request json.RawMessage) context.Context {
+	t.Called(ctx, request)
+	return ctx
 }
 func (t *MockPlugin) AfterExecution(ctx context.Context, request json.RawMessage, response interface{}, err interface{}) []plugin.MonitoringDataWrapper {
 	t.Called(ctx, request, response, err)

@@ -37,7 +37,7 @@ func TestMetric_BeforeExecution(t *testing.T) {
 
 	wg := sync.WaitGroup{}
 	wg.Add(1)
-	mp.BeforeExecution(context.TODO(), json.RawMessage{}, &wg)
+	mp.BeforeExecution(context.TODO(), json.RawMessage{})
 	assert.NotNil(t, mp)
 
 	// In order to ensure startGCCount and startPauseTotalNs are assigned,
