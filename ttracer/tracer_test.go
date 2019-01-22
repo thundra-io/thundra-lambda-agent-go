@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	duration      = 500
+	duration      = 100
 	operationName = "creating-bubble"
 	className     = "Test Class"
 	domainName    = "Test Domain"
@@ -41,7 +41,7 @@ func TestStartSpanWithOptions(t *testing.T) {
 	r := NewInMemoryRecorder()
 	tracer := New(r)
 
-	f := func() opentracing.Span {
+	f := func() {
 		span := tracer.StartSpan(
 			operationName,
 			ext.ClassName(className),
@@ -51,17 +51,19 @@ func TestStartSpanWithOptions(t *testing.T) {
 		defer span.Finish()
 
 		time.Sleep(time.Millisecond * duration)
-		return span
 	}
 
-	span, ok := f().(*spanImpl)
-	assert.True(t, ok)
-	assert.True(t, span.raw.Duration() >= int64(duration))
-	assert.True(t, span.OperationName() == operationName)
-	assert.True(t, span.raw.ClassName == className)
-	assert.True(t, span.raw.DomainName == domainName)
-	assert.True(t, len(span.raw.GetTags()) == 1)
-	assert.True(t, span.raw.GetTags()["stage"].(string) == "testing")
+	f()
+	spans := r.GetSpans()
+	span := spans[0]
+
+	assert.True(t, len(spans) == 1)
+	assert.True(t, span.Duration() >= int64(duration))
+	assert.True(t, span.OperationName == operationName)
+	assert.True(t, span.ClassName == className)
+	assert.True(t, span.DomainName == domainName)
+	assert.True(t, len(span.GetTags()) == 1)
+	assert.True(t, span.GetTags()["stage"].(string) == "testing")
 }
 
 func TestParentChildRelation(t *testing.T) {
@@ -77,7 +79,7 @@ func TestParentChildRelation(t *testing.T) {
 		time.Sleep(time.Millisecond * duration)
 		parentSpan.Finish()
 	}
-	
+
 	f()
 
 	spans := r.GetSpans()
