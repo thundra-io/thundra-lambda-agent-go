@@ -60,6 +60,10 @@ func (mp *metricPlugin) IsEnabled() bool {
 	return true
 }
 
+func (mp *metricPlugin) Order() uint8 {
+	return pluginOrder
+}
+
 func (mp *metricPlugin) BeforeExecution(ctx context.Context, request json.RawMessage) context.Context {
 	mp.data = new(metricData)
 	mp.data.metricTimestamp = plugin.GetTimestamp()

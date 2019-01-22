@@ -21,19 +21,22 @@ type MockPlugin struct {
 	mock.Mock
 }
 
-func (t *MockPlugin) IsEnabled() bool {
+func (p *MockPlugin) IsEnabled() bool {
 	return true
 }
-func (t *MockPlugin) BeforeExecution(ctx context.Context, request json.RawMessage) context.Context {
-	t.Called(ctx, request)
+func (p *MockPlugin) Order() uint8 {
+	return 4
+}
+func (p *MockPlugin) BeforeExecution(ctx context.Context, request json.RawMessage) context.Context {
+	p.Called(ctx, request)
 	return ctx
 }
-func (t *MockPlugin) AfterExecution(ctx context.Context, request json.RawMessage, response interface{}, err interface{}) []plugin.MonitoringDataWrapper {
-	t.Called(ctx, request, response, err)
+func (p *MockPlugin) AfterExecution(ctx context.Context, request json.RawMessage, response interface{}, err interface{}) []plugin.MonitoringDataWrapper {
+	p.Called(ctx, request, response, err)
 	return []plugin.MonitoringDataWrapper{}
 }
-func (t *MockPlugin) OnPanic(ctx context.Context, request json.RawMessage, err interface{}, stackTrace []byte) []plugin.MonitoringDataWrapper {
-	t.Called(ctx, request, err, stackTrace)
+func (p *MockPlugin) OnPanic(ctx context.Context, request json.RawMessage, err interface{}, stackTrace []byte) []plugin.MonitoringDataWrapper {
+	p.Called(ctx, request, err, stackTrace)
 	return []plugin.MonitoringDataWrapper{}
 }
 

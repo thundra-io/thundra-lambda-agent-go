@@ -36,6 +36,10 @@ func (ip *invocationPlugin) IsEnabled() bool {
 	return true
 }
 
+func (ip *invocationPlugin) Order() uint8 {
+	return pluginOrder
+}
+
 func (ip *invocationPlugin) BeforeExecution(ctx context.Context, request json.RawMessage) context.Context {
 	ip.data = new(invocationData)
 	ip.data.startTimestamp = plugin.GetTimestamp()

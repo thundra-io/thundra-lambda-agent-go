@@ -10,4 +10,5 @@ type Plugin interface {
 	BeforeExecution(ctx context.Context, request json.RawMessage) context.Context
 	AfterExecution(ctx context.Context, request json.RawMessage, response interface{}, err interface{}) []MonitoringDataWrapper
 	IsEnabled() bool
+	Order() uint8
 }

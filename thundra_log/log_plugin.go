@@ -22,6 +22,10 @@ func (p *logPlugin) IsEnabled() bool {
 	return true
 }
 
+func (p *logPlugin) Order() uint8 {
+	return pluginOrder
+}
+
 func (p *logPlugin) BeforeExecution(ctx context.Context, request json.RawMessage) context.Context {
 	logManager.clearLogs()
 	return ctx

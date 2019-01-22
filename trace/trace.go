@@ -49,6 +49,10 @@ func (tr *tracePlugin) IsEnabled() bool {
 	return true
 }
 
+func (tr *tracePlugin) Order() uint8 {
+	return pluginOrder
+}
+
 // BeforeExecution executes the necessary tasks before the invocation
 func (tr *tracePlugin) BeforeExecution(ctx context.Context, request json.RawMessage) context.Context {
 	rootSpan, ctxWithRootSpan := opentracing.StartSpanFromContext(ctx, plugin.FunctionName)
