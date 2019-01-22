@@ -63,3 +63,32 @@ func TestStartSpanWithOptions(t *testing.T) {
 	assert.True(t, len(span.raw.GetTags()) == 1)
 	assert.True(t, span.raw.GetTags()["stage"].(string) == "testing")
 }
+
+func TestParentChildRelation(t *testing.T) {
+	r := NewInMemoryRecorder()
+	tracer := New(r)
+
+	f := func() {
+		parentSpan := tracer.StartSpan("parentSpan")
+		time.Sleep(time.Millisecond * duration)
+		childSpan := tracer.StartSpan("childSpan", opentracing.ChildOf(parentSpan.Context()))
+		time.Sleep(time.Millisecond * duration)
+		childSpan.Finish()
+		time.Sleep(time.Millisecond * duration)
+		parentSpan.Finish()
+	}
+	
+	f()
+
+	spans := r.GetSpans()
+	parentSpan, childSpan := spans[0], spans[1]
+
+	assert.True(t, len(spans) == 2)
+	assert.True(t, parentSpan.OperationName == "parentSpan")
+	assert.True(t, childSpan.OperationName == "childSpan")
+	assert.True(t, parentSpan.ParentSpanID == "")
+	assert.True(t, childSpan.ParentSpanID == parentSpan.Context.SpanID)
+	assert.True(t, childSpan.Context.TraceID == parentSpan.Context.TraceID)
+	assert.True(t, childSpan.Duration() >= duration)
+	assert.True(t, parentSpan.Duration() >= 3*duration)
+}
