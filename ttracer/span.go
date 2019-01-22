@@ -1,10 +1,11 @@
 package ttracer
 
 import (
-	ot "github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 	"sync"
 	"time"
+
+	ot "github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 )
 
 type spanImpl struct {
@@ -207,4 +208,15 @@ func GetRaw(ots ot.Span) (*RawSpan, bool) {
 	s, ok := ots.(*spanImpl)
 
 	return &s.raw, ok
+}
+
+func (s *spanImpl) setParent(parentCtx SpanContext) {
+	s.raw.ParentSpanID = parentCtx.SpanID
+
+	if l := len(parentCtx.Baggage); l > 0 {
+		s.raw.Context.Baggage = make(map[string]string, l)
+		for k, v := range parentCtx.Baggage {
+			s.raw.Context.Baggage[k] = v
+		}
+	}
 }

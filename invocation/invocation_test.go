@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -21,9 +20,7 @@ func TestInvocationData_BeforeExecution(t *testing.T) {
 	ip := New()
 	prevTime := plugin.GetTimestamp()
 
-	wg := sync.WaitGroup{}
-	wg.Add(1)
-	ip.BeforeExecution(context.TODO(), nil, &wg)
+	ip.BeforeExecution(context.TODO(), nil)
 
 	assert.True(t, prevTime <= ip.data.startTimestamp)
 }
@@ -34,8 +31,6 @@ func TestInvocationData_AfterExecution(t *testing.T) {
 	prevTime := plugin.GetTimestamp()
 	ip.data.startTimestamp = prevTime
 
-	wg := sync.WaitGroup{}
-	wg.Add(1)
 	data := ip.AfterExecution(context.TODO(), nil, nil, nil)
 	d, ok := data[0].Data.(invocationDataModel)
 	if !ok {
@@ -57,8 +52,6 @@ func TestInvocationData_AfterExecutionWithError(t *testing.T) {
 	ip := New()
 	err := errors.New(testErrorMessage)
 
-	wg := sync.WaitGroup{}
-	wg.Add(1)
 	data := ip.AfterExecution(context.TODO(), nil, nil, err)
 	d, ok := data[0].Data.(invocationDataModel)
 	if !ok {

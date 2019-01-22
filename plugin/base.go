@@ -24,8 +24,6 @@ var SpanID string
 
 var ApiKey string
 
-var CtxWithRootSpan context.Context
-
 func init() {
 	FunctionName = getFunctionName()
 	ApplicationID = getAppID()

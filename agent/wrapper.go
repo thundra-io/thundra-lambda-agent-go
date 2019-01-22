@@ -5,8 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
-
-	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 )
 
 type lambdaFunction func(context.Context, json.RawMessage) (interface{}, error)
@@ -52,16 +50,10 @@ func (a *Agent) Wrap(handler interface{}) interface{} {
 
 		var args []reflect.Value
 
-		a.ExecutePreHooks(ctx, payload)
+		ctxAfterPreHooks := a.ExecutePreHooks(ctx, payload)
 
 		if takesContext {
-			var ctxToPass context.Context
-			if plugin.CtxWithRootSpan != nil {
-				ctxToPass = plugin.CtxWithRootSpan
-			} else {
-				ctxToPass = ctx
-			}
-			args = append(args, reflect.ValueOf(ctxToPass))
+			args = append(args, reflect.ValueOf(ctxAfterPreHooks))
 		}
 
 		if (handlerType.NumIn() == 1 && !takesContext) || handlerType.NumIn() == 2 {
@@ -98,7 +90,7 @@ func (a *Agent) Wrap(handler interface{}) interface{} {
 			val = nil
 		}
 
-		a.ExecutePostHooks(ctx, payload, val, err)
+		a.ExecutePostHooks(ctxAfterPreHooks, payload, val, err)
 
 		return val, err
 	}

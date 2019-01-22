@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"sync"
+	"sort"
 	"time"
 
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
@@ -54,16 +54,23 @@ func (a *Agent) SetReporter(r reporter) *Agent {
 }
 
 // ExecutePreHooks contains necessary works that should be done before user's handler
-func (a *Agent) ExecutePreHooks(ctx context.Context, request json.RawMessage) {
+func (a *Agent) ExecutePreHooks(ctx context.Context, request json.RawMessage) context.Context {
 	a.Reporter.FlushFlag()
+
+	// Sort plugins w.r.t their orders
+	sort.Slice(a.Plugins, func(i, j int) bool {
+		return a.Plugins[i].Order() < a.Plugins[j].Order()
+	})
 	plugin.TraceID = plugin.GenerateNewID()
 	plugin.TransactionID = plugin.GenerateNewID()
-	var wg sync.WaitGroup
-	wg.Add(len(a.Plugins))
+
+	updatedCtx := ctx
+	// Traverse sorted plugin slice
 	for _, p := range a.Plugins {
-		go p.BeforeExecution(ctx, request, &wg)
+		updatedCtx = p.BeforeExecution(updatedCtx, request)
 	}
-	wg.Wait()
+
+	return updatedCtx
 }
 
 // ExecutePostHooks contains necessary works that should be done after user's handler
@@ -72,16 +79,12 @@ func (a *Agent) ExecutePostHooks(ctx context.Context, request json.RawMessage, r
 	if *a.Reporter.Reported() == 1 {
 		return
 	}
-	var wg sync.WaitGroup
-	wg.Add(len(a.Plugins))
-	for _, p := range a.Plugins {
-		go func(plugin plugin.Plugin) {
-			messages := plugin.AfterExecution(ctx, request, response, err)
-			a.Reporter.Collect(messages)
-			wg.Done()
-		}(p)
+	// Traverse the plugin slice in reverse order
+	for i := len(a.Plugins)-1; i >= 0; i-- {
+		p := a.Plugins[i]
+		messages := p.AfterExecution(ctx, request, response, err)
+		a.Reporter.Collect(messages)
 	}
-	wg.Wait()
 	a.Reporter.Report()
 	a.Reporter.ClearData()
 }

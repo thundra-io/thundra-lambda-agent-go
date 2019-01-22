@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"os"
-	"sync"
 
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
@@ -50,10 +49,13 @@ func (tr *tracePlugin) IsEnabled() bool {
 	return true
 }
 
+func (tr *tracePlugin) Order() uint8 {
+	return pluginOrder
+}
+
 // BeforeExecution executes the necessary tasks before the invocation
-func (tr *tracePlugin) BeforeExecution(ctx context.Context, request json.RawMessage, wg *sync.WaitGroup) {
+func (tr *tracePlugin) BeforeExecution(ctx context.Context, request json.RawMessage) context.Context {
 	rootSpan, ctxWithRootSpan := opentracing.StartSpanFromContext(ctx, plugin.FunctionName)
-	plugin.CtxWithRootSpan = ctxWithRootSpan
 	invocationCount++
 
 	tr.rootSpan = rootSpan
@@ -61,7 +63,7 @@ func (tr *tracePlugin) BeforeExecution(ctx context.Context, request json.RawMess
 		startTime: plugin.GetTimestamp(),
 	}
 
-	wg.Done()
+	return ctxWithRootSpan
 }
 
 // AfterExecution executes the necessary tasks after the invocation

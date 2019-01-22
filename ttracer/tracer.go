@@ -1,10 +1,10 @@
 package ttracer
 
 import (
-	"github.com/thundra-io/thundra-lambda-agent-go/ext"
 	ot "github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	uuid "github.com/satori/go.uuid"
+	"github.com/thundra-io/thundra-lambda-agent-go/ext"
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 )
 
@@ -43,26 +43,14 @@ func (t *tracerImpl) StartSpanWithOptions(operationName string, opts ot.StartSpa
 	}
 
 	newSpan := t.getSpan()
+	newSpan.raw.Context.TraceID = plugin.TraceID
+	newSpan.raw.Context.SpanID = uuid.NewV4().String()
+
 	for _, ref := range opts.References {
 		if ref.Type == ot.ChildOfRef {
-			refSpanCtx := ref.ReferencedContext.(SpanContext)
-			newSpan.raw.Context.TraceID = refSpanCtx.TraceID
-			newSpan.raw.Context.SpanID = uuid.NewV4().String()
-			newSpan.raw.ParentSpanID = refSpanCtx.SpanID
-
-			if l := len(refSpanCtx.Baggage); l > 0 {
-				newSpan.raw.Context.Baggage = make(map[string]string, l)
-				for k, v := range refSpanCtx.Baggage {
-					newSpan.raw.Context.Baggage[k] = v
-				}
-			}
+			parentCtx := ref.ReferencedContext.(SpanContext)
+			newSpan.setParent(parentCtx)
 		}
-	}
-
-	if newSpan.raw.Context.TraceID == "" {
-		// Couldn't find a parent span then create a new trace and span id
-		newSpan.raw.Context.TraceID = uuid.NewV4().String()
-		newSpan.raw.Context.SpanID = uuid.NewV4().String()
 	}
 
 	newSpan.tracer = t
@@ -70,7 +58,7 @@ func (t *tracerImpl) StartSpanWithOptions(operationName string, opts ot.StartSpa
 	newSpan.raw.StartTimestamp = GetTimestamp()
 	newSpan.raw.Tags = tags
 	newSpan.raw.Logs = []ot.LogRecord{}
-	
+
 	className, ok := tags[ext.ClassNameKey]
 	if !ok {
 		newSpan.raw.ClassName = plugin.DefaultClassName

@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"runtime"
-	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -35,9 +34,7 @@ func TestMetric_BeforeExecution(t *testing.T) {
 	mp.data.startGCCount = MaxUint32
 	mp.data.startPauseTotalNs = MaxUint64
 
-	wg := sync.WaitGroup{}
-	wg.Add(1)
-	mp.BeforeExecution(context.TODO(), json.RawMessage{}, &wg)
+	mp.BeforeExecution(context.TODO(), json.RawMessage{})
 	assert.NotNil(t, mp)
 
 	// In order to ensure startGCCount and startPauseTotalNs are assigned,
@@ -51,8 +48,6 @@ func TestMetric_AfterExecution(t *testing.T) {
 
 	mp := New()
 
-	wg := sync.WaitGroup{}
-	wg.Add(1)
 	stats := mp.AfterExecution(context.TODO(), json.RawMessage{}, nil, nil)
 
 	// Assert all stats are collected, heap, gc, goroutine, cpu, net, disk

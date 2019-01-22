@@ -1,5 +1,6 @@
 package thundra_log
 
+const pluginOrder = 20
 const logType = "Log"
 const thundraLogLogLevel = "thundra_log_logLevel"
 

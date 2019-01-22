@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"os"
-	"sync"
 
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 )
@@ -23,9 +22,13 @@ func (p *logPlugin) IsEnabled() bool {
 	return true
 }
 
-func (p *logPlugin) BeforeExecution(ctx context.Context, request json.RawMessage, wg *sync.WaitGroup) {
+func (p *logPlugin) Order() uint8 {
+	return pluginOrder
+}
+
+func (p *logPlugin) BeforeExecution(ctx context.Context, request json.RawMessage) context.Context {
 	logManager.clearLogs()
-	wg.Done()
+	return ctx
 }
 
 func (p *logPlugin) AfterExecution(ctx context.Context, request json.RawMessage, response interface{}, err interface{}) []plugin.MonitoringDataWrapper {

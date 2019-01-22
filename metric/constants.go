@@ -1,5 +1,6 @@
 package metric
 
+const pluginOrder = 15
 const metricType = "Metric"
 const cpuMetric = "CPUMetric"
 const gcMetric = "GcMetric"
