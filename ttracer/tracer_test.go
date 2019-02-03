@@ -64,7 +64,7 @@ func TestStartSpanWithOptions(t *testing.T) {
 	assert.True(t, span.ClassName == className)
 	assert.True(t, span.DomainName == domainName)
 	assert.True(t, len(span.GetTags()) == 1)
-	assert.True(t, span.GetTags()["stage"].(string) == "testing")
+	assert.True(t, span.GetTags()["stage"] == "testing")
 }
 
 func TestParentChildRelation(t *testing.T) {
