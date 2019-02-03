@@ -96,15 +96,7 @@ func (a *Agent) CatchTimeout(ctx context.Context, payload json.RawMessage) {
 		return
 	}
 
-	var timeoutMargin time.Duration
-
-	if a.TimeoutMargin != 0 {
-		timeoutMargin = a.TimeoutMargin
-	} else {
-		timeoutMargin = defaultTimeoutMargin * time.Millisecond
-	}
-
-	timeoutDuration := deadline.Add(-timeoutMargin)
+	timeoutDuration := deadline.Add(-a.TimeoutMargin)
 
 	if time.Now().After(timeoutDuration) {
 		return

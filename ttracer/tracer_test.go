@@ -19,27 +19,28 @@ const (
 )
 
 func TestStartSpan(t *testing.T) {
-	r := NewInMemoryRecorder()
-	tracer := New(r)
+	tracer, r := newTracerAndRecorder()
 
-	f := func() opentracing.Span {
+	f := func() {
 		span := tracer.StartSpan(operationName)
 		defer span.Finish()
 		time.Sleep(time.Millisecond * duration)
-		return span
 	}
 
-	span, ok := f().(*spanImpl)
-	assert.True(t, ok)
-	assert.True(t, span.raw.Duration() >= int64(duration))
-	assert.True(t, span.OperationName() == operationName)
-	assert.True(t, span.raw.ClassName == plugin.DefaultClassName)
-	assert.True(t, span.raw.DomainName == plugin.DefaultDomainName)
+	f()
+
+	spans := r.GetSpans()
+	span := spans[0]
+
+	assert.True(t, len(spans) == 1)
+	assert.True(t, span.Duration() >= int64(duration))
+	assert.True(t, span.OperationName == operationName)
+	assert.True(t, span.ClassName == plugin.DefaultClassName)
+	assert.True(t, span.DomainName == plugin.DefaultDomainName)
 }
 
 func TestStartSpanWithOptions(t *testing.T) {
-	r := NewInMemoryRecorder()
-	tracer := New(r)
+	tracer, r := newTracerAndRecorder()
 
 	f := func() {
 		span := tracer.StartSpan(
@@ -67,8 +68,7 @@ func TestStartSpanWithOptions(t *testing.T) {
 }
 
 func TestParentChildRelation(t *testing.T) {
-	r := NewInMemoryRecorder()
-	tracer := New(r)
+	tracer, r := newTracerAndRecorder()
 
 	f := func() {
 		parentSpan := tracer.StartSpan("parentSpan")
@@ -93,4 +93,11 @@ func TestParentChildRelation(t *testing.T) {
 	assert.True(t, childSpan.Context.TraceID == parentSpan.Context.TraceID)
 	assert.True(t, childSpan.Duration() >= duration)
 	assert.True(t, parentSpan.Duration() >= 3*duration)
+}
+
+func newTracerAndRecorder() (opentracing.Tracer, *InMemorySpanRecorder) {
+	r := NewInMemoryRecorder()
+	tracer := New(r)
+
+	return tracer, r
 }

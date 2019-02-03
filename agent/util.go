@@ -32,7 +32,7 @@ func determineTimeoutMargin() time.Duration {
 	t := os.Getenv(thundraLambdaTimeoutMargin)
 	// environment variable is not set
 	if t == "" {
-		return time.Duration(defaultTimeoutMargin)
+		return time.Duration(DefaultTimeoutMargin) * time.Millisecond
 	}
 
 	i, err := strconv.ParseInt(t, 10, 32)
@@ -40,7 +40,7 @@ func determineTimeoutMargin() time.Duration {
 	// environment variable is not set in the correct format
 	if err != nil {
 		fmt.Println(err, " "+thundraLambdaTimeoutMargin+" should be set with an integer.")
-		return time.Duration(defaultTimeoutMargin)
+		return time.Duration(DefaultTimeoutMargin) * time.Millisecond
 	}
 
 	return time.Duration(i) * time.Millisecond
