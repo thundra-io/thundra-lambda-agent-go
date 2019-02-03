@@ -1,7 +1,6 @@
 package ttracer
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -57,11 +56,17 @@ func TestLog(t *testing.T) {
 	tracer, r := newTracerAndRecorder()
 
 	s := tracer.StartSpan("foo")
-	s.LogKV("key1", "value1", "key2", "value2")
+	s.LogKV(
+		"intKey", 37,
+		"boolKey", true,
+		"stringKey", "foo",
+	)
 	s.Finish()
 
 	rs := r.GetSpans()[0]
-	fmt.Println(rs.Logs)
+	logFields := rs.Logs[0].Fields
 
-	t.Fail()
+	assert.True(t, logFields[0].Key() == "intKey" && logFields[0].Value() == 37)
+	assert.True(t, logFields[1].Key() == "boolKey" && logFields[1].Value() == true)
+	assert.True(t, logFields[2].Key() == "stringKey" && logFields[2].Value() == "foo")
 }
