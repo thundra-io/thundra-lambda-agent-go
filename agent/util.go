@@ -39,7 +39,7 @@ func determineTimeoutMargin() time.Duration {
 
 	// environment variable is not set in the correct format
 	if err != nil {
-		fmt.Printf("%v: %s should be set with an integer", err, thundraLambdaTimeoutMargin)
+		fmt.Printf("%v: %s should be set with an integer\n", err, thundraLambdaTimeoutMargin)
 		return time.Duration(DefaultTimeoutMargin) * time.Millisecond
 	}
 
