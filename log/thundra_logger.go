@@ -3,11 +3,15 @@ package log
 import (
 	"errors"
 	"fmt"
-	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 	"log"
 	"os"
 	"runtime"
 	"strings"
+
+	"github.com/thundra-io/thundra-lambda-agent-go/tracer"
+
+	ot "github.com/opentracing/opentracing-go"
+	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 )
 
 var (
@@ -19,6 +23,7 @@ var (
 	// It is zero for other functions: trace, debug, info, warn, error.
 	additionalCalldepth int
 	logLevelCode        int
+	spanID              string
 )
 
 func init() {
@@ -54,6 +59,12 @@ func (l *thundraLogger) Trace(v ...interface{}) {
 	l.Output(2, fmt.Sprint(v...))
 }
 
+func (l *thundraLogger) TraceWithSpan(span ot.Span, v ...interface{}) {
+	setSpanID(span)
+	additionalCalldepth = 1
+	l.Trace(v...)
+}
+
 // Debug prints debug level logs to logger.
 func (l *thundraLogger) Debug(v ...interface{}) {
 	if logLevelCode > debugLogLevelCode {
@@ -62,6 +73,12 @@ func (l *thundraLogger) Debug(v ...interface{}) {
 	logManager.recentLogLevel = debugLogLevel
 	logManager.recentLogLevelCode = debugLogLevelCode
 	l.Output(2, fmt.Sprint(v...))
+}
+
+func (l *thundraLogger) DebugWithSpan(span ot.Span, v ...interface{}) {
+	setSpanID(span)
+	additionalCalldepth = 1
+	l.Debug(v...)
 }
 
 // Info prints info level logs to logger.
@@ -74,6 +91,12 @@ func (l *thundraLogger) Info(v ...interface{}) {
 	l.Output(2, fmt.Sprint(v...))
 }
 
+func (l *thundraLogger) InfoWithSpan(span ot.Span, v ...interface{}) {
+	setSpanID(span)
+	additionalCalldepth = 1
+	l.Info(v...)
+}
+
 // Warn prints warn level logs to logger.
 func (l *thundraLogger) Warn(v ...interface{}) {
 	if logLevelCode > warnLogLevelCode {
@@ -84,6 +107,12 @@ func (l *thundraLogger) Warn(v ...interface{}) {
 	l.Output(2, fmt.Sprint(v...))
 }
 
+func (l *thundraLogger) WarnWithSpan(span ot.Span, v ...interface{}) {
+	setSpanID(span)
+	additionalCalldepth = 1
+	l.Warn(v...)
+}
+
 // Error prints error level logs to logger.
 func (l *thundraLogger) Error(v ...interface{}) {
 	if logLevelCode > errorLogLevelCode {
@@ -92,6 +121,12 @@ func (l *thundraLogger) Error(v ...interface{}) {
 	logManager.recentLogLevel = errorLogLevel
 	logManager.recentLogLevelCode = errorLogLevelCode
 	l.Output(2, fmt.Sprint(v...))
+}
+
+func (l *thundraLogger) ErrorWithSpan(span ot.Span, v ...interface{}) {
+	setSpanID(span)
+	additionalCalldepth = 1
+	l.Error(v...)
 }
 
 // Below are the wrapper functions for standard library's logger.
@@ -165,20 +200,30 @@ func (l thundraLogger) Panicln(v ...interface{}) {
 // Write stores the log into logs array which will later be used to send monitoredLogs to Thundra collector.
 func (t *thundraLogManager) Write(p []byte) (n int, err error) {
 	// We need to skip last 3 frames and additionalCalldepth for wrapper functions
-	_, file, line, ok := runtime.Caller(3 + additionalCalldepth)
-	additionalCalldepth = 0 //reset it
+	pc, _, line, ok := runtime.Caller(3 + additionalCalldepth)
+	contextName := runtime.FuncForPC(pc).Name()
+
+	// Reset addtional calldepth
+	additionalCalldepth = 0
+
 	if !ok {
-		file = "???"
+		contextName = "???"
 		line = 0
 	}
 
 	mL := &monitoringLog{
 		logMessage:     string(p),
-		logContextName: fmt.Sprintf("%s %d", file, line),
+		logContextName: fmt.Sprintf("%s: %d", contextName, line),
 		logTimestamp:   plugin.GetTimestamp(),
 		logLevel:       t.recentLogLevel,
 		logLevelCode:   t.recentLogLevelCode,
+		spanID:         spanID,
 	}
+
+	// Reset span id
+	spanID = ""
+
+	// Append log
 	t.logs = append(t.logs, mL)
 	return len(p), nil
 }
@@ -210,4 +255,11 @@ func getLogLevelCode() int {
 
 	log.Print(errors.New("invalid " + thundraLogLogLevel + ". Logs are disabled. Use trace, debug, info, warn, error or none."))
 	return noneLogLevelCode
+}
+
+func setSpanID(span ot.Span) {
+	spanCtx, ok := span.Context().(tracer.SpanContext)
+	if ok {
+		spanID = spanCtx.SpanID
+	}
 }

@@ -3,7 +3,6 @@ package log
 import (
 	"encoding/json"
 	"fmt"
-	"runtime"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -129,8 +128,6 @@ func TestThundraLogManager_Write(t *testing.T) {
 func testMonitoredLogSetCorrectly(t *testing.T, m *monitoringLog, expectedMessage string) {
 	assert.Equal(t, expectedMessage, m.logMessage)
 
-	_, file, line, _ := runtime.Caller(3)
-	assert.Equal(t, fmt.Sprintf("%s %d", file, line), m.logContextName)
 	now := plugin.GetTimestamp()
 	assert.True(t, now >= m.logTimestamp)
 }
