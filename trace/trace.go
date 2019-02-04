@@ -7,13 +7,13 @@ import (
 
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
-	"github.com/thundra-io/thundra-lambda-agent-go/ttracer"
+	"github.com/thundra-io/thundra-lambda-agent-go/tracer"
 )
 
 type tracePlugin struct {
 	data     *traceData // Not opentracing data just to construct trace plugin data
 	rootSpan opentracing.Span
-	recorder ttracer.SpanRecorder
+	recorder tracer.SpanRecorder
 }
 
 // traceData collects information related to trace plugin per invocation.
@@ -33,8 +33,8 @@ var invocationCount uint32
 
 // New returns a new trace object.
 func New() *tracePlugin {
-	recorder := ttracer.NewInMemoryRecorder()
-	tracer := ttracer.New(recorder)
+	recorder := tracer.NewInMemoryRecorder()
+	tracer := tracer.New(recorder)
 	opentracing.SetGlobalTracer(tracer)
 	return &tracePlugin{
 		recorder: recorder,
@@ -73,7 +73,7 @@ func (tr *tracePlugin) AfterExecution(ctx context.Context, request json.RawMessa
 	tr.data.duration = tr.data.finishTime - tr.data.startTime
 
 	// Add root span data
-	rawRootSpan, ok := ttracer.GetRaw(tr.rootSpan)
+	rawRootSpan, ok := tracer.GetRaw(tr.rootSpan)
 	if ok {
 		rawRootSpan.ClassName = "AWS-Lambda"
 		rawRootSpan.DomainName = "API"

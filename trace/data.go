@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/thundra-io/thundra-lambda-agent-go/ttracer"
+	"github.com/thundra-io/thundra-lambda-agent-go/tracer"
 
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 )
@@ -50,7 +50,7 @@ func (tr *tracePlugin) prepareTraceDataModel(ctx context.Context, request json.R
 		ApplicationRuntimeVersion: plugin.ApplicationRuntimeVersion,
 		ApplicationTags:           map[string]interface{}{},
 
-		RootSpanID:      tr.rootSpan.Context().(ttracer.SpanContext).SpanID,
+		RootSpanID:      tr.rootSpan.Context().(tracer.SpanContext).SpanID,
 		StartTimestamp:  tr.data.startTime,
 		FinishTimestamp: tr.data.finishTime,
 		Duration:        tr.data.duration,
@@ -134,7 +134,7 @@ type spanLog struct {
 	Timestamp int64       `json:"timestamp"`
 }
 
-func (tr *tracePlugin) prepareSpanDataModel(ctx context.Context, span *ttracer.RawSpan) spanDataModel {
+func (tr *tracePlugin) prepareSpanDataModel(ctx context.Context, span *tracer.RawSpan) spanDataModel {
 	return spanDataModel{
 		ID:                        span.Context.SpanID,
 		Type:                      spanType,

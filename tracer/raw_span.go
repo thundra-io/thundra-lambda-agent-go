@@ -1,4 +1,4 @@
-package ttracer
+package tracer
 
 import (
 	"strings"

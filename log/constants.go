@@ -1,4 +1,4 @@
-package thundra_log
+package log
 
 const pluginOrder = 20
 const logType = "Log"

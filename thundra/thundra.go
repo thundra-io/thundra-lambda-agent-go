@@ -6,7 +6,7 @@ import (
 	"github.com/thundra-io/thundra-lambda-agent-go/agent"
 	ip "github.com/thundra-io/thundra-lambda-agent-go/invocation"
 	mp "github.com/thundra-io/thundra-lambda-agent-go/metric"
-	lp "github.com/thundra-io/thundra-lambda-agent-go/thundra_log"
+	lp "github.com/thundra-io/thundra-lambda-agent-go/log"
 	tp "github.com/thundra-io/thundra-lambda-agent-go/trace"
 )
 

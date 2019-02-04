@@ -1,4 +1,4 @@
-package thundra_log
+package log
 
 import (
 	"errors"
