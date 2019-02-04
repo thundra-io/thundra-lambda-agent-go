@@ -54,10 +54,10 @@ func (r *reporterImpl) Collect(messages []plugin.MonitoringDataWrapper) {
 
 // Report sends the data to collector
 func (r *reporterImpl) Report() {
+	atomic.CompareAndSwapUint32(r.reported, 0, 1)
 	if shouldSendAsync == "false" || shouldSendAsync == "" {
 		sendHTTPReq(r.messageQueue)
 	}
-	atomic.CompareAndSwapUint32(r.reported, 0, 1)
 }
 
 // ClearData clears the reporter data
