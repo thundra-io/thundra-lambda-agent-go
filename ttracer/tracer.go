@@ -8,22 +8,16 @@ import (
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 )
 
-// NewWithOptions creates a customized Tracer.
-func NewWithOptions(opts Options) ot.Tracer {
-	rval := &tracerImpl{options: opts}
-	return rval
-}
-
 // New creates and returns a standard Tracer which defers completed Spans to
 // `recorder`.
 func New(recorder SpanRecorder) ot.Tracer {
-	opts := DefaultOptions()
-	opts.Recorder = recorder
-	return NewWithOptions(opts)
+	return &tracerImpl{
+		Recorder: recorder,
+	}
 }
 
 type tracerImpl struct {
-	options Options
+	Recorder SpanRecorder
 }
 
 // StartSpan starts a new span with options and returns it.
@@ -74,7 +68,7 @@ func (t *tracerImpl) StartSpanWithOptions(operationName string, opts ot.StartSpa
 	}
 
 	// Add to recorder
-	t.options.Recorder.RecordSpan(&newSpan.raw)
+	t.Recorder.RecordSpan(&newSpan.raw)
 	return newSpan
 }
 

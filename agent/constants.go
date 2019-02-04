@@ -1,10 +1,10 @@
 package agent
 
+const DefaultTimeoutMargin = 200
 const thundraLambdaDisable = "thundra_lambda_disable"
 const defaultCollectorURL = "https://api.thundra.io/v1"
 const monitoringDataPath = "/monitoring-data"
 const dataModelVersion = "2.0"
-const defaultTimeoutMargin = 200
 
 //Thundra
 const thundraAPIKey = "thundra_apiKey"

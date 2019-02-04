@@ -12,9 +12,7 @@ type SpanRecorder interface {
 	Reset()
 }
 
-// InMemorySpanRecorder is a simple thread-safe implementation of
-// SpanRecorder that stores all reported spans in memory, accessible
-// via reporter.GetSpans(). It is primarily intended for testing purposes.
+// InMemorySpanRecorder stores spans using a slice in a thread-safe way
 type InMemorySpanRecorder struct {
 	sync.RWMutex
 	spans []*RawSpan

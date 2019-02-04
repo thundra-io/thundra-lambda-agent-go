@@ -297,7 +297,7 @@ func TestTimeout(t *testing.T) {
 	const timeoutDuration = 1
 	timeOutFunction := func(s string) string {
 		// Let it run longer than timeoutDuration
-		time.Sleep(time.Second * 2 * timeoutDuration)
+		time.Sleep(time.Second * 2 * time.Duration(timeoutDuration))
 		return fmt.Sprintf("Happy monitoring with %s!", s)
 	}
 
@@ -330,8 +330,7 @@ func TestTimeout(t *testing.T) {
 		defer cancel()
 
 		f(ctx, []byte(testCase[0].input))
-		// Code doesn't wait goroutines to finish.
-		//Monitor Data
+		
 		msg, err := getWrappedTraceData(r.MessageQueue)
 		if err != nil {
 			fmt.Println(err)
