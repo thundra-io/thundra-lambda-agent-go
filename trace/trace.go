@@ -91,6 +91,7 @@ func (tr *tracePlugin) AfterExecution(ctx context.Context, request json.RawMessa
 	tr.rootSpan.SetTag(plugin.AwsLambdaInvocationTimeout, plugin.IsTimeout(err))
 	tr.rootSpan.SetTag(plugin.AwsLambdaInvocationRequestId, plugin.GetAwsRequestID(ctx))
 	tr.rootSpan.SetTag(plugin.AwsLambdaInvocationRequest, request)
+	// TODO: Serialize response properly
 	tr.rootSpan.SetTag(plugin.AwsLambdaInvocationResponse, response)
 
 	if err != nil {

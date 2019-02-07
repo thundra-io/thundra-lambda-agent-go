@@ -88,3 +88,27 @@ func TestPrepareDataStaticFields(t *testing.T) {
 
 	test.CleanEnvironment()
 }
+
+func TestInvocationTags(t *testing.T) {
+	tags := map[string]interface{}{
+		"boolKey":   true,
+		"intKey":    37,
+		"floatKey":  3.14,
+		"stringKey": "foobar",
+		"dictKey": map[string]string{
+			"key1": "val1",
+			"key2": "val2",
+		},
+	}
+
+	for k, v := range tags {
+		SetInvocationTag(k, v)
+	}
+
+	assert.Equal(t, len(invocationTags), len(tags))
+	assert.Equal(t, invocationTags["boolKey"], tags["boolKey"])
+	assert.Equal(t, invocationTags["intKey"], tags["intKey"])
+	assert.Equal(t, invocationTags["floatKey"], tags["floatKey"])
+	assert.Equal(t, invocationTags["stringKey"], tags["stringKey"])
+	assert.Equal(t, invocationTags["dictKey"], fmt.Sprint(tags["dictKey"]))
+}

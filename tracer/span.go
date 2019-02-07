@@ -1,6 +1,8 @@
 package tracer
 
 import (
+	"encoding/json"
+	"fmt"
 	"sync"
 	"time"
 
@@ -81,7 +83,14 @@ func (s *spanImpl) SetTag(key string, value interface{}) ot.Span {
 	if s.raw.Tags == nil {
 		s.raw.Tags = ot.Tags{}
 	}
-	s.raw.Tags[key] = value
+
+	switch value.(type) {
+	case string, int, float64, bool, json.RawMessage:
+		s.raw.Tags[key] = value
+	default:
+		s.raw.Tags[key] = fmt.Sprint(value)
+	}
+
 	return s
 }
 
@@ -96,8 +105,8 @@ func (s *spanImpl) LogKV(keyValues ...interface{}) {
 }
 
 func (s *spanImpl) appendLog(lr ot.LogRecord) {
-		s.raw.Logs = append(s.raw.Logs, lr)
-		return
+	s.raw.Logs = append(s.raw.Logs, lr)
+	return
 }
 
 // LogFields parses parameter fields sequentially, as first one is the key and the second is it's value.

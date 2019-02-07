@@ -61,8 +61,14 @@ func (ip *invocationPlugin) AfterExecution(ctx context.Context, request json.Raw
 	ip.data.timeout = plugin.IsTimeout(err)
 
 	data := ip.prepareData(ctx)
+
+	ip.Reset()
 	
 	return []plugin.MonitoringDataWrapper{plugin.WrapMonitoringData(data, "Invocation")}
+}
+
+func (ip *invocationPlugin) Reset() {
+	invocationTags = make(map[string]interface{})
 }
 
 // isColdStarted returns if the lambda instance is cold started. Cold Start only happens on the first invocationPlugin.

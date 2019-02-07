@@ -60,7 +60,7 @@ func (ip *invocationPlugin) prepareData(ctx context.Context) invocationDataModel
 
 		TraceID:       plugin.TraceID,
 		TransactionID: plugin.TransactionID,
-		SpanID: "", // Optional Field
+		SpanID:        "", // Optional Field
 
 		FunctionPlatform: plugin.AwsFunctionPlatform,
 		FunctionName:     plugin.FunctionName,
@@ -79,7 +79,7 @@ func (ip *invocationPlugin) prepareData(ctx context.Context) invocationDataModel
 }
 
 func (ip *invocationPlugin) prepareTags(ctx context.Context) map[string]interface{} {
-	tags := map[string]interface{}{}
+	tags := invocationTags
 
 	// Put error related tags
 	if ip.data.erroneous {
