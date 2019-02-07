@@ -12,6 +12,9 @@ import (
 
 var agentInstance *agent.Agent
 
+// Logger is main thundra logger
+var Logger = lp.Logger
+
 func addDefaultPlugins(a *agent.Agent) *agent.Agent {
 	a.AddPlugin(ip.New()).
 		AddPlugin(mp.New()).
