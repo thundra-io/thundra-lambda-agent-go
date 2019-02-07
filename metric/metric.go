@@ -48,7 +48,7 @@ func New() *metricPlugin {
 	proc = plugin.GetThisProcess()
 
 	return &metricPlugin{
-		data: new(metricData),
+		data: &metricData{},
 	}
 }
 
@@ -65,7 +65,7 @@ func (mp *metricPlugin) Order() uint8 {
 }
 
 func (mp *metricPlugin) BeforeExecution(ctx context.Context, request json.RawMessage) context.Context {
-	mp.data = new(metricData)
+	mp.data = &metricData{}
 	mp.data.metricTimestamp = plugin.GetTimestamp()
 
 	if !mp.disableGCMetrics {
@@ -143,6 +143,6 @@ func (mp *metricPlugin) AfterExecution(ctx context.Context, request json.RawMess
 		mm := prepareMemoryMetricsData(mp, base)
 		stats = append(stats, plugin.WrapMonitoringData(mm, metricType))
 	}
-	mp.data = nil
+
 	return stats
 }

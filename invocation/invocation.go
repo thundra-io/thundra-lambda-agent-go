@@ -27,8 +27,8 @@ type invocationData struct {
 
 // New initializes and returns a new invocationPlugin object.
 func New() *invocationPlugin {
-	ip := new(invocationPlugin)
-	ip.data = new(invocationData)
+	ip := &invocationPlugin{}
+	ip.data = &invocationData{}
 	return ip
 }
 
@@ -41,7 +41,7 @@ func (ip *invocationPlugin) Order() uint8 {
 }
 
 func (ip *invocationPlugin) BeforeExecution(ctx context.Context, request json.RawMessage) context.Context {
-	ip.data = new(invocationData)
+	ip.data = &invocationData{}
 	ip.data.startTimestamp = plugin.GetTimestamp()
 	return ctx
 }
@@ -61,10 +61,8 @@ func (ip *invocationPlugin) AfterExecution(ctx context.Context, request json.Raw
 	ip.data.timeout = plugin.IsTimeout(err)
 
 	data := ip.prepareData(ctx)
-	ip.data = nil
-	var invocationArr []plugin.MonitoringDataWrapper
-	invocationArr = append(invocationArr, plugin.WrapMonitoringData(data, "Invocation"))
-	return invocationArr
+	
+	return []plugin.MonitoringDataWrapper{plugin.WrapMonitoringData(data, "Invocation")}
 }
 
 // isColdStarted returns if the lambda instance is cold started. Cold Start only happens on the first invocationPlugin.

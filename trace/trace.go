@@ -36,6 +36,7 @@ func New() *tracePlugin {
 	recorder := tracer.NewInMemoryRecorder()
 	tracer := tracer.New(recorder)
 	opentracing.SetGlobalTracer(tracer)
+	
 	return &tracePlugin{
 		recorder: recorder,
 	}
@@ -132,6 +133,5 @@ func (tr *tracePlugin) AfterExecution(ctx context.Context, request json.RawMessa
 
 // Reset clears the recorded data for the next invocation
 func (tr *tracePlugin) Reset() {
-	tr.data = nil
 	tr.recorder.Reset()
 }

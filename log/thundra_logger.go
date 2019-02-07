@@ -16,8 +16,8 @@ import (
 
 var (
 	logManager *thundraLogManager
+	// Logger used as main thundra logger
 	Logger     *thundraLogger
-
 	// If we use prebuilt logger functions these are print,panic or fatal
 	// we have too add an additional calldepth for our wrapper.
 	// It is zero for other functions: trace, debug, info, warn, error.
@@ -43,7 +43,6 @@ type thundraLogManager struct {
 }
 
 func newThundraLogger(t *thundraLogManager) *thundraLogger {
-	//flag := log.Ldate | log.Ltime | log.Lmicroseconds
 	return &thundraLogger{
 		Logger: log.New(t, "", 0),
 	}

@@ -10,6 +10,7 @@ import (
 
 type logPlugin struct{}
 
+// New creates and returns new logPlugin
 func New() *logPlugin {
 	return &logPlugin{}
 }
