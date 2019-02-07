@@ -22,7 +22,7 @@ var TraceID string
 var TransactionID string
 var SpanID string
 
-var ApiKey string
+var APIKey string
 
 func init() {
 	FunctionName = getFunctionName()

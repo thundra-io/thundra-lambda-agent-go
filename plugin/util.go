@@ -87,6 +87,6 @@ func WrapMonitoringData(data interface{}, dataType string) MonitoringDataWrapper
 		DataModelVersion: DataModelVersion,
 		Type:             dataType,
 		Data:             data,
-		ApiKey:           ApiKey,
+		APIKey:           APIKey,
 	}
 }

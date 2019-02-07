@@ -104,7 +104,7 @@ func sendHTTPReq(messageQueue []plugin.MonitoringDataWrapper) {
 		fmt.Println("Error http.NewRequest: ", err)
 	}
 	req.Close = true
-	req.Header.Set("Authorization", "ApiKey "+plugin.ApiKey)
+	req.Header.Set("Authorization", "APIKey "+plugin.APIKey)
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}

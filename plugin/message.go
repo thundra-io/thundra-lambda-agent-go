@@ -7,6 +7,6 @@ type MonitoringDataWrapper struct {
 	DataModelVersion string `json:"dataModelVersion"`
 	Type             string `json:"type"`
 	Data             Data   `json:"data"`
-	ApiKey           string `json:"apiKey"`
+	APIKey           string `json:"apiKey"`
 	Compressed       bool   `json:"compressed"`
 }

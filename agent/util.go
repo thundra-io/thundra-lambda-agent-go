@@ -70,5 +70,5 @@ func determineAPIKey() {
 	}
 
 	// Set it globally
-	plugin.ApiKey = k
+	plugin.APIKey = k
 }
