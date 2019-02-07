@@ -22,19 +22,17 @@ type tracerImpl struct {
 
 // StartSpan starts a new span with options and returns it.
 func (t *tracerImpl) StartSpan(operationName string, opts ...ot.StartSpanOption) ot.Span {
-	sso := ot.StartSpanOptions{}
+	sso := ot.StartSpanOptions{
+		Tags: make(map[string]interface{}),
+	}
 	for _, o := range opts {
 		o.Apply(&sso)
 	}
-
 	return t.StartSpanWithOptions(operationName, sso)
 }
 
 func (t *tracerImpl) StartSpanWithOptions(operationName string, opts ot.StartSpanOptions) ot.Span {
 	tags := opts.Tags
-	if tags == nil {
-		tags = map[string]interface{}{}
-	}
 
 	newSpan := t.getSpan()
 	newSpan.raw.Context.TraceID = plugin.TraceID

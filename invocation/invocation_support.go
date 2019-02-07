@@ -1,25 +1,18 @@
 package invocation
 
-import "fmt"
-
 var invocationTags = make(map[string]interface{})
 
-// SetInvocationTag sets the given tag for invocation
-func SetInvocationTag(key string, value interface{}) {
-	switch value.(type) {
-	case string, int, float64, bool:
-		invocationTags[key] = value
-	default:
-		invocationTags[key] = fmt.Sprint(value)
-	}
+// SetTag sets the given tag for invocation
+func SetTag(key string, value interface{}) {
+	invocationTags[key] = value
 }
 
-// GetInvocationTags returns invocation tags
-func GetInvocationTags() map[string]interface{} {
+// GetTags returns invocation tags
+func GetTags() map[string]interface{} {
 	return invocationTags
 }
 
-// ClearInvocationTags clears the invocation tags
-func ClearInvocationTags() {
+// ClearTags clears the invocation tags
+func ClearTags() {
 	invocationTags = make(map[string]interface{})
 }

@@ -1,8 +1,6 @@
 package tracer
 
 import (
-	"encoding/json"
-	"fmt"
 	"sync"
 	"time"
 
@@ -79,18 +77,10 @@ func (s *spanImpl) SetOperationName(operationName string) ot.Span {
 func (s *spanImpl) SetTag(key string, value interface{}) ot.Span {
 	s.Lock()
 	defer s.Unlock()
-
 	if s.raw.Tags == nil {
 		s.raw.Tags = ot.Tags{}
 	}
-
-	switch value.(type) {
-	case string, int, float64, bool, json.RawMessage:
-		s.raw.Tags[key] = value
-	default:
-		s.raw.Tags[key] = fmt.Sprint(value)
-	}
-
+	s.raw.Tags[key] = value
 	return s
 }
 
