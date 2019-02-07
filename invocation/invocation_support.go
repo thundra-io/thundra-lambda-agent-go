@@ -18,3 +18,8 @@ func SetInvocationTag(key string, value interface{}) {
 func GetInvocationTags() map[string]interface{} {
 	return invocationTags
 }
+
+// ClearInvocationTags clears the invocation tags
+func ClearInvocationTags() {
+	invocationTags = make(map[string]interface{})
+}
