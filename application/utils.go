@@ -11,6 +11,8 @@ import (
 
 var ApplicationName string
 var ApplicationID string
+var ApplicationDomainName string
+var ApplicationClassName string
 var ApplicationVersion string
 var ApplicationStage string
 var FunctionRegion string
@@ -19,9 +21,12 @@ var LogGroupName string
 var LogStreamName string
 var FunctionARN string
 
+
 func init() {
 	ApplicationName = getApplicationName()
 	ApplicationID = getAppID()
+	ApplicationDomainName = getApplicationDomainName()
+	ApplicationClassName = getApplicationClassName()
 	ApplicationVersion = getApplicationVersion()
 	ApplicationStage = getApplicationStage()
 	FunctionRegion = getFunctionRegion()
@@ -30,17 +35,43 @@ func init() {
 	LogStreamName = getLogStreamName()
 }
 
-// getFunctionName returns function name.
+// getApplicationDomainName returns application domain name
+func getApplicationDomainName() string {
+	v := os.Getenv(constants.ApplicationDomainProp)
+	if v != "" {
+		return v
+	}
+	return constants.AwsLambdaApplicationDomain
+}
+
+// getApplicationClassName returns application class name
+func getApplicationClassName() string {
+	v := os.Getenv(constants.ApplicationClassProp)
+	if v != "" {
+		return v
+	}
+	return constants.AwsLambdaApplicationClass
+}
+
+// getApplicationName returns application name
 func getApplicationName() string {
+	v := os.Getenv(constants.ApplicationNameProp)
+	if v != "" {
+		return v
+	}
 	return lambdacontext.FunctionName
 }
 
-// getAppID returns application id.
+// getAppID returns application id
 func getAppID() string {
+	v := os.Getenv(constants.ApplicationIDProp)
+	if v != "" {
+		return v
+	}
 	return getAppIDFromStreamName(lambdacontext.LogStreamName)
 }
 
-// getAppIDFromStreamName returns application id. AppId starts after ']' in logstreamname.
+// getAppIDFromStreamName returns application id. AppId starts after ']' in logstreamname
 func getAppIDFromStreamName(logStreamName string) string {
 	s := strings.Split(logStreamName, "]")
 	if len(s) > 1 {
@@ -49,18 +80,22 @@ func getAppIDFromStreamName(logStreamName string) string {
 	return ""
 }
 
-// getApplicationVersion returns function version.
+// getApplicationVersion returns function version
 func getApplicationVersion() string {
+	v := os.Getenv(constants.ApplicationVersionProp)
+	if v != "" {
+		return v
+	}
 	return lambdacontext.FunctionVersion
 }
 
-// getApplicationStage returns profile.
+// getApplicationStage returns profile
 func getApplicationStage() string {
-	p := os.Getenv(constants.ThundraApplicationProfile)
-	if p == "" {
-		p = constants.DefaultProfile
+	v := os.Getenv(constants.ApplicationNameProp)
+	if v != "" {
+		return v
 	}
-	return p
+	return os.Getenv(constants.ThundraApplicationStage)
 }
 
 // getFunctionRegion returns AWS region's name

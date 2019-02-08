@@ -37,7 +37,7 @@ var mutex = &sync.Mutex{}
 
 func init() {
 	shouldSendAsync = os.Getenv(constants.ThundraLambdaPublishCloudwatchEnable)
-	if url := os.Getenv(constants.ThundraLambdaPublishRestBaseURL); url != "" {
+	if url := os.Getenv(constants.ThundraLambdaReportRestBaseURL); url != "" {
 		collectorURL = url
 	} else {
 		collectorURL = constants.DefaultCollectorURL
