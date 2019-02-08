@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 
+	"github.com/thundra-io/thundra-lambda-agent-go/application"
+	"github.com/thundra-io/thundra-lambda-agent-go/constants"
 	"github.com/thundra-io/thundra-lambda-agent-go/tracer"
 
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
@@ -38,16 +40,16 @@ func (tr *tracePlugin) prepareTraceDataModel(ctx context.Context, request json.R
 	return traceDataModel{
 		ID:                        plugin.TraceID,
 		Type:                      traceType,
-		AgentVersion:              plugin.AgentVersion,
-		DataModelVersion:          plugin.DataModelVersion,
-		ApplicationID:             plugin.ApplicationID,
-		ApplicationDomainName:     plugin.ApplicationDomainName,
-		ApplicationClassName:      plugin.ApplicationClassName,
-		ApplicationName:           plugin.FunctionName,
-		ApplicationVersion:        plugin.ApplicationVersion,
-		ApplicationStage:          plugin.ApplicationStage,
-		ApplicationRuntime:        plugin.ApplicationRuntime,
-		ApplicationRuntimeVersion: plugin.ApplicationRuntimeVersion,
+		AgentVersion:              constants.AgentVersion,
+		DataModelVersion:          constants.DataModelVersion,
+		ApplicationID:             application.ApplicationID,
+		ApplicationDomainName:     application.ApplicationDomainName,
+		ApplicationClassName:      application.ApplicationClassName,
+		ApplicationName:           application.FunctionName,
+		ApplicationVersion:        application.ApplicationVersion,
+		ApplicationStage:          application.ApplicationStage,
+		ApplicationRuntime:        application.ApplicationRuntime,
+		ApplicationRuntimeVersion: application.ApplicationRuntimeVersion,
 		ApplicationTags:           map[string]interface{}{},
 
 		RootSpanID:      tr.rootSpan.Context().(tracer.SpanContext).SpanID,
@@ -60,40 +62,40 @@ func (tr *tracePlugin) prepareTraceDataModel(ctx context.Context, request json.R
 
 func (tr *tracePlugin) prepareTraceTags(ctx context.Context, request json.RawMessage, response interface{}) map[string]interface{} {
 	tags := map[string]interface{}{}
-	tags[plugin.AwsLambdaInvocationRequestId] = plugin.GetAwsRequestID(ctx)
+	tags[constants.AwsLambdaInvocationRequestId] = application.GetAwsRequestID(ctx)
 
 	// If the agent's user doesn't want to send their request and response data, hide them.
 	if !shouldHideRequest() {
-		tags[plugin.AwsLambdaInvocationRequest] = string(request)
+		tags[constants.AwsLambdaInvocationRequest] = string(request)
 	}
 	if !shouldHideResponse() {
-		tags[plugin.AwsLambdaInvocationResponse] = response
+		tags[constants.AwsLambdaInvocationResponse] = response
 	}
 
-	tags[plugin.AwsLambdaARN] = plugin.GetInvokedFunctionArn(ctx)
-	tags[plugin.AwsLambdaLogGroupName] = plugin.LogGroupName
-	tags[plugin.AwsLambdaLogStreamName] = plugin.LogStreamName
-	tags[plugin.AwsLambdaMemoryLimit] = plugin.MemoryLimit
-	tags[plugin.AwsLambdaName] = plugin.FunctionName
-	tags[plugin.AwsRegion] = plugin.FunctionRegion
-	tags[plugin.AwsLambdaInvocationTimeout] = tr.data.timeout
+	tags[constants.AwsLambdaARN] = application.GetInvokedFunctionArn(ctx)
+	tags[constants.AwsLambdaLogGroupName] = application.LogGroupName
+	tags[constants.AwsLambdaLogStreamName] = application.LogStreamName
+	tags[constants.AwsLambdaMemoryLimit] = application.MemoryLimit
+	tags[constants.AwsLambdaName] = application.FunctionName
+	tags[constants.AwsRegion] = application.FunctionRegion
+	tags[constants.AwsLambdaInvocationTimeout] = tr.data.timeout
 
 	// If this is the first invocation, it is a cold start
 	if invocationCount == 1 {
-		tags[plugin.AwsLambdaInvocationColdStart] = true
+		tags[constants.AwsLambdaInvocationColdStart] = true
 	} else {
-		tags[plugin.AwsLambdaInvocationColdStart] = false
+		tags[constants.AwsLambdaInvocationColdStart] = false
 	}
 
 	if tr.data.panicInfo != nil {
-		tags[plugin.AwsError] = true
-		tags[plugin.AwsErrorKind] = tr.data.panicInfo.Kind
-		tags[plugin.AwsErrorMessage] = tr.data.panicInfo.Message
-		tags[plugin.AwsErrorStack] = tr.data.panicInfo.Stack
+		tags[constants.AwsError] = true
+		tags[constants.AwsErrorKind] = tr.data.panicInfo.Kind
+		tags[constants.AwsErrorMessage] = tr.data.panicInfo.Message
+		tags[constants.AwsErrorStack] = tr.data.panicInfo.Stack
 	} else if tr.data.errorInfo != nil {
-		tags[plugin.AwsError] = true
-		tags[plugin.AwsErrorKind] = tr.data.errorInfo.Kind
-		tags[plugin.AwsErrorMessage] = tr.data.errorInfo.Message
+		tags[constants.AwsError] = true
+		tags[constants.AwsErrorKind] = tr.data.errorInfo.Kind
+		tags[constants.AwsErrorMessage] = tr.data.errorInfo.Message
 	}
 	return tags
 }
@@ -138,16 +140,16 @@ func (tr *tracePlugin) prepareSpanDataModel(ctx context.Context, span *tracer.Ra
 	return spanDataModel{
 		ID:                        span.Context.SpanID,
 		Type:                      spanType,
-		AgentVersion:              plugin.AgentVersion,
-		DataModelVersion:          plugin.DataModelVersion,
-		ApplicationID:             plugin.ApplicationID,
-		ApplicationDomainName:     plugin.ApplicationDomainName,
-		ApplicationClassName:      plugin.ApplicationClassName,
-		ApplicationName:           plugin.FunctionName,
-		ApplicationVersion:        plugin.ApplicationVersion,
-		ApplicationStage:          plugin.ApplicationStage,
-		ApplicationRuntime:        plugin.ApplicationRuntime,
-		ApplicationRuntimeVersion: plugin.ApplicationRuntimeVersion,
+		AgentVersion:              constants.AgentVersion,
+		DataModelVersion:          constants.DataModelVersion,
+		ApplicationID:             application.ApplicationID,
+		ApplicationDomainName:     application.ApplicationDomainName,
+		ApplicationClassName:      application.ApplicationClassName,
+		ApplicationName:           application.FunctionName,
+		ApplicationVersion:        application.ApplicationVersion,
+		ApplicationStage:          application.ApplicationStage,
+		ApplicationRuntime:        application.ApplicationRuntime,
+		ApplicationRuntimeVersion: application.ApplicationRuntimeVersion,
 		ApplicationTags:           map[string]interface{}{},
 
 		TraceID:       span.Context.TraceID,
@@ -156,7 +158,7 @@ func (tr *tracePlugin) prepareSpanDataModel(ctx context.Context, span *tracer.Ra
 
 		DomainName:    span.DomainName,
 		ClassName:     span.ClassName,
-		ServiceName:   plugin.FunctionName, //TODO implement it with Opentracing
+		ServiceName:   application.FunctionName,
 		OperationName: span.OperationName,
 
 		StartTimestamp:  span.StartTimestamp,

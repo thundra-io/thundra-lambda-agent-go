@@ -7,8 +7,10 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
+	"github.com/thundra-io/thundra-lambda-agent-go/application"
+	"github.com/thundra-io/thundra-lambda-agent-go/constants"
 	"github.com/thundra-io/thundra-lambda-agent-go/test"
+	"github.com/thundra-io/thundra-lambda-agent-go/utils"
 )
 
 const (
@@ -18,7 +20,7 @@ const (
 
 func TestInvocationData_BeforeExecution(t *testing.T) {
 	ip := New()
-	prevTime := plugin.GetTimestamp()
+	prevTime := utils.GetTimestamp()
 
 	ip.BeforeExecution(context.TODO(), nil)
 
@@ -28,7 +30,7 @@ func TestInvocationData_BeforeExecution(t *testing.T) {
 func TestInvocationData_AfterExecution(t *testing.T) {
 	ip := New()
 	invocationCount = 0
-	prevTime := plugin.GetTimestamp()
+	prevTime := utils.GetTimestamp()
 	ip.data.startTimestamp = prevTime
 
 	data := ip.AfterExecution(context.TODO(), nil, nil, nil)
@@ -37,7 +39,7 @@ func TestInvocationData_AfterExecution(t *testing.T) {
 		fmt.Println("Can not convert to invocationDataModel")
 	}
 
-	now := plugin.GetTimestamp()
+	now := utils.GetTimestamp()
 	assert.True(t, prevTime <= d.FinishTimestamp)
 	assert.True(t, d.FinishTimestamp <= now)
 	assert.True(t, d.Duration <= now-prevTime)
@@ -73,21 +75,21 @@ func TestPrepareDataStaticFields(t *testing.T) {
 	data := i.prepareData(context.TODO())
 	assert.NotNil(t, data.ID)
 	assert.Equal(t, "Invocation", data.Type)
-	assert.Equal(t, plugin.AgentVersion, data.AgentVersion)
-	assert.Equal(t, plugin.DataModelVersion, data.DataModelVersion)
+	assert.Equal(t, constants.AgentVersion, data.AgentVersion)
+	assert.Equal(t, constants.DataModelVersion, data.DataModelVersion)
 	assert.Equal(t, test.AppId, data.ApplicationID)
-	assert.Equal(t, plugin.ApplicationDomainName, data.ApplicationDomainName)
-	assert.Equal(t, plugin.ApplicationClassName, data.ApplicationClassName)
-	assert.Equal(t, plugin.FunctionName, data.ApplicationName)
-	assert.Equal(t, plugin.ApplicationVersion, data.ApplicationVersion)
-	assert.Equal(t, plugin.ApplicationStage, data.ApplicationStage)
-	assert.Equal(t, plugin.ApplicationRuntime, data.ApplicationRuntime)
-	assert.Equal(t, plugin.ApplicationRuntimeVersion, data.ApplicationRuntimeVersion)
+	assert.Equal(t, application.ApplicationDomainName, data.ApplicationDomainName)
+	assert.Equal(t, application.ApplicationClassName, data.ApplicationClassName)
+	assert.Equal(t, application.FunctionName, data.ApplicationName)
+	assert.Equal(t, application.ApplicationVersion, data.ApplicationVersion)
+	assert.Equal(t, application.ApplicationStage, data.ApplicationStage)
+	assert.Equal(t, application.ApplicationRuntime, data.ApplicationRuntime)
+	assert.Equal(t, application.ApplicationRuntimeVersion, data.ApplicationRuntimeVersion)
 	assert.NotNil(t, data.ApplicationTags)
 
 	assert.Equal(t, "AWS Lambda", data.FunctionPlatform)
-	assert.Equal(t, plugin.FunctionName, data.FunctionName)
-	assert.Equal(t, plugin.FunctionRegion, data.FunctionRegion)
+	assert.Equal(t, application.FunctionName, data.FunctionName)
+	assert.Equal(t, application.FunctionRegion, data.FunctionRegion)
 	assert.NotNil(t, data.Tags)
 
 	test.CleanEnvironment()
@@ -116,6 +118,6 @@ func TestInvocationTags(t *testing.T) {
 	assert.Equal(t, invocationTags["floatKey"], tags["floatKey"])
 	assert.Equal(t, invocationTags["stringKey"], tags["stringKey"])
 	assert.Equal(t, invocationTags["dictKey"], tags["dictKey"])
-	
+
 	ClearTags()
 }

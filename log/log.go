@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"os"
 
+	"github.com/thundra-io/thundra-lambda-agent-go/constants"
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 )
 
@@ -16,7 +17,7 @@ func New() *logPlugin {
 }
 
 func (p *logPlugin) IsEnabled() bool {
-	if os.Getenv(plugin.ThundraDisableLog) == "true" {
+	if os.Getenv(constants.ThundraDisableLog) == "true" {
 		return false
 	}
 

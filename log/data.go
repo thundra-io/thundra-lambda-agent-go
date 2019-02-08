@@ -1,7 +1,10 @@
 package log
 
 import (
+	"github.com/thundra-io/thundra-lambda-agent-go/application"
+	"github.com/thundra-io/thundra-lambda-agent-go/constants"
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
+	"github.com/thundra-io/thundra-lambda-agent-go/utils"
 )
 
 type logData struct {
@@ -42,18 +45,18 @@ type monitoringLog struct {
 
 func prepareLogData(log *monitoringLog) logData {
 	return logData{
-		ID:                        plugin.GenerateNewID(),
+		ID:                        utils.GenerateNewID(),
 		Type:                      logType,
-		AgentVersion:              plugin.AgentVersion,
-		DataModelVersion:          plugin.DataModelVersion,
-		ApplicationID:             plugin.ApplicationID,
-		ApplicationDomainName:     plugin.ApplicationDomainName,
-		ApplicationClassName:      plugin.ApplicationClassName,
-		ApplicationName:           plugin.FunctionName,
-		ApplicationVersion:        plugin.ApplicationVersion,
-		ApplicationStage:          plugin.ApplicationStage,
-		ApplicationRuntime:        plugin.ApplicationRuntime,
-		ApplicationRuntimeVersion: plugin.ApplicationRuntimeVersion,
+		AgentVersion:              constants.AgentVersion,
+		DataModelVersion:          constants.DataModelVersion,
+		ApplicationID:             application.ApplicationID,
+		ApplicationDomainName:     application.ApplicationDomainName,
+		ApplicationClassName:      application.ApplicationClassName,
+		ApplicationName:           application.FunctionName,
+		ApplicationVersion:        application.ApplicationVersion,
+		ApplicationStage:          application.ApplicationStage,
+		ApplicationRuntime:        application.ApplicationRuntime,
+		ApplicationRuntimeVersion: application.ApplicationRuntimeVersion,
 		ApplicationTags:           map[string]interface{}{},
 
 		TraceID:        plugin.TraceID,

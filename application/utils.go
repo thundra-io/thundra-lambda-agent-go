@@ -1,7 +1,8 @@
-package plugin
+package application
 
 import (
 	"context"
+	"github.com/thundra-io/thundra-lambda-agent-go/constants"
 	"os"
 	"strings"
 
@@ -17,12 +18,6 @@ var MemoryLimit int
 var LogGroupName string
 var LogStreamName string
 var FunctionARN string
-
-var TraceID string
-var TransactionID string
-var SpanID string
-
-var APIKey string
 
 func init() {
 	FunctionName = getFunctionName()
@@ -61,16 +56,16 @@ func getApplicationVersion() string {
 
 // getApplicationStage returns profile.
 func getApplicationStage() string {
-	p := os.Getenv(ThundraApplicationProfile)
+	p := os.Getenv(constants.ThundraApplicationProfile)
 	if p == "" {
-		p = DefaultProfile
+		p = constants.DefaultProfile
 	}
 	return p
 }
 
 // getFunctionRegion returns AWS region's name
 func getFunctionRegion() string {
-	return os.Getenv(AwsDefaultRegion)
+	return os.Getenv(constants.AwsDefaultRegion)
 }
 
 // getMemoryLimit returns configured memory limit for the current instance of the Lambda Function

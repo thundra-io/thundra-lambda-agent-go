@@ -5,6 +5,7 @@ import (
 
 	"github.com/aws/aws-lambda-go/lambdacontext"
 	"github.com/stretchr/testify/mock"
+	"github.com/thundra-io/thundra-lambda-agent-go/application"
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 )
 
@@ -61,21 +62,21 @@ func NewMockReporter() *MockReporter {
 
 func PrepareEnvironment() {
 	lambdacontext.LogStreamName = LogStreamName
-	plugin.FunctionName = FunctionName
-	plugin.ApplicationID = AppId
-	plugin.ApplicationVersion = FunctionVersion
-	plugin.ApplicationStage = ApplicationStage
-	plugin.FunctionRegion = Region
-	plugin.MemoryLimit = MemoryLimit
-	plugin.LogGroupName = LogGroupName
-	plugin.LogStreamName = LogStreamName
+	application.FunctionName = FunctionName
+	application.ApplicationID = AppId
+	application.ApplicationVersion = FunctionVersion
+	application.ApplicationStage = ApplicationStage
+	application.FunctionRegion = Region
+	application.MemoryLimit = MemoryLimit
+	application.LogGroupName = LogGroupName
+	application.LogStreamName = LogStreamName
 }
 
 func CleanEnvironment() {
-	plugin.FunctionName = ""
-	plugin.ApplicationID = ""
-	plugin.ApplicationVersion = ""
-	plugin.ApplicationStage = ""
-	plugin.FunctionRegion = ""
-	plugin.MemoryLimit = 0
+	application.FunctionName = ""
+	application.ApplicationID = ""
+	application.ApplicationVersion = ""
+	application.ApplicationStage = ""
+	application.FunctionRegion = ""
+	application.MemoryLimit = 0
 }

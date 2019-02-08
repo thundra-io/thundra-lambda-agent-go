@@ -9,15 +9,15 @@ import (
 	"strings"
 
 	"github.com/thundra-io/thundra-lambda-agent-go/tracer"
+	"github.com/thundra-io/thundra-lambda-agent-go/utils"
 
 	ot "github.com/opentracing/opentracing-go"
-	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 )
 
 var (
 	logManager *thundraLogManager
 	// Logger used as main thundra logger
-	Logger     *thundraLogger
+	Logger *thundraLogger
 	// If we use prebuilt logger functions these are print,panic or fatal
 	// we have too add an additional calldepth for our wrapper.
 	// It is zero for other functions: trace, debug, info, warn, error.
@@ -213,7 +213,7 @@ func (t *thundraLogManager) Write(p []byte) (n int, err error) {
 	mL := &monitoringLog{
 		logMessage:     string(p),
 		logContextName: fmt.Sprintf("%s: %d", contextName, line),
-		logTimestamp:   plugin.GetTimestamp(),
+		logTimestamp:   utils.GetTimestamp(),
 		logLevel:       t.recentLogLevel,
 		logLevelCode:   t.recentLogLevelCode,
 		spanID:         spanID,

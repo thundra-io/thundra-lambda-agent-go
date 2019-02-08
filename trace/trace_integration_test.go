@@ -10,8 +10,11 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/thundra-io/thundra-lambda-agent-go/agent"
+	"github.com/thundra-io/thundra-lambda-agent-go/application"
+	"github.com/thundra-io/thundra-lambda-agent-go/constants"
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 	"github.com/thundra-io/thundra-lambda-agent-go/test"
+	"github.com/thundra-io/thundra-lambda-agent-go/utils"
 )
 
 const (
@@ -111,9 +114,9 @@ func TestTrace(t *testing.T) {
 			lambdaHandler := a.Wrap(testCase.handler)
 			h := lambdaHandler.(func(context.Context, json.RawMessage) (interface{}, error))
 			f := lambdaFunction(h)
-			invocationStartTime := plugin.GetTimestamp()
+			invocationStartTime := utils.GetTimestamp()
 			response, errVal := f(context.TODO(), []byte(testCase.input))
-			invocationEndTime := plugin.GetTimestamp()
+			invocationEndTime := utils.GetTimestamp()
 
 			//Monitor Data
 			msg, err := getWrappedTraceData(r.MessageQueue)
@@ -122,7 +125,7 @@ func TestTrace(t *testing.T) {
 				return
 			}
 			assert.Equal(t, traceType, msg.Type)
-			assert.Equal(t, plugin.DataModelVersion, msg.DataModelVersion)
+			assert.Equal(t, constants.DataModelVersion, msg.DataModelVersion)
 
 			//Trace Data
 			td, ok := msg.Data.(traceDataModel)
@@ -131,16 +134,16 @@ func TestTrace(t *testing.T) {
 			}
 			assert.NotNil(t, td.ID)
 			assert.Equal(t, traceType, td.Type)
-			assert.Equal(t, plugin.AgentVersion, td.AgentVersion)
-			assert.Equal(t, plugin.DataModelVersion, td.DataModelVersion)
+			assert.Equal(t, constants.AgentVersion, td.AgentVersion)
+			assert.Equal(t, constants.DataModelVersion, td.DataModelVersion)
 			assert.Equal(t, test.AppId, td.ApplicationID)
-			assert.Equal(t, plugin.ApplicationDomainName, td.ApplicationDomainName)
-			assert.Equal(t, plugin.ApplicationClassName, td.ApplicationClassName)
+			assert.Equal(t, application.ApplicationDomainName, td.ApplicationDomainName)
+			assert.Equal(t, application.ApplicationClassName, td.ApplicationClassName)
 			assert.Equal(t, test.FunctionName, td.ApplicationName)
 			assert.Equal(t, test.FunctionVersion, td.ApplicationVersion)
 			assert.Equal(t, test.ApplicationStage, td.ApplicationStage)
-			assert.Equal(t, plugin.ApplicationRuntime, td.ApplicationRuntime)
-			assert.Equal(t, plugin.ApplicationRuntimeVersion, td.ApplicationRuntimeVersion)
+			assert.Equal(t, application.ApplicationRuntime, td.ApplicationRuntime)
+			assert.Equal(t, application.ApplicationRuntimeVersion, td.ApplicationRuntimeVersion)
 			assert.NotNil(t, td.ApplicationTags)
 
 			assert.NotNil(t, td.RootSpanID)
@@ -151,28 +154,28 @@ func TestTrace(t *testing.T) {
 			assert.True(t, int64(duration) <= td.Duration)
 
 			//Tags
-			assert.Equal(t, testCase.input, td.Tags[plugin.AwsLambdaInvocationRequest])
-			assert.Equal(t, test.LogGroupName, td.Tags[plugin.AwsLambdaLogGroupName])
-			assert.Equal(t, test.LogStreamName, td.Tags[plugin.AwsLambdaLogStreamName])
-			assert.Equal(t, test.MemoryLimit, td.Tags[plugin.AwsLambdaMemoryLimit])
-			assert.Equal(t, test.FunctionName, td.Tags[plugin.AwsLambdaName])
-			assert.Equal(t, test.Region, td.Tags[plugin.AwsRegion])
-			assert.Equal(t, false, td.Tags[plugin.AwsLambdaInvocationTimeout])
-			assert.Equal(t, coldStart, td.Tags[plugin.AwsLambdaInvocationColdStart])
+			assert.Equal(t, testCase.input, td.Tags[constants.AwsLambdaInvocationRequest])
+			assert.Equal(t, test.LogGroupName, td.Tags[constants.AwsLambdaLogGroupName])
+			assert.Equal(t, test.LogStreamName, td.Tags[constants.AwsLambdaLogStreamName])
+			assert.Equal(t, test.MemoryLimit, td.Tags[constants.AwsLambdaMemoryLimit])
+			assert.Equal(t, test.FunctionName, td.Tags[constants.AwsLambdaName])
+			assert.Equal(t, test.Region, td.Tags[constants.AwsRegion])
+			assert.Equal(t, false, td.Tags[constants.AwsLambdaInvocationTimeout])
+			assert.Equal(t, coldStart, td.Tags[constants.AwsLambdaInvocationColdStart])
 
 			if testCase.expected.err != nil {
 				assert.Equal(t, testCase.expected.err, errVal)
-				assert.Equal(t, true, td.Tags[plugin.AwsError])
-				assert.Equal(t, errorKind, td.Tags[plugin.AwsErrorKind])
-				assert.Equal(t, errorMessage, td.Tags[plugin.AwsErrorMessage])
+				assert.Equal(t, true, td.Tags[constants.AwsError])
+				assert.Equal(t, errorKind, td.Tags[constants.AwsErrorKind])
+				assert.Equal(t, errorMessage, td.Tags[constants.AwsErrorMessage])
 			} else {
 				assert.Equal(t, testCase.expected.val, response)
-				assert.Equal(t, testCase.expected.val, td.Tags[plugin.AwsLambdaInvocationResponse])
+				assert.Equal(t, testCase.expected.val, td.Tags[constants.AwsLambdaInvocationResponse])
 				assert.NoError(t, errVal)
-				assert.Nil(t, td.Tags[plugin.AwsError])
-				assert.Nil(t, td.Tags[plugin.AwsErrorKind])
-				assert.Nil(t, td.Tags[plugin.AwsErrorMessage])
-				assert.Nil(t, td.Tags[plugin.AwsErrorStack])
+				assert.Nil(t, td.Tags[constants.AwsError])
+				assert.Nil(t, td.Tags[constants.AwsErrorKind])
+				assert.Nil(t, td.Tags[constants.AwsErrorMessage])
+				assert.Nil(t, td.Tags[constants.AwsErrorStack])
 			}
 
 			test.CleanEnvironment()
@@ -225,11 +228,11 @@ func TestPanic(t *testing.T) {
 			tr := New()
 			a := agent.New().AddPlugin(tr).SetReporter(r)
 			lambdaHandler := a.Wrap(testCase.handler)
-			invocationStartTime := plugin.GetTimestamp()
+			invocationStartTime := utils.GetTimestamp()
 
 			defer func() {
 				if rec := recover(); rec != nil {
-					invocationEndTime := plugin.GetTimestamp()
+					invocationEndTime := utils.GetTimestamp()
 
 					//Monitor Data
 					msg, err := getWrappedTraceData(r.MessageQueue)
@@ -238,7 +241,7 @@ func TestPanic(t *testing.T) {
 						return
 					}
 					assert.Equal(t, traceType, msg.Type)
-					assert.Equal(t, plugin.DataModelVersion, msg.DataModelVersion)
+					assert.Equal(t, constants.DataModelVersion, msg.DataModelVersion)
 
 					//Trace Data
 					td, ok := msg.Data.(traceDataModel)
@@ -247,16 +250,16 @@ func TestPanic(t *testing.T) {
 					}
 					assert.NotNil(t, td.ID)
 					assert.Equal(t, traceType, td.Type)
-					assert.Equal(t, plugin.AgentVersion, td.AgentVersion)
-					assert.Equal(t, plugin.DataModelVersion, td.DataModelVersion)
+					assert.Equal(t, constants.AgentVersion, td.AgentVersion)
+					assert.Equal(t, constants.DataModelVersion, td.DataModelVersion)
 					assert.Equal(t, test.AppId, td.ApplicationID)
-					assert.Equal(t, plugin.ApplicationDomainName, td.ApplicationDomainName)
-					assert.Equal(t, plugin.ApplicationClassName, td.ApplicationClassName)
+					assert.Equal(t, application.ApplicationDomainName, td.ApplicationDomainName)
+					assert.Equal(t, application.ApplicationClassName, td.ApplicationClassName)
 					assert.Equal(t, test.FunctionName, td.ApplicationName)
 					assert.Equal(t, test.FunctionVersion, td.ApplicationVersion)
 					assert.Equal(t, test.ApplicationStage, td.ApplicationStage)
-					assert.Equal(t, plugin.ApplicationRuntime, td.ApplicationRuntime)
-					assert.Equal(t, plugin.ApplicationRuntimeVersion, td.ApplicationRuntimeVersion)
+					assert.Equal(t, application.ApplicationRuntime, td.ApplicationRuntime)
+					assert.Equal(t, application.ApplicationRuntimeVersion, td.ApplicationRuntimeVersion)
 					assert.NotNil(t, td.ApplicationTags)
 
 					assert.NotNil(t, td.RootSpanID)
@@ -267,20 +270,20 @@ func TestPanic(t *testing.T) {
 					assert.True(t, int64(duration) <= td.Duration)
 
 					//Tags
-					assert.Equal(t, testCase.input, td.Tags[plugin.AwsLambdaInvocationRequest])
-					assert.Equal(t, test.LogGroupName, td.Tags[plugin.AwsLambdaLogGroupName])
-					assert.Equal(t, test.LogStreamName, td.Tags[plugin.AwsLambdaLogStreamName])
-					assert.Equal(t, test.MemoryLimit, td.Tags[plugin.AwsLambdaMemoryLimit])
-					assert.Equal(t, test.FunctionName, td.Tags[plugin.AwsLambdaName])
-					assert.Equal(t, test.Region, td.Tags[plugin.AwsRegion])
-					assert.Equal(t, false, td.Tags[plugin.AwsLambdaInvocationTimeout])
-					assert.Equal(t, coldStart, td.Tags[plugin.AwsLambdaInvocationColdStart])
+					assert.Equal(t, testCase.input, td.Tags[constants.AwsLambdaInvocationRequest])
+					assert.Equal(t, test.LogGroupName, td.Tags[constants.AwsLambdaLogGroupName])
+					assert.Equal(t, test.LogStreamName, td.Tags[constants.AwsLambdaLogStreamName])
+					assert.Equal(t, test.MemoryLimit, td.Tags[constants.AwsLambdaMemoryLimit])
+					assert.Equal(t, test.FunctionName, td.Tags[constants.AwsLambdaName])
+					assert.Equal(t, test.Region, td.Tags[constants.AwsRegion])
+					assert.Equal(t, false, td.Tags[constants.AwsLambdaInvocationTimeout])
+					assert.Equal(t, coldStart, td.Tags[constants.AwsLambdaInvocationColdStart])
 
 					//Panic
-					assert.Equal(t, true, td.Tags[plugin.AwsError])
-					assert.Equal(t, errorKind, td.Tags[plugin.AwsErrorKind])
-					assert.Equal(t, panicMessage, td.Tags[plugin.AwsErrorMessage])
-					assert.Nil(t, td.Tags[plugin.AwsLambdaInvocationResponse])
+					assert.Equal(t, true, td.Tags[constants.AwsError])
+					assert.Equal(t, errorKind, td.Tags[constants.AwsErrorKind])
+					assert.Equal(t, panicMessage, td.Tags[constants.AwsErrorMessage])
+					assert.Nil(t, td.Tags[constants.AwsLambdaInvocationResponse])
 
 					test.CleanEnvironment()
 					coldStart = false
@@ -330,7 +333,7 @@ func TestTimeout(t *testing.T) {
 		defer cancel()
 
 		f(ctx, []byte(testCase[0].input))
-		
+
 		msg, err := getWrappedTraceData(r.MessageQueue)
 		if err != nil {
 			fmt.Println(err)
@@ -347,7 +350,7 @@ func TestTimeout(t *testing.T) {
 			fmt.Println("Can not convert to trace data")
 		}
 
-		assert.Equal(t, true, td.Tags[plugin.AwsLambdaInvocationTimeout])
+		assert.Equal(t, true, td.Tags[constants.AwsLambdaInvocationTimeout])
 	})
 
 }

@@ -3,7 +3,10 @@ package invocation
 import (
 	"context"
 
+	"github.com/thundra-io/thundra-lambda-agent-go/application"
+	"github.com/thundra-io/thundra-lambda-agent-go/constants"
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
+	"github.com/thundra-io/thundra-lambda-agent-go/utils"
 )
 
 // invocationPlugin is the simplest form of data collected from lambda functions. It is collected for any case.
@@ -44,27 +47,27 @@ type invocationDataModel struct {
 func (ip *invocationPlugin) prepareData(ctx context.Context) invocationDataModel {
 	tags := ip.prepareTags(ctx)
 	return invocationDataModel{
-		ID:                        plugin.GenerateNewID(),
+		ID:                        utils.GenerateNewID(),
 		Type:                      invocationType,
-		AgentVersion:              plugin.AgentVersion,
-		DataModelVersion:          plugin.DataModelVersion,
-		ApplicationID:             plugin.ApplicationID,
-		ApplicationDomainName:     plugin.ApplicationDomainName,
-		ApplicationClassName:      plugin.ApplicationClassName,
-		ApplicationName:           plugin.FunctionName,
-		ApplicationVersion:        plugin.ApplicationVersion,
-		ApplicationStage:          plugin.ApplicationStage,
-		ApplicationRuntime:        plugin.ApplicationRuntime,
-		ApplicationRuntimeVersion: plugin.ApplicationRuntimeVersion,
+		AgentVersion:              constants.AgentVersion,
+		DataModelVersion:          constants.DataModelVersion,
+		ApplicationID:             application.ApplicationID,
+		ApplicationDomainName:     application.ApplicationDomainName,
+		ApplicationClassName:      application.ApplicationClassName,
+		ApplicationName:           application.FunctionName,
+		ApplicationVersion:        application.ApplicationVersion,
+		ApplicationStage:          application.ApplicationStage,
+		ApplicationRuntime:        application.ApplicationRuntime,
+		ApplicationRuntimeVersion: application.ApplicationRuntimeVersion,
 		ApplicationTags:           map[string]interface{}{}, // empty object
 
 		TraceID:       plugin.TraceID,
 		TransactionID: plugin.TransactionID,
 		SpanID:        "", // Optional Field
 
-		FunctionPlatform: plugin.AwsFunctionPlatform,
-		FunctionName:     plugin.FunctionName,
-		FunctionRegion:   plugin.FunctionRegion,
+		FunctionPlatform: constants.AwsFunctionPlatform,
+		FunctionName:     application.FunctionName,
+		FunctionRegion:   application.FunctionRegion,
 		StartTimestamp:   ip.data.startTimestamp,
 		FinishTimestamp:  ip.data.finishTimestamp,
 		Duration:         ip.data.duration,
@@ -87,13 +90,13 @@ func (ip *invocationPlugin) prepareTags(ctx context.Context) map[string]interfac
 		tags["error.kind"] = ip.data.errorType
 		tags["error.message"] = ip.data.errorMessage
 	}
-	tags[plugin.AwsLambdaARN] = plugin.GetInvokedFunctionArn(ctx)
-	tags[plugin.AwsLambdaInvocationColdStart] = ip.data.coldStart
-	tags[plugin.AwsLambdaInvocationRequestId] = plugin.GetAwsRequestID(ctx)
-	tags[plugin.AwsLambdaLogGroupName] = plugin.LogGroupName
-	tags[plugin.AwsLambdaLogStreamName] = plugin.LogStreamName
-	tags[plugin.AwsLambdaMemoryLimit] = plugin.MemoryLimit
-	tags[plugin.AwsLambdaName] = plugin.FunctionName
-	tags[plugin.AwsRegion] = plugin.FunctionRegion
+	tags[constants.AwsLambdaARN] = application.GetInvokedFunctionArn(ctx)
+	tags[constants.AwsLambdaInvocationColdStart] = ip.data.coldStart
+	tags[constants.AwsLambdaInvocationRequestId] = application.GetAwsRequestID(ctx)
+	tags[constants.AwsLambdaLogGroupName] = application.LogGroupName
+	tags[constants.AwsLambdaLogStreamName] = application.LogStreamName
+	tags[constants.AwsLambdaMemoryLimit] = application.MemoryLimit
+	tags[constants.AwsLambdaName] = application.FunctionName
+	tags[constants.AwsRegion] = application.FunctionRegion
 	return tags
 }

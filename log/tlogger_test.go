@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
+	"github.com/thundra-io/thundra-lambda-agent-go/utils"
 )
 
 const (
@@ -128,6 +128,6 @@ func TestLogManagerWrite(t *testing.T) {
 func testMonitoredLogSetCorrectly(t *testing.T, m *monitoringLog, expectedMessage string) {
 	assert.Equal(t, expectedMessage, m.logMessage)
 
-	now := plugin.GetTimestamp()
+	now := utils.GetTimestamp()
 	assert.True(t, now >= m.logTimestamp)
 }

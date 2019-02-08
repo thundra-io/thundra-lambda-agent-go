@@ -8,7 +8,9 @@ import (
 
 	"github.com/shirou/gopsutil/net"
 	"github.com/shirou/gopsutil/process"
+	"github.com/thundra-io/thundra-lambda-agent-go/constants"
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
+	"github.com/thundra-io/thundra-lambda-agent-go/utils"
 )
 
 var proc *process.Process
@@ -44,8 +46,8 @@ type metricData struct {
 
 // New returns new metric plugin initialized with empty metrics data
 func New() *metricPlugin {
-	pid = plugin.GetPid()
-	proc = plugin.GetThisProcess()
+	pid = utils.GetPid()
+	proc = utils.GetThisProcess()
 
 	return &metricPlugin{
 		data: &metricData{},
@@ -53,7 +55,7 @@ func New() *metricPlugin {
 }
 
 func (mp *metricPlugin) IsEnabled() bool {
-	if os.Getenv(plugin.ThundraDisableMetric) == "true" {
+	if os.Getenv(constants.ThundraDisableMetric) == "true" {
 		return false
 	}
 
@@ -66,7 +68,7 @@ func (mp *metricPlugin) Order() uint8 {
 
 func (mp *metricPlugin) BeforeExecution(ctx context.Context, request json.RawMessage) context.Context {
 	mp.data = &metricData{}
-	mp.data.metricTimestamp = plugin.GetTimestamp()
+	mp.data.metricTimestamp = utils.GetTimestamp()
 
 	if !mp.disableGCMetrics {
 		m := &runtime.MemStats{}
