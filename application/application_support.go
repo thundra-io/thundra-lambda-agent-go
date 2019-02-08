@@ -10,6 +10,10 @@ import (
 
 var applicationTags = make(map[string]interface{})
 
+func init() {
+	parseApplicationTags()
+}
+
 func parseApplicationTags() {
 	tagPrefix := constants.ApplicationTagPrefixProp
 	prefixLen := len(tagPrefix)
@@ -33,4 +37,8 @@ func parseStringToVal(s string) interface{} {
 		return v
 	}
 	return strings.Trim(s, "\"")
+}
+
+func ClearApplicationTags() {
+	applicationTags = make(map[string]interface{})
 }
