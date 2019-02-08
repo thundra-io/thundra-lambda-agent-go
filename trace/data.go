@@ -45,7 +45,7 @@ func (tr *tracePlugin) prepareTraceDataModel(ctx context.Context, request json.R
 		ApplicationID:             application.ApplicationID,
 		ApplicationDomainName:     application.ApplicationDomainName,
 		ApplicationClassName:      application.ApplicationClassName,
-		ApplicationName:           application.FunctionName,
+		ApplicationName:           application.ApplicationName,
 		ApplicationVersion:        application.ApplicationVersion,
 		ApplicationStage:          application.ApplicationStage,
 		ApplicationRuntime:        application.ApplicationRuntime,
@@ -76,7 +76,7 @@ func (tr *tracePlugin) prepareTraceTags(ctx context.Context, request json.RawMes
 	tags[constants.AwsLambdaLogGroupName] = application.LogGroupName
 	tags[constants.AwsLambdaLogStreamName] = application.LogStreamName
 	tags[constants.AwsLambdaMemoryLimit] = application.MemoryLimit
-	tags[constants.AwsLambdaName] = application.FunctionName
+	tags[constants.AwsLambdaName] = application.ApplicationName
 	tags[constants.AwsRegion] = application.FunctionRegion
 	tags[constants.AwsLambdaInvocationTimeout] = tr.data.timeout
 
@@ -145,7 +145,7 @@ func (tr *tracePlugin) prepareSpanDataModel(ctx context.Context, span *tracer.Ra
 		ApplicationID:             application.ApplicationID,
 		ApplicationDomainName:     application.ApplicationDomainName,
 		ApplicationClassName:      application.ApplicationClassName,
-		ApplicationName:           application.FunctionName,
+		ApplicationName:           application.ApplicationName,
 		ApplicationVersion:        application.ApplicationVersion,
 		ApplicationStage:          application.ApplicationStage,
 		ApplicationRuntime:        application.ApplicationRuntime,
@@ -158,7 +158,7 @@ func (tr *tracePlugin) prepareSpanDataModel(ctx context.Context, span *tracer.Ra
 
 		DomainName:    span.DomainName,
 		ClassName:     span.ClassName,
-		ServiceName:   application.FunctionName,
+		ServiceName:   application.ApplicationName,
 		OperationName: span.OperationName,
 
 		StartTimestamp:  span.StartTimestamp,

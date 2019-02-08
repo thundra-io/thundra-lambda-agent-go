@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-lambda-go/lambdacontext"
 )
 
-var FunctionName string
+var ApplicationName string
 var ApplicationID string
 var ApplicationVersion string
 var ApplicationStage string
@@ -20,7 +20,7 @@ var LogStreamName string
 var FunctionARN string
 
 func init() {
-	FunctionName = getFunctionName()
+	ApplicationName = getApplicationName()
 	ApplicationID = getAppID()
 	ApplicationVersion = getApplicationVersion()
 	ApplicationStage = getApplicationStage()
@@ -31,7 +31,7 @@ func init() {
 }
 
 // getFunctionName returns function name.
-func getFunctionName() string {
+func getApplicationName() string {
 	return lambdacontext.FunctionName
 }
 

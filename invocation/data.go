@@ -54,7 +54,7 @@ func (ip *invocationPlugin) prepareData(ctx context.Context) invocationDataModel
 		ApplicationID:             application.ApplicationID,
 		ApplicationDomainName:     application.ApplicationDomainName,
 		ApplicationClassName:      application.ApplicationClassName,
-		ApplicationName:           application.FunctionName,
+		ApplicationName:           application.ApplicationName,
 		ApplicationVersion:        application.ApplicationVersion,
 		ApplicationStage:          application.ApplicationStage,
 		ApplicationRuntime:        application.ApplicationRuntime,
@@ -66,7 +66,7 @@ func (ip *invocationPlugin) prepareData(ctx context.Context) invocationDataModel
 		SpanID:        "", // Optional Field
 
 		FunctionPlatform: constants.AwsFunctionPlatform,
-		FunctionName:     application.FunctionName,
+		FunctionName:     application.ApplicationName,
 		FunctionRegion:   application.FunctionRegion,
 		StartTimestamp:   ip.data.startTimestamp,
 		FinishTimestamp:  ip.data.finishTimestamp,
@@ -96,7 +96,7 @@ func (ip *invocationPlugin) prepareTags(ctx context.Context) map[string]interfac
 	tags[constants.AwsLambdaLogGroupName] = application.LogGroupName
 	tags[constants.AwsLambdaLogStreamName] = application.LogStreamName
 	tags[constants.AwsLambdaMemoryLimit] = application.MemoryLimit
-	tags[constants.AwsLambdaName] = application.FunctionName
+	tags[constants.AwsLambdaName] = application.ApplicationName
 	tags[constants.AwsRegion] = application.FunctionRegion
 	return tags
 }

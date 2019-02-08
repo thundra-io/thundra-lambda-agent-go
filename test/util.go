@@ -10,9 +10,9 @@ import (
 )
 
 const (
-	FunctionName     = "TestFunctionName"
+	ApplicationName     = "TestFunctionName"
 	LogStreamName    = "2018/01/01/[$LATEST]1234567890"
-	AppId            = "1234567890"
+	AppID            = "1234567890"
 	FunctionVersion  = "$Version"
 	ApplicationStage = "TestStage"
 	Region           = "TestRegion"
@@ -62,8 +62,8 @@ func NewMockReporter() *MockReporter {
 
 func PrepareEnvironment() {
 	lambdacontext.LogStreamName = LogStreamName
-	application.FunctionName = FunctionName
-	application.ApplicationID = AppId
+	application.ApplicationName = ApplicationName
+	application.ApplicationID = AppID
 	application.ApplicationVersion = FunctionVersion
 	application.ApplicationStage = ApplicationStage
 	application.FunctionRegion = Region
@@ -73,7 +73,7 @@ func PrepareEnvironment() {
 }
 
 func CleanEnvironment() {
-	application.FunctionName = ""
+	application.ApplicationName = ""
 	application.ApplicationID = ""
 	application.ApplicationVersion = ""
 	application.ApplicationStage = ""

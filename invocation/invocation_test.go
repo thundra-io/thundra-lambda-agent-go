@@ -77,10 +77,10 @@ func TestPrepareDataStaticFields(t *testing.T) {
 	assert.Equal(t, "Invocation", data.Type)
 	assert.Equal(t, constants.AgentVersion, data.AgentVersion)
 	assert.Equal(t, constants.DataModelVersion, data.DataModelVersion)
-	assert.Equal(t, test.AppId, data.ApplicationID)
+	assert.Equal(t, test.AppID, data.ApplicationID)
 	assert.Equal(t, application.ApplicationDomainName, data.ApplicationDomainName)
 	assert.Equal(t, application.ApplicationClassName, data.ApplicationClassName)
-	assert.Equal(t, application.FunctionName, data.ApplicationName)
+	assert.Equal(t, application.ApplicationName, data.ApplicationName)
 	assert.Equal(t, application.ApplicationVersion, data.ApplicationVersion)
 	assert.Equal(t, application.ApplicationStage, data.ApplicationStage)
 	assert.Equal(t, application.ApplicationRuntime, data.ApplicationRuntime)
@@ -88,7 +88,7 @@ func TestPrepareDataStaticFields(t *testing.T) {
 	assert.NotNil(t, data.ApplicationTags)
 
 	assert.Equal(t, "AWS Lambda", data.FunctionPlatform)
-	assert.Equal(t, application.FunctionName, data.FunctionName)
+	assert.Equal(t, application.ApplicationName, data.ApplicationName)
 	assert.Equal(t, application.FunctionRegion, data.FunctionRegion)
 	assert.NotNil(t, data.Tags)
 

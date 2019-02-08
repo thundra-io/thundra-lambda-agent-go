@@ -59,7 +59,7 @@ func (tr *tracePlugin) Order() uint8 {
 
 // BeforeExecution executes the necessary tasks before the invocation
 func (tr *tracePlugin) BeforeExecution(ctx context.Context, request json.RawMessage) context.Context {
-	rootSpan, ctxWithRootSpan := opentracing.StartSpanFromContext(ctx, application.FunctionName)
+	rootSpan, ctxWithRootSpan := opentracing.StartSpanFromContext(ctx, application.ApplicationName)
 	invocationCount++
 
 	tr.rootSpan = rootSpan
@@ -84,7 +84,7 @@ func (tr *tracePlugin) AfterExecution(ctx context.Context, request json.RawMessa
 	}
 
 	// Adding tags related to the root span
-	tr.rootSpan.SetTag(constants.AwsLambdaName, application.FunctionName)
+	tr.rootSpan.SetTag(constants.AwsLambdaName, application.ApplicationName)
 	tr.rootSpan.SetTag(constants.AwsLambdaARN, application.GetInvokedFunctionArn(ctx))
 	tr.rootSpan.SetTag(constants.AwsRegion, application.FunctionRegion)
 	tr.rootSpan.SetTag(constants.AwsLambdaMemoryLimit, application.MemoryLimit)

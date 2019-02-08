@@ -52,7 +52,7 @@ func prepareLogData(log *monitoringLog) logData {
 		ApplicationID:             application.ApplicationID,
 		ApplicationDomainName:     application.ApplicationDomainName,
 		ApplicationClassName:      application.ApplicationClassName,
-		ApplicationName:           application.FunctionName,
+		ApplicationName:           application.ApplicationName,
 		ApplicationVersion:        application.ApplicationVersion,
 		ApplicationStage:          application.ApplicationStage,
 		ApplicationRuntime:        application.ApplicationRuntime,
