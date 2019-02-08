@@ -10,6 +10,9 @@ import (
 	"sync"
 	"sync/atomic"
 
+	"github.com/thundra-io/thundra-lambda-agent-go/config"
+
+	"github.com/thundra-io/thundra-lambda-agent-go/constants"
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 )
 
@@ -33,11 +36,11 @@ var collectorURL string
 var mutex = &sync.Mutex{}
 
 func init() {
-	shouldSendAsync = os.Getenv(thundraLambdaPublishCloudwatchEnable)
-	if url := os.Getenv(thundraLambdaPublishRestBaseURL); url != "" {
+	shouldSendAsync = os.Getenv(constants.ThundraLambdaPublishCloudwatchEnable)
+	if url := os.Getenv(constants.ThundraLambdaPublishRestBaseURL); url != "" {
 		collectorURL = url
 	} else {
-		collectorURL = defaultCollectorURL
+		collectorURL = constants.DefaultCollectorURL
 	}
 }
 
@@ -86,7 +89,7 @@ func sendAsync(msg interface{}) {
 }
 
 func sendHTTPReq(messageQueue []plugin.MonitoringDataWrapper) {
-	if plugin.DebugEnabled {
+	if config.DebugEnabled {
 		fmt.Printf("MessageQueue:\n %+v \n", messageQueue)
 	}
 	b, err := json.Marshal(&messageQueue)
@@ -94,8 +97,8 @@ func sendHTTPReq(messageQueue []plugin.MonitoringDataWrapper) {
 		fmt.Println("Error in marshalling ", err)
 	}
 
-	targetURL := collectorURL + monitoringDataPath
-	if plugin.DebugEnabled {
+	targetURL := collectorURL + constants.MonitoringDataPath
+	if config.DebugEnabled {
 		fmt.Println("Sending HTTP request to Thundra collector: " + targetURL)
 	}
 
@@ -104,7 +107,7 @@ func sendHTTPReq(messageQueue []plugin.MonitoringDataWrapper) {
 		fmt.Println("Error http.NewRequest: ", err)
 	}
 	req.Close = true
-	req.Header.Set("Authorization", "APIKey "+plugin.APIKey)
+	req.Header.Set("Authorization", "ApiKey "+config.APIKey)
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
@@ -117,7 +120,7 @@ func sendHTTPReq(messageQueue []plugin.MonitoringDataWrapper) {
 	if err != nil {
 		fmt.Println("ioutil.ReadAll(resp.Body): ", err)
 	}
-	if plugin.DebugEnabled {
+	if config.DebugEnabled {
 		fmt.Println("response Status:", resp.Status)
 		fmt.Println("response Headers:", resp.Header)
 		fmt.Println("response Body:", string(body))

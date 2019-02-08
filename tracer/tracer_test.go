@@ -4,11 +4,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/thundra-io/thundra-lambda-agent-go/constants"
 	"github.com/thundra-io/thundra-lambda-agent-go/ext"
 
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/stretchr/testify/assert"
-	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 )
 
 const (
@@ -35,8 +35,8 @@ func TestStartSpan(t *testing.T) {
 	assert.True(t, len(spans) == 1)
 	assert.True(t, span.Duration() >= int64(duration))
 	assert.True(t, span.OperationName == operationName)
-	assert.True(t, span.ClassName == plugin.DefaultClassName)
-	assert.True(t, span.DomainName == plugin.DefaultDomainName)
+	assert.True(t, span.ClassName == constants.DefaultClassName)
+	assert.True(t, span.DomainName == constants.DefaultDomainName)
 }
 
 func TestStartSpanWithOptions(t *testing.T) {

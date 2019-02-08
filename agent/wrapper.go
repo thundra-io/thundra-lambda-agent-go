@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+
+	"github.com/thundra-io/thundra-lambda-agent-go/config"
 )
 
 type lambdaFunction func(context.Context, json.RawMessage) (interface{}, error)
@@ -13,7 +15,7 @@ type lambdaFunction func(context.Context, json.RawMessage) (interface{}, error)
 // It wraps your lambda function and return a new lambda function. By that, AWS will be able to run this function
 // and Thundra will be able to collect monitoring data from your function.
 func (a *Agent) Wrap(handler interface{}) interface{} {
-	if isThundraDisabled() {
+	if config.ThundraDisabled {
 		return handler
 	}
 

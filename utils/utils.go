@@ -1,4 +1,4 @@
-package plugin
+package utils
 
 import (
 	"fmt"
@@ -7,12 +7,13 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/satori/go.uuid"
+	uuid "github.com/satori/go.uuid"
 	"github.com/shirou/gopsutil/process"
 )
 
-func init() {
-	DebugEnabled = isThundraDebugEnabled()
+// GetTimestamp returns current unix timestamp in msec.
+func GetTimestamp() int64 {
+	return time.Now().UnixNano() / (int64(time.Millisecond) / int64(time.Nanosecond))
 }
 
 // GenerateNewID generates new uuid.
@@ -36,11 +37,6 @@ func GetThisProcess() *process.Process {
 func GetPid() string {
 	pid := os.Getpid()
 	return strconv.Itoa(pid)
-}
-
-// GetTimestamp returns current unix timestamp in msec.
-func GetTimestamp() int64 {
-	return time.Now().UnixNano() / (int64(time.Millisecond) / int64(time.Nanosecond))
 }
 
 // GetErrorType returns type of the error
@@ -70,23 +66,4 @@ func GetErrorMessage(err interface{}) string {
 		return err.(string)
 	}
 	return e.Error()
-}
-
-var DebugEnabled bool
-
-func isThundraDebugEnabled() bool {
-	b, err := strconv.ParseBool(os.Getenv(thundraLambdaDebugEnable))
-	if err != nil {
-		return false
-	}
-	return b
-}
-
-func WrapMonitoringData(data interface{}, dataType string) MonitoringDataWrapper {
-	return MonitoringDataWrapper{
-		DataModelVersion: DataModelVersion,
-		Type:             dataType,
-		Data:             data,
-		APIKey:           APIKey,
-	}
 }

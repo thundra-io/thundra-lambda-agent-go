@@ -6,6 +6,7 @@ import (
 
 	ot "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+	"github.com/thundra-io/thundra-lambda-agent-go/utils"
 )
 
 type spanImpl struct {
@@ -23,7 +24,7 @@ func (s *spanImpl) Finish() {
 
 // FinishWithOptions finishes span and adds the given options to it
 func (s *spanImpl) FinishWithOptions(opts ot.FinishOptions) {
-	finishTimestamp := GetTimestamp()
+	finishTimestamp := utils.GetTimestamp()
 
 	s.Lock()
 	defer s.Unlock()

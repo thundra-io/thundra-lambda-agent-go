@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
+	"github.com/thundra-io/thundra-lambda-agent-go/utils"
 )
 
 const numGoroutines = 5
@@ -15,7 +15,7 @@ const defaultGoroutines = 2
 
 func TestPrepareGoroutineMetricsData(t *testing.T) {
 	mp := New()
-	mp.data.metricTimestamp = plugin.GetTimestamp()
+	mp.data.metricTimestamp = utils.GetTimestamp()
 	mp.data.startGCCount = 1
 	mp.data.endGCCount = 2
 

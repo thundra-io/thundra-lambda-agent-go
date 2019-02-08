@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
+	"github.com/thundra-io/thundra-lambda-agent-go/utils"
 )
 
 var invocationCount uint32
@@ -42,28 +43,28 @@ func (ip *invocationPlugin) Order() uint8 {
 
 func (ip *invocationPlugin) BeforeExecution(ctx context.Context, request json.RawMessage) context.Context {
 	ip.data = &invocationData{}
-	ip.data.startTimestamp = plugin.GetTimestamp()
+	ip.data.startTimestamp = utils.GetTimestamp()
 	return ctx
 }
 
 func (ip *invocationPlugin) AfterExecution(ctx context.Context, request json.RawMessage, response interface{}, err interface{}) []plugin.MonitoringDataWrapper {
-	ip.data.finishTimestamp = plugin.GetTimestamp()
+	ip.data.finishTimestamp = utils.GetTimestamp()
 	ip.data.duration = ip.data.finishTimestamp - ip.data.startTimestamp
 
 	if err != nil {
 		ip.data.erroneous = true
-		ip.data.errorMessage = plugin.GetErrorMessage(err)
-		ip.data.errorType = plugin.GetErrorType(err)
+		ip.data.errorMessage = utils.GetErrorMessage(err)
+		ip.data.errorType = utils.GetErrorType(err)
 		ip.data.errorCode = defaultErrorCode
 	}
 
 	ip.data.coldStart = isColdStarted()
-	ip.data.timeout = plugin.IsTimeout(err)
+	ip.data.timeout = utils.IsTimeout(err)
 
 	data := ip.prepareData(ctx)
 
 	ip.Reset()
-	
+
 	return []plugin.MonitoringDataWrapper{plugin.WrapMonitoringData(data, "Invocation")}
 }
 

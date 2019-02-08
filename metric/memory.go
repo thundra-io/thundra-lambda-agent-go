@@ -5,7 +5,7 @@ import (
 
 	uuid "github.com/satori/go.uuid"
 	"github.com/shirou/gopsutil/mem"
-	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
+	"github.com/thundra-io/thundra-lambda-agent-go/application"
 )
 
 func prepareMemoryMetricsData(mp *metricPlugin, base metricDataModel) metricDataModel {
@@ -24,10 +24,10 @@ func prepareMemoryMetricsData(mp *metricPlugin, base metricDataModel) metricData
 
 	base.Metrics = map[string]interface{}{
 		appUsedMemory: procMemInfo.RSS,
-		appMaxMemory:  plugin.MemoryLimit * 1024 * 1024,
+		appMaxMemory:  application.MemoryLimit * 1024 * 1024,
 		sysUsedMemory: memInfo.Used,
 		sysMaxMemory:  memInfo.Total,
 	}
-	
+
 	return base
 }

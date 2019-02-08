@@ -4,8 +4,10 @@ import (
 	ot "github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	uuid "github.com/satori/go.uuid"
+	"github.com/thundra-io/thundra-lambda-agent-go/constants"
 	"github.com/thundra-io/thundra-lambda-agent-go/ext"
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
+	"github.com/thundra-io/thundra-lambda-agent-go/utils"
 )
 
 // New creates and returns a standard Tracer which defers completed Spans to
@@ -47,20 +49,20 @@ func (t *tracerImpl) StartSpanWithOptions(operationName string, opts ot.StartSpa
 
 	newSpan.tracer = t
 	newSpan.raw.OperationName = operationName
-	newSpan.raw.StartTimestamp = GetTimestamp()
+	newSpan.raw.StartTimestamp = utils.GetTimestamp()
 	newSpan.raw.Tags = tags
 	newSpan.raw.Logs = []ot.LogRecord{}
 
 	className, ok := tags[ext.ClassNameKey]
 	if !ok {
-		newSpan.raw.ClassName = plugin.DefaultClassName
+		newSpan.raw.ClassName = constants.DefaultClassName
 	} else {
 		newSpan.raw.ClassName = className.(string)
 	}
 
 	domainName, ok := tags[ext.DomainNameKey]
 	if !ok {
-		newSpan.raw.DomainName = plugin.DefaultDomainName
+		newSpan.raw.DomainName = constants.DefaultDomainName
 	} else {
 		newSpan.raw.DomainName = domainName.(string)
 	}

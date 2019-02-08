@@ -7,7 +7,10 @@ import (
 	"sort"
 	"time"
 
+	"github.com/thundra-io/thundra-lambda-agent-go/config"
+
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
+	"github.com/thundra-io/thundra-lambda-agent-go/utils"
 )
 
 // Agent is thundra agent implementation
@@ -20,20 +23,14 @@ type Agent struct {
 
 // New is used to collect basic invocation data with thundra. Use NewBuilder and AddPlugin to access full functionality.
 func New() *Agent {
-	w := determineWarmup()
-	g := determineTimeoutMargin()
-	determineAPIKey()
-
-	a := &Agent{
+	return &Agent{
 		Reporter: &reporterImpl{
 			reported: new(uint32),
 		},
-		WarmUp:        w,
-		TimeoutMargin: g,
+		WarmUp:        config.WarmupEnabled,
+		TimeoutMargin: config.TimeoutMargin,
 		Plugins:       []plugin.Plugin{},
 	}
-
-	return a
 }
 
 // AddPlugin is used to enable plugins on thundra. You can use Trace, Metrics and Log plugins.
@@ -61,8 +58,8 @@ func (a *Agent) ExecutePreHooks(ctx context.Context, request json.RawMessage) co
 	sort.Slice(a.Plugins, func(i, j int) bool {
 		return a.Plugins[i].Order() < a.Plugins[j].Order()
 	})
-	plugin.TraceID = plugin.GenerateNewID()
-	plugin.TransactionID = plugin.GenerateNewID()
+	plugin.TraceID = utils.GenerateNewID()
+	plugin.TransactionID = utils.GenerateNewID()
 
 	updatedCtx := ctx
 	// Traverse sorted plugin slice
@@ -80,7 +77,7 @@ func (a *Agent) ExecutePostHooks(ctx context.Context, request json.RawMessage, r
 		return
 	}
 	// Traverse the plugin slice in reverse order
-	for i := len(a.Plugins)-1; i >= 0; i-- {
+	for i := len(a.Plugins) - 1; i >= 0; i-- {
 		p := a.Plugins[i]
 		messages := p.AfterExecution(ctx, request, response, err)
 		a.Reporter.Collect(messages)
@@ -115,4 +112,10 @@ func (a *Agent) CatchTimeout(ctx context.Context, payload json.RawMessage) {
 		timer.Stop()
 		return
 	}
+}
+
+type timeoutError struct{}
+
+func (e timeoutError) Error() string {
+	return fmt.Sprintf("Lambda is timed out")
 }
