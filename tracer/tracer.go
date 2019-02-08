@@ -54,17 +54,27 @@ func (t *tracerImpl) StartSpanWithOptions(operationName string, opts ot.StartSpa
 	newSpan.raw.Logs = []ot.LogRecord{}
 
 	className, ok := tags[ext.ClassNameKey]
-	if !ok {
-		newSpan.raw.ClassName = constants.DefaultClassName
+	if ok {
+		classNameStr, ok := className.(string)
+		if ok {
+			newSpan.raw.ClassName = classNameStr
+		} else {
+			newSpan.raw.ClassName = constants.DefaultClassName
+		}
 	} else {
-		newSpan.raw.ClassName = className.(string)
+		newSpan.raw.ClassName = constants.DefaultClassName
 	}
 
 	domainName, ok := tags[ext.DomainNameKey]
-	if !ok {
-		newSpan.raw.DomainName = constants.DefaultDomainName
+	if ok {
+		domainNameStr, ok := domainName.(string)
+		if ok {
+			newSpan.raw.DomainName = domainNameStr
+		} else {
+			newSpan.raw.DomainName = constants.DefaultDomainName
+		}
 	} else {
-		newSpan.raw.DomainName = domainName.(string)
+		newSpan.raw.DomainName = constants.DefaultDomainName
 	}
 
 	// Add to recorder
