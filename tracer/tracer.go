@@ -3,7 +3,6 @@ package tracer
 import (
 	ot "github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
-	uuid "github.com/satori/go.uuid"
 	"github.com/thundra-io/thundra-lambda-agent-go/constants"
 	"github.com/thundra-io/thundra-lambda-agent-go/ext"
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
@@ -37,8 +36,9 @@ func (t *tracerImpl) StartSpanWithOptions(operationName string, opts ot.StartSpa
 	tags := opts.Tags
 
 	newSpan := t.getSpan()
+	newSpan.raw.Context.TransactionID = plugin.TransactionID
 	newSpan.raw.Context.TraceID = plugin.TraceID
-	newSpan.raw.Context.SpanID = uuid.NewV4().String()
+	newSpan.raw.Context.SpanID = utils.GenerateNewID()
 
 	for _, ref := range opts.References {
 		if ref.Type == ot.ChildOfRef {

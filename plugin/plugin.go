@@ -11,7 +11,6 @@ import (
 
 var TraceID string
 var TransactionID string
-var SpanID string
 
 // Plugin interface provides necessary methods for the plugins to be used in thundra agent
 type Plugin interface {

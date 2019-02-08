@@ -2,14 +2,13 @@ package tracer
 
 // SpanContext holds the basic Span metadata.
 type SpanContext struct {
+	TransactionID string
 	// A probabilistically unique identifier for a [multi-span] trace.
 	TraceID string
-
 	// A probabilistically unique identifier for a span.
 	SpanID string
-
 	// The span's associated baggage.
-	Baggage map[string]string // initialized on first use
+	Baggage map[string]string
 }
 
 // ForeachBaggageItem belongs to the opentracing.SpanContext interface
@@ -35,5 +34,5 @@ func (c SpanContext) WithBaggageItem(key, val string) SpanContext {
 		newBaggage[key] = val
 	}
 	// Use positional parameters so the compiler will help catch new fields.
-	return SpanContext{c.TraceID, c.SpanID, newBaggage}
+	return SpanContext{c.TransactionID, c.TraceID, c.SpanID, newBaggage}
 }

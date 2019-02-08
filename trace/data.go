@@ -147,7 +147,7 @@ func (tr *tracePlugin) prepareSpanDataModel(ctx context.Context, span *tracer.Ra
 		ApplicationRuntimeVersion: application.ApplicationRuntimeVersion,
 		ApplicationTags:           application.ApplicationTags,
 		TraceID:                   span.Context.TraceID,
-		TransactionID:             plugin.TransactionID,
+		TransactionID:             span.Context.TransactionID,
 		ParentSpanID:              span.ParentSpanID,
 		DomainName:                span.DomainName,
 		ClassName:                 span.ClassName,
