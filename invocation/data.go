@@ -25,23 +25,22 @@ type invocationDataModel struct {
 	ApplicationRuntime        string                 `json:"applicationRuntime"`
 	ApplicationRuntimeVersion string                 `json:"applicationRuntimeVersion"`
 	ApplicationTags           map[string]interface{} `json:"applicationTags"`
-
-	TraceID          string                 `json:"traceId"`
-	TransactionID    string                 `json:"transactionId"`
-	SpanID           string                 `json:"spanId"`
-	FunctionPlatform string                 `json:"functionPlatform"`
-	FunctionName     string                 `json:"functionName"`
-	FunctionRegion   string                 `json:"functionRegion"`
-	StartTimestamp   int64                  `json:"startTimestamp"`  // Invocation start time in UNIX Epoch milliseconds
-	FinishTimestamp  int64                  `json:"finishTimestamp"` // Invocation end time in UNIX Epoch milliseconds
-	Duration         int64                  `json:"duration"`        // Invocation time in milliseconds
-	Erroneous        bool                   `json:"erroneous"`       // Shows if the invocationPlugin failed with an error
-	ErrorType        string                 `json:"errorType"`       // Type of the thrown error
-	ErrorMessage     string                 `json:"errorMessage"`    // Message of the thrown error
-	ErrorCode        string                 `json:"errorCode"`       // Numeric code of the error, such as 404 for HttpError
-	ColdStart        bool                   `json:"coldStart"`       // Shows if the invocationPlugin is cold started
-	Timeout          bool                   `json:"timeout"`         // Shows if the invocationPlugin is timed out
-	Tags             map[string]interface{} `json:"tags"`
+	TraceID                   string                 `json:"traceId"`
+	TransactionID             string                 `json:"transactionId"`
+	SpanID                    string                 `json:"spanId"`
+	FunctionPlatform          string                 `json:"functionPlatform"`
+	FunctionName              string                 `json:"functionName"`
+	FunctionRegion            string                 `json:"functionRegion"`
+	StartTimestamp            int64                  `json:"startTimestamp"`  // Invocation start time in UNIX Epoch milliseconds
+	FinishTimestamp           int64                  `json:"finishTimestamp"` // Invocation end time in UNIX Epoch milliseconds
+	Duration                  int64                  `json:"duration"`        // Invocation time in milliseconds
+	Erroneous                 bool                   `json:"erroneous"`       // Shows if the invocationPlugin failed with an error
+	ErrorType                 string                 `json:"errorType"`       // Type of the thrown error
+	ErrorMessage              string                 `json:"errorMessage"`    // Message of the thrown error
+	ErrorCode                 string                 `json:"errorCode"`       // Numeric code of the error, such as 404 for HttpError
+	ColdStart                 bool                   `json:"coldStart"`       // Shows if the invocationPlugin is cold started
+	Timeout                   bool                   `json:"timeout"`         // Shows if the invocationPlugin is timed out
+	Tags                      map[string]interface{} `json:"tags"`
 }
 
 func (ip *invocationPlugin) prepareData(ctx context.Context) invocationDataModel {
@@ -59,25 +58,23 @@ func (ip *invocationPlugin) prepareData(ctx context.Context) invocationDataModel
 		ApplicationStage:          application.ApplicationStage,
 		ApplicationRuntime:        application.ApplicationRuntime,
 		ApplicationRuntimeVersion: application.ApplicationRuntimeVersion,
-		ApplicationTags:           map[string]interface{}{}, // empty object
-
-		TraceID:       plugin.TraceID,
-		TransactionID: plugin.TransactionID,
-		SpanID:        "", // Optional Field
-
-		FunctionPlatform: constants.AwsFunctionPlatform,
-		FunctionName:     application.ApplicationName,
-		FunctionRegion:   application.FunctionRegion,
-		StartTimestamp:   ip.data.startTimestamp,
-		FinishTimestamp:  ip.data.finishTimestamp,
-		Duration:         ip.data.duration,
-		Erroneous:        ip.data.erroneous,
-		ErrorType:        ip.data.errorType,
-		ErrorMessage:     ip.data.errorMessage,
-		ErrorCode:        ip.data.errorCode,
-		ColdStart:        ip.data.coldStart,
-		Timeout:          ip.data.timeout,
-		Tags:             tags,
+		ApplicationTags:           application.ApplicationTags,
+		TraceID:                   plugin.TraceID,
+		TransactionID:             plugin.TransactionID,
+		SpanID:                    "", // Optional Field
+		FunctionPlatform:          constants.AwsFunctionPlatform,
+		FunctionName:              application.ApplicationName,
+		FunctionRegion:            application.FunctionRegion,
+		StartTimestamp:            ip.data.startTimestamp,
+		FinishTimestamp:           ip.data.finishTimestamp,
+		Duration:                  ip.data.duration,
+		Erroneous:                 ip.data.erroneous,
+		ErrorType:                 ip.data.errorType,
+		ErrorMessage:              ip.data.errorMessage,
+		ErrorCode:                 ip.data.errorCode,
+		ColdStart:                 ip.data.coldStart,
+		Timeout:                   ip.data.timeout,
+		Tags:                      tags,
 	}
 }
 

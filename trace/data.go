@@ -12,7 +12,6 @@ import (
 )
 
 type traceDataModel struct {
-	//Base fields
 	ID                        string                 `json:"id"`
 	Type                      string                 `json:"type"`
 	AgentVersion              string                 `json:"agentVersion"`
@@ -26,13 +25,11 @@ type traceDataModel struct {
 	ApplicationRuntime        string                 `json:"applicationRuntime"`
 	ApplicationRuntimeVersion string                 `json:"applicationRuntimeVersion"`
 	ApplicationTags           map[string]interface{} `json:"applicationTags"`
-
-	//Trace fields
-	RootSpanID      string                 `json:"rootSpanId"`
-	StartTimestamp  int64                  `json:"startTimestamp"`
-	FinishTimestamp int64                  `json:"finishTimestamp"`
-	Duration        int64                  `json:"duration"`
-	Tags            map[string]interface{} `json:"tags"`
+	RootSpanID                string                 `json:"rootSpanId"`
+	StartTimestamp            int64                  `json:"startTimestamp"`
+	FinishTimestamp           int64                  `json:"finishTimestamp"`
+	Duration                  int64                  `json:"duration"`
+	Tags                      map[string]interface{} `json:"tags"`
 }
 
 func (tr *tracePlugin) prepareTraceDataModel(ctx context.Context, request json.RawMessage, response interface{}) traceDataModel {
@@ -50,13 +47,12 @@ func (tr *tracePlugin) prepareTraceDataModel(ctx context.Context, request json.R
 		ApplicationStage:          application.ApplicationStage,
 		ApplicationRuntime:        application.ApplicationRuntime,
 		ApplicationRuntimeVersion: application.ApplicationRuntimeVersion,
-		ApplicationTags:           map[string]interface{}{},
-
-		RootSpanID:      tr.rootSpan.Context().(tracer.SpanContext).SpanID,
-		StartTimestamp:  tr.data.startTime,
-		FinishTimestamp: tr.data.finishTime,
-		Duration:        tr.data.duration,
-		Tags:            tags,
+		ApplicationTags:           application.ApplicationTags,
+		RootSpanID:                tr.rootSpan.Context().(tracer.SpanContext).SpanID,
+		StartTimestamp:            tr.data.startTime,
+		FinishTimestamp:           tr.data.finishTime,
+		Duration:                  tr.data.duration,
+		Tags:                      tags,
 	}
 }
 
@@ -101,7 +97,6 @@ func (tr *tracePlugin) prepareTraceTags(ctx context.Context, request json.RawMes
 }
 
 type spanDataModel struct {
-	//Base fields
 	ID                        string                 `json:"id"`
 	Type                      string                 `json:"type"`
 	AgentVersion              string                 `json:"agentVersion"`
@@ -150,21 +145,18 @@ func (tr *tracePlugin) prepareSpanDataModel(ctx context.Context, span *tracer.Ra
 		ApplicationStage:          application.ApplicationStage,
 		ApplicationRuntime:        application.ApplicationRuntime,
 		ApplicationRuntimeVersion: application.ApplicationRuntimeVersion,
-		ApplicationTags:           map[string]interface{}{},
-
-		TraceID:       span.Context.TraceID,
-		TransactionID: plugin.TransactionID,
-		ParentSpanID:  span.ParentSpanID,
-
-		DomainName:    span.DomainName,
-		ClassName:     span.ClassName,
-		ServiceName:   application.ApplicationName,
-		OperationName: span.OperationName,
-
-		StartTimestamp:  span.StartTimestamp,
-		FinishTimestamp: span.EndTimestamp,
-		Duration:        span.Duration(),
-		Tags:            span.GetTags(),
-		Logs:            map[string]spanLog{}, // TO DO get logs
+		ApplicationTags:           application.ApplicationTags,
+		TraceID:                   span.Context.TraceID,
+		TransactionID:             plugin.TransactionID,
+		ParentSpanID:              span.ParentSpanID,
+		DomainName:                span.DomainName,
+		ClassName:                 span.ClassName,
+		ServiceName:               application.ApplicationName,
+		OperationName:             span.OperationName,
+		StartTimestamp:            span.StartTimestamp,
+		FinishTimestamp:           span.EndTimestamp,
+		Duration:                  span.Duration(),
+		Tags:                      span.GetTags(),
+		Logs:                      map[string]spanLog{}, // TO DO get logs
 	}
 }

@@ -8,20 +8,15 @@ import (
 	"github.com/thundra-io/thundra-lambda-agent-go/constants"
 )
 
-var applicationTags = make(map[string]interface{})
-
-func init() {
-	parseApplicationTags()
-}
-
 func parseApplicationTags() {
+	clearApplicationTags()
 	tagPrefix := constants.ApplicationTagPrefixProp
 	prefixLen := len(tagPrefix)
 	for _, pair := range os.Environ() {
 		if strings.HasPrefix(pair, tagPrefix) {
 			splits := strings.SplitN(pair[prefixLen:], "=", 2)
 			key, val := splits[0], splits[1]
-			applicationTags[key] = parseStringToVal(val)
+			ApplicationTags[key] = parseStringToVal(val)
 		}
 	}
 }
@@ -39,6 +34,6 @@ func parseStringToVal(s string) interface{} {
 	return strings.Trim(s, "\"")
 }
 
-func ClearApplicationTags() {
-	applicationTags = make(map[string]interface{})
+func clearApplicationTags() {
+	ApplicationTags = make(map[string]interface{})
 }

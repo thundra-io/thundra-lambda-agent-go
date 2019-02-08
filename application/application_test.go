@@ -84,10 +84,9 @@ func TestParseApplicationTags(t *testing.T) {
 
 	for i, testCase := range cases {
 		t.Run(fmt.Sprintf("testCase[%d] %s", i, testCase.name), func(t *testing.T) {
-			ClearApplicationTags()
 			os.Setenv(testCase.key, testCase.val)
 			parseApplicationTags()
-			assert.Equal(t, testCase.expectedVal, applicationTags[testCase.expectedKey])
+			assert.Equal(t, testCase.expectedVal, ApplicationTags[testCase.expectedKey])
 			os.Unsetenv(testCase.key)
 		})
 	}

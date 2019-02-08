@@ -21,14 +21,13 @@ type metricDataModel struct {
 	ApplicationRuntime        string                 `json:"applicationRuntime"`
 	ApplicationRuntimeVersion string                 `json:"applicationRuntimeVersion"`
 	ApplicationTags           map[string]interface{} `json:"applicationTags"`
-
-	TraceID         string                 `json:"traceId"`
-	TransactionID   string                 `json:"transactionId"`
-	SpanID          string                 `json:"spanId"`
-	MetricName      string                 `json:"metricName"`
-	MetricTimestamp int64                  `json:"metricTimestamp"`
-	Metrics         map[string]interface{} `json:"metrics"`
-	Tags            map[string]interface{} `json:"tags"`
+	TraceID                   string                 `json:"traceId"`
+	TransactionID             string                 `json:"transactionId"`
+	SpanID                    string                 `json:"spanId"`
+	MetricName                string                 `json:"metricName"`
+	MetricTimestamp           int64                  `json:"metricTimestamp"`
+	Metrics                   map[string]interface{} `json:"metrics"`
+	Tags                      map[string]interface{} `json:"tags"`
 }
 
 func (mp *metricPlugin) prepareMetricsData() metricDataModel {
@@ -44,14 +43,12 @@ func (mp *metricPlugin) prepareMetricsData() metricDataModel {
 		ApplicationStage:          application.ApplicationStage,
 		ApplicationRuntime:        application.ApplicationRuntime,
 		ApplicationRuntimeVersion: application.ApplicationRuntimeVersion,
-		ApplicationTags:           map[string]interface{}{},
-
-		TraceID:         plugin.TraceID,
-		TransactionID:   plugin.TransactionID,
-		SpanID:          "", // Optional
-		MetricTimestamp: mp.data.metricTimestamp,
-
-		Metrics: map[string]interface{}{},
-		Tags:    map[string]interface{}{},
+		ApplicationTags:           application.ApplicationTags,
+		TraceID:                   plugin.TraceID,
+		TransactionID:             plugin.TransactionID,
+		SpanID:                    "", // Optional
+		MetricTimestamp:           mp.data.metricTimestamp,
+		Metrics:                   map[string]interface{}{},
+		Tags:                      map[string]interface{}{},
 	}
 }

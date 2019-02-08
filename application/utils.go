@@ -20,6 +20,7 @@ var MemoryLimit int
 var LogGroupName string
 var LogStreamName string
 var FunctionARN string
+var ApplicationTags map[string]interface{}
 
 
 func init() {
@@ -33,6 +34,7 @@ func init() {
 	MemoryLimit = getMemoryLimit()
 	LogGroupName = getLogGroupName()
 	LogStreamName = getLogStreamName()
+	parseApplicationTags()
 }
 
 // getApplicationDomainName returns application domain name
