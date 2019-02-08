@@ -91,7 +91,7 @@ func getApplicationVersion() string {
 
 // getApplicationStage returns profile
 func getApplicationStage() string {
-	v := os.Getenv(constants.ApplicationNameProp)
+	v := os.Getenv(constants.ApplicationStageProp)
 	if v != "" {
 		return v
 	}
@@ -116,7 +116,7 @@ func getLogStreamName() string {
 	return lambdacontext.LogStreamName
 }
 
-// GetFromContext returns InvokedFunctionArn and AwsRequestID if available.
+// GetInvokedFunctionArn returns InvokedFunctionArn if available.
 func GetInvokedFunctionArn(ctx context.Context) string {
 	lc, ok := lambdacontext.FromContext(ctx)
 	if !ok {
@@ -126,7 +126,7 @@ func GetInvokedFunctionArn(ctx context.Context) string {
 	return lc.InvokedFunctionArn
 }
 
-// GetFromContext returns InvokedFunctionArn and AwsRequestID if available.
+// GetAwsRequestID returns AwsRequestID if available.
 func GetAwsRequestID(ctx context.Context) string {
 	lc, ok := lambdacontext.FromContext(ctx)
 	if !ok {
