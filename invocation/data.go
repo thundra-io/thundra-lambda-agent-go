@@ -3,6 +3,8 @@ package invocation
 import (
 	"context"
 
+	"github.com/thundra-io/thundra-lambda-agent-go/tracer"
+
 	"github.com/thundra-io/thundra-lambda-agent-go/application"
 	"github.com/thundra-io/thundra-lambda-agent-go/constants"
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
@@ -44,6 +46,10 @@ type invocationDataModel struct {
 }
 
 func (ip *invocationPlugin) prepareData(ctx context.Context) invocationDataModel {
+	spanID := ""
+	if ip.rootSpan != nil {
+		spanID = ip.rootSpan.Context().(tracer.SpanContext).SpanID
+	}
 	tags := ip.prepareTags(ctx)
 	return invocationDataModel{
 		ID:                        utils.GenerateNewID(),
@@ -61,7 +67,7 @@ func (ip *invocationPlugin) prepareData(ctx context.Context) invocationDataModel
 		ApplicationTags:           application.ApplicationTags,
 		TraceID:                   plugin.TraceID,
 		TransactionID:             plugin.TransactionID,
-		SpanID:                    "", // Optional Field
+		SpanID:                    spanID,
 		FunctionPlatform:          constants.AwsFunctionPlatform,
 		FunctionName:              application.ApplicationName,
 		FunctionRegion:            application.FunctionRegion,

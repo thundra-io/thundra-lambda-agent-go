@@ -17,8 +17,7 @@ var proc *process.Process
 var pid string
 
 type metricPlugin struct {
-	data *metricData
-
+	data                    *metricData
 	disableGCMetrics        bool
 	disableHeapMetrics      bool
 	disableGoroutineMetrics bool

@@ -92,16 +92,12 @@ func (a *Agent) CatchTimeout(ctx context.Context, payload json.RawMessage) {
 	if deadline.IsZero() {
 		return
 	}
-
 	timeoutDuration := deadline.Add(-a.TimeoutMargin)
-
 	if time.Now().After(timeoutDuration) {
 		return
 	}
-
 	timer := time.NewTimer(time.Until(timeoutDuration))
 	timeoutChannel := timer.C
-
 	select {
 	case <-timeoutChannel:
 		fmt.Println("Function is timed out")

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 	"github.com/thundra-io/thundra-lambda-agent-go/utils"
 )
@@ -11,7 +12,8 @@ import (
 var invocationCount uint32
 
 type invocationPlugin struct {
-	data *invocationData
+	data     *invocationData
+	rootSpan opentracing.Span
 }
 
 type invocationData struct {
@@ -28,9 +30,9 @@ type invocationData struct {
 
 // New initializes and returns a new invocationPlugin object.
 func New() *invocationPlugin {
-	ip := &invocationPlugin{}
-	ip.data = &invocationData{}
-	return ip
+	return &invocationPlugin{
+		data: &invocationData{},
+	}
 }
 
 func (ip *invocationPlugin) IsEnabled() bool {
@@ -42,8 +44,10 @@ func (ip *invocationPlugin) Order() uint8 {
 }
 
 func (ip *invocationPlugin) BeforeExecution(ctx context.Context, request json.RawMessage) context.Context {
-	ip.data = &invocationData{}
-	ip.data.startTimestamp = utils.GetTimestamp()
+	ip.rootSpan = opentracing.SpanFromContext(ctx)
+	ip.data = &invocationData{
+		startTimestamp: utils.GetTimestamp(),
+	}
 	return ctx
 }
 

@@ -29,8 +29,8 @@ func GetAgent() *agent.Agent {
 	return agentInstance
 }
 
-// Wrap wraps the given handler function so that the thundra agent integrates
-// with given handler
+// Wrap wraps the given handler function so that the 
+// thundra agent integrates with given handler
 func Wrap(handler interface{}) interface{} {
 	if agentInstance == nil {
 		fmt.Println("thundra.go: agentInstance is nil")
