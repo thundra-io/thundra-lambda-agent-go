@@ -14,6 +14,7 @@ var TimeoutMargin time.Duration
 var WarmupEnabled bool
 var DebugEnabled bool
 var APIKey string
+var TrustAllCertificates bool
 
 func init() {
 	ThundraDisabled = isThundraDisabled()
@@ -21,6 +22,7 @@ func init() {
 	TimeoutMargin = determineTimeoutMargin()
 	WarmupEnabled = determineWarmup()
 	APIKey = determineAPIKey()
+	TrustAllCertificates = trustAllCertificates()
 }
 
 func isThundraDisabled() bool {
@@ -75,6 +77,14 @@ func determineAPIKey() string {
 
 func isThundraDebugEnabled() bool {
 	b, err := strconv.ParseBool(os.Getenv(constants.ThundraLambdaDebugEnable))
+	if err != nil {
+		return false
+	}
+	return b
+}
+
+func trustAllCertificates() bool {
+	b, err := strconv.ParseBool(os.Getenv(constants.ThundraTrustAllCertificates))
 	if err != nil {
 		return false
 	}

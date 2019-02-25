@@ -20,6 +20,7 @@ const ThundraLambdaPublishCloudwatchEnable = "thundra_agent_lambda_publish_cloud
 const ThundraLambdaReportRestBaseURL = "thundra_agent_lambda_report_rest_baseUrl"
 const ThundraLambdaWarmupWarmupAware = "thundra_agent_lambda_warmup_warmupAware"
 const ThundraLambdaTimeoutMargin = "thundra_agent_lambda_timeout_margin"
+const ThundraTrustAllCertificates = "thundra_agent_lambda_report_rest_trustAllCertificates"
 
 const ApplicationIDProp = "thundra_agent_lambda_application_id"
 const ApplicationDomainProp = "thundra_agent_lambda_application_domainName"

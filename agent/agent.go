@@ -24,9 +24,7 @@ type Agent struct {
 // New is used to collect basic invocation data with thundra. Use NewBuilder and AddPlugin to access full functionality.
 func New() *Agent {
 	return &Agent{
-		Reporter: &reporterImpl{
-			reported: new(uint32),
-		},
+		Reporter: newReporter(),
 		WarmUp:        config.WarmupEnabled,
 		TimeoutMargin: config.TimeoutMargin,
 		Plugins:       []plugin.Plugin{},

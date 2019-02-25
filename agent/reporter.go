@@ -2,6 +2,7 @@ package agent
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -26,9 +27,8 @@ type reporter interface {
 
 type reporterImpl struct {
 	messageQueue []plugin.MonitoringDataWrapper
-
-	// reported is a flag to prevent system from sending data twice in case of timeout
-	reported *uint32
+	client       *http.Client
+	reported     *uint32
 }
 
 var shouldSendAsync string
@@ -41,6 +41,13 @@ func init() {
 		collectorURL = url
 	} else {
 		collectorURL = constants.DefaultCollectorURL
+	}
+}
+
+func newReporter() *reporterImpl {
+	return &reporterImpl{
+		client:   createHTTPClient(),
+		reported: new(uint32),
 	}
 }
 
@@ -59,7 +66,7 @@ func (r *reporterImpl) Collect(messages []plugin.MonitoringDataWrapper) {
 func (r *reporterImpl) Report() {
 	atomic.CompareAndSwapUint32(r.reported, 0, 1)
 	if shouldSendAsync == "false" || shouldSendAsync == "" {
-		sendHTTPReq(r.messageQueue)
+		r.sendHTTPReq()
 	}
 }
 
@@ -88,11 +95,11 @@ func sendAsync(msg interface{}) {
 	fmt.Println(string(b))
 }
 
-func sendHTTPReq(messageQueue []plugin.MonitoringDataWrapper) {
+func (r *reporterImpl) sendHTTPReq() {
 	if config.DebugEnabled {
-		fmt.Printf("MessageQueue:\n %+v \n", messageQueue)
+		fmt.Printf("MessageQueue:\n %+v \n", r.messageQueue)
 	}
-	b, err := json.Marshal(&messageQueue)
+	b, err := json.Marshal(r.messageQueue)
 	if err != nil {
 		fmt.Println("Error in marshalling ", err)
 	}
@@ -110,8 +117,7 @@ func sendHTTPReq(messageQueue []plugin.MonitoringDataWrapper) {
 	req.Header.Set("Authorization", "ApiKey "+config.APIKey)
 	req.Header.Set("Content-Type", "application/json")
 
-	client := &http.Client{}
-	resp, err := client.Do(req)
+	resp, err := r.client.Do(req)
 	if err != nil {
 		fmt.Println("Error client.Do(req): ", err)
 		return
@@ -126,4 +132,13 @@ func sendHTTPReq(messageQueue []plugin.MonitoringDataWrapper) {
 		fmt.Println("response Body:", string(body))
 	}
 	resp.Body.Close()
+}
+
+func createHTTPClient() *http.Client {
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{
+			InsecureSkipVerify: config.TrustAllCertificates,
+		},
+	}
+	return &http.Client{Transport: tr}
 }
