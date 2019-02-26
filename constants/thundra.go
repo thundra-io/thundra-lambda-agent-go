@@ -1,17 +1,21 @@
 package constants
 
-const DefaultProfile = "default"
-const ThundraApplicationStage = "thundra_agent_lambda_application_stage"
 const AgentVersion = "2.0.0"
 const DataModelVersion = "2.0"
+
+const DefaultProfile = "default"
 const DefaultClassName = "Method"
 const DefaultDomainName = ""
+
+const ThundraLambdaDisable = "thundra_agent_lambda_disable"
 const ThundraDisableTrace = "thundra_agent_lambda_trace_disable"
 const ThundraDisableMetric = "thundra_agent_lambda_metric_disable"
 const ThundraDisableLog = "thundra_agent_lambda_log_disable"
+const ThundraDisableTraceRequest = "thundra_agent_lambda_trace_request_disable"
+const ThundraDisableTraceResponse = "thundra_agent_lambda_trace_response_disable"
+const ThundraApplicationStage = "thundra_agent_lambda_application_stage"
 
 const DefaultTimeoutMargin = 200
-const ThundraLambdaDisable = "thundra_agent_lambda_disable"
 const DefaultCollectorURL = "https://api.thundra.io/v1"
 const MonitoringDataPath = "/monitoring-data"
 

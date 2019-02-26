@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 
+	"github.com/thundra-io/thundra-lambda-agent-go/config"
+
 	"github.com/thundra-io/thundra-lambda-agent-go/application"
 	"github.com/thundra-io/thundra-lambda-agent-go/constants"
 	"github.com/thundra-io/thundra-lambda-agent-go/tracer"
@@ -61,10 +63,10 @@ func (tr *tracePlugin) prepareTraceTags(ctx context.Context, request json.RawMes
 	tags[constants.AwsLambdaInvocationRequestId] = application.GetAwsRequestID(ctx)
 
 	// If the agent's user doesn't want to send their request and response data, hide them.
-	if !shouldHideRequest() {
+	if !config.TraceRequestDisabled {
 		tags[constants.AwsLambdaInvocationRequest] = string(request)
 	}
-	if !shouldHideResponse() {
+	if !config.TraceResponseDisabled {
 		tags[constants.AwsLambdaInvocationResponse] = response
 	}
 

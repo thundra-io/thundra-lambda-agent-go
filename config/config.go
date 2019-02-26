@@ -10,6 +10,8 @@ import (
 )
 
 var ThundraDisabled bool
+var TraceRequestDisabled bool
+var TraceResponseDisabled bool
 var TimeoutMargin time.Duration
 var WarmupEnabled bool
 var DebugEnabled bool
@@ -18,6 +20,8 @@ var TrustAllCertificates bool
 
 func init() {
 	ThundraDisabled = isThundraDisabled()
+	TraceRequestDisabled = isTraceRequestDisabled()
+	TraceResponseDisabled = isTraceResponseDisabled()
 	DebugEnabled = isThundraDebugEnabled()
 	TimeoutMargin = determineTimeoutMargin()
 	WarmupEnabled = determineWarmup()
@@ -89,4 +93,28 @@ func trustAllCertificates() bool {
 		return false
 	}
 	return b
+}
+
+func isTraceRequestDisabled() bool {
+	env := os.Getenv(constants.ThundraDisableTraceRequest)
+	disabled, err := strconv.ParseBool(env)
+	if err != nil {
+		if env != "" {
+			fmt.Println(err, constants.ThundraDisableTraceRequest+"is not a bool value. Trace request is not disabled.")
+		}
+		return false
+	}
+	return disabled
+}
+
+func isTraceResponseDisabled() bool {
+	env := os.Getenv(constants.ThundraDisableTraceResponse)
+	disabled, err := strconv.ParseBool(env)
+	if err != nil {
+		if env != "" {
+			fmt.Println(err, constants.ThundraDisableTraceResponse+" is not a bool value. Trace response is not disabled.")
+		}
+		return false
+	}
+	return disabled
 }
