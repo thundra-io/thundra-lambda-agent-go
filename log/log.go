@@ -3,9 +3,9 @@ package log
 import (
 	"context"
 	"encoding/json"
-	"os"
 
-	"github.com/thundra-io/thundra-lambda-agent-go/constants"
+	"github.com/thundra-io/thundra-lambda-agent-go/config"
+
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 )
 
@@ -17,11 +17,7 @@ func New() *logPlugin {
 }
 
 func (p *logPlugin) IsEnabled() bool {
-	if os.Getenv(constants.ThundraDisableLog) == "true" {
-		return false
-	}
-
-	return true
+	return !config.LogDisabled
 }
 
 func (p *logPlugin) Order() uint8 {

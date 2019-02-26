@@ -3,12 +3,12 @@ package metric
 import (
 	"context"
 	"encoding/json"
-	"os"
 	"runtime"
+
+	"github.com/thundra-io/thundra-lambda-agent-go/config"
 
 	"github.com/shirou/gopsutil/net"
 	"github.com/shirou/gopsutil/process"
-	"github.com/thundra-io/thundra-lambda-agent-go/constants"
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 	"github.com/thundra-io/thundra-lambda-agent-go/utils"
 )
@@ -54,11 +54,7 @@ func New() *metricPlugin {
 }
 
 func (mp *metricPlugin) IsEnabled() bool {
-	if os.Getenv(constants.ThundraDisableMetric) == "true" {
-		return false
-	}
-
-	return true
+	return !config.MetricDisabled
 }
 
 func (mp *metricPlugin) Order() uint8 {

@@ -3,7 +3,8 @@ package trace
 import (
 	"context"
 	"encoding/json"
-	"os"
+
+	"github.com/thundra-io/thundra-lambda-agent-go/config"
 
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/thundra-io/thundra-lambda-agent-go/application"
@@ -46,11 +47,7 @@ func New() *tracePlugin {
 }
 
 func (tr *tracePlugin) IsEnabled() bool {
-	if os.Getenv(constants.ThundraDisableTrace) == "true" {
-		return false
-	}
-
-	return true
+	return !config.TraceDisabled
 }
 
 func (tr *tracePlugin) Order() uint8 {

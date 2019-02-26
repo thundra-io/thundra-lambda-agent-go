@@ -10,6 +10,9 @@ import (
 )
 
 var ThundraDisabled bool
+var TraceDisabled bool
+var MetricDisabled bool
+var LogDisabled bool
 var TraceRequestDisabled bool
 var TraceResponseDisabled bool
 var TimeoutMargin time.Duration
@@ -20,6 +23,9 @@ var TrustAllCertificates bool
 
 func init() {
 	ThundraDisabled = isThundraDisabled()
+	TraceDisabled = isTraceDisabled()
+	MetricDisabled = isMetricDisabled()
+	LogDisabled = isLogDisabled()
 	TraceRequestDisabled = isTraceRequestDisabled()
 	TraceResponseDisabled = isTraceResponseDisabled()
 	DebugEnabled = isThundraDebugEnabled()
@@ -35,6 +41,42 @@ func isThundraDisabled() bool {
 	if err != nil {
 		if env != "" {
 			fmt.Println(err, " thundra_lambda_disable is not a bool value. Thundra is enabled by default.")
+		}
+		return false
+	}
+	return disabled
+}
+
+func isTraceDisabled() bool {
+	env := os.Getenv(constants.ThundraDisableTrace)
+	disabled, err := strconv.ParseBool(env)
+	if err != nil {
+		if env != "" {
+			fmt.Println(err, constants.ThundraDisableTrace + " is not a bool value. Trace plugin is enabled by default.")
+		}
+		return false
+	}
+	return disabled
+}
+
+func isMetricDisabled() bool {
+	env := os.Getenv(constants.ThundraDisableMetric)
+	disabled, err := strconv.ParseBool(env)
+	if err != nil {
+		if env != "" {
+			fmt.Println(err, constants.ThundraDisableMetric + " is not a bool value. Metric plugin is enabled by default.")
+		}
+		return false
+	}
+	return disabled
+}
+
+func isLogDisabled() bool {
+	env := os.Getenv(constants.ThundraDisableLog)
+	disabled, err := strconv.ParseBool(env)
+	if err != nil {
+		if env != "" {
+			fmt.Println(err, constants.ThundraDisableLog + " is not a bool value. Log plugin is enabled by default.")
 		}
 		return false
 	}
