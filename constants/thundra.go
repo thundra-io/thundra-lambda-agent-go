@@ -14,6 +14,8 @@ const ThundraDisableLog = "thundra_agent_lambda_log_disable"
 const ThundraDisableTraceRequest = "thundra_agent_lambda_trace_request_disable"
 const ThundraDisableTraceResponse = "thundra_agent_lambda_trace_response_disable"
 const ThundraApplicationStage = "thundra_agent_lambda_application_stage"
+const ThundraLogLogLevel = "thundra_log_logLevel"
+
 
 const DefaultTimeoutMargin = 200
 const DefaultCollectorURL = "https://api.thundra.io/v1"

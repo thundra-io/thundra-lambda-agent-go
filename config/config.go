@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/thundra-io/thundra-lambda-agent-go/constants"
@@ -13,6 +14,7 @@ var ThundraDisabled bool
 var TraceDisabled bool
 var MetricDisabled bool
 var LogDisabled bool
+var LogLevel string
 var TraceRequestDisabled bool
 var TraceResponseDisabled bool
 var TimeoutMargin time.Duration
@@ -32,6 +34,7 @@ func init() {
 	TimeoutMargin = determineTimeoutMargin()
 	WarmupEnabled = determineWarmup()
 	APIKey = determineAPIKey()
+	LogLevel = determineLogLevel()
 	TrustAllCertificates = trustAllCertificates()
 }
 
@@ -52,7 +55,7 @@ func isTraceDisabled() bool {
 	disabled, err := strconv.ParseBool(env)
 	if err != nil {
 		if env != "" {
-			fmt.Println(err, constants.ThundraDisableTrace + " is not a bool value. Trace plugin is enabled by default.")
+			fmt.Println(err, constants.ThundraDisableTrace+" is not a bool value. Trace plugin is enabled by default.")
 		}
 		return false
 	}
@@ -64,7 +67,7 @@ func isMetricDisabled() bool {
 	disabled, err := strconv.ParseBool(env)
 	if err != nil {
 		if env != "" {
-			fmt.Println(err, constants.ThundraDisableMetric + " is not a bool value. Metric plugin is enabled by default.")
+			fmt.Println(err, constants.ThundraDisableMetric+" is not a bool value. Metric plugin is enabled by default.")
 		}
 		return false
 	}
@@ -76,7 +79,7 @@ func isLogDisabled() bool {
 	disabled, err := strconv.ParseBool(env)
 	if err != nil {
 		if env != "" {
-			fmt.Println(err, constants.ThundraDisableLog + " is not a bool value. Log plugin is enabled by default.")
+			fmt.Println(err, constants.ThundraDisableLog+" is not a bool value. Log plugin is enabled by default.")
 		}
 		return false
 	}
@@ -159,4 +162,9 @@ func isTraceResponseDisabled() bool {
 		return false
 	}
 	return disabled
+}
+
+func determineLogLevel() string {
+	level := os.Getenv(constants.ThundraLogLogLevel)
+	return strings.ToUpper(level)
 }

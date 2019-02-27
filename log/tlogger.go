@@ -4,9 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"os"
 	"runtime"
-	"strings"
+
+	"github.com/thundra-io/thundra-lambda-agent-go/config"
 
 	"github.com/thundra-io/thundra-lambda-agent-go/tracer"
 	"github.com/thundra-io/thundra-lambda-agent-go/utils"
@@ -232,8 +232,7 @@ func (t *thundraLogManager) clearLogs() {
 }
 
 func getLogLevelCode() int {
-	l := os.Getenv(thundraLogLogLevel)
-	thundraLogLevel := strings.ToUpper(l)
+	thundraLogLevel := config.LogLevel
 	if thundraLogLevel == traceLogLevel {
 		return traceLogLevelCode
 	} else if thundraLogLevel == debugLogLevel {
@@ -252,7 +251,7 @@ func getLogLevelCode() int {
 		return 0
 	}
 
-	log.Print(errors.New("invalid " + thundraLogLogLevel + ". Logs are disabled. Use trace, debug, info, warn, error or none."))
+	log.Print(errors.New("invalid " + thundraLogLevel + ". Logs are disabled. Use trace, debug, info, warn, error or none."))
 	return noneLogLevelCode
 }
 
