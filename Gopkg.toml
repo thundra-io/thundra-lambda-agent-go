@@ -23,7 +23,10 @@
 #   non-go = false
 #   go-tests = true
 #   unused-packages = true
-ignored = ["github.com/aws/aws-lambda-go/lambdacontext"]
+ignored = [
+  "github.com/opentracing/*",
+  "github.com/aws/aws-lambda-go/lambdacontext",
+]
 
 [[constraint]]
   name = "github.com/satori/go.uuid"
@@ -36,6 +39,10 @@ ignored = ["github.com/aws/aws-lambda-go/lambdacontext"]
 [[constraint]]
   name = "github.com/stretchr/testify"
   version = "1.2.1"
+
+[[constraint]]
+  name = "github.com/pkg/errors"
+  version = "0.8.1"
 
 [prune]
   go-tests = true

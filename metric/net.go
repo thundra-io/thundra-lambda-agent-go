@@ -3,51 +3,32 @@ package metric
 import (
 	"fmt"
 
-	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
+	uuid "github.com/satori/go.uuid"
 	"github.com/shirou/gopsutil/net"
 )
 
 const all = 0
 
-func prepareNetMetricsData(metric *metric) metricData {
-	nf := takeNetFrame(metric)
-	return metricData{
-		Id:                        plugin.GenerateNewId(),
-		Type:                      metricType,
-		AgentVersion:              plugin.AgentVersion,
-		DataModelVersion:          plugin.DataModelVersion,
-		ApplicationId:             plugin.ApplicationId,
-		ApplicationDomainName:     plugin.ApplicationDomainName,
-		ApplicationClassName:      plugin.ApplicationClassName,
-		ApplicationName:           plugin.FunctionName,
-		ApplicationVersion:        plugin.ApplicationVersion,
-		ApplicationStage:          plugin.ApplicationStage,
-		ApplicationRuntime:        plugin.ApplicationRuntime,
-		ApplicationRuntimeVersion: plugin.ApplicationRuntimeVersion,
-		ApplicationTags:           map[string]interface{}{},
-
-		TraceId:         plugin.TraceId,
-		TransactionId:  plugin.TransactionId,
-		SpanId:          plugin.SpanId,
-		MetricName:      netMetric,
-		MetricTimestamp: metric.span.metricTimestamp,
-
-		Metrics: map[string]interface{}{
-			// BytesRecv is how many bytes received from network
-			bytesRecv: nf.bytesRecv,
-			// BytesSent is how many bytes sent to network
-			bytesSent: nf.bytesSent,
-			// PacketsRecv is how many packets received from network
-			packetsRecv: nf.packetsRecv,
-			// PacketsSent is how many packets sent to network
-			packetsSent: nf.packetsSent,
-			// ErrIn is the number of errors while sending packet
-			errIn: nf.errin,
-			// ErrOut is the number of errors while receiving packet
-			errOut: nf.errout,
-		},
-		Tags: map[string]interface{}{},
+func prepareNetMetricsData(mp *metricPlugin, base metricDataModel) metricDataModel {
+	base.ID = uuid.NewV4().String()
+	base.MetricName = netMetric
+	nf := takeNetFrame(mp)
+	base.Metrics = map[string]interface{}{
+		// BytesRecv is how many bytes received from network
+		bytesRecv: nf.bytesRecv,
+		// BytesSent is how many bytes sent to network
+		bytesSent: nf.bytesSent,
+		// PacketsRecv is how many packets received from network
+		packetsRecv: nf.packetsRecv,
+		// PacketsSent is how many packets sent to network
+		packetsSent: nf.packetsSent,
+		// ErrIn is the number of errors while sending packet
+		errIn: nf.errin,
+		// ErrOut is the number of errors while receiving packet
+		errOut: nf.errout,
 	}
+
+	return base
 }
 
 type netFrame struct {
@@ -60,18 +41,18 @@ type netFrame struct {
 }
 
 //Since lambda works continuously we should subtract io values in order to get correct results per invocation
-func takeNetFrame(metric *metric) *netFrame {
+func takeNetFrame(mp *metricPlugin) *netFrame {
 	// If nil, return an empty netFrame
-	if metric.span.endNetStat == nil || metric.span.startNetStat == nil {
+	if mp.data.endNetStat == nil || mp.data.startNetStat == nil {
 		return &netFrame{}
 	}
 
-	br := metric.span.endNetStat.BytesRecv - metric.span.startNetStat.BytesRecv
-	bs := metric.span.endNetStat.BytesSent - metric.span.startNetStat.BytesSent
-	ps := metric.span.endNetStat.PacketsSent - metric.span.startNetStat.PacketsSent
-	pr := metric.span.endNetStat.PacketsRecv - metric.span.startNetStat.PacketsRecv
-	ei := metric.span.endNetStat.Errin - metric.span.startNetStat.Errin
-	eo := metric.span.endNetStat.Errout - metric.span.startNetStat.Errout
+	br := mp.data.endNetStat.BytesRecv - mp.data.startNetStat.BytesRecv
+	bs := mp.data.endNetStat.BytesSent - mp.data.startNetStat.BytesSent
+	ps := mp.data.endNetStat.PacketsSent - mp.data.startNetStat.PacketsSent
+	pr := mp.data.endNetStat.PacketsRecv - mp.data.startNetStat.PacketsRecv
+	ei := mp.data.endNetStat.Errin - mp.data.startNetStat.Errin
+	eo := mp.data.endNetStat.Errout - mp.data.startNetStat.Errout
 
 	return &netFrame{
 		bytesRecv:   br,
@@ -83,7 +64,7 @@ func takeNetFrame(metric *metric) *netFrame {
 	}
 }
 
-func sampleNetStat() (*net.IOCountersStat) {
+func sampleNetStat() *net.IOCountersStat {
 	netIOStat, err := net.IOCounters(false)
 	if err != nil {
 		fmt.Println("Error sampling net stat", err)

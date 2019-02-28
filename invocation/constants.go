@@ -1,6 +1,5 @@
 package invocation
 
 const invocationType = "Invocation"
-const functionPlatform = "AWS Lambda"
-
+const pluginOrder = 10
 const defaultErrorCode = "-1"

@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
+	"github.com/thundra-io/thundra-lambda-agent-go/utils"
 )
 
 const numGoroutines = 5
@@ -14,20 +14,21 @@ const numGoroutines = 5
 const defaultGoroutines = 2
 
 func TestPrepareGoroutineMetricsData(t *testing.T) {
-	metric := NewBuilder().Build()
-	metric.span.metricTimestamp = plugin.GetTimestamp()
-	metric.span.startGCCount = 1
-	metric.span.endGCCount = 2
+	mp := New()
+	mp.data.metricTimestamp = utils.GetTimestamp()
+	mp.data.startGCCount = 1
+	mp.data.endGCCount = 2
 
 	done := make(chan bool)
 	generateGoroutines(done, numGoroutines)
+	base := mp.prepareMetricsData()
+	grMetric := prepareGoRoutineMetricsData(mp, base)
 
-	gcStatsData := prepareGoRoutineMetricsData(metric)
+	assert.True(t, len(grMetric.ID) != 0)
+	assert.Equal(t, goroutineMetric, grMetric.MetricName)
+	assert.Equal(t, mp.data.metricTimestamp, grMetric.MetricTimestamp)
 
-	assert.Equal(t, goroutineMetric, gcStatsData.MetricName)
-	assert.Equal(t, metric.span.metricTimestamp, gcStatsData.MetricTimestamp)
-
-	assert.Equal(t, uint64(numGoroutines+defaultGoroutines), gcStatsData.Metrics[numGoroutine])
+	assert.Equal(t, uint64(numGoroutines+defaultGoroutines), grMetric.Metrics[numGoroutine])
 	killGeneratedGoroutines(done, numGoroutines)
 }
 

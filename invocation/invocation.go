@@ -3,15 +3,20 @@ package invocation
 import (
 	"context"
 	"encoding/json"
-	"sync"
 
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
+	"github.com/thundra-io/thundra-lambda-agent-go/utils"
 )
 
 var invocationCount uint32
 
-// invocationSpan collects raw information related to invocation.
-type invocationSpan struct {
+type invocationPlugin struct {
+	data     *invocationData
+	rootSpan opentracing.Span
+}
+
+type invocationData struct {
 	startTimestamp  int64
 	finishTimestamp int64
 	duration        int64
@@ -23,80 +28,58 @@ type invocationSpan struct {
 	timeout         bool
 }
 
-type invocation struct {
-	span *invocationSpan
+// New initializes and returns a new invocationPlugin object.
+func New() *invocationPlugin {
+	return &invocationPlugin{
+		data: &invocationData{},
+	}
 }
 
-// New initializes and returns a new invocation object.
-func New() *invocation {
-	i := new(invocation)
-	i.span = new(invocationSpan)
-	return i
+func (ip *invocationPlugin) IsEnabled() bool {
+	return true
 }
 
-func (i *invocation) BeforeExecution(ctx context.Context, request json.RawMessage, wg *sync.WaitGroup) {
-	i.span = new(invocationSpan)
-	i.span.startTimestamp = plugin.GetTimestamp()
-	wg.Done()
+func (ip *invocationPlugin) Order() uint8 {
+	return pluginOrder
 }
 
-func (i *invocation) AfterExecution(ctx context.Context, request json.RawMessage, response interface{}, err interface{}) []plugin.MonitoringDataWrapper {
-	i.span.finishTimestamp = plugin.GetTimestamp()
-	i.span.duration = i.span.finishTimestamp - i.span.startTimestamp
+func (ip *invocationPlugin) BeforeExecution(ctx context.Context, request json.RawMessage) context.Context {
+	ip.rootSpan = opentracing.SpanFromContext(ctx)
+	ip.data = &invocationData{
+		startTimestamp: utils.GetTimestamp(),
+	}
+	return ctx
+}
+
+func (ip *invocationPlugin) AfterExecution(ctx context.Context, request json.RawMessage, response interface{}, err interface{}) []plugin.MonitoringDataWrapper {
+	ip.data.finishTimestamp = utils.GetTimestamp()
+	ip.data.duration = ip.data.finishTimestamp - ip.data.startTimestamp
 
 	if err != nil {
-		i.span.erroneous = true
-		i.span.errorMessage = plugin.GetErrorMessage(err)
-		i.span.errorType = plugin.GetErrorType(err)
-		i.span.errorCode = defaultErrorCode
+		ip.data.erroneous = true
+		ip.data.errorMessage = utils.GetErrorMessage(err)
+		ip.data.errorType = utils.GetErrorType(err)
+		ip.data.errorCode = defaultErrorCode
 	}
 
-	i.span.coldStart = isColdStarted()
-	i.span.timeout = isTimeout(err)
+	ip.data.coldStart = isColdStarted()
+	ip.data.timeout = utils.IsTimeout(err)
 
-	data := i.prepareData(ctx)
-	i.span = nil
+	data := ip.prepareData(ctx)
 
-	var invocationArr []plugin.MonitoringDataWrapper
-	invocationArr = append(invocationArr, plugin.WrapMonitoringData(data, invocationType))
-	return invocationArr
+	ip.Reset()
+
+	return []plugin.MonitoringDataWrapper{plugin.WrapMonitoringData(data, "Invocation")}
 }
 
-func (i *invocation) OnPanic(ctx context.Context, request json.RawMessage, err interface{}, stackTrace []byte) []plugin.MonitoringDataWrapper {
-	i.span.finishTimestamp = plugin.GetTimestamp()
-	i.span.duration = i.span.finishTimestamp - i.span.startTimestamp
-	i.span.erroneous = true
-	i.span.errorMessage = plugin.GetErrorMessage(err)
-	i.span.errorType = plugin.GetErrorType(err)
-	i.span.errorCode = defaultErrorCode
-	i.span.coldStart = isColdStarted()
-
-	// since it is panicked it could not be timed out
-	i.span.timeout = false
-
-	data := i.prepareData(ctx)
-	i.span = nil
-
-	var invocationArr []plugin.MonitoringDataWrapper
-	invocationArr = append(invocationArr, plugin.WrapMonitoringData(data, invocationType))
-	return invocationArr
+func (ip *invocationPlugin) Reset() {
+	ClearTags()
 }
 
-// isColdStarted returns if the lambda instance is cold started. Cold Start only happens on the first invocation.
+// isColdStarted returns if the lambda instance is cold started. Cold Start only happens on the first invocationPlugin.
 func isColdStarted() (coldStart bool) {
-	if invocationCount += 1; invocationCount == 1 {
+	if invocationCount++; invocationCount == 1 {
 		coldStart = true
 	}
 	return coldStart
-}
-
-// isTimeout returns if the lambda invocation is timed out.
-func isTimeout(err interface{}) bool {
-	if err == nil {
-		return false
-	}
-	if plugin.GetErrorType(err) == "timeoutError" {
-		return true
-	}
-	return false
 }

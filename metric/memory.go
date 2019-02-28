@@ -3,11 +3,15 @@ package metric
 import (
 	"fmt"
 
-	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
+	uuid "github.com/satori/go.uuid"
 	"github.com/shirou/gopsutil/mem"
+	"github.com/thundra-io/thundra-lambda-agent-go/application"
 )
 
-func prepareMemoryMetricsData(metric *metric) metricData {
+func prepareMemoryMetricsData(mp *metricPlugin, base metricDataModel) metricDataModel {
+	base.ID = uuid.NewV4().String()
+	base.MetricName = memoryMetric
+
 	memInfo, err := mem.VirtualMemory()
 	if err != nil {
 		fmt.Println(err)
@@ -18,33 +22,12 @@ func prepareMemoryMetricsData(metric *metric) metricData {
 		fmt.Println(err)
 	}
 
-	return metricData{
-		Id:                        plugin.GenerateNewId(),
-		Type:                      metricType,
-		AgentVersion:              plugin.AgentVersion,
-		DataModelVersion:          plugin.DataModelVersion,
-		ApplicationId:             plugin.ApplicationId,
-		ApplicationDomainName:     plugin.ApplicationDomainName,
-		ApplicationClassName:      plugin.ApplicationClassName,
-		ApplicationName:           plugin.FunctionName,
-		ApplicationVersion:        plugin.ApplicationVersion,
-		ApplicationStage:          plugin.ApplicationStage,
-		ApplicationRuntime:        plugin.ApplicationRuntime,
-		ApplicationRuntimeVersion: plugin.ApplicationRuntimeVersion,
-		ApplicationTags:           map[string]interface{}{},
-
-		TraceId:         plugin.TraceId,
-		TransactionId:  plugin.TransactionId,
-		SpanId:          plugin.SpanId,
-		MetricName:      memoryMetric,
-		MetricTimestamp: metric.span.metricTimestamp,
-
-		Metrics: map[string]interface{}{
-			appUsedMemory: procMemInfo.RSS,
-			appMaxMemory:  plugin.MemoryLimit * 1024 * 1024,
-			sysUsedMemory: memInfo.Used,
-			sysMaxMemory:  memInfo.Total,
-		},
-		Tags: map[string]interface{}{},
+	base.Metrics = map[string]interface{}{
+		appUsedMemory: procMemInfo.RSS,
+		appMaxMemory:  application.MemoryLimit * 1024 * 1024,
+		sysUsedMemory: memInfo.Used,
+		sysMaxMemory:  memInfo.Total,
 	}
+
+	return base
 }

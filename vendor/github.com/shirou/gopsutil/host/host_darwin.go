@@ -18,6 +18,7 @@ import (
 
 	"github.com/shirou/gopsutil/internal/common"
 	"github.com/shirou/gopsutil/process"
+	"golang.org/x/sys/unix"
 )
 
 // from utmpx.h
@@ -38,12 +39,9 @@ func InfoWithContext(ctx context.Context) (*InfoStat, error) {
 		ret.Hostname = hostname
 	}
 
-	uname, err := exec.LookPath("uname")
+	kernelVersion, err := KernelVersionWithContext(ctx)
 	if err == nil {
-		out, err := invoke.CommandWithContext(ctx, uname, "-r")
-		if err == nil {
-			ret.KernelVersion = strings.ToLower(strings.TrimSpace(string(out)))
-		}
+		ret.KernelVersion = kernelVersion
 	}
 
 	platform, family, pver, err := PlatformInformation()
@@ -183,17 +181,13 @@ func PlatformInformationWithContext(ctx context.Context) (string, string, string
 	if err != nil {
 		return "", "", "", err
 	}
-	uname, err := exec.LookPath("uname")
-	if err != nil {
-		return "", "", "", err
-	}
 
-	out, err := invoke.CommandWithContext(ctx, uname, "-s")
+	p, err := unix.Sysctl("kern.ostype")
 	if err == nil {
-		platform = strings.ToLower(strings.TrimSpace(string(out)))
+		platform = strings.ToLower(p)
 	}
 
-	out, err = invoke.CommandWithContext(ctx, sw_vers, "-productVersion")
+	out, err := invoke.CommandWithContext(ctx, sw_vers, "-productVersion")
 	if err == nil {
 		pver = strings.ToLower(strings.TrimSpace(string(out)))
 	}
@@ -214,8 +208,8 @@ func KernelVersion() (string, error) {
 }
 
 func KernelVersionWithContext(ctx context.Context) (string, error) {
-	_, _, version, err := PlatformInformation()
-	return version, err
+	version, err := unix.Sysctl("kern.osrelease")
+	return strings.ToLower(version), err
 }
 
 func SensorsTemperatures() ([]TemperatureStat, error) {

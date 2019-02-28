@@ -4,18 +4,20 @@ import (
 	"context"
 	"encoding/json"
 	"runtime"
-	"sync"
+
+	"github.com/thundra-io/thundra-lambda-agent-go/config"
 
 	"github.com/shirou/gopsutil/net"
 	"github.com/shirou/gopsutil/process"
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
+	"github.com/thundra-io/thundra-lambda-agent-go/utils"
 )
 
 var proc *process.Process
+var pid string
 
-type metric struct {
-	span *metricSpan
-
+type metricPlugin struct {
+	data                    *metricData
 	disableGCMetrics        bool
 	disableHeapMetrics      bool
 	disableGoroutineMetrics bool
@@ -25,8 +27,7 @@ type metric struct {
 	disableMemoryMetrics    bool
 }
 
-// metricSpan collects information related to metric plugin per invocation.
-type metricSpan struct {
+type metricData struct {
 	metricTimestamp   int64
 	startGCCount      uint32
 	endGCCount        uint32
@@ -34,96 +35,111 @@ type metricSpan struct {
 	endPauseTotalNs   uint64
 	startCPUTimeStat  *cpuTimesStat
 	endCPUTimeStat    *cpuTimesStat
-	appCpuLoad        float64
-	systemCpuLoad     float64
+	appCPULoad        float64
+	systemCPULoad     float64
 	endDiskStat       *process.IOCountersStat
 	startDiskStat     *process.IOCountersStat
 	endNetStat        *net.IOCountersStat
 	startNetStat      *net.IOCountersStat
 }
 
-func (metric *metric) BeforeExecution(ctx context.Context, request json.RawMessage, wg *sync.WaitGroup) {
-	metric.span = new(metricSpan)
-	metric.span.metricTimestamp = plugin.GetTimestamp()
+// New returns new metric plugin initialized with empty metrics data
+func New() *metricPlugin {
+	pid = utils.GetPid()
+	proc = utils.GetThisProcess()
 
-	if !metric.disableGCMetrics {
+	return &metricPlugin{
+		data: &metricData{},
+	}
+}
+
+func (mp *metricPlugin) IsEnabled() bool {
+	return !config.MetricDisabled
+}
+
+func (mp *metricPlugin) Order() uint8 {
+	return pluginOrder
+}
+
+func (mp *metricPlugin) BeforeExecution(ctx context.Context, request json.RawMessage) context.Context {
+	mp.data = &metricData{}
+	mp.data.metricTimestamp = utils.GetTimestamp()
+
+	if !mp.disableGCMetrics {
 		m := &runtime.MemStats{}
 		runtime.ReadMemStats(m)
 
-		metric.span.startGCCount = m.NumGC
-		metric.span.startPauseTotalNs = m.PauseTotalNs
+		mp.data.startGCCount = m.NumGC
+		mp.data.startPauseTotalNs = m.PauseTotalNs
 	}
 
-	if !metric.disableCPUMetrics {
-		metric.span.startCPUTimeStat = sampleCPUtimesStat()
+	if !mp.disableCPUMetrics {
+		mp.data.startCPUTimeStat = sampleCPUtimesStat()
 	}
 
-	if !metric.disableDiskMetrics {
-		metric.span.startDiskStat = sampleDiskStat()
+	if !mp.disableDiskMetrics {
+		mp.data.startDiskStat = sampleDiskStat()
 	}
 
-	if !metric.disableNetMetrics {
-		metric.span.startNetStat = sampleNetStat()
+	if !mp.disableNetMetrics {
+		mp.data.startNetStat = sampleNetStat()
 	}
 
-	wg.Done()
+	return ctx
 }
 
-func (metric *metric) AfterExecution(ctx context.Context, request json.RawMessage, response interface{}, err interface{}) []plugin.MonitoringDataWrapper {
+func (mp *metricPlugin) AfterExecution(ctx context.Context, request json.RawMessage, response interface{}, err interface{}) []plugin.MonitoringDataWrapper {
 	mStats := &runtime.MemStats{}
 	runtime.ReadMemStats(mStats)
 
 	var stats []plugin.MonitoringDataWrapper
 
-	if !metric.disableGCMetrics {
-		metric.span.endGCCount = mStats.NumGC
-		metric.span.endPauseTotalNs = mStats.PauseTotalNs
+	base := mp.prepareMetricsData()
 
-		gc := prepareGCMetricsData(metric, mStats)
+	if !mp.disableGCMetrics {
+		mp.data.endGCCount = mStats.NumGC
+		mp.data.endPauseTotalNs = mStats.PauseTotalNs
+
+		gc := prepareGCMetricsData(mp, mStats, base)
 		stats = append(stats, plugin.WrapMonitoringData(gc, metricType))
 	}
 
-	if !metric.disableHeapMetrics {
-		h := prepareHeapMetricsData(metric, mStats)
+	if !mp.disableHeapMetrics {
+		h := prepareHeapMetricsData(mp, mStats, base)
 		stats = append(stats, plugin.WrapMonitoringData(h, metricType))
 	}
 
-	if !metric.disableGoroutineMetrics {
-		g := prepareGoRoutineMetricsData(metric)
+	if !mp.disableGoroutineMetrics {
+		g := prepareGoRoutineMetricsData(mp, base)
 		stats = append(stats, plugin.WrapMonitoringData(g, metricType))
 	}
 
-	if !metric.disableCPUMetrics {
-		metric.span.endCPUTimeStat = sampleCPUtimesStat()
+	if !mp.disableCPUMetrics {
+		mp.data.endCPUTimeStat = sampleCPUtimesStat()
 
-		metric.span.appCpuLoad = getProcessCpuLoad(metric)
-		metric.span.systemCpuLoad = getSystemCpuLoad(metric)
+		mp.data.appCPULoad = getProcessCPULoad(mp)
+		mp.data.systemCPULoad = getSystemCPULoad(mp)
 
-		c := prepareCpuMetricsData(metric)
+		c := prepareCPUMetricsData(mp, base)
 		stats = append(stats, plugin.WrapMonitoringData(c, metricType))
 	}
 
-	if !metric.disableDiskMetrics {
-		metric.span.endDiskStat = sampleDiskStat()
-		d := prepareDiskMetricsData(metric)
+	if !mp.disableDiskMetrics {
+		mp.data.endDiskStat = sampleDiskStat()
+		d := prepareDiskMetricsData(mp, base)
 		stats = append(stats, plugin.WrapMonitoringData(d, metricType))
 	}
 
-	if !metric.disableNetMetrics {
-		metric.span.endNetStat = sampleNetStat()
-		n := prepareNetMetricsData(metric)
+	if !mp.disableNetMetrics {
+		mp.data.endNetStat = sampleNetStat()
+		n := prepareNetMetricsData(mp, base)
 		stats = append(stats, plugin.WrapMonitoringData(n, metricType))
 	}
 
-	if !metric.disableMemoryMetrics {
-		mm := prepareMemoryMetricsData(metric)
+	if !mp.disableMemoryMetrics {
+		mm := prepareMemoryMetricsData(mp, base)
 		stats = append(stats, plugin.WrapMonitoringData(mm, metricType))
 	}
-	metric.span = nil
-	return stats
-}
 
-//OnPanic just collect the metrics and send them as in the AfterExecution
-func (metric *metric) OnPanic(ctx context.Context, request json.RawMessage, err interface{}, stackTrace []byte) []plugin.MonitoringDataWrapper {
-	return metric.AfterExecution(ctx, request, nil, err)
+	return stats
 }

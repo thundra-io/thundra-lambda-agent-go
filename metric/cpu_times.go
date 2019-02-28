@@ -29,17 +29,22 @@ func (t *cpuTimesStat) total() uint64 {
 	return t.User + t.Nice + t.System + t.Idle + t.Iowait
 }
 
-func (t *cpuTimesStat) sys_used() uint64 {
+func (t *cpuTimesStat) sysUsed() uint64 {
 	return t.User + t.Nice + t.System
 }
 
-func (t *cpuTimesStat) proc_used() uint64 {
+func (t *cpuTimesStat) procUsed() uint64 {
 	return t.Utime + t.Stime
 }
 
 func sampleCPUtimesStat() *cpuTimesStat {
 	pps := getProcPidStat()
 	ps := getProcStat()
+
+	if pps == nil || ps == nil {
+		return nil
+	}
+	
 	return &cpuTimesStat{
 		procPidTimesStat: pps,
 		procTimesStat:    ps,

@@ -7,10 +7,11 @@ import (
 )
 
 func TestPrepareCPUMetricsData(t *testing.T) {
-	metric := NewBuilder().Build()
+	mp := New()
+	base := mp.prepareMetricsData()
+	cpuStatsData := prepareCPUMetricsData(mp, base)
 
-	cpuStatsData := prepareCpuMetricsData(metric)
-
+	assert.True(t, len(cpuStatsData.ID) != 0)
 	assert.Equal(t, cpuMetric, cpuStatsData.MetricName)
-	assert.Equal(t, metric.span.metricTimestamp, cpuStatsData.MetricTimestamp)
+	assert.Equal(t, mp.data.metricTimestamp, cpuStatsData.MetricTimestamp)
 }

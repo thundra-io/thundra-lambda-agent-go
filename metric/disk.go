@@ -3,45 +3,26 @@ package metric
 import (
 	"fmt"
 
-	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
+	uuid "github.com/satori/go.uuid"
 	"github.com/shirou/gopsutil/process"
 )
 
-func prepareDiskMetricsData(metric *metric) metricData {
-	df := takeDiskFrame(metric)
-	return metricData{
-		Id:                        plugin.GenerateNewId(),
-		Type:                      metricType,
-		AgentVersion:              plugin.AgentVersion,
-		DataModelVersion:          plugin.DataModelVersion,
-		ApplicationId:             plugin.ApplicationId,
-		ApplicationDomainName:     plugin.ApplicationDomainName,
-		ApplicationClassName:      plugin.ApplicationClassName,
-		ApplicationName:           plugin.FunctionName,
-		ApplicationVersion:        plugin.ApplicationVersion,
-		ApplicationStage:          plugin.ApplicationStage,
-		ApplicationRuntime:        plugin.ApplicationRuntime,
-		ApplicationRuntimeVersion: plugin.ApplicationRuntimeVersion,
-		ApplicationTags:           map[string]interface{}{},
-
-		TraceId:         plugin.TraceId,
-		TransactionId:  plugin.TransactionId,
-		SpanId:          plugin.SpanId,
-		MetricName:      diskMetric,
-		MetricTimestamp: metric.span.metricTimestamp,
-
-		Metrics: map[string]interface{}{
-			// ReadBytes is the number of bytes read from disk
-			readBytes: df.readBytes,
-			// WriteBytes is the number of bytes write to disk
-			writeBytes: df.writeBytes,
-			// ReadCount is the number read operations from disk
-			readCount: df.readCount,
-			// WriteCount is the number write operations to disk
-			writeCount: df.writeCount,
-		},
-		Tags: map[string]interface{}{},
+func prepareDiskMetricsData(mp *metricPlugin, base metricDataModel) metricDataModel {
+	base.ID = uuid.NewV4().String()
+	base.MetricName = diskMetric
+	df := takeDiskFrame(mp)
+	base.Metrics = map[string]interface{}{
+		// ReadBytes is the number of bytes read from disk
+		readBytes: df.readBytes,
+		// WriteBytes is the number of bytes write to disk
+		writeBytes: df.writeBytes,
+		// ReadCount is the number read operations from disk
+		readCount: df.readCount,
+		// WriteCount is the number write operations to disk
+		writeCount: df.writeCount,
 	}
+
+	return base
 }
 
 type diskFrame struct {
@@ -53,15 +34,15 @@ type diskFrame struct {
 
 //Since lambda works continuously we should subtract io values in order to get correct results per invocation
 //takeDiskFrame returns IO operations count for a specific time range
-func takeDiskFrame(metric *metric) *diskFrame {
-	if metric.span.endDiskStat == nil || metric.span.startDiskStat == nil {
+func takeDiskFrame(mp *metricPlugin) *diskFrame {
+	if mp.data.endDiskStat == nil || mp.data.startDiskStat == nil {
 		return &diskFrame{}
 	}
-	rb := metric.span.endDiskStat.ReadBytes - metric.span.startDiskStat.ReadBytes
-	wb := metric.span.endDiskStat.WriteBytes - metric.span.startDiskStat.WriteBytes
+	rb := mp.data.endDiskStat.ReadBytes - mp.data.startDiskStat.ReadBytes
+	wb := mp.data.endDiskStat.WriteBytes - mp.data.startDiskStat.WriteBytes
 
-	rc := metric.span.endDiskStat.ReadCount - metric.span.startDiskStat.ReadCount
-	wc := metric.span.endDiskStat.WriteCount - metric.span.startDiskStat.WriteCount
+	rc := mp.data.endDiskStat.ReadCount - mp.data.startDiskStat.ReadCount
+	wc := mp.data.endDiskStat.WriteCount - mp.data.startDiskStat.WriteCount
 
 	return &diskFrame{
 		readBytes:  rb,
