@@ -8,7 +8,7 @@ Check out [Thundra docs](https://docs.thundra.io/docs) for more information.
 
 In order to trace your lambda usages with Thundra all you need to do is wrap your function.
 
-```
+```go
 package main
 
 import (
