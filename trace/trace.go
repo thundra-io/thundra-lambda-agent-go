@@ -58,24 +58,24 @@ func (tr *tracePlugin) Order() uint8 {
 func (tr *tracePlugin) BeforeExecution(ctx context.Context, request json.RawMessage) context.Context {
 	invocationCount++
 
-	startTimeInMs, updatedCtx := plugin.StartTimeFromContext(ctx)
+	startTimeInMs, ctx := plugin.StartTimeFromContext(ctx)
 	startTime := utils.MsToTime(startTimeInMs)
-	rootSpan, updatedCtx := opentracing.StartSpanFromContext(updatedCtx, application.ApplicationName, opentracing.StartTime(startTime))
+	rootSpan, ctx := opentracing.StartSpanFromContext(ctx, application.ApplicationName, opentracing.StartTime(startTime))
 	tr.rootSpan = rootSpan
 
 	tr.data = &traceData{
 		startTime: startTimeInMs,
 	}
 
-	return updatedCtx
+	return ctx
 }
 
 // AfterExecution executes the necessary tasks after the invocation
 func (tr *tracePlugin) AfterExecution(ctx context.Context, request json.RawMessage, response interface{}, err interface{}) ([]plugin.MonitoringDataWrapper, context.Context) {
-	finishTimeInMs, updatedCtx := plugin.EndTimeFromContext(ctx)
-	tr.data.finishTime = finishTimeInMs
+	finishTime, ctx := plugin.EndTimeFromContext(ctx)
+	tr.data.finishTime = finishTime
 	tr.data.duration = tr.data.finishTime - tr.data.startTime
-	tr.rootSpan.FinishWithOptions(opentracing.FinishOptions{FinishTime: utils.MsToTime(finishTimeInMs)})
+	tr.rootSpan.FinishWithOptions(opentracing.FinishOptions{FinishTime: utils.MsToTime(finishTime)})
 
 	// Add root span data
 	rawRootSpan, ok := tracer.GetRaw(tr.rootSpan)
@@ -133,7 +133,7 @@ func (tr *tracePlugin) AfterExecution(ctx context.Context, request json.RawMessa
 	// Clear trace plugin data for next invocation
 	tr.Reset()
 
-	return traceArr, updatedCtx
+	return traceArr, ctx
 }
 
 // Reset clears the recorded data for the next invocation

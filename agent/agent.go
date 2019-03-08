@@ -68,7 +68,7 @@ func (a *Agent) ExecutePreHooks(ctx context.Context, request json.RawMessage) co
 }
 
 // ExecutePostHooks contains necessary works that should be done after user's handler
-func (a *Agent) ExecutePostHooks(ctx context.Context, request json.RawMessage, response interface{}, err interface{}){
+func (a *Agent) ExecutePostHooks(ctx context.Context, request json.RawMessage, response interface{}, err interface{}) {
 	// Skip if it is already reported
 	if *a.Reporter.Reported() == 1 {
 		return
