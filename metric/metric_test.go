@@ -48,7 +48,7 @@ func TestMetric_AfterExecution(t *testing.T) {
 
 	mp := New()
 
-	stats := mp.AfterExecution(context.TODO(), json.RawMessage{}, nil, nil)
+	stats, _ := mp.AfterExecution(context.TODO(), json.RawMessage{}, nil, nil)
 
 	// Assert all stats are collected, heap, gc, goroutine, cpu, net, disk
 	// Note that this fails on MACOSX and returns 6 instead of 7

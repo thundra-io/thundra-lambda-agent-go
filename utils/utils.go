@@ -13,7 +13,15 @@ import (
 
 // GetTimestamp returns current unix timestamp in msec.
 func GetTimestamp() int64 {
-	return time.Now().UnixNano() / (int64(time.Millisecond) / int64(time.Nanosecond))
+	return TimeToMs(time.Now())
+}
+
+func TimeToMs(t time.Time) int64 {
+	return t.UnixNano() / (int64(time.Millisecond) / int64(time.Nanosecond))
+}
+
+func MsToTime(t int64) time.Time {
+	return time.Unix(0, t * (int64(time.Millisecond) / int64(time.Nanosecond)))
 }
 
 // GenerateNewID generates new uuid.

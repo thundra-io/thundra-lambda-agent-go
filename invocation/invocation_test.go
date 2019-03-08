@@ -33,7 +33,7 @@ func TestInvocationData_AfterExecution(t *testing.T) {
 	prevTime := utils.GetTimestamp()
 	ip.data.startTimestamp = prevTime
 
-	data := ip.AfterExecution(context.TODO(), nil, nil, nil)
+	data, _ := ip.AfterExecution(context.TODO(), nil, nil, nil)
 	d, ok := data[0].Data.(invocationDataModel)
 	if !ok {
 		fmt.Println("Can not convert to invocationDataModel")
@@ -56,7 +56,7 @@ func TestInvocationData_AfterExecutionWithError(t *testing.T) {
 	ip := New()
 	err := errors.New(testErrorMessage)
 
-	data := ip.AfterExecution(context.TODO(), nil, nil, err)
+	data, _ := ip.AfterExecution(context.TODO(), nil, nil, err)
 	d, ok := data[0].Data.(invocationDataModel)
 	if !ok {
 		fmt.Println("Can not convert to invocationDataModel")

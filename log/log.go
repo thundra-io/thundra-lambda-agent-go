@@ -29,13 +29,13 @@ func (p *logPlugin) BeforeExecution(ctx context.Context, request json.RawMessage
 	return ctx
 }
 
-func (p *logPlugin) AfterExecution(ctx context.Context, request json.RawMessage, response interface{}, err interface{}) []plugin.MonitoringDataWrapper {
+func (p *logPlugin) AfterExecution(ctx context.Context, request json.RawMessage, response interface{}, err interface{}) ([]plugin.MonitoringDataWrapper, context.Context) {
 	var collectedData []plugin.MonitoringDataWrapper
 	for _, l := range logManager.logs {
 		data := prepareLogData(l)
 		collectedData = append(collectedData, plugin.WrapMonitoringData(data, logType))
 	}
-	return collectedData
+	return collectedData, ctx
 }
 
 func (p *logPlugin) OnPanic(ctx context.Context, request json.RawMessage, err interface{}, stackTrace []byte) []plugin.MonitoringDataWrapper {
