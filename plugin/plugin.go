@@ -4,11 +4,9 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/thundra-io/thundra-lambda-agent-go/utils"
-
 	"github.com/thundra-io/thundra-lambda-agent-go/config"
-
 	"github.com/thundra-io/thundra-lambda-agent-go/constants"
+	"github.com/thundra-io/thundra-lambda-agent-go/utils"
 )
 
 var TraceID string
@@ -63,4 +61,3 @@ func EndTimeFromContext(ctx context.Context) (int64, context.Context) {
 	endTime = utils.GetTimestamp()
 	return endTime, context.WithValue(ctx, startTimeKey{}, endTime)
 }
-
