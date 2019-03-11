@@ -44,15 +44,17 @@ func (ip *invocationPlugin) Order() uint8 {
 }
 
 func (ip *invocationPlugin) BeforeExecution(ctx context.Context, request json.RawMessage) context.Context {
+	startTime, ctx := plugin.StartTimeFromContext(ctx)
 	ip.rootSpan = opentracing.SpanFromContext(ctx)
 	ip.data = &invocationData{
-		startTimestamp: utils.GetTimestamp(),
+		startTimestamp: startTime,
 	}
 	return ctx
 }
 
-func (ip *invocationPlugin) AfterExecution(ctx context.Context, request json.RawMessage, response interface{}, err interface{}) []plugin.MonitoringDataWrapper {
-	ip.data.finishTimestamp = utils.GetTimestamp()
+func (ip *invocationPlugin) AfterExecution(ctx context.Context, request json.RawMessage, response interface{}, err interface{}) ([]plugin.MonitoringDataWrapper, context.Context) {
+	finishTime, ctx := plugin.EndTimeFromContext(ctx)
+	ip.data.finishTimestamp = finishTime
 	ip.data.duration = ip.data.finishTimestamp - ip.data.startTimestamp
 
 	if err != nil {
@@ -69,7 +71,7 @@ func (ip *invocationPlugin) AfterExecution(ctx context.Context, request json.Raw
 
 	ip.Reset()
 
-	return []plugin.MonitoringDataWrapper{plugin.WrapMonitoringData(data, "Invocation")}
+	return []plugin.MonitoringDataWrapper{plugin.WrapMonitoringData(data, "Invocation")}, ctx
 }
 
 func (ip *invocationPlugin) Reset() {

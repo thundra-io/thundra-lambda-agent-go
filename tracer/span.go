@@ -24,7 +24,11 @@ func (s *spanImpl) Finish() {
 
 // FinishWithOptions finishes span and adds the given options to it
 func (s *spanImpl) FinishWithOptions(opts ot.FinishOptions) {
-	finishTimestamp := utils.GetTimestamp()
+	if opts.FinishTime.IsZero() {
+		s.raw.EndTimestamp = utils.GetTimestamp()
+	} else {
+		s.raw.EndTimestamp = utils.TimeToMs(opts.FinishTime)
+	}
 
 	s.Lock()
 	defer s.Unlock()
@@ -35,8 +39,6 @@ func (s *spanImpl) FinishWithOptions(opts ot.FinishOptions) {
 	for _, ld := range opts.BulkLogData {
 		s.appendLog(ld.ToLogRecord())
 	}
-
-	s.raw.EndTimestamp = finishTimestamp
 }
 
 // Deprecated: use LogFields or LogKV.

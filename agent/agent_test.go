@@ -31,9 +31,9 @@ func (p *MockPlugin) BeforeExecution(ctx context.Context, request json.RawMessag
 	p.Called(ctx, request)
 	return ctx
 }
-func (p *MockPlugin) AfterExecution(ctx context.Context, request json.RawMessage, response interface{}, err interface{}) []plugin.MonitoringDataWrapper {
+func (p *MockPlugin) AfterExecution(ctx context.Context, request json.RawMessage, response interface{}, err interface{}) ([]plugin.MonitoringDataWrapper, context.Context) {
 	p.Called(ctx, request, response, err)
-	return []plugin.MonitoringDataWrapper{}
+	return []plugin.MonitoringDataWrapper{}, ctx
 }
 func (p *MockPlugin) OnPanic(ctx context.Context, request json.RawMessage, err interface{}, stackTrace []byte) []plugin.MonitoringDataWrapper {
 	p.Called(ctx, request, err, stackTrace)

@@ -24,7 +24,7 @@ type Agent struct {
 // New is used to collect basic invocation data with thundra. Use NewBuilder and AddPlugin to access full functionality.
 func New() *Agent {
 	return &Agent{
-		Reporter: newReporter(),
+		Reporter:      newReporter(),
 		WarmUp:        config.WarmupEnabled,
 		TimeoutMargin: config.TimeoutMargin,
 		Plugins:       []plugin.Plugin{},
@@ -59,13 +59,12 @@ func (a *Agent) ExecutePreHooks(ctx context.Context, request json.RawMessage) co
 	plugin.TraceID = utils.GenerateNewID()
 	plugin.TransactionID = utils.GenerateNewID()
 
-	updatedCtx := ctx
 	// Traverse sorted plugin slice
 	for _, p := range a.Plugins {
-		updatedCtx = p.BeforeExecution(updatedCtx, request)
+		ctx = p.BeforeExecution(ctx, request)
 	}
 
-	return updatedCtx
+	return ctx
 }
 
 // ExecutePostHooks contains necessary works that should be done after user's handler
@@ -75,9 +74,10 @@ func (a *Agent) ExecutePostHooks(ctx context.Context, request json.RawMessage, r
 		return
 	}
 	// Traverse the plugin slice in reverse order
+	var messages []plugin.MonitoringDataWrapper
 	for i := len(a.Plugins) - 1; i >= 0; i-- {
 		p := a.Plugins[i]
-		messages := p.AfterExecution(ctx, request, response, err)
+		messages, ctx = p.AfterExecution(ctx, request, response, err)
 		a.Reporter.Collect(messages)
 	}
 	a.Reporter.Report()

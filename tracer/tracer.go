@@ -23,9 +23,7 @@ type tracerImpl struct {
 
 // StartSpan starts a new span with options and returns it.
 func (t *tracerImpl) StartSpan(operationName string, opts ...ot.StartSpanOption) ot.Span {
-	sso := ot.StartSpanOptions{
-		Tags: make(map[string]interface{}),
-	}
+	sso := ot.StartSpanOptions{}
 	for _, o := range opts {
 		o.Apply(&sso)
 	}
@@ -33,9 +31,12 @@ func (t *tracerImpl) StartSpan(operationName string, opts ...ot.StartSpanOption)
 }
 
 func (t *tracerImpl) StartSpanWithOptions(operationName string, opts ot.StartSpanOptions) ot.Span {
-	tags := opts.Tags
-
 	newSpan := t.getSpan()
+
+	newSpan.tracer = t
+	newSpan.raw.Tags = opts.Tags
+	newSpan.raw.Logs = []ot.LogRecord{}
+	newSpan.raw.OperationName = operationName
 	newSpan.raw.Context.TransactionID = plugin.TransactionID
 	newSpan.raw.Context.TraceID = plugin.TraceID
 	newSpan.raw.Context.SpanID = utils.GenerateNewID()
@@ -47,13 +48,13 @@ func (t *tracerImpl) StartSpanWithOptions(operationName string, opts ot.StartSpa
 		}
 	}
 
-	newSpan.tracer = t
-	newSpan.raw.OperationName = operationName
-	newSpan.raw.StartTimestamp = utils.GetTimestamp()
-	newSpan.raw.Tags = tags
-	newSpan.raw.Logs = []ot.LogRecord{}
+	if opts.StartTime.IsZero() {
+		newSpan.raw.StartTimestamp = utils.GetTimestamp()
+	} else {
+		newSpan.raw.StartTimestamp = utils.TimeToMs(opts.StartTime)
+	}
 
-	className, ok := tags[ext.ClassNameKey]
+	className, ok := opts.Tags[ext.ClassNameKey]
 	if ok {
 		classNameStr, ok := className.(string)
 		if ok {
@@ -65,7 +66,7 @@ func (t *tracerImpl) StartSpanWithOptions(operationName string, opts ot.StartSpa
 		newSpan.raw.ClassName = constants.DefaultClassName
 	}
 
-	domainName, ok := tags[ext.DomainNameKey]
+	domainName, ok := opts.Tags[ext.DomainNameKey]
 	if ok {
 		domainNameStr, ok := domainName.(string)
 		if ok {

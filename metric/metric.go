@@ -88,7 +88,7 @@ func (mp *metricPlugin) BeforeExecution(ctx context.Context, request json.RawMes
 	return ctx
 }
 
-func (mp *metricPlugin) AfterExecution(ctx context.Context, request json.RawMessage, response interface{}, err interface{}) []plugin.MonitoringDataWrapper {
+func (mp *metricPlugin) AfterExecution(ctx context.Context, request json.RawMessage, response interface{}, err interface{}) ([]plugin.MonitoringDataWrapper, context.Context) {
 	mStats := &runtime.MemStats{}
 	runtime.ReadMemStats(mStats)
 
@@ -141,5 +141,5 @@ func (mp *metricPlugin) AfterExecution(ctx context.Context, request json.RawMess
 		stats = append(stats, plugin.WrapMonitoringData(mm, metricType))
 	}
 
-	return stats
+	return stats, ctx
 }
