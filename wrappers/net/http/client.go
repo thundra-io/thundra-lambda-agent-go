@@ -107,7 +107,7 @@ func (c *ClientWrapper) PostForm(url string, data neturl.Values) (resp *http.Res
 	return c.PostFormWithContext(emptyCtx, url, data)
 }
 
-// PostFormWithContext wraps the http.Client.PostFormWithContext and starts a new span
+// PostFormWithContext wraps the http.Client.PostForm and starts a new span
 // for the http call. The newly created span will be a child of the span
 // whose context is is passed using the ctx parameter
 func (c *ClientWrapper) PostFormWithContext(ctx context.Context, url string, data neturl.Values) (resp *http.Response, err error) {
@@ -133,7 +133,7 @@ func (c *ClientWrapper) Head(url string) (resp *http.Response, err error) {
 	return c.HeadWithContext(emptyCtx, url)
 }
 
-// HeadWithContext wraps the http.Client.HeadWithContext and starts a new span
+// HeadWithContext wraps the http.Client.Head and starts a new span
 // for the http call. The newly created span will be a child of the span
 // whose context is is passed using the ctx parameter
 func (c *ClientWrapper) HeadWithContext(ctx context.Context, url string) (resp *http.Response, err error) {
