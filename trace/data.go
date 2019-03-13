@@ -50,10 +50,10 @@ func (tr *tracePlugin) prepareTraceDataModel(ctx context.Context, request json.R
 		ApplicationRuntime:        application.ApplicationRuntime,
 		ApplicationRuntimeVersion: application.ApplicationRuntimeVersion,
 		ApplicationTags:           application.ApplicationTags,
-		RootSpanID:                tr.rootSpan.Context().(tracer.SpanContext).SpanID,
-		StartTimestamp:            tr.data.startTime,
-		FinishTimestamp:           tr.data.finishTime,
-		Duration:                  tr.data.duration,
+		RootSpanID:                tr.RootSpan.Context().(tracer.SpanContext).SpanID,
+		StartTimestamp:            tr.Data.StartTime,
+		FinishTimestamp:           tr.Data.FinishTime,
+		Duration:                  tr.Data.Duration,
 		Tags:                      tags,
 	}
 }
@@ -76,7 +76,7 @@ func (tr *tracePlugin) prepareTraceTags(ctx context.Context, request json.RawMes
 	tags[constants.AwsLambdaMemoryLimit] = application.MemoryLimit
 	tags[constants.AwsLambdaName] = application.ApplicationName
 	tags[constants.AwsRegion] = application.FunctionRegion
-	tags[constants.AwsLambdaInvocationTimeout] = tr.data.timeout
+	tags[constants.AwsLambdaInvocationTimeout] = tr.Data.Timeout
 
 	// If this is the first invocation, it is a cold start
 	if invocationCount == 1 {
@@ -85,15 +85,15 @@ func (tr *tracePlugin) prepareTraceTags(ctx context.Context, request json.RawMes
 		tags[constants.AwsLambdaInvocationColdStart] = false
 	}
 
-	if tr.data.panicInfo != nil {
+	if tr.Data.PanicInfo != nil {
 		tags[constants.AwsError] = true
-		tags[constants.AwsErrorKind] = tr.data.panicInfo.Kind
-		tags[constants.AwsErrorMessage] = tr.data.panicInfo.Message
-		tags[constants.AwsErrorStack] = tr.data.panicInfo.Stack
-	} else if tr.data.errorInfo != nil {
+		tags[constants.AwsErrorKind] = tr.Data.PanicInfo.Kind
+		tags[constants.AwsErrorMessage] = tr.Data.PanicInfo.Message
+		tags[constants.AwsErrorStack] = tr.Data.PanicInfo.Stack
+	} else if tr.Data.ErrorInfo != nil {
 		tags[constants.AwsError] = true
-		tags[constants.AwsErrorKind] = tr.data.errorInfo.Kind
-		tags[constants.AwsErrorMessage] = tr.data.errorInfo.Message
+		tags[constants.AwsErrorKind] = tr.Data.ErrorInfo.Kind
+		tags[constants.AwsErrorMessage] = tr.Data.ErrorInfo.Message
 	}
 	return tags
 }
@@ -136,7 +136,7 @@ type spanLog struct {
 func (tr *tracePlugin) prepareSpanDataModel(ctx context.Context, span *tracer.RawSpan) spanDataModel {
 	// If a span have no rootSpanID (other than the root span) 
 	// Set rootSpan's ID as the parent ID for that span
-	rootSpanID := tr.rootSpan.Context().(tracer.SpanContext).SpanID
+	rootSpanID := tr.RootSpan.Context().(tracer.SpanContext).SpanID
 	if len(span.ParentSpanID) == 0 && span.Context.SpanID != rootSpanID {
 		span.ParentSpanID = rootSpanID
 	}
