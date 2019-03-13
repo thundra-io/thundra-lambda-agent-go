@@ -134,6 +134,8 @@ type spanLog struct {
 }
 
 func (tr *tracePlugin) prepareSpanDataModel(ctx context.Context, span *tracer.RawSpan) spanDataModel {
+	// If a span have no rootSpanID (other than the root span) 
+	// Set rootSpan's ID as the parent ID for that span
 	rootSpanID := tr.rootSpan.Context().(tracer.SpanContext).SpanID
 	if len(span.ParentSpanID) == 0 && span.Context.SpanID != rootSpanID {
 		span.ParentSpanID = rootSpanID
