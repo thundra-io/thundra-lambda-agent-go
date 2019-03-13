@@ -111,6 +111,8 @@ func (tr *tracePlugin) AfterExecution(ctx context.Context, request json.RawMessa
 		tr.rootSpan.SetTag(constants.AwsErrorKind, errType)
 		tr.rootSpan.SetTag(constants.AwsErrorMessage, errMessage)
 
+		utils.SetSpanError(tr.rootSpan, err)
+
 		tr.data.errorInfo = ei
 		tr.data.thrownError = errType
 		tr.data.thrownErrorMessage = errMessage

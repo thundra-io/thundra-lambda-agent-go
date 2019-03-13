@@ -7,8 +7,10 @@ import (
 	"strconv"
 	"time"
 
+	opentracing "github.com/opentracing/opentracing-go"
 	uuid "github.com/satori/go.uuid"
 	"github.com/shirou/gopsutil/process"
+	"github.com/thundra-io/thundra-lambda-agent-go/constants"
 )
 
 // GetTimestamp returns current unix timestamp in msec.
@@ -21,7 +23,7 @@ func TimeToMs(t time.Time) int64 {
 }
 
 func MsToTime(t int64) time.Time {
-	return time.Unix(0, t * (int64(time.Millisecond) / int64(time.Nanosecond)))
+	return time.Unix(0, t*(int64(time.Millisecond)/int64(time.Nanosecond)))
 }
 
 // GenerateNewID generates new uuid.
@@ -74,4 +76,11 @@ func GetErrorMessage(err interface{}) string {
 		return err.(string)
 	}
 	return e.Error()
+}
+
+// SetSpanError sets the tags related to the given error to the given span
+func SetSpanError(span opentracing.Span, err interface{}) {
+	span.SetTag(constants.AwsError, true)
+	span.SetTag(constants.AwsErrorKind, GetErrorType(err))
+	span.SetTag(constants.AwsErrorMessage, GetErrorMessage(err))
 }
