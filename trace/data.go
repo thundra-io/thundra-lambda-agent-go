@@ -134,6 +134,10 @@ type spanLog struct {
 }
 
 func (tr *tracePlugin) prepareSpanDataModel(ctx context.Context, span *tracer.RawSpan) spanDataModel {
+	rootSpanID := tr.rootSpan.Context().(tracer.SpanContext).SpanID
+	if len(span.ParentSpanID) == 0 && span.Context.SpanID != rootSpanID {
+		span.ParentSpanID = rootSpanID
+	}
 	return spanDataModel{
 		ID:                        span.Context.SpanID,
 		Type:                      spanType,
