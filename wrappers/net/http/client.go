@@ -5,7 +5,7 @@ import (
 	"context"
 	"io"
 	"net/http"
-	neturl "net/url"
+	gourl "net/url"
 
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/thundra-io/thundra-lambda-agent-go/constants"
@@ -103,14 +103,14 @@ func (c *ClientWrapper) PostWithContext(ctx context.Context, url, contentType st
 }
 
 // PostForm wraps the http.Client.PostForm and starts a new span for the http call
-func (c *ClientWrapper) PostForm(url string, data neturl.Values) (resp *http.Response, err error) {
+func (c *ClientWrapper) PostForm(url string, data gourl.Values) (resp *http.Response, err error) {
 	return c.PostFormWithContext(emptyCtx, url, data)
 }
 
 // PostFormWithContext wraps the http.Client.PostForm and starts a new span
 // for the http call. The newly created span will be a child of the span
 // whose context is is passed using the ctx parameter
-func (c *ClientWrapper) PostFormWithContext(ctx context.Context, url string, data neturl.Values) (resp *http.Response, err error) {
+func (c *ClientWrapper) PostFormWithContext(ctx context.Context, url string, data gourl.Values) (resp *http.Response, err error) {
 	// Parse URL
 	span, _ := opentracing.StartSpanFromContext(
 		ctx,
@@ -156,7 +156,7 @@ func (c *ClientWrapper) HeadWithContext(ctx context.Context, url string) (resp *
 
 func addHTTPTags(span opentracing.Span, url, method string) {
 	// Parse URL
-	parsedURL, err := neturl.Parse(url)
+	parsedURL, err := gourl.Parse(url)
 
 	// Set span tags
 	span.SetTag(constants.HTTPMethodTag, method)
@@ -171,7 +171,7 @@ func addHTTPTags(span opentracing.Span, url, method string) {
 
 func getOperationName(url string) string {
 	// Parse URLs
-	parsedURL, err := neturl.Parse(url)
+	parsedURL, err := gourl.Parse(url)
 	if err != nil {
 		return ""
 	}
