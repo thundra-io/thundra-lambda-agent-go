@@ -45,3 +45,25 @@ const HTTPQueryParamsTag = "http.query_params"
 
 const HTTPClassName = "HTTP"
 const HTTPDomainName = "API"
+
+var DynamoDBRequestTypes = map[string]string {
+	"BatchGetItem": "READ",
+    "BatchWriteItem": "WRITE",
+    "CreateTable": "WRITE",
+    "CreateGlobalTable": "WRITE",
+    "DeleteItem": "DELETE",
+    "DeleteTable": "DELETE",
+    "GetItem": "READ",
+    "PutItem": "WRITE",
+    "Query": "READ",
+    "Scan": "READ",
+    "UpdateItem": "WRITE",
+}
+
+var SpanTags = map[string]string {
+	"OPERATION_TYPE": "operation.type",
+    "TRIGGER_DOMAIN_NAME": "trigger.domainName",
+    "TRIGGER_CLASS_NAME": "trigger.className",
+    "TRIGGER_OPERATION_NAMES": "trigger.operationNames",
+    "TOPOLOGY_VERTEX": "topology.vertex",
+}
