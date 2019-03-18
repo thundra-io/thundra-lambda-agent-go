@@ -1,15 +1,28 @@
 package thundraaws
 
 import (
-	"github.com/thundra-io/thundra-lambda-agent-go/tracer"
+	"encoding/json"
+
 	"github.com/aws/aws-sdk-go/aws/request"
 	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/thundra-io/thundra-lambda-agent-go/tracer"
 )
 
 type dynamodbIntegration struct{}
 
 func (i *dynamodbIntegration) getOperationName(r *request.Request) string {
-	return "DynamoSpan"
+	fields := struct {
+		TableName string `json:"TableName"`
+	}{}
+	m, err := json.Marshal(r.Params)
+	if err != nil {
+		return ""
+	}
+	err = json.Unmarshal(m, &fields)
+	if err != nil {
+		return ""
+	}
+	return fields.TableName
 }
 
 func (i *dynamodbIntegration) beforeCall(r *request.Request, span opentracing.Span) {
