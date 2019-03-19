@@ -1,6 +1,7 @@
 package thundraaws
 
 import (
+	"github.com/thundra-io/thundra-lambda-agent-go/tracer"
 	opentracing "github.com/opentracing/opentracing-go"
 
 	"github.com/aws/aws-sdk-go/aws/request"
@@ -32,7 +33,11 @@ func validateHandler(r *request.Request) {
 	i := integrations[r.ClientInfo.ServiceID]
 	span, ctxWithSpan := opentracing.StartSpanFromContext(r.Context(), i.getOperationName(r))
 	r.SetContext(ctxWithSpan)
-	i.beforeCall(r, span)
+	rawSpan, ok := tracer.GetRaw(span)
+	if !ok {
+		return
+	}
+	i.beforeCall(r, rawSpan)
 }
 
 func completeHandler(r *request.Request) {
@@ -41,9 +46,12 @@ func completeHandler(r *request.Request) {
 	if span == nil {
 		return
 	}
-	i.afterCall(r, span)
+	rawSpan, ok := tracer.GetRaw(span)
+	if !ok {
+		return
+	}
+	i.afterCall(r, rawSpan)
 	span.Finish()
-
 }
 
 // TODO: Add other handlers

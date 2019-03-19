@@ -24,6 +24,14 @@ var DynamoDBRequestTypes = map[string]string {
     "UpdateItem": "WRITE",
 }
 
+var SQSRequestTypes = map[string]string {
+    "ReceiveMessage": "READ",
+    "SendMessage": "WRITE",
+    "SendMessageBatch": "WRITE",
+    "DeleteMessage": "DELETE",
+    "DeleteMessageBatch": "DELETE",
+}
+
 var SpanTags = map[string]string {
 	"OPERATION_TYPE": "operation.type",
     "TRIGGER_DOMAIN_NAME": "trigger.domainName",
@@ -47,8 +55,39 @@ var AwsDynamoDBTags = map[string]string {
     "REQUEST_THROTTLED": "aws.dynamodb.request.throttled",
 }
 
+var AwsSQSTags = map[string]string {
+    "QUEUE_NAME": "aws.sqs.queue.name",
+}
+
 var AwsSDKTags = map[string]string {
     "SERVICE_NAME": "aws.service.name",
     "REQUEST_NAME": "aws.request.name",
     "HOST": "host",
+}
+
+var DomainNames = map[string]string {
+    "AWS": "AWS",
+    "DB": "DB",
+    "MESSAGING": "Messaging",
+    "STREAM": "Stream",
+    "STORAGE": "Storage",
+    "API": "API",
+    "CACHE": "Cache",
+}
+
+var ClassNames = map[string]string {
+    "AWSSERVICE": "AWSService",
+    "DYNAMODB": "AWS-DynamoDB",
+    "SQS": "AWS-SQS",
+    "SNS": "AWS-SNS",
+    "KINESIS": "AWS-Kinesis",
+    "FIREHOSE": "AWS-Firehose",
+    "S3": "AWS-S3",
+    "LAMBDA": "AWS-Lambda",
+    "RDB": "RDB",
+    "REDIS": "Redis",
+    "HTTP": "HTTP",
+    "MYSQL": "MYSQL",
+    "POSTGRESQL": "POSTGRESQL",
+    "ELASTICSEARCH": "ELASTICSEARCH",
 }

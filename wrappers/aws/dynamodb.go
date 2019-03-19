@@ -1,14 +1,14 @@
 package thundraaws
 
 import (
-	"github.com/thundra-io/thundra-lambda-agent-go/application"
 	"encoding/json"
 	"strings"
+
+	"github.com/thundra-io/thundra-lambda-agent-go/application"
 
 	"github.com/thundra-io/thundra-lambda-agent-go/constants"
 
 	"github.com/aws/aws-sdk-go/aws/request"
-	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/thundra-io/thundra-lambda-agent-go/tracer"
 )
 
@@ -33,14 +33,9 @@ func (i *dynamodbIntegration) getOperationName(r *request.Request) string {
 	return i.getTableName(r)
 }
 
-func (i *dynamodbIntegration) beforeCall(r *request.Request, span opentracing.Span) {
-	rawSpan, ok := tracer.GetRaw(span)
-	if !ok {
-		return
-	}
-
-	rawSpan.ClassName = "AWS-DynamoDB"
-	rawSpan.DomainName = "DB"
+func (i *dynamodbIntegration) beforeCall(r *request.Request, span *tracer.RawSpan) {
+	span.ClassName = constants.ClassNames["DYNAMODB"]
+	span.DomainName = constants.DomainNames["DB"]
 
 	operationName := r.Operation.Name
 	operationType := constants.DynamoDBRequestTypes[operationName]
@@ -49,22 +44,24 @@ func (i *dynamodbIntegration) beforeCall(r *request.Request, span opentracing.Sp
 	if len(endpointParts) > 1 {
 		endpoint = endpointParts[1]
 	}
-	span.SetTag(constants.SpanTags["OPERATION_TYPE"], operationType)
-	span.SetTag(constants.DBTags["DB_INSTANCE"], endpoint)
-	span.SetTag(constants.AwsDynamoDBTags["TABLE_NAME"], i.getTableName(r))
-	span.SetTag(constants.DBTags["DB_STATEMENT_TYPE"], operationType)
-	span.SetTag(constants.AwsSDKTags["REQUEST_NAME"], operationName)
+	tags := map[string]interface{}{
+		constants.SpanTags["OPERATION_TYPE"]:          operationType,
+		constants.DBTags["DB_INSTANCE"]:               endpoint,
+		constants.AwsDynamoDBTags["TABLE_NAME"]:       i.getTableName(r),
+		constants.DBTags["DB_STATEMENT_TYPE"]:         operationType,
+		constants.AwsSDKTags["REQUEST_NAME"]:          operationName,
+		constants.SpanTags["TOPOLOGY_VERTEX"]:         true,
+		constants.SpanTags["TRIGGER_OPERATION_NAMES"]: []string{application.FunctionName},
+		constants.SpanTags["TRIGGER_DOMAIN_NAME"]:     constants.AwsLambdaApplicationDomain,
+		constants.SpanTags["TRIGGER_CLASS_NAME"]:      constants.AwsLambdaApplicationClass,
+	}
 
+	span.Tags = tags
 	// TODO: Get Key and Item values from request in a safe way to set db statement
-	
-	span.SetTag(constants.SpanTags["TOPOLOGY_VERTEX"], true)
-	span.SetTag(constants.SpanTags["TRIGGER_OPERATION_NAMES"], []string{application.FunctionName})
-	span.SetTag(constants.SpanTags["TRIGGER_DOMAIN_NAME"], constants.AwsLambdaApplicationDomain)
-	span.SetTag(constants.SpanTags["TRIGGER_CLASS_NAME"], constants.AwsLambdaApplicationClass)
 	return
 }
 
-func (i *dynamodbIntegration) afterCall(r *request.Request, span opentracing.Span) {
+func (i *dynamodbIntegration) afterCall(r *request.Request, span *tracer.RawSpan) {
 	return
 }
 
