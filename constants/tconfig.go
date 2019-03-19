@@ -16,7 +16,6 @@ const ThundraDisableTraceResponse = "thundra_agent_lambda_trace_response_disable
 const ThundraApplicationStage = "thundra_agent_lambda_application_stage"
 const ThundraLogLogLevel = "thundra_log_logLevel"
 
-
 const DefaultTimeoutMargin = 200
 const DefaultCollectorURL = "https://api.thundra.io/v1"
 const MonitoringDataPath = "/monitoring-data"
@@ -35,35 +34,3 @@ const ApplicationNameProp = "thundra_agent_lambda_application_name"
 const ApplicationVersionProp = "thundra_agent_lambda_application_version"
 const ApplicationStageProp = "thundra_agent_lambda_application_stage"
 const ApplicationTagPrefixProp = "thundra_agent_lambda_application_tag_"
-
-const HTTPMethodTag = "http.method"
-const HTTPURLTag = "http.url"
-const HTTPPathTag = "http.path"
-const HTTPHostTag = "http.host"
-const HTTPStatusTag = "http.status_code"
-const HTTPQueryParamsTag = "http.query_params"
-
-const HTTPClassName = "HTTP"
-const HTTPDomainName = "API"
-
-var DynamoDBRequestTypes = map[string]string {
-	"BatchGetItem": "READ",
-    "BatchWriteItem": "WRITE",
-    "CreateTable": "WRITE",
-    "CreateGlobalTable": "WRITE",
-    "DeleteItem": "DELETE",
-    "DeleteTable": "DELETE",
-    "GetItem": "READ",
-    "PutItem": "WRITE",
-    "Query": "READ",
-    "Scan": "READ",
-    "UpdateItem": "WRITE",
-}
-
-var SpanTags = map[string]string {
-	"OPERATION_TYPE": "operation.type",
-    "TRIGGER_DOMAIN_NAME": "trigger.domainName",
-    "TRIGGER_CLASS_NAME": "trigger.className",
-    "TRIGGER_OPERATION_NAMES": "trigger.operationNames",
-    "TOPOLOGY_VERTEX": "topology.vertex",
-}

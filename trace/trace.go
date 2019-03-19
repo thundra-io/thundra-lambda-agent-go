@@ -80,8 +80,8 @@ func (tr *tracePlugin) AfterExecution(ctx context.Context, request json.RawMessa
 	// Add root span data
 	rawRootSpan, ok := tracer.GetRaw(tr.RootSpan)
 	if ok {
-		rawRootSpan.ClassName = "AWS-Lambda"
-		rawRootSpan.DomainName = "API"
+		rawRootSpan.ClassName = constants.AwsLambdaApplicationClass
+		rawRootSpan.DomainName = constants.AwsLambdaApplicationDomain
 	}
 
 	// Adding tags related to the root span

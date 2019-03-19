@@ -1,6 +1,7 @@
 package thundraaws
 
 import (
+	"github.com/thundra-io/thundra-lambda-agent-go/application"
 	"encoding/json"
 	"strings"
 
@@ -13,7 +14,7 @@ import (
 
 type dynamodbIntegration struct{}
 
-func (i *dynamodbIntegration) getOperationName(r *request.Request) string {
+func (i *dynamodbIntegration) getTableName(r *request.Request) string {
 	fields := struct {
 		TableName string `json:"TableName"`
 	}{}
@@ -28,6 +29,10 @@ func (i *dynamodbIntegration) getOperationName(r *request.Request) string {
 	return fields.TableName
 }
 
+func (i *dynamodbIntegration) getOperationName(r *request.Request) string {
+	return i.getTableName(r)
+}
+
 func (i *dynamodbIntegration) beforeCall(r *request.Request, span opentracing.Span) {
 	rawSpan, ok := tracer.GetRaw(span)
 	if !ok {
@@ -39,11 +44,23 @@ func (i *dynamodbIntegration) beforeCall(r *request.Request, span opentracing.Sp
 
 	operationName := r.Operation.Name
 	operationType := constants.DynamoDBRequestTypes[operationName]
-	endpoint := strings.SplitN(r.ClientInfo.Endpoint, "://", 2)[1]
-
+	endpoint := r.ClientInfo.Endpoint
+	endpointParts := strings.SplitN(endpoint, "://", 2)
+	if len(endpointParts) > 1 {
+		endpoint = endpointParts[1]
+	}
 	span.SetTag(constants.SpanTags["OPERATION_TYPE"], operationType)
-	span.SetTag("db.host", endpoint)
+	span.SetTag(constants.DBTags["DB_INSTANCE"], endpoint)
+	span.SetTag(constants.AwsDynamoDBTags["TABLE_NAME"], i.getTableName(r))
+	span.SetTag(constants.DBTags["DB_STATEMENT_TYPE"], operationType)
+	span.SetTag(constants.AwsSDKTags["REQUEST_NAME"], operationName)
+
+	// TODO: Get Key and Item values from request in a safe way to set db statement
+	
 	span.SetTag(constants.SpanTags["TOPOLOGY_VERTEX"], true)
+	span.SetTag(constants.SpanTags["TRIGGER_OPERATION_NAMES"], []string{application.FunctionName})
+	span.SetTag(constants.SpanTags["TRIGGER_DOMAIN_NAME"], constants.AwsLambdaApplicationDomain)
+	span.SetTag(constants.SpanTags["TRIGGER_CLASS_NAME"], constants.AwsLambdaApplicationClass)
 	return
 }
 
