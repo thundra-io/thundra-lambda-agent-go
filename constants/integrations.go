@@ -32,6 +32,10 @@ var SQSRequestTypes = map[string]string {
     "DeleteMessageBatch": "DELETE",
 }
 
+var SNSRequestTypes = map[string]string {
+    "Publish": "WRITE",
+}
+
 var SpanTags = map[string]string {
 	"OPERATION_TYPE": "operation.type",
     "TRIGGER_DOMAIN_NAME": "trigger.domainName",
@@ -57,6 +61,10 @@ var AwsDynamoDBTags = map[string]string {
 
 var AwsSQSTags = map[string]string {
     "QUEUE_NAME": "aws.sqs.queue.name",
+}
+
+var AwsSNSTags = map[string]string {
+    "TOPIC_NAME": "aws.sns.topic.name",
 }
 
 var AwsSDKTags = map[string]string {
