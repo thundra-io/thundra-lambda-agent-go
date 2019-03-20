@@ -35,7 +35,11 @@ func (i *sqsIntegration) getQueueName(r *request.Request) string {
 }
 
 func (i *sqsIntegration) getOperationName(r *request.Request) string {
-	return i.getQueueName(r)
+	queueName := i.getQueueName(r)
+	if len(queueName) > 0 {
+		return queueName
+	}
+	return constants.AWSServiceRequest
 }
 
 func (i *sqsIntegration) beforeCall(r *request.Request, span *tracer.RawSpan) {
@@ -45,7 +49,7 @@ func (i *sqsIntegration) beforeCall(r *request.Request, span *tracer.RawSpan) {
 	operationName := r.Operation.Name
 	operationType := constants.SQSRequestTypes[operationName]
 
-	tags := map[string]interface{} {
+	tags := map[string]interface{}{
 		constants.AwsSQSTags["QUEUE_NAME"]:            i.getQueueName(r),
 		constants.SpanTags["OPERATION_TYPE"]:          operationType,
 		constants.AwsSDKTags["REQUEST_NAME"]:          operationName,
@@ -56,7 +60,6 @@ func (i *sqsIntegration) beforeCall(r *request.Request, span *tracer.RawSpan) {
 	}
 
 	span.Tags = tags
-	return
 }
 
 func (i *sqsIntegration) afterCall(r *request.Request, span *tracer.RawSpan) {

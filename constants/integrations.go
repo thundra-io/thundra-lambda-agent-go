@@ -10,6 +10,8 @@ const HTTPQueryParamsTag = "http.query_params"
 const HTTPClassName = "HTTP"
 const HTTPDomainName = "API"
 
+const AWSServiceRequest = "AWSServiceRequest"
+
 var DynamoDBRequestTypes = map[string]string {
 	"BatchGetItem": "READ",
     "BatchWriteItem": "WRITE",
@@ -45,6 +47,19 @@ var KinesisRequestTypes = map[string]string {
 var FirehoseRequestTypes = map[string]string {
     "PutRecordBatch": "WRITE",
     "PutRecord": "WRITE",
+}
+
+var S3RequestTypes = map[string]string {
+    "DeleteBucket": "DELETE",
+    "CreateBucket": "WRITE",
+    "copyObject": "WRITE",
+    "DeleteObject": "DELETE",
+    "deleteObjects": "DELETE",
+    "GetObject": "READ",
+    "GetObjectAcl": "READ",
+    "ListBucket": "READ",
+    "PutObject": "WRITE",
+    "PutObjectAcl": "WRITE",
 }
 
 var SpanTags = map[string]string {
@@ -90,6 +105,11 @@ var AwsSDKTags = map[string]string {
     "SERVICE_NAME": "aws.service.name",
     "REQUEST_NAME": "aws.request.name",
     "HOST": "host",
+}
+
+var AwsS3Tags = map[string]string {
+    "BUCKET_NAME": "aws.s3.bucket.name",
+    "OBJECT_NAME": "aws.s3.object.name",
 }
 
 var DomainNames = map[string]string {

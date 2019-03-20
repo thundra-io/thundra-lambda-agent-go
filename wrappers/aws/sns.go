@@ -38,7 +38,11 @@ func (i *snsIntegration) getTopicName(r *request.Request) string {
 }
 
 func (i *snsIntegration) getOperationName(r *request.Request) string {
-	return i.getTopicName(r)
+	topicName := i.getTopicName(r)
+	if len(topicName) > 0 {
+		return topicName
+	}
+	return constants.AWSServiceRequest
 }
 
 func (i *snsIntegration) beforeCall(r *request.Request, span *tracer.RawSpan) {
@@ -48,7 +52,7 @@ func (i *snsIntegration) beforeCall(r *request.Request, span *tracer.RawSpan) {
 	operationName := r.Operation.Name
 	operationType := constants.SNSRequestTypes[operationName]
 
-	tags := map[string]interface{} {
+	tags := map[string]interface{}{
 		constants.AwsSNSTags["TOPIC_NAME"]:            i.getTopicName(r),
 		constants.SpanTags["OPERATION_TYPE"]:          operationType,
 		constants.AwsSDKTags["REQUEST_NAME"]:          operationName,
@@ -59,7 +63,6 @@ func (i *snsIntegration) beforeCall(r *request.Request, span *tracer.RawSpan) {
 	}
 
 	span.Tags = tags
-	return
 }
 
 func (i *snsIntegration) afterCall(r *request.Request, span *tracer.RawSpan) {

@@ -29,7 +29,11 @@ func (i *kinesisIntegration) getStreamName(r *request.Request) string {
 }
 
 func (i *kinesisIntegration) getOperationName(r *request.Request) string {
-	return i.getStreamName(r)
+	streamName := i.getStreamName(r)
+	if len(streamName) > 0 {
+		return streamName
+	}
+	return constants.AWSServiceRequest
 }
 
 func (i *kinesisIntegration) beforeCall(r *request.Request, span *tracer.RawSpan) {
@@ -39,7 +43,7 @@ func (i *kinesisIntegration) beforeCall(r *request.Request, span *tracer.RawSpan
 	operationName := r.Operation.Name
 	operationType := constants.KinesisRequestTypes[operationName]
 
-	tags := map[string]interface{} {
+	tags := map[string]interface{}{
 		constants.AwsKinesisTags["STREAM_NAME"]:       i.getStreamName(r),
 		constants.SpanTags["OPERATION_TYPE"]:          operationType,
 		constants.AwsSDKTags["REQUEST_NAME"]:          operationName,
@@ -50,7 +54,6 @@ func (i *kinesisIntegration) beforeCall(r *request.Request, span *tracer.RawSpan
 	}
 
 	span.Tags = tags
-	return
 }
 
 func (i *kinesisIntegration) afterCall(r *request.Request, span *tracer.RawSpan) {

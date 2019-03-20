@@ -29,7 +29,11 @@ func (i *firehoseIntegration) getDeliveryStreamName(r *request.Request) string {
 }
 
 func (i *firehoseIntegration) getOperationName(r *request.Request) string {
-	return i.getDeliveryStreamName(r)
+	dsn := i.getDeliveryStreamName(r)
+	if len(dsn) > 0 {
+		return dsn
+	}
+	return constants.AWSServiceRequest
 }
 
 func (i *firehoseIntegration) beforeCall(r *request.Request, span *tracer.RawSpan) {

@@ -25,11 +25,18 @@ func (i *dynamodbIntegration) getTableName(r *request.Request) string {
 	if err = json.Unmarshal(m, &fields); err != nil {
 		return ""
 	}
-	return fields.TableName
+	if len(fields.TableName) > 0 {
+		return fields.TableName
+	}
+	return ""
 }
 
 func (i *dynamodbIntegration) getOperationName(r *request.Request) string {
-	return i.getTableName(r)
+	tableName := i.getTableName(r)
+	if len(tableName) > 0 {
+		return tableName
+	}
+	return constants.AWSServiceRequest
 }
 
 func (i *dynamodbIntegration) beforeCall(r *request.Request, span *tracer.RawSpan) {
@@ -43,7 +50,7 @@ func (i *dynamodbIntegration) beforeCall(r *request.Request, span *tracer.RawSpa
 	if len(endpointParts) > 1 {
 		endpoint = endpointParts[1]
 	}
-	tags := map[string]interface{} {
+	tags := map[string]interface{}{
 		constants.SpanTags["OPERATION_TYPE"]:          operationType,
 		constants.DBTags["DB_INSTANCE"]:               endpoint,
 		constants.AwsDynamoDBTags["TABLE_NAME"]:       i.getTableName(r),
@@ -57,7 +64,6 @@ func (i *dynamodbIntegration) beforeCall(r *request.Request, span *tracer.RawSpa
 
 	span.Tags = tags
 	// TODO: Get Key and Item values from request in a safe way to set db statement
-	return
 }
 
 func (i *dynamodbIntegration) afterCall(r *request.Request, span *tracer.RawSpan) {
