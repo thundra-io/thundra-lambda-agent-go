@@ -42,6 +42,11 @@ var KinesisRequestTypes = map[string]string {
     "PutRecord": "WRITE",
 }
 
+var FirehoseRequestTypes = map[string]string {
+    "PutRecordBatch": "WRITE",
+    "PutRecord": "WRITE",
+}
+
 var SpanTags = map[string]string {
 	"OPERATION_TYPE": "operation.type",
     "TRIGGER_DOMAIN_NAME": "trigger.domainName",
@@ -75,6 +80,10 @@ var AwsSNSTags = map[string]string {
 
 var AwsKinesisTags = map[string]string {
     "STREAM_NAME": "aws.kinesis.stream.name",
+}
+
+var AwsFirehoseTags = map[string]string {
+    "STREAM_NAME": "aws.firehose.stream.name",
 }
 
 var AwsSDKTags = map[string]string {
