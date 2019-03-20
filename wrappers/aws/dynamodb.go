@@ -22,8 +22,7 @@ func (i *dynamodbIntegration) getTableName(r *request.Request) string {
 	if err != nil {
 		return ""
 	}
-	err = json.Unmarshal(m, &fields)
-	if err != nil {
+	if err = json.Unmarshal(m, &fields); err != nil {
 		return ""
 	}
 	return fields.TableName
@@ -44,7 +43,7 @@ func (i *dynamodbIntegration) beforeCall(r *request.Request, span *tracer.RawSpa
 	if len(endpointParts) > 1 {
 		endpoint = endpointParts[1]
 	}
-	tags := map[string]interface{}{
+	tags := map[string]interface{} {
 		constants.SpanTags["OPERATION_TYPE"]:          operationType,
 		constants.DBTags["DB_INSTANCE"]:               endpoint,
 		constants.AwsDynamoDBTags["TABLE_NAME"]:       i.getTableName(r),

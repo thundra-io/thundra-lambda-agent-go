@@ -22,8 +22,7 @@ func (i *snsIntegration) getTopicName(r *request.Request) string {
 	if err != nil {
 		return ""
 	}
-	err = json.Unmarshal(m, &fields)
-	if err != nil {
+	if err = json.Unmarshal(m, &fields); err != nil {
 		return ""
 	}
 	if len(fields.Name) > 0 {
@@ -49,7 +48,7 @@ func (i *snsIntegration) beforeCall(r *request.Request, span *tracer.RawSpan) {
 	operationName := r.Operation.Name
 	operationType := constants.SNSRequestTypes[operationName]
 
-	tags := map[string]interface{}{
+	tags := map[string]interface{} {
 		constants.AwsSNSTags["TOPIC_NAME"]:            i.getTopicName(r),
 		constants.SpanTags["OPERATION_TYPE"]:          operationType,
 		constants.AwsSDKTags["REQUEST_NAME"]:          operationName,

@@ -36,6 +36,12 @@ var SNSRequestTypes = map[string]string {
     "Publish": "WRITE",
 }
 
+var KinesisRequestTypes = map[string]string {
+    "GetRecords": "READ",
+    "PutRecords": "WRITE",
+    "PutRecord": "WRITE",
+}
+
 var SpanTags = map[string]string {
 	"OPERATION_TYPE": "operation.type",
     "TRIGGER_DOMAIN_NAME": "trigger.domainName",
@@ -65,6 +71,10 @@ var AwsSQSTags = map[string]string {
 
 var AwsSNSTags = map[string]string {
     "TOPIC_NAME": "aws.sns.topic.name",
+}
+
+var AwsKinesisTags = map[string]string {
+    "STREAM_NAME": "aws.kinesis.stream.name",
 }
 
 var AwsSDKTags = map[string]string {

@@ -22,8 +22,7 @@ func (i *sqsIntegration) getQueueName(r *request.Request) string {
 	if err != nil {
 		return ""
 	}
-	err = json.Unmarshal(m, &fields)
-	if err != nil {
+	if err = json.Unmarshal(m, &fields); err != nil {
 		return ""
 	}
 	if len(fields.QueueName) > 0 {
@@ -46,7 +45,7 @@ func (i *sqsIntegration) beforeCall(r *request.Request, span *tracer.RawSpan) {
 	operationName := r.Operation.Name
 	operationType := constants.SQSRequestTypes[operationName]
 
-	tags := map[string]interface{}{
+	tags := map[string]interface{} {
 		constants.AwsSQSTags["QUEUE_NAME"]:            i.getQueueName(r),
 		constants.SpanTags["OPERATION_TYPE"]:          operationType,
 		constants.AwsSDKTags["REQUEST_NAME"]:          operationName,
