@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/aws/aws-sdk-go/service/kinesis"
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/stretchr/testify/assert"
 	"github.com/thundra-io/thundra-lambda-agent-go/constants"
@@ -172,6 +173,56 @@ func TestSNSCreateTopic(t *testing.T) {
 	assert.Equal(t, "foobar", span.Tags[constants.AwsSNSTags["TOPIC_NAME"]])
 	assert.Equal(t, "", span.Tags[constants.SpanTags["OPERATION_TYPE"]])
 	assert.Equal(t, "CreateTopic", span.Tags[constants.AwsSDKTags["REQUEST_NAME"]])
+	assert.Equal(t, true, span.Tags[constants.SpanTags["TOPOLOGY_VERTEX"]])
+	assert.Equal(t, constants.AwsLambdaApplicationDomain, span.Tags[constants.SpanTags["TRIGGER_DOMAIN_NAME"]])
+	assert.Equal(t, constants.AwsLambdaApplicationClass, span.Tags[constants.SpanTags["TRIGGER_CLASS_NAME"]])
+
+	// Clear tracer
+	tp.Reset()
+}
+
+func TestKinesisPutRecord(t *testing.T) {
+	// Initilize trace plugin to set GlobalTracer of opentracing
+	tp := trace.New()
+	// Create a session and wrap it
+	kinesisClient := kinesis.New(sess)
+	// Actual call
+	kinesisClient.PutRecord(&kinesis.PutRecordInput{
+		StreamName: aws.String("Foo Stream"),
+	})
+	// Get the span created for dynamo call
+	span := tp.Recorder.GetSpans()[0]
+	// Test related fields
+	assert.Equal(t, constants.ClassNames["KINESIS"], span.ClassName)
+	assert.Equal(t, constants.DomainNames["STREAM"], span.DomainName)
+	assert.Equal(t, "Foo Stream", span.Tags[constants.AwsKinesisTags["STREAM_NAME"]])
+	assert.Equal(t, "WRITE", span.Tags[constants.SpanTags["OPERATION_TYPE"]])
+	assert.Equal(t, "PutRecord", span.Tags[constants.AwsSDKTags["REQUEST_NAME"]])
+	assert.Equal(t, true, span.Tags[constants.SpanTags["TOPOLOGY_VERTEX"]])
+	assert.Equal(t, constants.AwsLambdaApplicationDomain, span.Tags[constants.SpanTags["TRIGGER_DOMAIN_NAME"]])
+	assert.Equal(t, constants.AwsLambdaApplicationClass, span.Tags[constants.SpanTags["TRIGGER_CLASS_NAME"]])
+
+	// Clear tracer
+	tp.Reset()
+}
+
+func TestKinesisGetRecord(t *testing.T) {
+	// Initilize trace plugin to set GlobalTracer of opentracing
+	tp := trace.New()
+	// Create a session and wrap it
+	kinesisClient := kinesis.New(sess)
+	// Actual call
+	kinesisClient.GetRecords(&kinesis.GetRecordsInput{
+		ShardIterator: aws.String("foo"),
+	})
+	// Get the span created for dynamo call
+	span := tp.Recorder.GetSpans()[0]
+	// Test related fields
+	assert.Equal(t, constants.ClassNames["KINESIS"], span.ClassName)
+	assert.Equal(t, constants.DomainNames["STREAM"], span.DomainName)
+	assert.Equal(t, "", span.Tags[constants.AwsKinesisTags["STREAM_NAME"]])
+	assert.Equal(t, "READ", span.Tags[constants.SpanTags["OPERATION_TYPE"]])
+	assert.Equal(t, "GetRecords", span.Tags[constants.AwsSDKTags["REQUEST_NAME"]])
 	assert.Equal(t, true, span.Tags[constants.SpanTags["TOPOLOGY_VERTEX"]])
 	assert.Equal(t, constants.AwsLambdaApplicationDomain, span.Tags[constants.SpanTags["TRIGGER_DOMAIN_NAME"]])
 	assert.Equal(t, constants.AwsLambdaApplicationClass, span.Tags[constants.SpanTags["TRIGGER_CLASS_NAME"]])
