@@ -1,6 +1,7 @@
 package thundraaws
 
 import (
+	"github.com/thundra-io/thundra-lambda-agent-go/utils"
 	"github.com/thundra-io/thundra-lambda-agent-go/tracer"
 	opentracing "github.com/opentracing/opentracing-go"
 
@@ -51,6 +52,9 @@ func completeHandler(r *request.Request) {
 		return
 	}
 	i.afterCall(r, rawSpan)
+	if r.Error != nil {
+		utils.SetSpanError(span, r.Error)
+	}
 	span.Finish()
 }
 
