@@ -11,45 +11,27 @@ import (
 )
 
 type s3Integration struct{}
-
-func (i *s3Integration) getBucketName(r *request.Request) string {
-	fields := struct {
-		Bucket string
-	}{}
-	m, err := json.Marshal(r.Params)
-	if err != nil {
-		return ""
-	}
-	if err = json.Unmarshal(m, &fields); err != nil {
-		return ""
-	}
-	if len(fields.Bucket) > 0 {
-		return fields.Bucket
-	}
-	return ""
+type s3Params struct {
+	Bucket string
+	Key    string
 }
 
-func (i *s3Integration) getKeyName(r *request.Request) string {
-	fields := struct {
-		Key string
-	}{}
+func (i *s3Integration) getS3Info(r *request.Request) *s3Params {
+	fields := &s3Params{}
 	m, err := json.Marshal(r.Params)
 	if err != nil {
-		return ""
+		return &s3Params{}
 	}
 	if err = json.Unmarshal(m, &fields); err != nil {
-		return ""
+		return &s3Params{}
 	}
-	if len(fields.Key) > 0 {
-		return fields.Key
-	}
-	return ""
+	return fields
 }
 
 func (i *s3Integration) getOperationName(r *request.Request) string {
-	bucketName := i.getBucketName(r)
-	if len(bucketName) > 0 {
-		return bucketName
+	s3Info := i.getS3Info(r)
+	if len(s3Info.Bucket) > 0 {
+		return s3Info.Bucket
 	}
 	return constants.AWSServiceRequest
 }
@@ -61,15 +43,22 @@ func (i *s3Integration) beforeCall(r *request.Request, span *tracer.RawSpan) {
 	operationName := r.Operation.Name
 	operationType := constants.S3RequestTypes[operationName]
 
+	s3Info := i.getS3Info(r)
+
 	tags := map[string]interface{}{
-		constants.AwsS3Tags["BUCKET_NAME"]:            i.getBucketName(r),
-		constants.AwsS3Tags["OBJECT_NAME"]:            i.getKeyName(r),
 		constants.SpanTags["OPERATION_TYPE"]:          operationType,
 		constants.AwsSDKTags["REQUEST_NAME"]:          operationName,
 		constants.SpanTags["TOPOLOGY_VERTEX"]:         true,
 		constants.SpanTags["TRIGGER_OPERATION_NAMES"]: []string{application.FunctionName},
 		constants.SpanTags["TRIGGER_DOMAIN_NAME"]:     constants.AwsLambdaApplicationDomain,
 		constants.SpanTags["TRIGGER_CLASS_NAME"]:      constants.AwsLambdaApplicationClass,
+	}
+
+	if s3Info.Bucket != "" {
+		tags[constants.AwsS3Tags["BUCKET_NAME"]] = s3Info.Bucket
+	}
+	if s3Info.Key != "" {
+		tags[constants.AwsS3Tags["OBJECT_NAME"]] = s3Info.Key
 	}
 
 	span.Tags = tags
