@@ -4,8 +4,6 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/thundra-io/thundra-lambda-agent-go/config"
-
 	"github.com/thundra-io/thundra-lambda-agent-go/application"
 	"github.com/thundra-io/thundra-lambda-agent-go/constants"
 	"github.com/thundra-io/thundra-lambda-agent-go/tracer"
@@ -35,7 +33,6 @@ type traceDataModel struct {
 }
 
 func (tr *tracePlugin) prepareTraceDataModel(ctx context.Context, request json.RawMessage, response interface{}) traceDataModel {
-	tags := tr.prepareTraceTags(ctx, request, response)
 	return traceDataModel{
 		ID:                        plugin.TraceID,
 		Type:                      traceType,
@@ -54,48 +51,7 @@ func (tr *tracePlugin) prepareTraceDataModel(ctx context.Context, request json.R
 		StartTimestamp:            tr.Data.StartTime,
 		FinishTimestamp:           tr.Data.FinishTime,
 		Duration:                  tr.Data.Duration,
-		Tags:                      tags,
 	}
-}
-
-func (tr *tracePlugin) prepareTraceTags(ctx context.Context, request json.RawMessage, response interface{}) map[string]interface{} {
-	tags := map[string]interface{}{}
-	tags[constants.AwsLambdaInvocationRequestId] = application.GetAwsRequestID(ctx)
-
-	// If the agent's user doesn't want to send their request and response data, hide them.
-	if !config.TraceRequestDisabled {
-		tags[constants.AwsLambdaInvocationRequest] = string(request)
-	}
-	if !config.TraceResponseDisabled {
-		tags[constants.AwsLambdaInvocationResponse] = response
-	}
-
-	tags[constants.AwsLambdaARN] = application.GetInvokedFunctionArn(ctx)
-	tags[constants.AwsLambdaLogGroupName] = application.LogGroupName
-	tags[constants.AwsLambdaLogStreamName] = application.LogStreamName
-	tags[constants.AwsLambdaMemoryLimit] = application.MemoryLimit
-	tags[constants.AwsLambdaName] = application.ApplicationName
-	tags[constants.AwsRegion] = application.FunctionRegion
-	tags[constants.AwsLambdaInvocationTimeout] = tr.Data.Timeout
-
-	// If this is the first invocation, it is a cold start
-	if invocationCount == 1 {
-		tags[constants.AwsLambdaInvocationColdStart] = true
-	} else {
-		tags[constants.AwsLambdaInvocationColdStart] = false
-	}
-
-	if tr.Data.PanicInfo != nil {
-		tags[constants.AwsError] = true
-		tags[constants.AwsErrorKind] = tr.Data.PanicInfo.Kind
-		tags[constants.AwsErrorMessage] = tr.Data.PanicInfo.Message
-		tags[constants.AwsErrorStack] = tr.Data.PanicInfo.Stack
-	} else if tr.Data.ErrorInfo != nil {
-		tags[constants.AwsError] = true
-		tags[constants.AwsErrorKind] = tr.Data.ErrorInfo.Kind
-		tags[constants.AwsErrorMessage] = tr.Data.ErrorInfo.Message
-	}
-	return tags
 }
 
 type spanDataModel struct {
@@ -134,7 +90,7 @@ type spanLog struct {
 }
 
 func (tr *tracePlugin) prepareSpanDataModel(ctx context.Context, span *tracer.RawSpan) spanDataModel {
-	// If a span have no rootSpanID (other than the root span) 
+	// If a span have no rootSpanID (other than the root span)
 	// Set rootSpan's ID as the parent ID for that span
 	rootSpanID := tr.RootSpan.Context().(tracer.SpanContext).SpanID
 	if len(span.ParentSpanID) == 0 && span.Context.SpanID != rootSpanID {
