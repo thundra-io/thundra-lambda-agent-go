@@ -28,15 +28,6 @@ func (i *dynamodbIntegration) getDynamodbInfo(r *request.Request) *dynamodbParam
 	if err = json.Unmarshal(m, &fields); err != nil {
 		return &dynamodbParams{}
 	}
-	for k, v := range fields.Key {
-		fk := make(map[string]interface{}, 12)
-		for t, vv := range v {
-			if vv != nil {
-				fk[t] = vv
-			}
-		}
-		fields.Key[k] = fk
-	}
 	return fields
 }
 
