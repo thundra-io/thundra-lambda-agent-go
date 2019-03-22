@@ -1,9 +1,10 @@
 package thundraaws
 
 import (
-	"github.com/thundra-io/thundra-lambda-agent-go/utils"
-	"github.com/thundra-io/thundra-lambda-agent-go/tracer"
 	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/thundra-io/thundra-lambda-agent-go/config"
+	"github.com/thundra-io/thundra-lambda-agent-go/tracer"
+	"github.com/thundra-io/thundra-lambda-agent-go/utils"
 
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -12,7 +13,7 @@ import (
 // Wrap wraps the given session object and adds necessary
 // handlers to create a span for the AWS call
 func Wrap(s *session.Session) *session.Session {
-	if s != nil {
+	if !config.AwsIntegrationDisabled && s != nil {
 		s.Handlers.Validate.PushFrontNamed(
 			request.NamedHandler{
 				Name: "github.com/thundra-io/thundra-lambda-agent-go/wrappers/aws/aws.go/validateHandler",

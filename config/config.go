@@ -13,6 +13,7 @@ import (
 var ThundraDisabled bool
 var TraceDisabled bool
 var MetricDisabled bool
+var AwsIntegrationDisabled bool
 var LogDisabled bool
 var LogLevel string
 var TraceRequestDisabled bool
@@ -28,6 +29,7 @@ func init() {
 	TraceDisabled = isTraceDisabled()
 	MetricDisabled = isMetricDisabled()
 	LogDisabled = isLogDisabled()
+	AwsIntegrationDisabled = isAwsIntegrationDisabled()
 	TraceRequestDisabled = isTraceRequestDisabled()
 	TraceResponseDisabled = isTraceResponseDisabled()
 	DebugEnabled = isThundraDebugEnabled()
@@ -167,4 +169,16 @@ func isTraceResponseDisabled() bool {
 func determineLogLevel() string {
 	level := os.Getenv(constants.ThundraLogLogLevel)
 	return strings.ToUpper(level)
+}
+
+func isAwsIntegrationDisabled() bool {
+	env := os.Getenv(constants.ThundraDisableAwsIntegration)
+	disabled, err := strconv.ParseBool(env)
+	if err != nil {
+		if env != "" {
+			fmt.Println(err, constants.ThundraDisableAwsIntegration+" is not a bool value. Trace response is not disabled.")
+		}
+		return false
+	}
+	return disabled
 }
