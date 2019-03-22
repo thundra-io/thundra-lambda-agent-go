@@ -62,6 +62,11 @@ var S3RequestTypes = map[string]string {
     "PutObjectAcl": "WRITE",
 }
 
+var LambdaRequestTypes = map[string]string {
+    "InvokeAsync": "CALL",
+    "Invoke": "CALL",
+}
+
 var SpanTags = map[string]string {
 	"OPERATION_TYPE": "operation.type",
     "TRIGGER_DOMAIN_NAME": "trigger.domainName",
@@ -110,6 +115,13 @@ var AwsSDKTags = map[string]string {
 var AwsS3Tags = map[string]string {
     "BUCKET_NAME": "aws.s3.bucket.name",
     "OBJECT_NAME": "aws.s3.object.name",
+}
+
+var AwsLambdaTags = map[string]string {
+    "FUNCTION_NAME": "aws.lambda.name",
+    "FUNCTION_QUALIFIER": "aws.lambda.qualifier",
+    "INVOCATION_TYPE": "aws.lambda.invocation.type",
+    "INVOCATION_PAYLOAD": "aws.lambda.invocation.payload",
 }
 
 var DomainNames = map[string]string {
