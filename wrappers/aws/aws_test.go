@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/firehose"
 	"github.com/aws/aws-sdk-go/service/kinesis"
+	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/stretchr/testify/assert"
@@ -281,6 +282,45 @@ func TestS3GetObject(t *testing.T) {
 	assert.Equal(t, constants.AwsLambdaApplicationDomain, span.Tags[constants.SpanTags["TRIGGER_DOMAIN_NAME"]])
 	assert.Equal(t, constants.AwsLambdaApplicationClass, span.Tags[constants.SpanTags["TRIGGER_CLASS_NAME"]])
 
+	// Clear tracer
+	tp.Reset()
+}
+
+func TestLambdaInvoke(t *testing.T) {
+	// Initilize trace plugin to set GlobalTracer of opentracing
+	tp := trace.New()
+	// Create a session and wrap it
+	lambdac := lambda.New(sess)
+	// Actual call
+	input := &lambda.InvokeInput{
+		FunctionName:   aws.String("a-lambda-function"),
+		Payload:        []byte("\"foobar\""),
+		InvocationType: aws.String("RequestResponse"),
+		Qualifier:      aws.String("function-qualifier"),
+	}
+	lambdac.Invoke(input)
+	// Get the span created for dynamo call
+	span := tp.Recorder.GetSpans()[0]
+	// Test related fields
+	assert.Equal(t, constants.ClassNames["LAMBDA"], span.ClassName)
+	assert.Equal(t, constants.DomainNames["API"], span.DomainName)
+	assert.Equal(t, "a-lambda-function", span.Tags[constants.AwsLambdaTags["FUNCTION_NAME"]])
+	assert.Equal(t, "RequestResponse", span.Tags[constants.AwsLambdaTags["INVOCATION_TYPE"]])
+	assert.Equal(t, "function-qualifier", span.Tags[constants.AwsLambdaTags["FUNCTION_QUALIFIER"]])
+	assert.Equal(t, "CALL", span.Tags[constants.SpanTags["OPERATION_TYPE"]])
+	assert.Equal(t, "Invoke", span.Tags[constants.AwsSDKTags["REQUEST_NAME"]])
+	assert.Equal(t, true, span.Tags[constants.SpanTags["TOPOLOGY_VERTEX"]])
+	assert.Equal(t, constants.AwsLambdaApplicationDomain, span.Tags[constants.SpanTags["TRIGGER_DOMAIN_NAME"]])
+	assert.Equal(t, constants.AwsLambdaApplicationClass, span.Tags[constants.SpanTags["TRIGGER_CLASS_NAME"]])
+	exp, err := json.Marshal(input.Payload)
+	if err != nil {
+		t.Errorf("Couldn't marshal lambda payload: %v", err)
+	}
+	got, err := json.Marshal(span.Tags[constants.AwsLambdaTags["INVOCATION_PAYLOAD"]])
+	if err != nil {
+		t.Errorf("Couldn't marshal lambda payload from span tags: %v", err)
+	}
+	assert.Equal(t, exp, got)
 	// Clear tracer
 	tp.Reset()
 }
