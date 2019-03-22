@@ -14,9 +14,9 @@ type snsIntegration struct{}
 
 func (i *snsIntegration) getTopicName(r *request.Request) string {
 	fields := struct {
-		Name      string `json:"Name"`
-		TopicArn  string `json:"TopicArn"`
-		TargetArn string `json:"TargetArn"`
+		Name      string
+		TopicArn  string
+		TargetArn string
 	}{}
 	m, err := json.Marshal(r.Params)
 	if err != nil {

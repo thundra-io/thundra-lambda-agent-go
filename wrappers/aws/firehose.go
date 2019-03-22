@@ -13,7 +13,7 @@ type firehoseIntegration struct{}
 
 func (i *firehoseIntegration) getDeliveryStreamName(r *request.Request) string {
 	fields := struct {
-		DeliveryStreamName string `json:"DeliveryStreamName"`
+		DeliveryStreamName string
 	}{}
 	m, err := json.Marshal(r.Params)
 	if err != nil {

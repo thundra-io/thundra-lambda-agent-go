@@ -13,7 +13,7 @@ type kinesisIntegration struct{}
 
 func (i *kinesisIntegration) getStreamName(r *request.Request) string {
 	fields := struct {
-		StreamName string `json:"StreamName"`
+		StreamName string
 	}{}
 	m, err := json.Marshal(r.Params)
 	if err != nil {

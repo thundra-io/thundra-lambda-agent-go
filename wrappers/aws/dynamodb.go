@@ -13,28 +13,37 @@ import (
 )
 
 type dynamodbIntegration struct{}
+type dynamodbParams struct {
+	TableName string
+	Key       map[string]map[string]interface{}
+	Item      map[string]map[string]interface{}
+}
 
-func (i *dynamodbIntegration) getTableName(r *request.Request) string {
-	fields := struct {
-		TableName string `json:"TableName"`
-	}{}
+func (i *dynamodbIntegration) getDynamodbInfo(r *request.Request) *dynamodbParams {
+	fields := &dynamodbParams{}
 	m, err := json.Marshal(r.Params)
 	if err != nil {
-		return ""
+		return &dynamodbParams{}
 	}
 	if err = json.Unmarshal(m, &fields); err != nil {
-		return ""
+		return &dynamodbParams{}
 	}
-	if len(fields.TableName) > 0 {
-		return fields.TableName
+	for k, v := range fields.Key {
+		fk := make(map[string]interface{}, 12)
+		for t, vv := range v {
+			if vv != nil {
+				fk[t] = vv
+			}
+		}
+		fields.Key[k] = fk
 	}
-	return ""
+	return fields
 }
 
 func (i *dynamodbIntegration) getOperationName(r *request.Request) string {
-	tableName := i.getTableName(r)
-	if len(tableName) > 0 {
-		return tableName
+	dynamodbInfo := i.getDynamodbInfo(r)
+	if dynamodbInfo.TableName != "" {
+		return dynamodbInfo.TableName
 	}
 	return constants.AWSServiceRequest
 }
@@ -50,10 +59,11 @@ func (i *dynamodbIntegration) beforeCall(r *request.Request, span *tracer.RawSpa
 	if len(endpointParts) > 1 {
 		endpoint = endpointParts[1]
 	}
+	dynamodbInfo := i.getDynamodbInfo(r)
 	tags := map[string]interface{}{
 		constants.SpanTags["OPERATION_TYPE"]:          operationType,
 		constants.DBTags["DB_INSTANCE"]:               endpoint,
-		constants.AwsDynamoDBTags["TABLE_NAME"]:       i.getTableName(r),
+		constants.AwsDynamoDBTags["TABLE_NAME"]:       dynamodbInfo.TableName,
 		constants.DBTags["DB_STATEMENT_TYPE"]:         operationType,
 		constants.AwsSDKTags["REQUEST_NAME"]:          operationName,
 		constants.SpanTags["TOPOLOGY_VERTEX"]:         true,
@@ -64,6 +74,11 @@ func (i *dynamodbIntegration) beforeCall(r *request.Request, span *tracer.RawSpa
 
 	span.Tags = tags
 	// TODO: Get Key and Item values from request in a safe way to set db statement
+	if len(dynamodbInfo.Item) > 0 {
+		tags[constants.DBTags["DB_STATEMENT"]] = dynamodbInfo.Item
+	} else if len(dynamodbInfo.Key) > 0 {
+		tags[constants.DBTags["DB_STATEMENT"]] = dynamodbInfo.Key
+	}
 }
 
 func (i *dynamodbIntegration) afterCall(r *request.Request, span *tracer.RawSpan) {

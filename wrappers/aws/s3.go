@@ -14,7 +14,7 @@ type s3Integration struct{}
 
 func (i *s3Integration) getBucketName(r *request.Request) string {
 	fields := struct {
-		Bucket string `json:"Bucket"`
+		Bucket string
 	}{}
 	m, err := json.Marshal(r.Params)
 	if err != nil {
@@ -31,7 +31,7 @@ func (i *s3Integration) getBucketName(r *request.Request) string {
 
 func (i *s3Integration) getKeyName(r *request.Request) string {
 	fields := struct {
-		Key string `json:"Key"`
+		Key string
 	}{}
 	m, err := json.Marshal(r.Params)
 	if err != nil {

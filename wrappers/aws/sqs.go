@@ -15,8 +15,8 @@ type sqsIntegration struct{}
 
 func (i *sqsIntegration) getQueueName(r *request.Request) string {
 	fields := struct {
-		QueueName string `json:"QueueName"`
-		QueueURL  string `json:"QueueUrl"`
+		QueueName string
+		QueueURL  string
 	}{}
 	m, err := json.Marshal(r.Params)
 	if err != nil {
