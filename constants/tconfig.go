@@ -36,3 +36,5 @@ const ApplicationNameProp = "thundra_agent_lambda_application_name"
 const ApplicationVersionProp = "thundra_agent_lambda_application_version"
 const ApplicationStageProp = "thundra_agent_lambda_application_stage"
 const ApplicationTagPrefixProp = "thundra_agent_lambda_application_tag_"
+
+const ThundraMaskDynamoDBStatement = "thundra_agent_lambda_trace_integrations_aws_dynamodb_statement_mask"

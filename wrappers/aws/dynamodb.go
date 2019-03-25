@@ -1,6 +1,7 @@
 package thundraaws
 
 import (
+	"github.com/thundra-io/thundra-lambda-agent-go/config"
 	"encoding/json"
 	"strings"
 
@@ -64,11 +65,13 @@ func (i *dynamodbIntegration) beforeCall(r *request.Request, span *tracer.RawSpa
 	}
 
 	span.Tags = tags
-	// TODO: Get Key and Item values from request in a safe way to set db statement
-	if len(dynamodbInfo.Item) > 0 {
-		tags[constants.DBTags["DB_STATEMENT"]] = dynamodbInfo.Item
-	} else if len(dynamodbInfo.Key) > 0 {
-		tags[constants.DBTags["DB_STATEMENT"]] = dynamodbInfo.Key
+	
+	if !config.MaskDynamoDBStatement {
+		if len(dynamodbInfo.Item) > 0 {
+			tags[constants.DBTags["DB_STATEMENT"]] = dynamodbInfo.Item
+		} else if len(dynamodbInfo.Key) > 0 {
+			tags[constants.DBTags["DB_STATEMENT"]] = dynamodbInfo.Key
+		}
 	}
 }
 

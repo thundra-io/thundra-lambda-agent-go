@@ -23,6 +23,7 @@ var WarmupEnabled bool
 var DebugEnabled bool
 var APIKey string
 var TrustAllCertificates bool
+var MaskDynamoDBStatement bool
 
 func init() {
 	ThundraDisabled = isThundraDisabled()
@@ -38,6 +39,7 @@ func init() {
 	APIKey = determineAPIKey()
 	LogLevel = determineLogLevel()
 	TrustAllCertificates = trustAllCertificates()
+	MaskDynamoDBStatement = isDynamoDBStatementsMasked()
 }
 
 func isThundraDisabled() bool {
@@ -176,9 +178,21 @@ func isAwsIntegrationDisabled() bool {
 	disabled, err := strconv.ParseBool(env)
 	if err != nil {
 		if env != "" {
-			fmt.Println(err, constants.ThundraDisableAwsIntegration+" is not a bool value. Trace response is not disabled.")
+			fmt.Println(err, constants.ThundraDisableAwsIntegration+" is not a bool value.")
 		}
 		return false
 	}
 	return disabled
+}
+
+func isDynamoDBStatementsMasked() bool {
+	env := os.Getenv(constants.ThundraMaskDynamoDBStatement)
+	masked, err := strconv.ParseBool(env)
+	if err != nil {
+		if env != "" {
+			fmt.Println(err, constants.ThundraMaskDynamoDBStatement+" is not a bool value.")
+		}
+		return false
+	}
+	return masked
 }
