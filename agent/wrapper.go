@@ -7,6 +7,7 @@ import (
 	"reflect"
 
 	"github.com/thundra-io/thundra-lambda-agent-go/config"
+	"github.com/thundra-io/thundra-lambda-agent-go/utils"
 )
 
 type lambdaFunction func(context.Context, json.RawMessage) (interface{}, error)
@@ -51,12 +52,7 @@ func (a *Agent) Wrap(handler interface{}) interface{} {
 		go a.CatchTimeout(ctx, payload)
 
 		var args []reflect.Value
-
-		ctxAfterPreHooks := a.ExecutePreHooks(ctx, payload)
-
-		if takesContext {
-			args = append(args, reflect.ValueOf(ctxAfterPreHooks))
-		}
+		var elem reflect.Value
 
 		if (handlerType.NumIn() == 1 && !takesContext) || handlerType.NumIn() == 2 {
 			newEventType := handlerType.In(handlerType.NumIn() - 1)
@@ -66,12 +62,21 @@ func (a *Agent) Wrap(handler interface{}) interface{} {
 				return nil, err
 			}
 
-			elem := newEvent.Elem()
+			elem = newEvent.Elem()
+			ctx = utils.SetEventTypeToContext(ctx, newEventType)
 
 			if a.WarmUp && checkAndHandleWarmupRequest(elem, newEventType) {
 				return nil, nil
 			}
+		}
 
+		ctxAfterPreHooks := a.ExecutePreHooks(ctx, payload)
+
+		if takesContext {
+			args = append(args, reflect.ValueOf(ctxAfterPreHooks))
+		}
+
+		if elem.IsValid() {
 			args = append(args, elem)
 		}
 
