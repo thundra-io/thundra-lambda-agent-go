@@ -363,7 +363,7 @@ func TestInvocationTags_UnknownInputEventFromInput(t *testing.T) {
 	ClearTags()
 
 	ctx := context.Background()
-	ctx = utils.SetEventTypeToContext(ctx, reflect.TypeOf(events.ALBTargetGroupRequest{}))
+	ctx = utils.SetEventTypeToContext(ctx, reflect.TypeOf(events.CognitoEvent{}))
 	eventMock := readJSONFromFile(t, "./testdata/alb-lambda-target-request-headers-only.json")
 
 	ok := injectTriggerTagsFromInputType(ctx, eventMock)
