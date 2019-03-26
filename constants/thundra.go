@@ -35,3 +35,13 @@ const ApplicationNameProp = "thundra_agent_lambda_application_name"
 const ApplicationVersionProp = "thundra_agent_lambda_application_version"
 const ApplicationStageProp = "thundra_agent_lambda_application_stage"
 const ApplicationTagPrefixProp = "thundra_agent_lambda_application_tag_"
+
+const HTTPMethodTag = "http.method"
+const HTTPURLTag = "http.url"
+const HTTPPathTag = "http.path"
+const HTTPHostTag = "http.host"
+const HTTPStatusTag = "http.status_code"
+const HTTPQueryParamsTag = "http.query_params"
+
+const HTTPClassName = "HTTP"
+const HTTPDomainName = "API"

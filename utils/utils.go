@@ -8,8 +8,10 @@ import (
 	"strconv"
 	"time"
 
+	opentracing "github.com/opentracing/opentracing-go"
 	uuid "github.com/satori/go.uuid"
 	"github.com/shirou/gopsutil/process"
+	"github.com/thundra-io/thundra-lambda-agent-go/constants"
 )
 
 type key struct{}
@@ -88,4 +90,11 @@ func GetEventTypeFromContext(ctx context.Context) interface{} {
 // SetEventTypeToContext returns a context with event type value
 func SetEventTypeToContext(ctx context.Context, et reflect.Type) context.Context {
 	return context.WithValue(ctx, eventTypeKey{}, et)
+}
+
+// SetSpanError sets the tags related to the given error to the given span
+func SetSpanError(span opentracing.Span, err interface{}) {
+	span.SetTag(constants.AwsError, true)
+	span.SetTag(constants.AwsErrorKind, GetErrorType(err))
+	span.SetTag(constants.AwsErrorMessage, GetErrorMessage(err))
 }
