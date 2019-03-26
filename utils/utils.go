@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"reflect"
@@ -10,6 +11,9 @@ import (
 	uuid "github.com/satori/go.uuid"
 	"github.com/shirou/gopsutil/process"
 )
+
+type key struct{}
+type eventTypeKey key
 
 // GetTimestamp returns current unix timestamp in msec.
 func GetTimestamp() int64 {
@@ -21,7 +25,7 @@ func TimeToMs(t time.Time) int64 {
 }
 
 func MsToTime(t int64) time.Time {
-	return time.Unix(0, t * (int64(time.Millisecond) / int64(time.Nanosecond)))
+	return time.Unix(0, t*(int64(time.Millisecond)/int64(time.Nanosecond)))
 }
 
 // GenerateNewID generates new uuid.
@@ -74,4 +78,14 @@ func GetErrorMessage(err interface{}) string {
 		return err.(string)
 	}
 	return e.Error()
+}
+
+// GetEventTypeFromContext returns event type passed in context
+func GetEventTypeFromContext(ctx context.Context) interface{} {
+	return ctx.Value(eventTypeKey{})
+}
+
+// SetEventTypeToContext returns a context with event type value
+func SetEventTypeToContext(ctx context.Context, et reflect.Type) context.Context {
+	return context.WithValue(ctx, eventTypeKey{}, et)
 }

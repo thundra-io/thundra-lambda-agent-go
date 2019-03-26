@@ -8,6 +8,7 @@ import (
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/thundra-io/thundra-lambda-agent-go/application"
+	"github.com/thundra-io/thundra-lambda-agent-go/utils"
 )
 
 type requestField struct {
@@ -326,11 +327,10 @@ func setInvocationTriggerTags(ctx context.Context, payload json.RawMessage) {
 }
 
 func injectTriggerTagsFromInputType(ctx context.Context, payload json.RawMessage) bool {
-	eventType, ok := ctx.Value(eventTypeKey{}).(reflect.Type)
+	eventType, ok := utils.GetEventTypeFromContext(ctx).(reflect.Type)
 	if !ok {
 		return false
 	}
-
 	switch eventType {
 	case reflect.TypeOf(events.DynamoDBEvent{}):
 		injectTriggerTagsForDynamoDB(payload)

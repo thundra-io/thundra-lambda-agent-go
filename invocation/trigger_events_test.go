@@ -6,6 +6,8 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/thundra-io/thundra-lambda-agent-go/utils"
+
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambdacontext"
 	"github.com/stretchr/testify/assert"
@@ -55,7 +57,7 @@ func TestInvocationTags_SNSTriggerFromInputType(t *testing.T) {
 
 	eventMock := readJSONFromFile(t, "./testdata/sns-event.json")
 	ctx := context.Background()
-	ctx = context.WithValue(ctx, eventTypeKey{}, reflect.TypeOf(events.SNSEvent{}))
+	ctx = utils.SetEventTypeToContext(ctx, reflect.TypeOf(events.SNSEvent{}))
 	ok := injectTriggerTagsFromInputType(ctx, eventMock)
 
 	operationNames := []string{"EXAMPLE"}
@@ -84,7 +86,8 @@ func TestInvocationTags_SQSTriggerFromInputType(t *testing.T) {
 	ClearTags()
 
 	ctx := context.Background()
-	ctx = context.WithValue(ctx, eventTypeKey{}, reflect.TypeOf(events.SQSEvent{}))
+	ctx = utils.SetEventTypeToContext(ctx, reflect.TypeOf(events.SQSEvent{}))
+
 	eventMock := readJSONFromFile(t, "./testdata/sqs-event.json")
 
 	ok := injectTriggerTagsFromInputType(ctx, eventMock)
@@ -141,7 +144,7 @@ func TestInvocationTags_APIGatewayProxyTriggerFromInputType(t *testing.T) {
 	ClearTags()
 
 	ctx := context.Background()
-	ctx = context.WithValue(ctx, eventTypeKey{}, reflect.TypeOf(events.APIGatewayProxyRequest{}))
+	ctx = utils.SetEventTypeToContext(ctx, reflect.TypeOf(events.APIGatewayProxyRequest{}))
 	eventMock := readJSONFromFile(t, "./testdata/apigw-request.json")
 
 	ok := injectTriggerTagsFromInputType(ctx, eventMock)
@@ -171,7 +174,7 @@ func TestInvocationTags_S3TriggerFromInputType(t *testing.T) {
 	ClearTags()
 
 	ctx := context.Background()
-	ctx = context.WithValue(ctx, eventTypeKey{}, reflect.TypeOf(events.S3Event{}))
+	ctx = utils.SetEventTypeToContext(ctx, reflect.TypeOf(events.S3Event{}))
 	eventMock := readJSONFromFile(t, "./testdata/s3-event.json")
 
 	ok := injectTriggerTagsFromInputType(ctx, eventMock)
@@ -201,7 +204,7 @@ func TestInvocationTags_ScheduleTriggerFromInputType(t *testing.T) {
 	ClearTags()
 
 	ctx := context.Background()
-	ctx = context.WithValue(ctx, eventTypeKey{}, reflect.TypeOf(events.CloudWatchEvent{}))
+	ctx = utils.SetEventTypeToContext(ctx, reflect.TypeOf(events.CloudWatchEvent{}))
 	eventMock := readJSONFromFile(t, "./testdata/schedule-event.json")
 
 	ok := injectTriggerTagsFromInputType(ctx, eventMock)
@@ -231,7 +234,7 @@ func TestInvocationTags_KinesisTriggerFromInputType(t *testing.T) {
 	ClearTags()
 
 	ctx := context.Background()
-	ctx = context.WithValue(ctx, eventTypeKey{}, reflect.TypeOf(events.KinesisEvent{}))
+	ctx = utils.SetEventTypeToContext(ctx, reflect.TypeOf(events.KinesisEvent{}))
 	eventMock := readJSONFromFile(t, "./testdata/kinesis-event.json")
 
 	ok := injectTriggerTagsFromInputType(ctx, eventMock)
@@ -260,7 +263,7 @@ func TestInvocationTags_KinesisFirehoseTrigger(t *testing.T) {
 func TestInvocationTags_KinesisFirehoseTriggerFromInputType(t *testing.T) {
 	ClearTags()
 	ctx := context.Background()
-	ctx = context.WithValue(ctx, eventTypeKey{}, reflect.TypeOf(events.KinesisFirehoseEvent{}))
+	ctx = utils.SetEventTypeToContext(ctx, reflect.TypeOf(events.KinesisFirehoseEvent{}))
 	eventMock := readJSONFromFile(t, "./testdata/kinesis-firehose-event.json")
 
 	ok := injectTriggerTagsFromInputType(ctx, eventMock)
@@ -290,7 +293,7 @@ func TestInvocationTags_DynamoDBTriggerFromInputType(t *testing.T) {
 	ClearTags()
 
 	ctx := context.Background()
-	ctx = context.WithValue(ctx, eventTypeKey{}, reflect.TypeOf(events.DynamoDBEvent{}))
+	ctx = utils.SetEventTypeToContext(ctx, reflect.TypeOf(events.DynamoDBEvent{}))
 	eventMock := readJSONFromFile(t, "./testdata/dynamodb-event.json")
 
 	ok := injectTriggerTagsFromInputType(ctx, eventMock)
@@ -320,7 +323,8 @@ func TestInvocationTags_CloudWatchLogsTriggerFromInputType(t *testing.T) {
 	ClearTags()
 
 	ctx := context.Background()
-	ctx = context.WithValue(ctx, eventTypeKey{}, reflect.TypeOf(events.CloudwatchLogsEvent{}))
+	ctx = utils.SetEventTypeToContext(ctx, reflect.TypeOf(events.CloudwatchLogsEvent{}))
+
 	eventMock := readJSONFromFile(t, "./testdata/cloudwatch-logs-event.json")
 
 	ok := injectTriggerTagsFromInputType(ctx, eventMock)
@@ -359,7 +363,7 @@ func TestInvocationTags_UnknownInputEventFromInput(t *testing.T) {
 	ClearTags()
 
 	ctx := context.Background()
-	ctx = context.WithValue(ctx, eventTypeKey{}, reflect.TypeOf(events.ALBTargetGroupRequest{}))
+	ctx = utils.SetEventTypeToContext(ctx, reflect.TypeOf(events.ALBTargetGroupRequest{}))
 	eventMock := readJSONFromFile(t, "./testdata/alb-lambda-target-request-headers-only.json")
 
 	ok := injectTriggerTagsFromInputType(ctx, eventMock)
@@ -385,7 +389,7 @@ func TestInvocationTags_MalformedEventWithInputType(t *testing.T) {
 	ClearTags()
 
 	ctx := context.Background()
-	ctx = context.WithValue(ctx, eventTypeKey{}, reflect.TypeOf(events.DynamoDBEvent{}))
+	ctx = utils.SetEventTypeToContext(ctx, reflect.TypeOf(events.DynamoDBEvent{}))
 	eventMock := readJSONFromFile(t, "./testdata/dynamodb-event-malformed.json")
 	setInvocationTriggerTags(ctx, eventMock)
 
@@ -397,7 +401,8 @@ func TestInvocationTags_MalformedEventWithInputType(t *testing.T) {
 func TestInvocationTags_IncorrectInputEventTypeForPayload(t *testing.T) {
 	ClearTags()
 	ctx := context.Background()
-	ctx = context.WithValue(ctx, eventTypeKey{}, reflect.TypeOf(events.SQSEvent{}))
+	ctx = utils.SetEventTypeToContext(ctx, reflect.TypeOf(events.SQSEvent{}))
+
 	eventMock := readJSONFromFile(t, "./testdata/sns-event.json")
 
 	ok := injectTriggerTagsFromInputType(ctx, eventMock)

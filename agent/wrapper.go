@@ -7,12 +7,10 @@ import (
 	"reflect"
 
 	"github.com/thundra-io/thundra-lambda-agent-go/config"
+	"github.com/thundra-io/thundra-lambda-agent-go/utils"
 )
 
 type lambdaFunction func(context.Context, json.RawMessage) (interface{}, error)
-
-type key struct{}
-type eventTypeKey key
 
 // Wrap is used for wrapping your lambda functions and start monitoring it by following the thundra objects settings
 // It wraps your lambda function and return a new lambda function. By that, AWS will be able to run this function
@@ -65,7 +63,7 @@ func (a *Agent) Wrap(handler interface{}) interface{} {
 			}
 
 			elem = newEvent.Elem()
-			ctx = context.WithValue(ctx, eventTypeKey{}, newEvent)
+			ctx = utils.SetEventTypeToContext(ctx, newEventType)
 
 			if a.WarmUp && checkAndHandleWarmupRequest(elem, newEventType) {
 				return nil, nil
