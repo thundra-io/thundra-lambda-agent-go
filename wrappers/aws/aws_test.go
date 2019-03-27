@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/sns"
+	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/stretchr/testify/assert"
 	"github.com/thundra-io/thundra-lambda-agent-go/constants"
 	"github.com/thundra-io/thundra-lambda-agent-go/trace"
@@ -130,6 +131,37 @@ func TestDynamoDBGetItem(t *testing.T) {
 		t.Errorf("Couldn't marshal db_statement tag in the span")
 	}
 	assert.Equal(t, exp, got)
+	// Clear tracer
+	tp.Reset()
+}
+
+func TestSNSPublish(t *testing.T) {
+	// Initilize trace plugin to set GlobalTracer of opentracing
+	tp := trace.New()
+	// Create a session and wrap it
+	snsc := sns.New(sess)
+
+	// Params will be sent to the publish call included here is the bare minimum params to send a message
+	params := &sns.PublishInput{
+		Message:  aws.String("message"),
+		TopicArn: aws.String("arn:aws:sns:us-west-2:123456789012:gsg-signup-notifications"),
+	}
+
+	// Call to publish message
+	snsc.Publish(params)
+
+	// Get the span created for dynamo call
+	span := tp.Recorder.GetSpans()[0]
+	// Test related fields
+	assert.Equal(t, constants.ClassNames["SNS"], span.ClassName)
+	assert.Equal(t, constants.DomainNames["MESSAGING"], span.DomainName)
+	assert.Equal(t, "gsg-signup-notifications", span.Tags[constants.AwsSNSTags["TOPIC_NAME"]])
+	assert.Equal(t, "WRITE", span.Tags[constants.SpanTags["OPERATION_TYPE"]])
+	assert.Equal(t, "Publish", span.Tags[constants.AwsSDKTags["REQUEST_NAME"]])
+	assert.Equal(t, true, span.Tags[constants.SpanTags["TOPOLOGY_VERTEX"]])
+	assert.Equal(t, constants.AwsLambdaApplicationDomain, span.Tags[constants.SpanTags["TRIGGER_DOMAIN_NAME"]])
+	assert.Equal(t, constants.AwsLambdaApplicationClass, span.Tags[constants.SpanTags["TRIGGER_CLASS_NAME"]])
+
 	// Clear tracer
 	tp.Reset()
 }
@@ -321,6 +353,36 @@ func TestLambdaInvoke(t *testing.T) {
 		t.Errorf("Couldn't marshal lambda payload from span tags: %v", err)
 	}
 	assert.Equal(t, exp, got)
+	// Clear tracer
+	tp.Reset()
+}
+
+func TestSQSSendMessage(t *testing.T) {
+	// Initilize trace plugin to set GlobalTracer of opentracing
+	tp := trace.New()
+	// Create a session and wrap it
+	sqsc := sqs.New(sess)
+
+	// Params will be sent to the publish call included here is the bare minimum params to send a message
+	params := &sqs.SendMessageInput{
+		MessageBody: aws.String("message"),
+		QueueUrl:    aws.String("https://sqs.us-west-2.amazonaws.com/123456789012/test-queue"),
+	}
+
+	sqsc.SendMessage(params)
+
+	// Get the span created for dynamo call
+	span := tp.Recorder.GetSpans()[0]
+	// Test related fields
+	assert.Equal(t, constants.ClassNames["SQS"], span.ClassName)
+	assert.Equal(t, constants.DomainNames["MESSAGING"], span.DomainName)
+	assert.Equal(t, "test-queue", span.Tags[constants.AwsSQSTags["QUEUE_NAME"]])
+	assert.Equal(t, "WRITE", span.Tags[constants.SpanTags["OPERATION_TYPE"]])
+	assert.Equal(t, "SendMessage", span.Tags[constants.AwsSDKTags["REQUEST_NAME"]])
+	assert.Equal(t, true, span.Tags[constants.SpanTags["TOPOLOGY_VERTEX"]])
+	assert.Equal(t, constants.AwsLambdaApplicationDomain, span.Tags[constants.SpanTags["TRIGGER_DOMAIN_NAME"]])
+	assert.Equal(t, constants.AwsLambdaApplicationClass, span.Tags[constants.SpanTags["TRIGGER_CLASS_NAME"]])
+
 	// Clear tracer
 	tp.Reset()
 }
