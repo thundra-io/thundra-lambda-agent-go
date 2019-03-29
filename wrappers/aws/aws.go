@@ -32,7 +32,10 @@ func Wrap(s *session.Session) *session.Session {
 }
 
 func validateHandler(r *request.Request) {
-	i := integrations[r.ClientInfo.ServiceID]
+	i, ok := integrations[r.ClientInfo.ServiceID]
+	if !ok {
+		return
+	}
 	span, ctxWithSpan := opentracing.StartSpanFromContext(r.Context(), i.getOperationName(r))
 	r.SetContext(ctxWithSpan)
 	rawSpan, ok := tracer.GetRaw(span)
@@ -43,7 +46,10 @@ func validateHandler(r *request.Request) {
 }
 
 func completeHandler(r *request.Request) {
-	i := integrations[r.ClientInfo.ServiceID]
+	i, ok := integrations[r.ClientInfo.ServiceID]
+	if !ok {
+		return
+	}
 	span := opentracing.SpanFromContext(r.Context())
 	if span == nil {
 		return
