@@ -49,6 +49,8 @@ func (ip *invocationPlugin) BeforeExecution(ctx context.Context, request json.Ra
 	ip.data = &invocationData{
 		startTimestamp: startTime,
 	}
+
+	setInvocationTriggerTags(ctx, request)
 	return ctx
 }
 
