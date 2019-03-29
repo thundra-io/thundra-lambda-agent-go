@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/thundra-io/thundra-lambda-agent-go/constants"
 	"github.com/thundra-io/thundra-lambda-agent-go/utils"
 
 	"github.com/aws/aws-lambda-go/events"
@@ -47,9 +48,9 @@ func TestInvocationTags_SNSTrigger(t *testing.T) {
 
 	operationNames := []string{"EXAMPLE"}
 
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_DOMAIN_NAME"]], domainNames["MESSAGING"])
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_CLASS_NAME"]], classNames["SNS"])
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_OPERATION_NAMES"]], operationNames)
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_DOMAIN_NAME"]], constants.DomainNames["MESSAGING"])
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_CLASS_NAME"]], constants.ClassNames["SNS"])
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_OPERATION_NAMES"]], operationNames)
 }
 
 func TestInvocationTags_SNSTriggerFromInputType(t *testing.T) {
@@ -64,9 +65,9 @@ func TestInvocationTags_SNSTriggerFromInputType(t *testing.T) {
 
 	assert.True(t, ok)
 
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_DOMAIN_NAME"]], domainNames["MESSAGING"])
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_CLASS_NAME"]], classNames["SNS"])
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_OPERATION_NAMES"]], operationNames)
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_DOMAIN_NAME"]], constants.DomainNames["MESSAGING"])
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_CLASS_NAME"]], constants.ClassNames["SNS"])
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_OPERATION_NAMES"]], operationNames)
 }
 
 func TestInvocationTags_SQSTrigger(t *testing.T) {
@@ -77,9 +78,9 @@ func TestInvocationTags_SQSTrigger(t *testing.T) {
 
 	operationNames := []string{"SQSQueue"}
 
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_DOMAIN_NAME"]], domainNames["MESSAGING"])
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_CLASS_NAME"]], classNames["SQS"])
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_OPERATION_NAMES"]], operationNames)
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_DOMAIN_NAME"]], constants.DomainNames["MESSAGING"])
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_CLASS_NAME"]], constants.ClassNames["SQS"])
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_OPERATION_NAMES"]], operationNames)
 }
 
 func TestInvocationTags_SQSTriggerFromInputType(t *testing.T) {
@@ -96,9 +97,9 @@ func TestInvocationTags_SQSTriggerFromInputType(t *testing.T) {
 
 	operationNames := []string{"SQSQueue"}
 
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_DOMAIN_NAME"]], domainNames["MESSAGING"])
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_CLASS_NAME"]], classNames["SQS"])
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_OPERATION_NAMES"]], operationNames)
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_DOMAIN_NAME"]], constants.DomainNames["MESSAGING"])
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_CLASS_NAME"]], constants.ClassNames["SQS"])
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_OPERATION_NAMES"]], operationNames)
 }
 
 func TestInvocationTags_CFTrigger(t *testing.T) {
@@ -109,9 +110,9 @@ func TestInvocationTags_CFTrigger(t *testing.T) {
 
 	operationNames := []string{"/test"}
 
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_DOMAIN_NAME"]], domainNames["CDN"])
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_CLASS_NAME"]], classNames["CLOUDFRONT"])
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_OPERATION_NAMES"]], operationNames)
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_DOMAIN_NAME"]], constants.DomainNames["CDN"])
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_CLASS_NAME"]], constants.ClassNames["CLOUDFRONT"])
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_OPERATION_NAMES"]], operationNames)
 }
 
 func TestInvocationTags_APIGatewayTrigger(t *testing.T) {
@@ -122,9 +123,9 @@ func TestInvocationTags_APIGatewayTrigger(t *testing.T) {
 
 	operationNames := []string{"random.execute-api.us-west-2.amazonaws.com/dev/hello"}
 
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_DOMAIN_NAME"]], domainNames["API"])
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_CLASS_NAME"]], classNames["APIGATEWAY"])
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_OPERATION_NAMES"]], operationNames)
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_DOMAIN_NAME"]], constants.DomainNames["API"])
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_CLASS_NAME"]], constants.ClassNames["APIGATEWAY"])
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_OPERATION_NAMES"]], operationNames)
 }
 
 func TestInvocationTags_APIGatewayProxyTrigger(t *testing.T) {
@@ -135,9 +136,9 @@ func TestInvocationTags_APIGatewayProxyTrigger(t *testing.T) {
 
 	operationNames := []string{"gy415nuibc.execute-api.us-east-1.amazonaws.com/testStage/hello/world"}
 
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_DOMAIN_NAME"]], domainNames["API"])
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_CLASS_NAME"]], classNames["APIGATEWAY"])
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_OPERATION_NAMES"]], operationNames)
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_DOMAIN_NAME"]], constants.DomainNames["API"])
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_CLASS_NAME"]], constants.ClassNames["APIGATEWAY"])
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_OPERATION_NAMES"]], operationNames)
 }
 
 func TestInvocationTags_APIGatewayProxyTriggerFromInputType(t *testing.T) {
@@ -152,9 +153,9 @@ func TestInvocationTags_APIGatewayProxyTriggerFromInputType(t *testing.T) {
 
 	operationNames := []string{"gy415nuibc.execute-api.us-east-1.amazonaws.com/testStage/hello/world"}
 
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_DOMAIN_NAME"]], domainNames["API"])
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_CLASS_NAME"]], classNames["APIGATEWAY"])
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_OPERATION_NAMES"]], operationNames)
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_DOMAIN_NAME"]], constants.DomainNames["API"])
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_CLASS_NAME"]], constants.ClassNames["APIGATEWAY"])
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_OPERATION_NAMES"]], operationNames)
 }
 
 func TestInvocationTags_S3Trigger(t *testing.T) {
@@ -165,9 +166,9 @@ func TestInvocationTags_S3Trigger(t *testing.T) {
 
 	operationNames := []string{"sourcebucket"}
 
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_DOMAIN_NAME"]], domainNames["STORAGE"])
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_CLASS_NAME"]], classNames["S3"])
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_OPERATION_NAMES"]], operationNames)
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_DOMAIN_NAME"]], constants.DomainNames["STORAGE"])
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_CLASS_NAME"]], constants.ClassNames["S3"])
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_OPERATION_NAMES"]], operationNames)
 }
 
 func TestInvocationTags_S3TriggerFromInputType(t *testing.T) {
@@ -182,9 +183,9 @@ func TestInvocationTags_S3TriggerFromInputType(t *testing.T) {
 
 	operationNames := []string{"sourcebucket"}
 
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_DOMAIN_NAME"]], domainNames["STORAGE"])
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_CLASS_NAME"]], classNames["S3"])
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_OPERATION_NAMES"]], operationNames)
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_DOMAIN_NAME"]], constants.DomainNames["STORAGE"])
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_CLASS_NAME"]], constants.ClassNames["S3"])
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_OPERATION_NAMES"]], operationNames)
 }
 
 func TestInvocationTags_ScheduleTrigger(t *testing.T) {
@@ -195,9 +196,9 @@ func TestInvocationTags_ScheduleTrigger(t *testing.T) {
 
 	operationNames := []string{"ExampleRule"}
 
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_DOMAIN_NAME"]], domainNames["SCHEDULE"])
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_CLASS_NAME"]], classNames["SCHEDULE"])
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_OPERATION_NAMES"]], operationNames)
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_DOMAIN_NAME"]], constants.DomainNames["SCHEDULE"])
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_CLASS_NAME"]], constants.ClassNames["SCHEDULE"])
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_OPERATION_NAMES"]], operationNames)
 }
 
 func TestInvocationTags_ScheduleTriggerFromInputType(t *testing.T) {
@@ -212,9 +213,9 @@ func TestInvocationTags_ScheduleTriggerFromInputType(t *testing.T) {
 
 	operationNames := []string{"ExampleRule"}
 
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_DOMAIN_NAME"]], domainNames["SCHEDULE"])
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_CLASS_NAME"]], classNames["SCHEDULE"])
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_OPERATION_NAMES"]], operationNames)
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_DOMAIN_NAME"]], constants.DomainNames["SCHEDULE"])
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_CLASS_NAME"]], constants.ClassNames["SCHEDULE"])
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_OPERATION_NAMES"]], operationNames)
 }
 
 func TestInvocationTags_KinesisTrigger(t *testing.T) {
@@ -225,9 +226,9 @@ func TestInvocationTags_KinesisTrigger(t *testing.T) {
 
 	operationNames := []string{"simple-stream"}
 
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_DOMAIN_NAME"]], domainNames["STREAM"])
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_CLASS_NAME"]], classNames["KINESIS"])
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_OPERATION_NAMES"]], operationNames)
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_DOMAIN_NAME"]], constants.DomainNames["STREAM"])
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_CLASS_NAME"]], constants.ClassNames["KINESIS"])
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_OPERATION_NAMES"]], operationNames)
 }
 
 func TestInvocationTags_KinesisTriggerFromInputType(t *testing.T) {
@@ -242,9 +243,9 @@ func TestInvocationTags_KinesisTriggerFromInputType(t *testing.T) {
 
 	operationNames := []string{"simple-stream"}
 
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_DOMAIN_NAME"]], domainNames["STREAM"])
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_CLASS_NAME"]], classNames["KINESIS"])
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_OPERATION_NAMES"]], operationNames)
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_DOMAIN_NAME"]], constants.DomainNames["STREAM"])
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_CLASS_NAME"]], constants.ClassNames["KINESIS"])
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_OPERATION_NAMES"]], operationNames)
 }
 
 func TestInvocationTags_KinesisFirehoseTrigger(t *testing.T) {
@@ -255,9 +256,9 @@ func TestInvocationTags_KinesisFirehoseTrigger(t *testing.T) {
 
 	operationNames := []string{"exampleStream"}
 
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_DOMAIN_NAME"]], domainNames["STREAM"])
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_CLASS_NAME"]], classNames["FIREHOSE"])
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_OPERATION_NAMES"]], operationNames)
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_DOMAIN_NAME"]], constants.DomainNames["STREAM"])
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_CLASS_NAME"]], constants.ClassNames["FIREHOSE"])
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_OPERATION_NAMES"]], operationNames)
 }
 
 func TestInvocationTags_KinesisFirehoseTriggerFromInputType(t *testing.T) {
@@ -271,9 +272,9 @@ func TestInvocationTags_KinesisFirehoseTriggerFromInputType(t *testing.T) {
 
 	operationNames := []string{"exampleStream"}
 
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_DOMAIN_NAME"]], domainNames["STREAM"])
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_CLASS_NAME"]], classNames["FIREHOSE"])
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_OPERATION_NAMES"]], operationNames)
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_DOMAIN_NAME"]], constants.DomainNames["STREAM"])
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_CLASS_NAME"]], constants.ClassNames["FIREHOSE"])
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_OPERATION_NAMES"]], operationNames)
 }
 
 func TestInvocationTags_DynamoDBTrigger(t *testing.T) {
@@ -284,9 +285,9 @@ func TestInvocationTags_DynamoDBTrigger(t *testing.T) {
 
 	operationNames := []string{"Example-Table", "Example-Table2"}
 
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_DOMAIN_NAME"]], domainNames["DB"])
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_CLASS_NAME"]], classNames["DYNAMODB"])
-	assert.ElementsMatch(t, invocationTags[spanTags["TRIGGER_OPERATION_NAMES"]], operationNames)
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_DOMAIN_NAME"]], constants.DomainNames["DB"])
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_CLASS_NAME"]], constants.ClassNames["DYNAMODB"])
+	assert.ElementsMatch(t, invocationTags[constants.SpanTags["TRIGGER_OPERATION_NAMES"]], operationNames)
 }
 
 func TestInvocationTags_DynamoDBTriggerFromInputType(t *testing.T) {
@@ -301,9 +302,9 @@ func TestInvocationTags_DynamoDBTriggerFromInputType(t *testing.T) {
 
 	operationNames := []string{"Example-Table", "Example-Table2"}
 
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_DOMAIN_NAME"]], domainNames["DB"])
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_CLASS_NAME"]], classNames["DYNAMODB"])
-	assert.ElementsMatch(t, invocationTags[spanTags["TRIGGER_OPERATION_NAMES"]], operationNames)
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_DOMAIN_NAME"]], constants.DomainNames["DB"])
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_CLASS_NAME"]], constants.ClassNames["DYNAMODB"])
+	assert.ElementsMatch(t, invocationTags[constants.SpanTags["TRIGGER_OPERATION_NAMES"]], operationNames)
 }
 
 func TestInvocationTags_CloudWatchLogsTrigger(t *testing.T) {
@@ -314,9 +315,9 @@ func TestInvocationTags_CloudWatchLogsTrigger(t *testing.T) {
 
 	operationNames := []string{"testLogGroup"}
 
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_DOMAIN_NAME"]], domainNames["LOG"])
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_CLASS_NAME"]], classNames["CLOUDWATCHLOG"])
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_OPERATION_NAMES"]], operationNames)
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_DOMAIN_NAME"]], constants.DomainNames["LOG"])
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_CLASS_NAME"]], constants.ClassNames["CLOUDWATCHLOG"])
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_OPERATION_NAMES"]], operationNames)
 }
 
 func TestInvocationTags_CloudWatchLogsTriggerFromInputType(t *testing.T) {
@@ -332,9 +333,9 @@ func TestInvocationTags_CloudWatchLogsTriggerFromInputType(t *testing.T) {
 
 	operationNames := []string{"testLogGroup"}
 
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_DOMAIN_NAME"]], domainNames["LOG"])
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_CLASS_NAME"]], classNames["CLOUDWATCHLOG"])
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_OPERATION_NAMES"]], operationNames)
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_DOMAIN_NAME"]], constants.DomainNames["LOG"])
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_CLASS_NAME"]], constants.ClassNames["CLOUDWATCHLOG"])
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_OPERATION_NAMES"]], operationNames)
 }
 
 func TestInvocationTags_LambdaTrigger(t *testing.T) {
@@ -344,9 +345,9 @@ func TestInvocationTags_LambdaTrigger(t *testing.T) {
 	setInvocationTriggerTags(c, nil)
 	operationNames := []string{"test-function"}
 
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_DOMAIN_NAME"]], domainNames["API"])
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_CLASS_NAME"]], classNames["LAMBDA"])
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_OPERATION_NAMES"]], operationNames)
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_DOMAIN_NAME"]], constants.DomainNames["API"])
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_CLASS_NAME"]], constants.ClassNames["LAMBDA"])
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_OPERATION_NAMES"]], operationNames)
 }
 
 func TestInvocationTags_NilEvent(t *testing.T) {
@@ -354,9 +355,9 @@ func TestInvocationTags_NilEvent(t *testing.T) {
 
 	setInvocationTriggerTags(context.TODO(), nil)
 
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_DOMAIN_NAME"]], nil)
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_CLASS_NAME"]], nil)
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_OPERATION_NAMES"]], nil)
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_DOMAIN_NAME"]], nil)
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_CLASS_NAME"]], nil)
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_OPERATION_NAMES"]], nil)
 }
 
 func TestInvocationTags_UnknownInputEventFromInput(t *testing.T) {
@@ -369,9 +370,9 @@ func TestInvocationTags_UnknownInputEventFromInput(t *testing.T) {
 	ok := injectTriggerTagsFromInputType(ctx, eventMock)
 	assert.False(t, ok)
 
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_DOMAIN_NAME"]], nil)
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_CLASS_NAME"]], nil)
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_OPERATION_NAMES"]], nil)
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_DOMAIN_NAME"]], nil)
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_CLASS_NAME"]], nil)
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_OPERATION_NAMES"]], nil)
 }
 
 func TestInvocationTags_MalformedPayloadJSON(t *testing.T) {
@@ -380,9 +381,9 @@ func TestInvocationTags_MalformedPayloadJSON(t *testing.T) {
 	eventMock := readJSONFromFile(t, "./testdata/dynamodb-event-malformed.json")
 	setInvocationTriggerTags(context.Background(), eventMock)
 
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_DOMAIN_NAME"]], nil)
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_CLASS_NAME"]], nil)
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_OPERATION_NAMES"]], nil)
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_DOMAIN_NAME"]], nil)
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_CLASS_NAME"]], nil)
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_OPERATION_NAMES"]], nil)
 }
 
 func TestInvocationTags_MalformedEventWithInputType(t *testing.T) {
@@ -393,9 +394,9 @@ func TestInvocationTags_MalformedEventWithInputType(t *testing.T) {
 	eventMock := readJSONFromFile(t, "./testdata/dynamodb-event-malformed.json")
 	setInvocationTriggerTags(ctx, eventMock)
 
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_DOMAIN_NAME"]], nil)
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_CLASS_NAME"]], nil)
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_OPERATION_NAMES"]], nil)
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_DOMAIN_NAME"]], nil)
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_CLASS_NAME"]], nil)
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_OPERATION_NAMES"]], nil)
 }
 
 func TestInvocationTags_IncorrectInputEventTypeForPayload(t *testing.T) {
@@ -408,9 +409,9 @@ func TestInvocationTags_IncorrectInputEventTypeForPayload(t *testing.T) {
 	ok := injectTriggerTagsFromInputType(ctx, eventMock)
 	assert.True(t, ok)
 
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_DOMAIN_NAME"]], domainNames["MESSAGING"])
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_CLASS_NAME"]], classNames["SQS"])
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_OPERATION_NAMES"]], []string{""})
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_DOMAIN_NAME"]], constants.DomainNames["MESSAGING"])
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_CLASS_NAME"]], constants.ClassNames["SQS"])
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_OPERATION_NAMES"]], []string{""})
 }
 
 func TestInvocationTags_DynamoDBPayloadWithInvalidField(t *testing.T) {
@@ -419,9 +420,9 @@ func TestInvocationTags_DynamoDBPayloadWithInvalidField(t *testing.T) {
 	eventMock := readJSONFromFile(t, "./testdata/dynamodb-event-wrong-arn.json")
 	setInvocationTriggerTags(context.Background(), eventMock)
 
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_DOMAIN_NAME"]], domainNames["DB"])
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_CLASS_NAME"]], classNames["DYNAMODB"])
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_OPERATION_NAMES"]], []string{""})
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_DOMAIN_NAME"]], constants.DomainNames["DB"])
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_CLASS_NAME"]], constants.ClassNames["DYNAMODB"])
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_OPERATION_NAMES"]], []string{""})
 }
 
 func TestInvocationTags_APIGatewayPayloadWithMissingFields(t *testing.T) {
@@ -430,9 +431,9 @@ func TestInvocationTags_APIGatewayPayloadWithMissingFields(t *testing.T) {
 	eventMock := readJSONFromFile(t, "./testdata/api-gw-missing-fields.json")
 	setInvocationTriggerTags(context.Background(), eventMock)
 
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_DOMAIN_NAME"]], domainNames["API"])
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_CLASS_NAME"]], classNames["APIGATEWAY"])
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_OPERATION_NAMES"]], []string{""})
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_DOMAIN_NAME"]], constants.DomainNames["API"])
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_CLASS_NAME"]], constants.ClassNames["APIGATEWAY"])
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_OPERATION_NAMES"]], []string{""})
 }
 
 func TestInvocationTags_APIGatewayProxyPayloadWithMissingFields(t *testing.T) {
@@ -441,7 +442,7 @@ func TestInvocationTags_APIGatewayProxyPayloadWithMissingFields(t *testing.T) {
 	eventMock := readJSONFromFile(t, "./testdata/apigw-request-missing-fields.json")
 	setInvocationTriggerTags(context.Background(), eventMock)
 
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_DOMAIN_NAME"]], domainNames["API"])
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_CLASS_NAME"]], classNames["APIGATEWAY"])
-	assert.Equal(t, invocationTags[spanTags["TRIGGER_OPERATION_NAMES"]], []string{""})
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_DOMAIN_NAME"]], constants.DomainNames["API"])
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_CLASS_NAME"]], constants.ClassNames["APIGATEWAY"])
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_OPERATION_NAMES"]], []string{""})
 }

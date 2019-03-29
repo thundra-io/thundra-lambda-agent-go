@@ -8,6 +8,7 @@ import (
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/thundra-io/thundra-lambda-agent-go/application"
+	"github.com/thundra-io/thundra-lambda-agent-go/constants"
 	"github.com/thundra-io/thundra-lambda-agent-go/utils"
 )
 
@@ -55,9 +56,9 @@ type eventTypeKey key
 var void struct{}
 
 func injectTriggerTagsToInvocation(domainName string, className string, operationNames []string) {
-	SetTag(spanTags["TRIGGER_DOMAIN_NAME"], domainName)
-	SetTag(spanTags["TRIGGER_CLASS_NAME"], className)
-	SetTag(spanTags["TRIGGER_OPERATION_NAMES"], operationNames)
+	SetTag(constants.SpanTags["TRIGGER_DOMAIN_NAME"], domainName)
+	SetTag(constants.SpanTags["TRIGGER_CLASS_NAME"], className)
+	SetTag(constants.SpanTags["TRIGGER_OPERATION_NAMES"], operationNames)
 }
 
 func injectTriggerTagsForDynamoDB(payload json.RawMessage) {
@@ -67,8 +68,8 @@ func injectTriggerTagsForDynamoDB(payload json.RawMessage) {
 		return
 	}
 
-	domainName := domainNames["DB"]
-	className := classNames["DYNAMODB"]
+	domainName := constants.DomainNames["DB"]
+	className := constants.ClassNames["DYNAMODB"]
 	tableNamesMap := make(map[string]struct{})
 	for _, record := range e.Records {
 		tableName := ""
@@ -92,8 +93,8 @@ func injectTriggerTagsForKinesis(payload json.RawMessage) {
 		return
 	}
 
-	domainName := domainNames["STREAM"]
-	className := classNames["KINESIS"]
+	domainName := constants.DomainNames["STREAM"]
+	className := constants.ClassNames["KINESIS"]
 	streamNamesMap := make(map[string]struct{})
 	for _, record := range e.Records {
 		streamName := ""
@@ -118,8 +119,8 @@ func injectTriggerTagsForKinesisFirehose(payload json.RawMessage) {
 		return
 	}
 
-	domainName := domainNames["STREAM"]
-	className := classNames["FIREHOSE"]
+	domainName := constants.DomainNames["STREAM"]
+	className := constants.ClassNames["FIREHOSE"]
 	streamName := ""
 	i := strings.Index(e.DeliveryStreamArn, "/")
 	if i != -1 && (i+1) < len(e.DeliveryStreamArn) {
@@ -137,8 +138,8 @@ func injectTriggerTagsForSNS(payload json.RawMessage) {
 		return
 	}
 
-	domainName := domainNames["MESSAGING"]
-	className := classNames["SNS"]
+	domainName := constants.DomainNames["MESSAGING"]
+	className := constants.ClassNames["SNS"]
 	streamNamesMap := make(map[string]struct{})
 
 	for _, record := range e.Records {
@@ -162,8 +163,8 @@ func injectTriggerTagsForSQS(payload json.RawMessage) {
 		return
 	}
 
-	domainName := domainNames["MESSAGING"]
-	className := classNames["SQS"]
+	domainName := constants.DomainNames["MESSAGING"]
+	className := constants.ClassNames["SQS"]
 	queueNamesMap := make(map[string]struct{})
 	for _, record := range e.Records {
 		queueSlice := strings.Split(record.EventSourceARN, ":")
@@ -186,8 +187,8 @@ func injectTriggerTagsForS3(payload json.RawMessage) {
 		return
 	}
 
-	domainName := domainNames["STORAGE"]
-	className := classNames["S3"]
+	domainName := constants.DomainNames["STORAGE"]
+	className := constants.ClassNames["S3"]
 	bucketNamesMap := make(map[string]struct{})
 	for _, record := range e.Records {
 		bucketName := record.S3.Bucket.Name
@@ -209,8 +210,8 @@ func injectTriggerTagsForCloudFront(payload json.RawMessage) {
 		return
 	}
 
-	domainName := domainNames["CDN"]
-	className := classNames["CLOUDFRONT"]
+	domainName := constants.DomainNames["CDN"]
+	className := constants.ClassNames["CLOUDFRONT"]
 	urisMap := make(map[string]struct{})
 	for _, record := range e.Records {
 		uri := record.CF.Request.URI
@@ -232,8 +233,8 @@ func injectTriggerTagsForAPIGateway(payload json.RawMessage) {
 		return
 	}
 
-	domainName := domainNames["API"]
-	className := classNames["APIGATEWAY"]
+	domainName := constants.DomainNames["API"]
+	className := constants.ClassNames["APIGATEWAY"]
 
 	path := ""
 	if e.Params.Header["Host"] != "" && e.Context["stage"] != "" {
@@ -252,8 +253,8 @@ func injectTriggerTagsForAPIGatewayProxy(payload json.RawMessage) {
 		return
 	}
 
-	domainName := domainNames["API"]
-	className := classNames["APIGATEWAY"]
+	domainName := constants.DomainNames["API"]
+	className := constants.ClassNames["APIGATEWAY"]
 
 	path := ""
 	if e.Headers["Host"] != "" {
@@ -271,8 +272,8 @@ func injectTriggerTagsForCloudWatchLogs(payload json.RawMessage) {
 		return
 	}
 
-	domainName := domainNames["LOG"]
-	className := classNames["CLOUDWATCHLOG"]
+	domainName := constants.DomainNames["LOG"]
+	className := constants.ClassNames["CLOUDWATCHLOG"]
 
 	data, err := e.AWSLogs.Parse()
 	var operationNames []string
@@ -290,8 +291,8 @@ func injectTriggerTagsForSchedule(payload json.RawMessage) {
 		return
 	}
 
-	domainName := domainNames["SCHEDULE"]
-	className := classNames["SCHEDULE"]
+	domainName := constants.DomainNames["SCHEDULE"]
+	className := constants.ClassNames["SCHEDULE"]
 
 	scheduleNamesMap := make(map[string]struct{})
 	for _, resource := range e.Resources {
@@ -308,8 +309,8 @@ func injectTriggerTagsForSchedule(payload json.RawMessage) {
 }
 
 func injectTriggerTagsForLambda(ctx context.Context) {
-	domainName := domainNames["API"]
-	className := classNames["LAMBDA"]
+	domainName := constants.DomainNames["API"]
+	className := constants.ClassNames["LAMBDA"]
 
 	clientContext, ok := application.GetClientContext(ctx)
 	if ok {
