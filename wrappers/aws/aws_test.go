@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/cloudwatch"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/firehose"
 	"github.com/aws/aws-sdk-go/service/kinesis"
@@ -384,5 +385,18 @@ func TestSQSSendMessage(t *testing.T) {
 	assert.Equal(t, constants.AwsLambdaApplicationClass, span.Tags[constants.SpanTags["TRIGGER_CLASS_NAME"]])
 
 	// Clear tracer
+	tp.Reset()
+}
+
+func TestNonTracedService(t *testing.T) {
+	// Initilize trace plugin to set GlobalTracer of opentracing
+	tp := trace.New()
+	// Create a session and wrap it
+	cwc := cloudwatch.New(sess)
+
+	cwc.GetDashboard(&cloudwatch.GetDashboardInput{
+		DashboardName: aws.String("foo"),
+	})
+	assert.Equal(t, 0, len(tp.Recorder.GetSpans()))
 	tp.Reset()
 }

@@ -64,5 +64,3 @@ func completeHandler(r *request.Request) {
 	}
 	span.Finish()
 }
-
-// TODO: Add other handlers
