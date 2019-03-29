@@ -1,16 +1,15 @@
 package constants
 
-const HTTPMethodTag = "http.method"
-const HTTPURLTag = "http.url"
-const HTTPPathTag = "http.path"
-const HTTPHostTag = "http.host"
-const HTTPStatusTag = "http.status_code"
-const HTTPQueryParamsTag = "http.query_params"
-
-const HTTPClassName = "HTTP"
-const HTTPDomainName = "API"
-
 const AWSServiceRequest = "AWSServiceRequest"
+
+var HTTPTags = map[string]string{
+	"METHOD":       "http.method",
+	"URL":          "http.url",
+	"PATH":         "http.path",
+	"HOST":         "http.host",
+	"STATUS":       "http.status_code",
+	"QUERY_PARAMS": "http.query_params",
+}
 
 var DynamoDBRequestTypes = map[string]string{
 	"BatchGetItem":      "READ",

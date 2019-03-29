@@ -42,16 +42,16 @@ func TestHTTPGet(t *testing.T) {
 	// Test HTTP related fields of span
 	assert.Nil(t, resp)
 	assert.NotNil(t, err)
-	assert.Equal(t, constants.HTTPClassName, span.ClassName)
-	assert.Equal(t, constants.HTTPDomainName, span.DomainName)
-	assert.Equal(t, "httpbin.org", span.Tags[constants.HTTPHostTag].(string))
-	assert.Equal(t, http.MethodGet, span.Tags[constants.HTTPMethodTag].(string))
-	assert.Equal(t, "/get", span.Tags[constants.HTTPPathTag].(string))
-	assert.Equal(t, "foo=bar", span.Tags[constants.HTTPQueryParamsTag].(string))
-	assert.Equal(t, "httpbin.org/get", span.Tags[constants.HTTPURLTag].(string))
+	assert.Equal(t, constants.ClassNames["HTTP"], span.ClassName)
+	assert.Equal(t, constants.DomainNames["API"], span.DomainName)
+	assert.Equal(t, "httpbin.org", span.Tags[constants.HTTPTags["HOST"]].(string))
+	assert.Equal(t, http.MethodGet, span.Tags[constants.HTTPTags["METHOD"]].(string))
+	assert.Equal(t, "/get", span.Tags[constants.HTTPTags["PATH"]].(string))
+	assert.Equal(t, "foo=bar", span.Tags[constants.HTTPTags["QUERY_PARAMS"]].(string))
+	assert.Equal(t, "httpbin.org/get", span.Tags[constants.HTTPTags["URL"]].(string))
 	assert.True(t, span.Tags[constants.AwsError].(bool))
 	assert.Equal(t, "Error", span.Tags[constants.AwsErrorKind].(string))
-	assert.Equal(t, "Get https://httpbin.org/get?foo=bar: http: Server closed", 
+	assert.Equal(t, "Get https://httpbin.org/get?foo=bar: http: Server closed",
 		span.Tags[constants.AwsErrorMessage].(string))
 	// Clear tracer
 	tp.Reset()
@@ -68,7 +68,7 @@ func TestHTTPGetWithContext(t *testing.T) {
 	resp, err := client.GetWithContext(ctx, "https://httpbin.org/get?foo=bar")
 	// Get the span created for http call
 	span := tp.Recorder.GetSpans()[1]
-	// Check parent span is set 
+	// Check parent span is set
 	assert.Nil(t, resp)
 	assert.NotNil(t, err)
 	assert.Equal(t, parentSpanRaw.Context.SpanID, span.ParentSpanID)
@@ -85,16 +85,16 @@ func TestHTTPPost(t *testing.T) {
 	// Test HTTP related fields of span
 	assert.NotNil(t, err)
 	assert.Nil(t, resp)
-	assert.Equal(t, constants.HTTPClassName, span.ClassName)
-	assert.Equal(t, constants.HTTPDomainName, span.DomainName)
-	assert.Equal(t, "httpbin.org", span.Tags[constants.HTTPHostTag].(string))
-	assert.Equal(t, http.MethodPost, span.Tags[constants.HTTPMethodTag].(string))
-	assert.Equal(t, "/post", span.Tags[constants.HTTPPathTag].(string))
-	assert.Equal(t, "foo=bar", span.Tags[constants.HTTPQueryParamsTag].(string))
-	assert.Equal(t, "httpbin.org/post", span.Tags[constants.HTTPURLTag].(string))
+	assert.Equal(t, constants.ClassNames["HTTP"], span.ClassName)
+	assert.Equal(t, constants.DomainNames["API"], span.DomainName)
+	assert.Equal(t, "httpbin.org", span.Tags[constants.HTTPTags["HOST"]].(string))
+	assert.Equal(t, http.MethodPost, span.Tags[constants.HTTPTags["METHOD"]].(string))
+	assert.Equal(t, "/post", span.Tags[constants.HTTPTags["PATH"]].(string))
+	assert.Equal(t, "foo=bar", span.Tags[constants.HTTPTags["QUERY_PARAMS"]].(string))
+	assert.Equal(t, "httpbin.org/post", span.Tags[constants.HTTPTags["URL"]].(string))
 	assert.True(t, span.Tags[constants.AwsError].(bool))
 	assert.Equal(t, "Error", span.Tags[constants.AwsErrorKind].(string))
-	assert.Equal(t, "Post https://httpbin.org/post?foo=bar: http: Server closed", 
+	assert.Equal(t, "Post https://httpbin.org/post?foo=bar: http: Server closed",
 		span.Tags[constants.AwsErrorMessage].(string))
 	// Clear tracer
 	tp.Reset()
@@ -132,16 +132,16 @@ func TestHTTPPostForm(t *testing.T) {
 	// Test HTTP related fields of span
 	assert.NotNil(t, err)
 	assert.Nil(t, resp)
-	assert.Equal(t, constants.HTTPClassName, span.ClassName)
-	assert.Equal(t, constants.HTTPDomainName, span.DomainName)
-	assert.Equal(t, "httpbin.org", span.Tags[constants.HTTPHostTag].(string))
-	assert.Equal(t, http.MethodPost, span.Tags[constants.HTTPMethodTag].(string))
-	assert.Equal(t, "/post", span.Tags[constants.HTTPPathTag].(string))
-	assert.Equal(t, "foo=bar", span.Tags[constants.HTTPQueryParamsTag].(string))
-	assert.Equal(t, "httpbin.org/post", span.Tags[constants.HTTPURLTag].(string))
+	assert.Equal(t, constants.ClassNames["HTTP"], span.ClassName)
+	assert.Equal(t, constants.DomainNames["API"], span.DomainName)
+	assert.Equal(t, "httpbin.org", span.Tags[constants.HTTPTags["HOST"]].(string))
+	assert.Equal(t, http.MethodPost, span.Tags[constants.HTTPTags["METHOD"]].(string))
+	assert.Equal(t, "/post", span.Tags[constants.HTTPTags["PATH"]].(string))
+	assert.Equal(t, "foo=bar", span.Tags[constants.HTTPTags["QUERY_PARAMS"]].(string))
+	assert.Equal(t, "httpbin.org/post", span.Tags[constants.HTTPTags["URL"]].(string))
 	assert.True(t, span.Tags[constants.AwsError].(bool))
 	assert.Equal(t, "Error", span.Tags[constants.AwsErrorKind].(string))
-	assert.Equal(t, "Post https://httpbin.org/post?foo=bar: http: Server closed", 
+	assert.Equal(t, "Post https://httpbin.org/post?foo=bar: http: Server closed",
 		span.Tags[constants.AwsErrorMessage].(string))
 	// Clear tracer
 	tp.Reset()
@@ -177,18 +177,18 @@ func TestHTTPDo(t *testing.T) {
 	// Get the span created for http call
 	span := tp.Recorder.GetSpans()[0]
 	// Test HTTP related fields of span
-	assert.NotNil(t, err)
 	assert.Nil(t, resp)
-	assert.Equal(t, constants.HTTPClassName, span.ClassName)
-	assert.Equal(t, constants.HTTPDomainName, span.DomainName)
-	assert.Equal(t, "httpbin.org", span.Tags[constants.HTTPHostTag].(string))
-	assert.Equal(t, http.MethodGet, span.Tags[constants.HTTPMethodTag].(string))
-	assert.Equal(t, "/get", span.Tags[constants.HTTPPathTag].(string))
-	assert.Equal(t, "foo=bar", span.Tags[constants.HTTPQueryParamsTag].(string))
-	assert.Equal(t, "httpbin.org/get", span.Tags[constants.HTTPURLTag].(string))
+	assert.NotNil(t, err)
+	assert.Equal(t, constants.ClassNames["HTTP"], span.ClassName)
+	assert.Equal(t, constants.DomainNames["API"], span.DomainName)
+	assert.Equal(t, "httpbin.org", span.Tags[constants.HTTPTags["HOST"]].(string))
+	assert.Equal(t, http.MethodGet, span.Tags[constants.HTTPTags["METHOD"]].(string))
+	assert.Equal(t, "/get", span.Tags[constants.HTTPTags["PATH"]].(string))
+	assert.Equal(t, "foo=bar", span.Tags[constants.HTTPTags["QUERY_PARAMS"]].(string))
+	assert.Equal(t, "httpbin.org/get", span.Tags[constants.HTTPTags["URL"]].(string))
 	assert.True(t, span.Tags[constants.AwsError].(bool))
 	assert.Equal(t, "Error", span.Tags[constants.AwsErrorKind].(string))
-	assert.Equal(t, "Get https://httpbin.org/get?foo=bar: http: Server closed", 
+	assert.Equal(t, "Get https://httpbin.org/get?foo=bar: http: Server closed",
 		span.Tags[constants.AwsErrorMessage].(string))
 	// Clear tracer
 	tp.Reset()
@@ -220,18 +220,18 @@ func TestHTTPHead(t *testing.T) {
 	// Get the span created for http call
 	span := tp.Recorder.GetSpans()[0]
 	// Test HTTP related fields of span
-	assert.NotNil(t, err)
 	assert.Nil(t, resp)
-	assert.Equal(t, constants.HTTPClassName, span.ClassName)
-	assert.Equal(t, constants.HTTPDomainName, span.DomainName)
-	assert.Equal(t, "httpbin.org", span.Tags[constants.HTTPHostTag].(string))
-	assert.Equal(t, http.MethodHead, span.Tags[constants.HTTPMethodTag].(string))
-	assert.Equal(t, "/head", span.Tags[constants.HTTPPathTag].(string))
-	assert.Equal(t, "foo=bar", span.Tags[constants.HTTPQueryParamsTag].(string))
-	assert.Equal(t, "httpbin.org/head", span.Tags[constants.HTTPURLTag].(string))
+	assert.NotNil(t, err)
+	assert.Equal(t, constants.ClassNames["HTTP"], span.ClassName)
+	assert.Equal(t, constants.DomainNames["API"], span.DomainName)
+	assert.Equal(t, "httpbin.org", span.Tags[constants.HTTPTags["HOST"]].(string))
+	assert.Equal(t, http.MethodHead, span.Tags[constants.HTTPTags["METHOD"]].(string))
+	assert.Equal(t, "/head", span.Tags[constants.HTTPTags["PATH"]].(string))
+	assert.Equal(t, "foo=bar", span.Tags[constants.HTTPTags["QUERY_PARAMS"]].(string))
+	assert.Equal(t, "httpbin.org/head", span.Tags[constants.HTTPTags["URL"]].(string))
 	assert.True(t, span.Tags[constants.AwsError].(bool))
 	assert.Equal(t, "Error", span.Tags[constants.AwsErrorKind].(string))
-	assert.Equal(t, "Head https://httpbin.org/head?foo=bar: http: Server closed", 
+	assert.Equal(t, "Head https://httpbin.org/head?foo=bar: http: Server closed",
 		span.Tags[constants.AwsErrorMessage].(string))
 	// Clear tracer
 	tp.Reset()
