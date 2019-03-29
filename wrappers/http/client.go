@@ -21,8 +21,8 @@ type ClientWrapper struct {
 }
 
 // Wrap wraps the given http.Client with ClientWrapper
-func Wrap(c http.Client) ClientWrapper {
-	return ClientWrapper{c}
+func Wrap(c http.Client) *ClientWrapper {
+	return &ClientWrapper{c}
 }
 
 // Do wraps the http.Client.Do and starts a new span for the http call
