@@ -314,7 +314,7 @@ func injectTriggerTagsForLambda(ctx context.Context) {
 
 	clientContext, ok := application.GetClientContext(ctx)
 	if ok {
-		operationName := clientContext.Custom[lambdaTriggerOperationName]
+		operationName := clientContext.Custom[constants.AwsLambdaTriggerOperationName]
 		operationNames := []string{operationName}
 		injectTriggerTagsToInvocation(domainName, className, operationNames)
 	}
@@ -360,7 +360,7 @@ func injectTriggerTagsFromInputType(ctx context.Context, payload json.RawMessage
 func injectTriggerTagsFromPayload(ctx context.Context, payload json.RawMessage) {
 	clientContext, ok := application.GetClientContext(ctx)
 	if ok {
-		if clientContext.Custom[lambdaTriggerOperationName] != "" {
+		if clientContext.Custom[constants.AwsLambdaTriggerOperationName] != "" {
 			injectTriggerTagsForLambda(ctx)
 			return
 		}

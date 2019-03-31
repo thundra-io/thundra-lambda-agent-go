@@ -32,7 +32,7 @@ func createMockLambdaTriggerContext() context.Context {
 	cc := lambdacontext.ClientContext{}
 	lc := &lambdacontext.LambdaContext{}
 	cc.Custom = map[string]string{
-		lambdaTriggerOperationName: "test-function",
+		constants.AwsLambdaTriggerOperationName: "test-function",
 	}
 	c := context.Background()
 	lc.ClientContext = cc
