@@ -1,12 +1,15 @@
 package thundraaws
 
 import (
+	"encoding/base64"
 	"encoding/json"
 
 	"github.com/thundra-io/thundra-lambda-agent-go/application"
 	"github.com/thundra-io/thundra-lambda-agent-go/constants"
 
+	"github.com/aws/aws-lambda-go/lambdacontext"
 	"github.com/aws/aws-sdk-go/aws/request"
+	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/thundra-io/thundra-lambda-agent-go/tracer"
 )
 
@@ -16,6 +19,7 @@ type lambdaParams struct {
 	Qualifier      string
 	InvocationType string
 	Payload        string
+	ClientContext  string
 }
 
 func (i *lambdaIntegration) getLambdaInfo(r *request.Request) *lambdaParams {
@@ -68,10 +72,47 @@ func (i *lambdaIntegration) beforeCall(r *request.Request, span *tracer.RawSpan)
 	}
 
 	span.Tags = tags
+	i.injectSpanIntoClientContext(r)
 }
 
 func (i *lambdaIntegration) afterCall(r *request.Request, span *tracer.RawSpan) {
 	return
+}
+
+func (i *lambdaIntegration) injectSpanIntoClientContext(r *request.Request) {
+
+	input, ok := r.Params.(*lambda.InvokeInput)
+
+	if !ok {
+		return
+	}
+	clientContext := &lambdacontext.ClientContext{}
+	if input.ClientContext != nil {
+		data, err := base64.StdEncoding.DecodeString(*input.ClientContext)
+		if err != nil {
+			return
+		}
+		if err = json.Unmarshal(data, clientContext); err != nil {
+			return
+		}
+	}
+	if clientContext.Custom != nil {
+		clientContext.Custom[constants.AwsLambdaTriggerOperationName] = application.ApplicationName
+		clientContext.Custom[constants.AwsLambdaTriggerDomainName] = application.ApplicationDomainName
+		clientContext.Custom[constants.AwsLambdaTriggerClassName] = application.ApplicationClassName
+	} else {
+		clientContext.Custom = map[string]string{
+			constants.AwsLambdaTriggerOperationName: application.ApplicationName,
+			constants.AwsLambdaTriggerDomainName:    application.ApplicationDomainName,
+			constants.AwsLambdaTriggerClassName:     application.ApplicationClassName,
+		}
+	}
+	clientContextJSON, err := json.Marshal(clientContext)
+	if err != nil {
+		return
+	}
+	encodedClientContextJSON := base64.StdEncoding.EncodeToString(clientContextJSON)
+	input.ClientContext = &encodedClientContextJSON
 }
 
 func init() {

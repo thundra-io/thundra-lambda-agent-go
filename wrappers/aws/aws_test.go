@@ -1,10 +1,12 @@
 package thundraaws
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"net/http"
 	"testing"
 
+	"github.com/aws/aws-lambda-go/lambdacontext"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
@@ -15,6 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/stretchr/testify/assert"
+	"github.com/thundra-io/thundra-lambda-agent-go/application"
 	"github.com/thundra-io/thundra-lambda-agent-go/constants"
 	"github.com/thundra-io/thundra-lambda-agent-go/trace"
 
@@ -42,6 +45,40 @@ var sess = Wrap(session.New(&aws.Config{
 	Region:     aws.String("us-west-2"),
 	MaxRetries: aws.Int(0),
 }))
+
+func getMockBase64EncodedClientContext() string {
+	cc := &lambdacontext.ClientContext{}
+	cc.Client.InstallationID = "testId"
+	cc.Custom = map[string]string{
+		"testKey": "testValue",
+	}
+	ccByte, _ := json.Marshal(cc)
+	return base64.StdEncoding.EncodeToString(ccByte)
+}
+
+func getBase64EncodedClientContext() string {
+	cc := &lambdacontext.ClientContext{}
+	cc.Custom = map[string]string{
+		constants.AwsLambdaTriggerOperationName: "test",
+		constants.AwsLambdaTriggerDomainName:    "API",
+		constants.AwsLambdaTriggerClassName:     "AWS-Lambda",
+	}
+	ccByte, _ := json.Marshal(cc)
+	return base64.StdEncoding.EncodeToString(ccByte)
+}
+
+func getBase64EncodedClientContextWithMockParam() string {
+	cc := &lambdacontext.ClientContext{}
+	cc.Client.InstallationID = "testId"
+	cc.Custom = map[string]string{
+		constants.AwsLambdaTriggerOperationName: "test",
+		constants.AwsLambdaTriggerDomainName:    "API",
+		constants.AwsLambdaTriggerClassName:     "AWS-Lambda",
+		"testKey":                               "testValue",
+	}
+	ccByte, _ := json.Marshal(cc)
+	return base64.StdEncoding.EncodeToString(ccByte)
+}
 
 func TestDynamoDBPutItem(t *testing.T) {
 	// Initilize trace plugin to set GlobalTracer of opentracing
@@ -320,6 +357,10 @@ func TestS3GetObject(t *testing.T) {
 }
 
 func TestLambdaInvoke(t *testing.T) {
+
+	// Set application name
+	application.ApplicationName = "test"
+
 	// Initilize trace plugin to set GlobalTracer of opentracing
 	tp := trace.New()
 	// Create a session and wrap it
@@ -354,6 +395,66 @@ func TestLambdaInvoke(t *testing.T) {
 		t.Errorf("Couldn't marshal lambda payload from span tags: %v", err)
 	}
 	assert.Equal(t, exp, got)
+
+	clientContextExp := getBase64EncodedClientContext()
+	clientContextGot := *input.ClientContext
+	if err != nil {
+		t.Errorf("Couldn't marshal lambda clientcontext: %v", err)
+	}
+	assert.Equal(t, clientContextExp, string(clientContextGot))
+
+	// Clear tracer
+	tp.Reset()
+}
+
+func TestLambdaInvokeWithClientContext(t *testing.T) {
+
+	// Set application name
+	application.ApplicationName = "test"
+
+	// Initilize trace plugin to set GlobalTracer of opentracing
+	tp := trace.New()
+	// Create a session and wrap it
+	lambdac := lambda.New(sess)
+	// Actual call
+	input := &lambda.InvokeInput{
+		FunctionName:   aws.String("a-lambda-function"),
+		Payload:        []byte("\"foobar\""),
+		InvocationType: aws.String("RequestResponse"),
+		Qualifier:      aws.String("function-qualifier"),
+		ClientContext:  aws.String(getMockBase64EncodedClientContext()),
+	}
+	lambdac.Invoke(input)
+	// Get the span created for dynamo call
+	span := tp.Recorder.GetSpans()[0]
+	// Test related fields
+	assert.Equal(t, constants.ClassNames["LAMBDA"], span.ClassName)
+	assert.Equal(t, constants.DomainNames["API"], span.DomainName)
+	assert.Equal(t, "a-lambda-function", span.Tags[constants.AwsLambdaTags["FUNCTION_NAME"]])
+	assert.Equal(t, "RequestResponse", span.Tags[constants.AwsLambdaTags["INVOCATION_TYPE"]])
+	assert.Equal(t, "function-qualifier", span.Tags[constants.AwsLambdaTags["FUNCTION_QUALIFIER"]])
+	assert.Equal(t, "CALL", span.Tags[constants.SpanTags["OPERATION_TYPE"]])
+	assert.Equal(t, "Invoke", span.Tags[constants.AwsSDKTags["REQUEST_NAME"]])
+	assert.Equal(t, true, span.Tags[constants.SpanTags["TOPOLOGY_VERTEX"]])
+	assert.Equal(t, constants.AwsLambdaApplicationDomain, span.Tags[constants.SpanTags["TRIGGER_DOMAIN_NAME"]])
+	assert.Equal(t, constants.AwsLambdaApplicationClass, span.Tags[constants.SpanTags["TRIGGER_CLASS_NAME"]])
+	exp, err := json.Marshal(input.Payload)
+	if err != nil {
+		t.Errorf("Couldn't marshal lambda payload: %v", err)
+	}
+	got, err := json.Marshal(span.Tags[constants.AwsLambdaTags["INVOCATION_PAYLOAD"]])
+	if err != nil {
+		t.Errorf("Couldn't marshal lambda payload from span tags: %v", err)
+	}
+	assert.Equal(t, exp, got)
+
+	clientContextExp := getBase64EncodedClientContextWithMockParam()
+	clientContextGot := *input.ClientContext
+	if err != nil {
+		t.Errorf("Couldn't marshal lambda clientcontext: %v", err)
+	}
+	assert.Equal(t, clientContextExp, string(clientContextGot))
+
 	// Clear tracer
 	tp.Reset()
 }
