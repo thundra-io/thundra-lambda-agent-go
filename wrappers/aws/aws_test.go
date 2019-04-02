@@ -357,7 +357,6 @@ func TestS3GetObject(t *testing.T) {
 }
 
 func TestLambdaInvoke(t *testing.T) {
-
 	// Set application name
 	application.ApplicationName = "test"
 
@@ -398,17 +397,13 @@ func TestLambdaInvoke(t *testing.T) {
 
 	clientContextExp := getBase64EncodedClientContext()
 	clientContextGot := *input.ClientContext
-	if err != nil {
-		t.Errorf("Couldn't marshal lambda clientcontext: %v", err)
-	}
-	assert.Equal(t, clientContextExp, string(clientContextGot))
 
+	assert.Equal(t, clientContextExp, string(clientContextGot))
 	// Clear tracer
 	tp.Reset()
 }
 
 func TestLambdaInvokeWithClientContext(t *testing.T) {
-
 	// Set application name
 	application.ApplicationName = "test"
 
@@ -450,11 +445,8 @@ func TestLambdaInvokeWithClientContext(t *testing.T) {
 
 	clientContextExp := getBase64EncodedClientContextWithMockParam()
 	clientContextGot := *input.ClientContext
-	if err != nil {
-		t.Errorf("Couldn't marshal lambda clientcontext: %v", err)
-	}
-	assert.Equal(t, clientContextExp, string(clientContextGot))
 
+	assert.Equal(t, clientContextExp, string(clientContextGot))
 	// Clear tracer
 	tp.Reset()
 }

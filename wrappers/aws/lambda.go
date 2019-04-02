@@ -80,7 +80,6 @@ func (i *lambdaIntegration) afterCall(r *request.Request, span *tracer.RawSpan) 
 }
 
 func (i *lambdaIntegration) injectSpanIntoClientContext(r *request.Request) {
-
 	input, ok := r.Params.(*lambda.InvokeInput)
 
 	if !ok {
@@ -96,21 +95,18 @@ func (i *lambdaIntegration) injectSpanIntoClientContext(r *request.Request) {
 			return
 		}
 	}
-	if clientContext.Custom != nil {
-		clientContext.Custom[constants.AwsLambdaTriggerOperationName] = application.ApplicationName
-		clientContext.Custom[constants.AwsLambdaTriggerDomainName] = application.ApplicationDomainName
-		clientContext.Custom[constants.AwsLambdaTriggerClassName] = application.ApplicationClassName
-	} else {
-		clientContext.Custom = map[string]string{
-			constants.AwsLambdaTriggerOperationName: application.ApplicationName,
-			constants.AwsLambdaTriggerDomainName:    application.ApplicationDomainName,
-			constants.AwsLambdaTriggerClassName:     application.ApplicationClassName,
-		}
+	if clientContext.Custom == nil {
+		clientContext.Custom = make(map[string]string, 3)
 	}
+	clientContext.Custom[constants.AwsLambdaTriggerOperationName] = application.ApplicationName
+	clientContext.Custom[constants.AwsLambdaTriggerDomainName] = application.ApplicationDomainName
+	clientContext.Custom[constants.AwsLambdaTriggerClassName] = application.ApplicationClassName
+	
 	clientContextJSON, err := json.Marshal(clientContext)
 	if err != nil {
 		return
 	}
+
 	encodedClientContextJSON := base64.StdEncoding.EncodeToString(clientContextJSON)
 	input.ClientContext = &encodedClientContextJSON
 }
