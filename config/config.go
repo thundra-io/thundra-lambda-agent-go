@@ -13,6 +13,7 @@ import (
 var ThundraDisabled bool
 var TraceDisabled bool
 var MetricDisabled bool
+var AwsIntegrationDisabled bool
 var LogDisabled bool
 var LogLevel string
 var TraceRequestDisabled bool
@@ -22,12 +23,14 @@ var WarmupEnabled bool
 var DebugEnabled bool
 var APIKey string
 var TrustAllCertificates bool
+var MaskDynamoDBStatement bool
 
 func init() {
 	ThundraDisabled = isThundraDisabled()
 	TraceDisabled = isTraceDisabled()
 	MetricDisabled = isMetricDisabled()
 	LogDisabled = isLogDisabled()
+	AwsIntegrationDisabled = isAwsIntegrationDisabled()
 	TraceRequestDisabled = isTraceRequestDisabled()
 	TraceResponseDisabled = isTraceResponseDisabled()
 	DebugEnabled = isThundraDebugEnabled()
@@ -36,6 +39,7 @@ func init() {
 	APIKey = determineAPIKey()
 	LogLevel = determineLogLevel()
 	TrustAllCertificates = trustAllCertificates()
+	MaskDynamoDBStatement = isDynamoDBStatementsMasked()
 }
 
 func isThundraDisabled() bool {
@@ -167,4 +171,28 @@ func isTraceResponseDisabled() bool {
 func determineLogLevel() string {
 	level := os.Getenv(constants.ThundraLogLogLevel)
 	return strings.ToUpper(level)
+}
+
+func isAwsIntegrationDisabled() bool {
+	env := os.Getenv(constants.ThundraDisableAwsIntegration)
+	disabled, err := strconv.ParseBool(env)
+	if err != nil {
+		if env != "" {
+			fmt.Println(err, constants.ThundraDisableAwsIntegration+" is not a bool value.")
+		}
+		return false
+	}
+	return disabled
+}
+
+func isDynamoDBStatementsMasked() bool {
+	env := os.Getenv(constants.ThundraMaskDynamoDBStatement)
+	masked, err := strconv.ParseBool(env)
+	if err != nil {
+		if env != "" {
+			fmt.Println(err, constants.ThundraMaskDynamoDBStatement+" is not a bool value.")
+		}
+		return false
+	}
+	return masked
 }

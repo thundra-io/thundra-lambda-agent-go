@@ -16,6 +16,7 @@ const ThundraDisableTraceResponse = "thundra_agent_lambda_trace_response_disable
 const ThundraApplicationStage = "thundra_agent_lambda_application_stage"
 const ThundraLogLogLevel = "thundra_log_logLevel"
 
+const ThundraDisableAwsIntegration = "thundra_agent_lambda_trace_integrations_aws_disable"
 
 const DefaultTimeoutMargin = 200
 const DefaultCollectorURL = "https://api.thundra.io/v1"
@@ -36,12 +37,4 @@ const ApplicationVersionProp = "thundra_agent_lambda_application_version"
 const ApplicationStageProp = "thundra_agent_lambda_application_stage"
 const ApplicationTagPrefixProp = "thundra_agent_lambda_application_tag_"
 
-const HTTPMethodTag = "http.method"
-const HTTPURLTag = "http.url"
-const HTTPPathTag = "http.path"
-const HTTPHostTag = "http.host"
-const HTTPStatusTag = "http.status_code"
-const HTTPQueryParamsTag = "http.query_params"
-
-const HTTPClassName = "HTTP"
-const HTTPDomainName = "API"
+const ThundraMaskDynamoDBStatement = "thundra_agent_lambda_trace_integrations_aws_dynamodb_statement_mask"

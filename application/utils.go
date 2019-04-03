@@ -11,6 +11,7 @@ import (
 )
 
 var ApplicationName string
+var FunctionName string
 var ApplicationID string
 var ApplicationDomainName string
 var ApplicationClassName string
@@ -31,6 +32,7 @@ func init() {
 	ApplicationVersion = getApplicationVersion()
 	ApplicationStage = getApplicationStage()
 	FunctionRegion = getFunctionRegion()
+	FunctionName = getFunctionName()
 	MemoryLimit = getMemoryLimit()
 	LogGroupName = getLogGroupName()
 	LogStreamName = getLogStreamName()
@@ -61,6 +63,11 @@ func getApplicationName() string {
 	if v != "" {
 		return v
 	}
+	return lambdacontext.FunctionName
+}
+
+// getFunctionName returns the lambda function's name
+func getFunctionName() string {
 	return lambdacontext.FunctionName
 }
 

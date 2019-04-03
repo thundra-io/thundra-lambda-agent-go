@@ -153,29 +153,12 @@ func TestTrace(t *testing.T) {
 			assert.True(t, td.FinishTimestamp <= invocationEndTime)
 			assert.True(t, int64(duration) <= td.Duration)
 
-			//Tags
-			assert.Equal(t, testCase.input, td.Tags[constants.AwsLambdaInvocationRequest])
-			assert.Equal(t, test.LogGroupName, td.Tags[constants.AwsLambdaLogGroupName])
-			assert.Equal(t, test.LogStreamName, td.Tags[constants.AwsLambdaLogStreamName])
-			assert.Equal(t, test.MemoryLimit, td.Tags[constants.AwsLambdaMemoryLimit])
-			assert.Equal(t, test.ApplicationName, td.Tags[constants.AwsLambdaName])
-			assert.Equal(t, test.Region, td.Tags[constants.AwsRegion])
-			assert.Equal(t, false, td.Tags[constants.AwsLambdaInvocationTimeout])
-			assert.Equal(t, coldStart, td.Tags[constants.AwsLambdaInvocationColdStart])
 
 			if testCase.expected.err != nil {
 				assert.Equal(t, testCase.expected.err, errVal)
-				assert.Equal(t, true, td.Tags[constants.AwsError])
-				assert.Equal(t, errorKind, td.Tags[constants.AwsErrorKind])
-				assert.Equal(t, errorMessage, td.Tags[constants.AwsErrorMessage])
 			} else {
 				assert.Equal(t, testCase.expected.val, response)
-				assert.Equal(t, testCase.expected.val, td.Tags[constants.AwsLambdaInvocationResponse])
 				assert.NoError(t, errVal)
-				assert.Nil(t, td.Tags[constants.AwsError])
-				assert.Nil(t, td.Tags[constants.AwsErrorKind])
-				assert.Nil(t, td.Tags[constants.AwsErrorMessage])
-				assert.Nil(t, td.Tags[constants.AwsErrorStack])
 			}
 
 			test.CleanEnvironment()
@@ -269,22 +252,6 @@ func TestPanic(t *testing.T) {
 					assert.True(t, td.FinishTimestamp <= invocationEndTime)
 					assert.True(t, int64(duration) <= td.Duration)
 
-					//Tags
-					assert.Equal(t, testCase.input, td.Tags[constants.AwsLambdaInvocationRequest])
-					assert.Equal(t, test.LogGroupName, td.Tags[constants.AwsLambdaLogGroupName])
-					assert.Equal(t, test.LogStreamName, td.Tags[constants.AwsLambdaLogStreamName])
-					assert.Equal(t, test.MemoryLimit, td.Tags[constants.AwsLambdaMemoryLimit])
-					assert.Equal(t, test.ApplicationName, td.Tags[constants.AwsLambdaName])
-					assert.Equal(t, test.Region, td.Tags[constants.AwsRegion])
-					assert.Equal(t, false, td.Tags[constants.AwsLambdaInvocationTimeout])
-					assert.Equal(t, coldStart, td.Tags[constants.AwsLambdaInvocationColdStart])
-
-					//Panic
-					assert.Equal(t, true, td.Tags[constants.AwsError])
-					assert.Equal(t, errorKind, td.Tags[constants.AwsErrorKind])
-					assert.Equal(t, panicMessage, td.Tags[constants.AwsErrorMessage])
-					assert.Nil(t, td.Tags[constants.AwsLambdaInvocationResponse])
-
 					test.CleanEnvironment()
 					coldStart = false
 				}
@@ -334,23 +301,19 @@ func TestTimeout(t *testing.T) {
 
 		f(ctx, []byte(testCase[0].input))
 
-		msg, err := getWrappedTraceData(r.MessageQueue)
+		msg, err := getRootSpanData(r.MessageQueue)
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
 
-		fmt.Println("Current message types in the stack:")
-		for _, m := range r.MessageQueue {
-			fmt.Println(m.Type)
-		}
 		//Trace Data
-		td, ok := msg.Data.(traceDataModel)
+		rsd, ok := msg.Data.(spanDataModel)
 		if !ok {
 			fmt.Println("Can not convert to trace data")
 		}
 
-		assert.Equal(t, true, td.Tags[constants.AwsLambdaInvocationTimeout])
+		assert.Equal(t, true, rsd.Tags[constants.AwsLambdaInvocationTimeout])
 	})
 
 }
@@ -362,6 +325,15 @@ func getWrappedTraceData(monitoringDataWrappers []plugin.MonitoringDataWrapper) 
 		}
 	}
 	return nil, errors.New("trace Data Wrapper is not found")
+}
+
+func getRootSpanData(monitoringDataWrappers []plugin.MonitoringDataWrapper) (*plugin.MonitoringDataWrapper, error) {
+	for _, m := range monitoringDataWrappers {
+		if m.Type == spanType {
+			return &m, nil
+		}
+	}
+	return nil, errors.New("Span Data Wrapper is not found")
 }
 
 type lambdaFunction func(context.Context, json.RawMessage) (interface{}, error)

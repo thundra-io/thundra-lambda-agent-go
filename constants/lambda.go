@@ -20,3 +20,7 @@ const AwsErrorMessage = "error.message"
 const AwsErrorStack = "error.stack"
 const AwsLambdaApplicationDomain = "API"
 const AwsLambdaApplicationClass = "AWS-Lambda"
+
+const AwsLambdaTriggerOperationName = "x-thundra-trigger-operation-name"
+const AwsLambdaTriggerDomainName = "x-thundra-trigger-domain-name"
+const AwsLambdaTriggerClassName = "x-thundra-trigger-class-name"
