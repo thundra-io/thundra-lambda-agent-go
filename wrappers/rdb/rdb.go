@@ -9,6 +9,7 @@ import (
 
 	"github.com/opentracing/opentracing-go"
 	"github.com/thundra-io/thundra-lambda-agent-go/tracer"
+	"github.com/thundra-io/thundra-lambda-agent-go/utils"
 )
 
 // DriverWrapper wraps sql driver.Driver
@@ -97,14 +98,17 @@ func (c *ConnWrapper) PrepareContext(ctx context.Context, query string) (stmt dr
 	return c.Prepare(query)
 }
 
+// Close closes connection in wrapper
 func (c *ConnWrapper) Close() error {
 	return c.Conn.Close()
 }
 
+// Begin starts and returns a new transaction
 func (c *ConnWrapper) Begin() (driver.Tx, error) {
 	return c.Conn.Begin()
 }
 
+// BeginTx starts and returns a new transaction with context and and TxOptions
 func (c *ConnWrapper) BeginTx(ctx context.Context, opts driver.TxOptions) (tx driver.Tx, err error) {
 	if connBeginTx, ok := c.Conn.(driver.ConnBeginTx); ok {
 		return connBeginTx.BeginTx(ctx, opts)
@@ -113,7 +117,8 @@ func (c *ConnWrapper) BeginTx(ctx context.Context, opts driver.TxOptions) (tx dr
 	return c.Conn.Begin()
 }
 
-func (c *ConnWrapper) Exec(query string, args []driver.Value) (driver.Result, error) {
+// Exec wraps the driver.execer.Exec and starts a new span.
+func (c *ConnWrapper) Exec(query string, args []driver.Value) (res driver.Result, err error) {
 	span, _ := opentracing.StartSpanFromContext(
 		emptyCtx,
 		c.integration.getOperationName(query),
@@ -127,21 +132,25 @@ func (c *ConnWrapper) Exec(query string, args []driver.Value) (driver.Result, er
 	}
 
 	if execer, ok := c.Conn.(driver.Execer); ok {
-		return execer.Exec(query, args)
+		res, err = execer.Exec(query, args)
+		if err != nil {
+			utils.SetSpanError(span, err)
+		}
+		return
 	}
 
 	return nil, driver.ErrSkip
 }
 
-func (c *ConnWrapper) ExecContext(ctx context.Context, query string, args []driver.NamedValue) (r driver.Result, err error) {
+// ExecContext wraps the driver.ExecerContext.ExecContext and starts a new span.
+// The newly created span will be a child of the span
+// whose context is is passed using the ctx parameter
+func (c *ConnWrapper) ExecContext(ctx context.Context, query string, args []driver.NamedValue) (res driver.Result, err error) {
 	span, ctxWithSpan := opentracing.StartSpanFromContext(
 		ctx,
 		c.integration.getOperationName(query),
 	)
 
-	if err != nil {
-		fmt.Println(err)
-	}
 	defer span.Finish()
 
 	rawSpan, ok := tracer.GetRaw(span)
@@ -150,7 +159,11 @@ func (c *ConnWrapper) ExecContext(ctx context.Context, query string, args []driv
 	}
 
 	if execContext, ok := c.Conn.(driver.ExecerContext); ok {
-		return execContext.ExecContext(ctxWithSpan, query, args)
+		res, err = execContext.ExecContext(ctxWithSpan, query, args)
+		if err != nil {
+			utils.SetSpanError(span, err)
+		}
+		return
 	}
 
 	dargs, err := namedValueToValue(args)
@@ -164,9 +177,14 @@ func (c *ConnWrapper) ExecContext(ctx context.Context, query string, args []driv
 		return nil, ctx.Err()
 	}
 
-	return c.Conn.(driver.Execer).Exec(query, dargs)
+	res, err = c.Conn.(driver.Execer).Exec(query, dargs)
+	if err != nil {
+		utils.SetSpanError(span, err)
+	}
+	return
 }
 
+// Ping wraps driver.Pinger.Ping
 func (c *ConnWrapper) Ping(ctx context.Context) (err error) {
 	if pinger, ok := c.Conn.(driver.Pinger); ok {
 		return pinger.Ping(ctx)
@@ -174,7 +192,8 @@ func (c *ConnWrapper) Ping(ctx context.Context) (err error) {
 	return nil
 }
 
-func (c *ConnWrapper) Query(query string, args []driver.Value) (driver.Rows, error) {
+// Query wraps the driver.Queryer.Query and starts a new span.
+func (c *ConnWrapper) Query(query string, args []driver.Value) (rows driver.Rows, err error) {
 	span, _ := opentracing.StartSpanFromContext(
 		emptyCtx,
 		c.integration.getOperationName(query),
@@ -187,12 +206,19 @@ func (c *ConnWrapper) Query(query string, args []driver.Value) (driver.Rows, err
 		c.integration.beforeCall(query, rawSpan, c.dsn)
 	}
 	if queryer, ok := c.Conn.(driver.Queryer); ok {
-		return queryer.Query(query, args)
+		rows, err = queryer.Query(query, args)
+		if err != nil {
+			utils.SetSpanError(span, err)
+		}
+		return
 	}
 
 	return nil, driver.ErrSkip
 }
 
+// QueryContext wraps the driver.Queryer.Query and starts a new span.
+// The newly created span will be a child of the span
+// whose context is is passed using the ctx parameter
 func (c *ConnWrapper) QueryContext(ctx context.Context, query string, args []driver.NamedValue) (rows driver.Rows, err error) {
 	span, ctxWithSpan := opentracing.StartSpanFromContext(
 		ctx,
@@ -207,7 +233,11 @@ func (c *ConnWrapper) QueryContext(ctx context.Context, query string, args []dri
 	}
 
 	if queryerContext, ok := c.Conn.(driver.QueryerContext); ok {
-		return queryerContext.QueryContext(ctxWithSpan, query, args)
+		res, err := queryerContext.QueryContext(ctxWithSpan, query, args)
+		if err != nil {
+			utils.SetSpanError(span, err)
+		}
+		return res, err
 	}
 
 	dargs, err := namedValueToValue(args)
@@ -221,17 +251,24 @@ func (c *ConnWrapper) QueryContext(ctx context.Context, query string, args []dri
 		return nil, ctx.Err()
 	}
 
-	return c.Query(query, dargs)
+	res, err := c.Query(query, dargs)
+	if err != nil {
+		utils.SetSpanError(span, err)
+	}
+	return res, err
 }
 
+// Close wraps driver.Stmt.Close
 func (s StmtWrapper) Close() (err error) {
 	return s.Stmt.Close()
 }
 
+// NumInput wraps driver.Stmt.NumInput
 func (s StmtWrapper) NumInput() int {
 	return s.Stmt.NumInput()
 }
 
+// Exec wraps the driver.Stmt.Exec and starts a new span.
 func (s StmtWrapper) Exec(args []driver.Value) (res driver.Result, err error) {
 	span, _ := opentracing.StartSpanFromContext(
 		s.ctx,
@@ -245,10 +282,17 @@ func (s StmtWrapper) Exec(args []driver.Value) (res driver.Result, err error) {
 		s.integration.beforeCall(s.query, rawSpan, s.dsn)
 	}
 
-	return s.Stmt.Exec(args)
+	res, err = s.Stmt.Exec(args)
+	if err != nil {
+		utils.SetSpanError(span, err)
+	}
+	return
 
 }
 
+// ExecContext wraps the driver.StmtExecContext.ExecContext and starts a new span.
+// The newly created span will be a child of the span
+// whose context is is passed using the ctx parameter
 func (s StmtWrapper) ExecContext(ctx context.Context, args []driver.NamedValue) (res driver.Result, err error) {
 	span, ctxWithSpan := opentracing.StartSpanFromContext(
 		ctx,
@@ -263,7 +307,11 @@ func (s StmtWrapper) ExecContext(ctx context.Context, args []driver.NamedValue) 
 	}
 
 	if stmtExecContext, ok := s.Stmt.(driver.StmtExecContext); ok {
-		return stmtExecContext.ExecContext(ctxWithSpan, args)
+		res, err = stmtExecContext.ExecContext(ctxWithSpan, args)
+		if err != nil {
+			utils.SetSpanError(span, err)
+		}
+		return
 	}
 
 	dargs, err := namedValueToValue(args)
@@ -277,9 +325,14 @@ func (s StmtWrapper) ExecContext(ctx context.Context, args []driver.NamedValue) 
 		return nil, ctx.Err()
 	}
 
-	return s.Stmt.Exec(dargs)
+	res, err = s.Stmt.Exec(dargs)
+	if err != nil {
+		utils.SetSpanError(span, err)
+	}
+	return
 }
 
+// Query wraps the driver.Stmt.Query and starts a new span.
 func (s StmtWrapper) Query(args []driver.Value) (rows driver.Rows, err error) {
 	span, _ := opentracing.StartSpanFromContext(
 		s.ctx,
@@ -293,9 +346,16 @@ func (s StmtWrapper) Query(args []driver.Value) (rows driver.Rows, err error) {
 		s.integration.beforeCall(s.query, rawSpan, s.dsn)
 	}
 
-	return s.Stmt.Query(args)
+	rows, err = s.Stmt.Query(args)
+	if err != nil {
+		utils.SetSpanError(span, err)
+	}
+	return
 }
 
+// QueryContext wraps the driver.StmtQueryContext.QueryContext and starts a new span.
+// The newly created span will be a child of the span
+// whose context is is passed using the ctx parameter
 func (s StmtWrapper) QueryContext(ctx context.Context, args []driver.NamedValue) (rows driver.Rows, err error) {
 	span, ctxWithSpan := opentracing.StartSpanFromContext(
 		ctx,
@@ -310,7 +370,8 @@ func (s StmtWrapper) QueryContext(ctx context.Context, args []driver.NamedValue)
 	}
 
 	if stmtQueryContext, ok := s.Stmt.(driver.StmtQueryContext); ok {
-		return stmtQueryContext.QueryContext(ctxWithSpan, args)
+		rows, err = stmtQueryContext.QueryContext(ctxWithSpan, args)
+		return
 	}
 
 	dargs, err := namedValueToValue(args)
@@ -324,7 +385,11 @@ func (s StmtWrapper) QueryContext(ctx context.Context, args []driver.NamedValue)
 		return nil, ctx.Err()
 	}
 
-	return s.Query(dargs)
+	rows, err = s.Query(dargs)
+	if err != nil {
+		utils.SetSpanError(span, err)
+	}
+	return
 }
 
 func namedValueToValue(named []driver.NamedValue) ([]driver.Value, error) {
