@@ -8,6 +8,7 @@ import (
 	"github.com/lib/pq"
 
 	"github.com/thundra-io/thundra-lambda-agent-go/application"
+	"github.com/thundra-io/thundra-lambda-agent-go/config"
 	"github.com/thundra-io/thundra-lambda-agent-go/constants"
 	"github.com/thundra-io/thundra-lambda-agent-go/tracer"
 )
@@ -48,11 +49,14 @@ func (i *postgresqlIntegration) beforeCall(query string, span *tracer.RawSpan, d
 		constants.SpanTags["TOPOLOGY_VERTEX"]:         true,
 		constants.DBTags["DB_STATEMENT_TYPE"]:         strings.ToUpper(operation),
 		constants.DBTags["DB_TYPE"]:                   "postgresql",
-		constants.DBTags["DB_STATEMENT"]:              query,
 		constants.DBTags["DB_STATEMENT_TYPE"]:         strings.ToUpper(operation),
 		constants.DBTags["DB_INSTANCE"]:               dbName,
 		constants.DBTags["DB_HOST"]:                   host,
 		constants.DBTags["DB_PORT"]:                   port,
+	}
+
+	if !config.MaskRDBStatement {
+		tags[constants.DBTags["DB_STATEMENT"]] = query
 	}
 
 	span.Tags = tags
