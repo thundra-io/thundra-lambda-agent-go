@@ -25,6 +25,10 @@ var APIKey string
 var TrustAllCertificates bool
 var MaskDynamoDBStatement bool
 
+var TraceKinesisRequestEnabled bool
+var TraceFirehoseRequestEnabled bool
+var TraceCloudwatchlogRequestEnabled bool
+
 func init() {
 	ThundraDisabled = isThundraDisabled()
 	TraceDisabled = isTraceDisabled()
@@ -40,6 +44,9 @@ func init() {
 	LogLevel = determineLogLevel()
 	TrustAllCertificates = trustAllCertificates()
 	MaskDynamoDBStatement = isDynamoDBStatementsMasked()
+	TraceKinesisRequestEnabled = isTraceKinesisRequestEnabled()
+	TraceFirehoseRequestEnabled = isTraceFirehoseRequestEnabled()
+	TraceCloudwatchlogRequestEnabled = isTraceCloudwatchlogRequestEnabled()
 }
 
 func isThundraDisabled() bool {
@@ -195,4 +202,40 @@ func isDynamoDBStatementsMasked() bool {
 		return false
 	}
 	return masked
+}
+
+func isTraceKinesisRequestEnabled() bool {
+	env := os.Getenv(constants.ThundraLambdaTraceKinesisRequestEnable)
+	enabled, err := strconv.ParseBool(env)
+	if err != nil {
+		if env != "" {
+			fmt.Println(err, constants.ThundraLambdaTraceKinesisRequestEnable+" is not a bool value.")
+		}
+		return false
+	}
+	return enabled
+}
+
+func isTraceFirehoseRequestEnabled() bool {
+	env := os.Getenv(constants.ThundraLambdaTraceFirehoseRequestEnable)
+	enabled, err := strconv.ParseBool(env)
+	if err != nil {
+		if env != "" {
+			fmt.Println(err, constants.ThundraLambdaTraceFirehoseRequestEnable+" is not a bool value.")
+		}
+		return false
+	}
+	return enabled
+}
+
+func isTraceCloudwatchlogRequestEnabled() bool {
+	env := os.Getenv(constants.ThundraLambdaTraceCloudwatchlogRequestEnable)
+	enabled, err := strconv.ParseBool(env)
+	if err != nil {
+		if env != "" {
+			fmt.Println(err, constants.ThundraLambdaTraceCloudwatchlogRequestEnable+" is not a bool value.")
+		}
+		return false
+	}
+	return enabled
 }

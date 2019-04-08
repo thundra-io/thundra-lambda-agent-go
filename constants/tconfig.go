@@ -38,3 +38,7 @@ const ApplicationStageProp = "thundra_agent_lambda_application_stage"
 const ApplicationTagPrefixProp = "thundra_agent_lambda_application_tag_"
 
 const ThundraMaskDynamoDBStatement = "thundra_agent_lambda_trace_integrations_aws_dynamodb_statement_mask"
+
+const ThundraLambdaTraceKinesisRequestEnable = "thundra_agent_lambda_trace_kinesis_request_enable"
+const ThundraLambdaTraceFirehoseRequestEnable = "thundra_agent_lambda_trace_firehose_request_enable"
+const ThundraLambdaTraceCloudwatchlogRequestEnable = "thundra_agent_lambda_trace_cloudwatchlog_request_enable"
