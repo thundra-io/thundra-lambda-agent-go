@@ -94,7 +94,19 @@ func (tr *tracePlugin) AfterExecution(ctx context.Context, request json.RawMessa
 	tr.RootSpan.SetTag(constants.AwsLambdaInvocationColdStart, invocationCount == 1)
 	tr.RootSpan.SetTag(constants.AwsLambdaInvocationTimeout, utils.IsTimeout(err))
 	tr.RootSpan.SetTag(constants.AwsLambdaInvocationRequestId, application.GetAwsRequestID(ctx))
-	tr.RootSpan.SetTag(constants.AwsLambdaInvocationRequest, request)
+
+	// Disable request data sending for cloudwatchlog, firehose and kinesis if not
+	// enabled by configuration because requests can get too big for these
+	enableRequestData := true
+	if (plugin.TriggerClassName == constants.ClassNames["KINESIS"] && !config.TraceKinesisRequestEnabled) ||
+		(plugin.TriggerClassName == constants.ClassNames["FIREHOSE"] && !config.TraceFirehoseRequestEnabled) ||
+		(plugin.TriggerClassName == constants.ClassNames["CLOUDWATCHLOG"] && !config.TraceCloudwatchlogRequestEnabled) {
+		enableRequestData = false
+	}
+	if enableRequestData {
+		tr.RootSpan.SetTag(constants.AwsLambdaInvocationRequest, request)
+	}
+
 	// TODO: Serialize response properly
 	tr.RootSpan.SetTag(constants.AwsLambdaInvocationResponse, response)
 

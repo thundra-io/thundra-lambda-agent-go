@@ -7,6 +7,11 @@ func SetTag(key string, value interface{}) {
 	invocationTags[key] = value
 }
 
+// GetTag returns invocation tag for key
+func GetTag(key string) interface{} {
+	return invocationTags[key]
+}
+
 // GetTags returns invocation tags
 func GetTags() map[string]interface{} {
 	return invocationTags
