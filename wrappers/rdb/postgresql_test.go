@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/lib/pq"
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/assert"
 )
 
 func setUpPostgresql(t *testing.T, dsn string) error {
@@ -17,7 +17,7 @@ func setUpPostgresql(t *testing.T, dsn string) error {
 	defer db.Close()
 
 	_, err = db.Exec("CREATE table IF NOT EXISTS test(id int, type text)")
-	require.NoError(t, err)
+	assert.NoError(t, err)
 	return nil
 }
 

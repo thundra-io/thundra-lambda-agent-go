@@ -60,7 +60,6 @@ var operationToType = map[string]string{
 func (d *DriverWrapper) Open(name string) (driver.Conn, error) {
 	conn, err := d.Driver.Open(name)
 	if err != nil {
-		fmt.Println(err)
 		return nil, err
 	}
 

@@ -4,8 +4,9 @@ import (
 	"database/sql"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/go-sql-driver/mysql"
-	"github.com/stretchr/testify/require"
 )
 
 func setUpMysql(t *testing.T, dsn string) error {
@@ -17,7 +18,7 @@ func setUpMysql(t *testing.T, dsn string) error {
 	defer db.Close()
 
 	_, err = db.Exec("CREATE table IF NOT EXISTS test(id int, type text)")
-	require.NoError(t, err)
+	assert.NoError(t, err)
 	return nil
 }
 
