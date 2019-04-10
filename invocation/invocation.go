@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 
 	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/thundra-io/thundra-lambda-agent-go/constants"
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 	"github.com/thundra-io/thundra-lambda-agent-go/utils"
 )
@@ -51,6 +52,13 @@ func (ip *invocationPlugin) BeforeExecution(ctx context.Context, request json.Ra
 	}
 
 	setInvocationTriggerTags(ctx, request)
+	if GetTag(constants.SpanTags["TRIGGER_CLASS_NAME"]) != nil {
+		triggerClassName, ok := GetTag(constants.SpanTags["TRIGGER_CLASS_NAME"]).(string)
+		if ok {
+			plugin.TriggerClassName = triggerClassName
+		}
+	}
+
 	return ctx
 }
 
