@@ -24,6 +24,7 @@
 #   go-tests = true
 #   unused-packages = true
 ignored = [
+  "github.com/lib/pq",
   "github.com/opentracing/*",
   "github.com/aws/aws-lambda-go/*",
   "github.com/aws/aws-sdk-go/*",
