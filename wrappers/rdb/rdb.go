@@ -4,10 +4,9 @@ import (
 	"context"
 	"database/sql/driver"
 	"errors"
-	"fmt"
 	"reflect"
 
-	"github.com/opentracing/opentracing-go"
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/thundra-io/thundra-lambda-agent-go/tracer"
 	"github.com/thundra-io/thundra-lambda-agent-go/utils"
 )
