@@ -216,6 +216,7 @@ func isRDBStatementsMasked() bool {
 		return false
 	}
 	return masked
+}
 
 func isTraceKinesisRequestEnabled() bool {
 	env := os.Getenv(constants.ThundraLambdaTraceKinesisRequestEnable)
