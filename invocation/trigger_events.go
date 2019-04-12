@@ -2,8 +2,12 @@ package invocation
 
 import (
 	"context"
+	"crypto/md5"
+	"encoding/hex"
 	"encoding/json"
 	"reflect"
+	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
@@ -71,19 +75,104 @@ func injectTriggerTagsForDynamoDB(payload json.RawMessage) {
 	domainName := constants.DomainNames["DB"]
 	className := constants.ClassNames["DYNAMODB"]
 	tableNamesMap := make(map[string]struct{})
+	var traceLinks []string
 	for _, record := range e.Records {
 		tableName := ""
 		if len(strings.Split(record.EventSourceArn, "/")) > 1 {
 			tableName = strings.Split(record.EventSourceArn, "/")[1]
 		}
 		tableNamesMap[tableName] = void
+
+		traceLinkFound := false
+		if record.EventName == "INSERT" || record.EventName == "MODIFY" {
+			if record.Change.NewImage != nil {
+				if record.Change.NewImage["x-thundra-span-id"].DataType() == events.DataTypeString {
+					traceLinks = append(traceLinks, "SAVE:"+record.Change.NewImage["x-thundra-span-id"].String())
+					traceLinkFound = true
+				}
+			}
+		} else if record.EventName == "REMOVE" {
+			if record.Change.OldImage != nil {
+				if record.Change.OldImage["x-thundra-span-id"].DataType() == events.DataTypeString {
+					spanID := record.Change.OldImage["x-thundra-span-id"].String()
+					traceLinks = append(traceLinks, "DELETE:"+spanID)
+					traceLinkFound = true
+				}
+			}
+		}
+		if !traceLinkFound {
+			creationTime := record.Change.ApproximateCreationDateTime
+			if creationTime != (events.SecondsEpochTime{}) {
+				if record.EventName == "INSERT" {
+					if record.Change.NewImage != nil {
+						attributeStr := attributesToStr(record.Change.NewImage)
+						addDynamoDBTraceLinks(&traceLinks, &record, "PUT", tableName, attributeStr)
+					}
+				} else if record.EventName == "MODIFY" {
+					if record.Change.NewImage != nil {
+						attributeStr := attributesToStr(record.Change.NewImage)
+						addDynamoDBTraceLinks(&traceLinks, &record, "PUT", tableName, attributeStr)
+					}
+					if record.Change.Keys != nil {
+						attributeStr := attributesToStr(record.Change.Keys)
+						addDynamoDBTraceLinks(&traceLinks, &record, "UPDATE", tableName, attributeStr)
+					}
+				} else if record.EventName == "REMOVE" {
+					if record.Change.Keys != nil {
+						attributeStr := attributesToStr(record.Change.Keys)
+						addDynamoDBTraceLinks(&traceLinks, &record, "DELETE", tableName, attributeStr)
+					}
+				}
+			}
+		}
 	}
 
+	AddIncomingTraceLinks(traceLinks)
 	var tableNames []string
 	for k := range tableNamesMap {
 		tableNames = append(tableNames, k)
 	}
 	injectTriggerTagsToInvocation(domainName, className, tableNames)
+}
+
+func addDynamoDBTraceLinks(traceLinks *[]string, record *events.DynamoDBEventRecord, operationType string, tableName string, attributesStr string) {
+	creationTime := record.Change.ApproximateCreationDateTime.Unix() - 1
+	region := record.AWSRegion
+
+	b := md5.Sum([]byte(attributesStr))
+	dataMD5 := hex.EncodeToString(b[:])
+
+	for j := 0; j < 3; j++ {
+		*traceLinks = append(*traceLinks, region+":"+tableName+":"+strconv.FormatInt(creationTime+int64(j), 10)+":"+operationType+":"+dataMD5)
+	}
+}
+
+func attributesToStr(attr map[string]events.DynamoDBAttributeValue) string {
+	var keys []string
+	for k := range attr {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	attributesStr := ""
+	first := true
+	for _, key := range keys {
+		dynamoAttrValue := attr[key]
+
+		valueStr, err := utils.AttributeValuetoStr(dynamoAttrValue)
+		if err == nil {
+			if !first {
+				attributesStr += ", "
+
+			} else {
+				first = false
+			}
+			attributesStr += key + "="
+			attributesStr += valueStr
+		}
+
+	}
+	return attributesStr
 }
 
 func injectTriggerTagsForKinesis(payload json.RawMessage) {
@@ -96,6 +185,8 @@ func injectTriggerTagsForKinesis(payload json.RawMessage) {
 	domainName := constants.DomainNames["STREAM"]
 	className := constants.ClassNames["KINESIS"]
 	streamNamesMap := make(map[string]struct{})
+
+	var links []string
 	for _, record := range e.Records {
 		streamName := ""
 		i := strings.Index(record.EventSourceArn, "/")
@@ -103,12 +194,16 @@ func injectTriggerTagsForKinesis(payload json.RawMessage) {
 			streamName = record.EventSourceArn[i+1:]
 		}
 		streamNamesMap[streamName] = void
+		link := record.AwsRegion + ":" + streamName + ":" + record.EventID
+		links = append(links, link)
 	}
 
 	var streamNames []string
 	for k := range streamNamesMap {
 		streamNames = append(streamNames, k)
 	}
+
+	AddIncomingTraceLinks(links)
 	injectTriggerTagsToInvocation(domainName, className, streamNames)
 }
 
@@ -123,12 +218,29 @@ func injectTriggerTagsForKinesisFirehose(payload json.RawMessage) {
 	className := constants.ClassNames["FIREHOSE"]
 	streamName := ""
 	i := strings.Index(e.DeliveryStreamArn, "/")
+
+	var traceLinks []string
 	if i != -1 && (i+1) < len(e.DeliveryStreamArn) {
 		streamName = e.DeliveryStreamArn[i+1:]
-	}
 
+		for _, record := range e.Records {
+			if record.ApproximateArrivalTimestamp != (events.MilliSecondsEpochTime{}) {
+				timestamp := record.ApproximateArrivalTimestamp.Unix()
+				b := md5.Sum(record.Data)
+				dataMD5 := hex.EncodeToString(b[:])
+				addFirehoseLink(&traceLinks, e.Region, dataMD5, timestamp, streamName)
+			}
+		}
+	}
+	AddIncomingTraceLinks(traceLinks)
 	var streamNames = []string{streamName}
 	injectTriggerTagsToInvocation(domainName, className, streamNames)
+}
+
+func addFirehoseLink(traceLinks *[]string, region string, dataMD5 string, timestamp int64, streamName string) {
+	for j := 0; j < 3; j++ {
+		*traceLinks = append(*traceLinks, region+":"+streamName+":"+strconv.FormatInt(timestamp+int64(j), 10)+":"+dataMD5)
+	}
 }
 
 func injectTriggerTagsForSNS(payload json.RawMessage) {
@@ -141,11 +253,15 @@ func injectTriggerTagsForSNS(payload json.RawMessage) {
 	domainName := constants.DomainNames["MESSAGING"]
 	className := constants.ClassNames["SNS"]
 	streamNamesMap := make(map[string]struct{})
+	var traceLinks []string
 
 	for _, record := range e.Records {
 		topicSlice := strings.Split(record.SNS.TopicArn, ":")
 		topicName := topicSlice[len(topicSlice)-1]
 		streamNamesMap[topicName] = void
+		if record.SNS.MessageID != "" {
+			traceLinks = append(traceLinks, record.SNS.MessageID)
+		}
 	}
 
 	var topicNames []string
@@ -153,6 +269,7 @@ func injectTriggerTagsForSNS(payload json.RawMessage) {
 		topicNames = append(topicNames, k)
 	}
 
+	AddIncomingTraceLinks(traceLinks)
 	injectTriggerTagsToInvocation(domainName, className, topicNames)
 }
 
@@ -166,10 +283,15 @@ func injectTriggerTagsForSQS(payload json.RawMessage) {
 	domainName := constants.DomainNames["MESSAGING"]
 	className := constants.ClassNames["SQS"]
 	queueNamesMap := make(map[string]struct{})
+	var traceLinks []string
+
 	for _, record := range e.Records {
 		queueSlice := strings.Split(record.EventSourceARN, ":")
 		topicName := queueSlice[len(queueSlice)-1]
 		queueNamesMap[topicName] = void
+		if record.MessageId != "" {
+			traceLinks = append(traceLinks, record.MessageId)
+		}
 	}
 
 	var queueNames []string
@@ -177,6 +299,7 @@ func injectTriggerTagsForSQS(payload json.RawMessage) {
 		queueNames = append(queueNames, k)
 	}
 
+	AddIncomingTraceLinks(traceLinks)
 	injectTriggerTagsToInvocation(domainName, className, queueNames)
 }
 
@@ -190,9 +313,15 @@ func injectTriggerTagsForS3(payload json.RawMessage) {
 	domainName := constants.DomainNames["STORAGE"]
 	className := constants.ClassNames["S3"]
 	bucketNamesMap := make(map[string]struct{})
+	var traceLinks []string
+
 	for _, record := range e.Records {
 		bucketName := record.S3.Bucket.Name
 		bucketNamesMap[bucketName] = void
+		link := record.ResponseElements["x-amz-request-id"]
+		if link != "" {
+			traceLinks = append(traceLinks, link)
+		}
 	}
 
 	var bucketNames []string
@@ -200,6 +329,7 @@ func injectTriggerTagsForS3(payload json.RawMessage) {
 		bucketNames = append(bucketNames, k)
 	}
 
+	AddIncomingTraceLinks(traceLinks)
 	injectTriggerTagsToInvocation(domainName, className, bucketNames)
 }
 
@@ -262,6 +392,13 @@ func injectTriggerTagsForAPIGatewayProxy(payload json.RawMessage) {
 	}
 	var operationNames = []string{path}
 
+	if e.Headers != nil {
+		spanID := e.Headers["x-thundra-span-id"]
+		if spanID != "" {
+			AddIncomingTraceLinks([]string{spanID})
+		}
+	}
+
 	injectTriggerTagsToInvocation(domainName, className, operationNames)
 }
 
@@ -317,6 +454,10 @@ func injectTriggerTagsForLambda(ctx context.Context) {
 		operationName := clientContext.Custom[constants.AwsLambdaTriggerOperationName]
 		operationNames := []string{operationName}
 		injectTriggerTagsToInvocation(domainName, className, operationNames)
+	}
+	awsRequestID := application.GetAwsRequestID(ctx)
+	if awsRequestID != "" {
+		AddIncomingTraceLinks([]string{awsRequestID})
 	}
 }
 

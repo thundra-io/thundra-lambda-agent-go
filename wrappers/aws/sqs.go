@@ -2,10 +2,12 @@ package thundraaws
 
 import (
 	"encoding/json"
+	"reflect"
 	"strings"
 
 	"github.com/thundra-io/thundra-lambda-agent-go/application"
 	"github.com/thundra-io/thundra-lambda-agent-go/constants"
+	"github.com/thundra-io/thundra-lambda-agent-go/utils"
 
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/thundra-io/thundra-lambda-agent-go/tracer"
@@ -63,7 +65,30 @@ func (i *sqsIntegration) beforeCall(r *request.Request, span *tracer.RawSpan) {
 }
 
 func (i *sqsIntegration) afterCall(r *request.Request, span *tracer.RawSpan) {
-	return
+	responseValue := reflect.ValueOf(r.Data).Elem()
+	links := i.getTraceLinks(r.Operation.Name, &responseValue)
+	if links != nil {
+		span.Tags[constants.SpanTags["TRACE_LINKS"]] = links
+	}
+}
+
+func (i *sqsIntegration) getTraceLinks(operationName string, responseValue *reflect.Value) []string {
+	if operationName == "SendMessage" {
+		messageID, _ := utils.GetStringFieldFromValue(*responseValue, "MessageId")
+		return []string{messageID}
+
+	} else if operationName == "SendMessageBatch" {
+		successful := responseValue.FieldByName("Successful")
+		if successful != (reflect.Value{}) && successful.Len() > 0 {
+			var links []string
+			for i := 0; i < successful.Len(); i++ {
+				messageID, _ := utils.GetStringFieldFromValue(successful.Index(i).Elem(), "MessageId")
+				links = append(links, messageID)
+			}
+			return links
+		}
+	}
+	return nil
 }
 
 func init() {

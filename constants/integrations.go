@@ -72,6 +72,7 @@ var SpanTags = map[string]string{
 	"TRIGGER_CLASS_NAME":      "trigger.className",
 	"TRIGGER_OPERATION_NAMES": "trigger.operationNames",
 	"TOPOLOGY_VERTEX":         "topology.vertex",
+	"TRACE_LINKS":             "trace.links",
 }
 
 var DBTags = map[string]string{

@@ -86,6 +86,7 @@ func (ip *invocationPlugin) AfterExecution(ctx context.Context, request json.Raw
 
 func (ip *invocationPlugin) Reset() {
 	ClearTags()
+	clearTraceLinks()
 }
 
 // isColdStarted returns if the lambda instance is cold started. Cold Start only happens on the first invocationPlugin.

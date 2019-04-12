@@ -76,7 +76,10 @@ func (i *lambdaIntegration) beforeCall(r *request.Request, span *tracer.RawSpan)
 }
 
 func (i *lambdaIntegration) afterCall(r *request.Request, span *tracer.RawSpan) {
-	return
+	xAmzRequestID := r.HTTPResponse.Header.Get("X-Amzn-Requestid")
+	if xAmzRequestID != "" {
+		span.Tags[constants.SpanTags["TRACE_LINKS"]] = []string{xAmzRequestID}
+	}
 }
 
 func (i *lambdaIntegration) injectSpanIntoClientContext(r *request.Request) {
@@ -101,7 +104,7 @@ func (i *lambdaIntegration) injectSpanIntoClientContext(r *request.Request) {
 	clientContext.Custom[constants.AwsLambdaTriggerOperationName] = application.ApplicationName
 	clientContext.Custom[constants.AwsLambdaTriggerDomainName] = application.ApplicationDomainName
 	clientContext.Custom[constants.AwsLambdaTriggerClassName] = application.ApplicationClassName
-	
+
 	clientContextJSON, err := json.Marshal(clientContext)
 	if err != nil {
 		return

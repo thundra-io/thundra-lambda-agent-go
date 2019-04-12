@@ -3,6 +3,7 @@ package trace
 import (
 	"context"
 	"encoding/json"
+	"sync"
 
 	"github.com/thundra-io/thundra-lambda-agent-go/config"
 
@@ -35,6 +36,9 @@ type Data struct {
 
 var invocationCount uint32
 
+var lock = &sync.Mutex{}
+var instance *tracePlugin
+
 // New returns a new trace object.
 func New() *tracePlugin {
 	recorder := tracer.NewInMemoryRecorder()
@@ -44,6 +48,18 @@ func New() *tracePlugin {
 	return &tracePlugin{
 		Recorder: recorder,
 	}
+}
+
+// GetInstance returns the tracePlugin instance existing or creates
+// a new instance and then returns it
+func GetInstance() *tracePlugin {
+	lock.Lock()
+	defer lock.Unlock()
+
+	if instance == nil {
+		instance = New()
+	}
+	return instance
 }
 
 func (tr *tracePlugin) IsEnabled() bool {

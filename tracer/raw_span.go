@@ -44,3 +44,8 @@ func (s *RawSpan) GetTags() ot.Tags {
 
 	return ft
 }
+
+// GetTag returns the value for key
+func (s *RawSpan) GetTag(key string) interface{} {
+	return s.Tags[key]
+}
