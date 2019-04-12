@@ -104,8 +104,15 @@ func (i *dynamodbIntegration) afterCall(r *request.Request, span *tracer.RawSpan
 
 func (i *dynamodbIntegration) getTraceLinks(r *request.Request, span *tracer.RawSpan) []string {
 
-	region := *r.Config.Region
-	dateStr := r.HTTPResponse.Header.Get("date")
+	region := ""
+	dateStr := ""
+
+	if r.Config.Region != nil {
+		region = *r.Config.Region
+	}
+	if r.HTTPResponse != nil && r.HTTPResponse.Header != nil {
+		dateStr = r.HTTPResponse.Header.Get("date")
+	}
 	dynamodbInfo := i.getDynamodbInfo(r)
 
 	params := reflect.ValueOf(&r.Params).Elem().Interface()
@@ -191,7 +198,11 @@ func (i *dynamodbIntegration) generateTraceLinks(region string, dateStr string, 
 }
 
 func (i *dynamodbIntegration) injectTraceLinkOnPut(r *request.Request, span *tracer.RawSpan) {
-	params := reflect.ValueOf(&r.Params).Elem().Interface()
+	paramsValue := reflect.ValueOf(&r.Params)
+	if paramsValue == (reflect.Value{}) {
+		return
+	}
+	params := paramsValue.Elem().Interface()
 	switch v := params.(type) {
 	case *dynamodb.PutItemInput:
 		thundraSpanAttr := &dynamodb.AttributeValue{
@@ -203,7 +214,11 @@ func (i *dynamodbIntegration) injectTraceLinkOnPut(r *request.Request, span *tra
 }
 
 func (i *dynamodbIntegration) injectTraceLinkOnDelete(r *request.Request, span *tracer.RawSpan) {
-	params := reflect.ValueOf(&r.Params).Elem().Interface()
+	paramsValue := reflect.ValueOf(&r.Params)
+	if paramsValue == (reflect.Value{}) {
+		return
+	}
+	params := paramsValue.Elem().Interface()
 	switch v := params.(type) {
 	case *dynamodb.DeleteItemInput:
 		v.ReturnValues = aws.String("ALL_OLD")
@@ -211,7 +226,11 @@ func (i *dynamodbIntegration) injectTraceLinkOnDelete(r *request.Request, span *
 }
 
 func (i *dynamodbIntegration) injectTraceLinkOnUpdate(r *request.Request, span *tracer.RawSpan) {
-	params := reflect.ValueOf(&r.Params).Elem().Interface()
+	paramsValue := reflect.ValueOf(&r.Params)
+	if paramsValue == (reflect.Value{}) {
+		return
+	}
+	params := paramsValue.Elem().Interface()
 	thundraSpanAttr := &dynamodb.AttributeValue{
 		S: aws.String(span.Context.SpanID),
 	}
@@ -223,7 +242,7 @@ func (i *dynamodbIntegration) injectTraceLinkOnUpdate(r *request.Request, span *
 			v.AttributeUpdates["x-thundra-span-id"] = &attributeUpdate
 			span.Tags[constants.SpanTags["TRACE_LINKS"]] = []string{"SAVE:" + span.Context.SpanID}
 
-		} else if v.ExpressionAttributeValues != nil {
+		} else if v.UpdateExpression != nil {
 			if v.ExpressionAttributeNames != nil {
 				v.ExpressionAttributeNames["#xThundraSpanId"] = aws.String("x-thundra-span-id")
 			} else {
@@ -239,18 +258,14 @@ func (i *dynamodbIntegration) injectTraceLinkOnUpdate(r *request.Request, span *
 					":xThundraSpanId": thundraSpanAttr,
 				}
 			}
-			if v.UpdateExpression != nil {
-				if strings.Index((*v.UpdateExpression), "SET") == -1 {
-					v.SetUpdateExpression("SET #xThundraSpanId = :xThundraSpanId " + *v.UpdateExpression)
+			if strings.Index((*v.UpdateExpression), "SET") == -1 {
+				v.SetUpdateExpression("SET #xThundraSpanId = :xThundraSpanId " + *v.UpdateExpression)
 
-				} else {
-					pattern := regexp.MustCompile("SET (.)")
-					repl := "SET #xThundraSpanId = :xThundraSpanId, ${1}$2"
-					output := pattern.ReplaceAllString(*v.UpdateExpression, repl)
-					v.SetUpdateExpression(output)
-				}
 			} else {
-				v.SetUpdateExpression("SET #xThundraSpanId = :xThundraSpanId")
+				pattern := regexp.MustCompile("SET (.)")
+				repl := "SET #xThundraSpanId = :xThundraSpanId, ${1}$2"
+				output := pattern.ReplaceAllString(*v.UpdateExpression, repl)
+				v.SetUpdateExpression(output)
 			}
 			span.Tags[constants.SpanTags["TRACE_LINKS"]] = []string{"SAVE:" + span.Context.SpanID}
 		}

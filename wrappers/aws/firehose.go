@@ -63,9 +63,8 @@ func (i *firehoseIntegration) beforeCall(r *request.Request, span *tracer.RawSpa
 }
 
 func (i *firehoseIntegration) afterCall(r *request.Request, span *tracer.RawSpan) {
-	requestValue := reflect.ValueOf(r.Params).Elem()
-	streamName := i.getDeliveryStreamName(r)
-	traceLinks := i.getTraceLinks(r.Operation.Name, *r.Config.Region, requestValue, r.HTTPResponse.Header.Get("date"), streamName)
+
+	traceLinks := i.getTraceLinks(r.Operation.Name, r)
 	if traceLinks != nil {
 		span.Tags[constants.SpanTags["TRACE_LINKS"]] = traceLinks
 	}
@@ -80,14 +79,32 @@ func getTimeStamp(dateStr string) int64 {
 	return timestamp
 }
 
-func (i *firehoseIntegration) getTraceLinks(operationName string, region string, requestValue reflect.Value, dateStr string, streamName string) []string {
+func (i *firehoseIntegration) getTraceLinks(operationName string, r *request.Request) []string {
+	requestValue := reflect.ValueOf(r.Params)
+	if requestValue == (reflect.Value{}) {
+		return nil
+	}
+
+	streamName := i.getDeliveryStreamName(r)
+	region := ""
+	dateStr := ""
+
+	if r.Config.Region != nil {
+		region = *r.Config.Region
+	}
+	if r.HTTPResponse != nil && r.HTTPResponse.Header != nil {
+		dateStr = r.HTTPResponse.Header.Get("date")
+	}
+
 	if operationName == "PutRecord" {
-		if recordInput, ok := requestValue.Interface().(firehose.PutRecordInput); ok {
-			data := recordInput.Record.Data
-			return i.generateTraceLinks(region, dateStr, data, streamName)
+		if recordInput, ok := requestValue.Elem().Interface().(firehose.PutRecordInput); ok {
+			if recordInput.Record != nil {
+				data := recordInput.Record.Data
+				return i.generateTraceLinks(region, dateStr, data, streamName)
+			}
 		}
 	} else if operationName == "PutRecordBatch" {
-		records := requestValue.FieldByName("Records")
+		records := requestValue.Elem().FieldByName("Records")
 		if records != (reflect.Value{}) {
 			var links []string
 			for j := 0; j < records.Len(); j++ {

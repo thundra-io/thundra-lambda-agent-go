@@ -65,25 +65,32 @@ func (i *sqsIntegration) beforeCall(r *request.Request, span *tracer.RawSpan) {
 }
 
 func (i *sqsIntegration) afterCall(r *request.Request, span *tracer.RawSpan) {
-	responseValue := reflect.ValueOf(r.Data).Elem()
-	links := i.getTraceLinks(r.Operation.Name, &responseValue)
+	links := i.getTraceLinks(r)
 	if links != nil {
 		span.Tags[constants.SpanTags["TRACE_LINKS"]] = links
 	}
 }
 
-func (i *sqsIntegration) getTraceLinks(operationName string, responseValue *reflect.Value) []string {
+func (i *sqsIntegration) getTraceLinks(r *request.Request) []string {
+	responseValue := reflect.ValueOf(r.Data)
+	if responseValue == (reflect.Value{}) {
+		return nil
+	}
+	responseValueElem := responseValue.Elem()
+	operationName := r.Operation.Name
 	if operationName == "SendMessage" {
-		messageID, _ := utils.GetStringFieldFromValue(*responseValue, "MessageId")
-		return []string{messageID}
+		if messageID, ok := utils.GetStringFieldFromValue(responseValueElem, "MessageId"); ok {
+			return []string{messageID}
+		}
 
 	} else if operationName == "SendMessageBatch" {
-		successful := responseValue.FieldByName("Successful")
+		successful := responseValueElem.FieldByName("Successful")
 		if successful != (reflect.Value{}) && successful.Len() > 0 {
 			var links []string
 			for i := 0; i < successful.Len(); i++ {
-				messageID, _ := utils.GetStringFieldFromValue(successful.Index(i).Elem(), "MessageId")
-				links = append(links, messageID)
+				if messageID, ok := utils.GetStringFieldFromValue(successful.Index(i).Elem(), "MessageId"); ok {
+					links = append(links, messageID)
+				}
 			}
 			return links
 		}

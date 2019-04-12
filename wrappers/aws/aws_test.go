@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws/request"
+
 	"github.com/aws/aws-lambda-go/lambdacontext"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
@@ -18,6 +20,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/stretchr/testify/assert"
 	"github.com/thundra-io/thundra-lambda-agent-go/application"
+	"github.com/thundra-io/thundra-lambda-agent-go/config"
 	"github.com/thundra-io/thundra-lambda-agent-go/constants"
 	"github.com/thundra-io/thundra-lambda-agent-go/trace"
 
@@ -83,6 +86,13 @@ func getBase64EncodedClientContextWithMockParam() string {
 func TestDynamoDBPutItem(t *testing.T) {
 	// Initilize trace plugin to set GlobalTracer of opentracing
 	tp := trace.New()
+
+	sess.Handlers.CompleteAttempt.Clear()
+	sess.Handlers.CompleteAttempt.PushBack(func(r *request.Request) {
+		r.HTTPResponse.Header = http.Header{}
+		r.HTTPResponse.Header.Set("date", "Thu, 10 Apr 2019 16:00:00 GMT")
+	})
+
 	// Create a session and wrap it
 	dynamoc := dynamodb.New(sess)
 	// Actual call
@@ -124,6 +134,365 @@ func TestDynamoDBPutItem(t *testing.T) {
 		t.Errorf("Couldn't marshal db_statement tag in the span")
 	}
 	assert.Equal(t, exp, got)
+
+	expectedTraceLinks := []string{
+		"us-west-2:Music:1554912000:PUT:cd2ecd1787d28c7d589601c6456b2e55",
+		"us-west-2:Music:1554912001:PUT:cd2ecd1787d28c7d589601c6456b2e55",
+		"us-west-2:Music:1554912002:PUT:cd2ecd1787d28c7d589601c6456b2e55",
+	}
+
+	assert.Equal(t, expectedTraceLinks, span.Tags[constants.SpanTags["TRACE_LINKS"]])
+
+	// Clear tracer
+	tp.Reset()
+}
+
+func TestDynamoDBUpdateItem(t *testing.T) {
+	// Initilize trace plugin to set GlobalTracer of opentracing
+	tp := trace.New()
+
+	sess.Handlers.CompleteAttempt.Clear()
+	sess.Handlers.CompleteAttempt.PushBack(func(r *request.Request) {
+		r.HTTPResponse.Header = http.Header{}
+		r.HTTPResponse.Header.Set("date", "Thu, 10 Apr 2019 16:00:00 GMT")
+	})
+
+	// Create a session and wrap it
+	dynamoc := dynamodb.New(sess)
+
+	input := &dynamodb.UpdateItemInput{
+		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
+			":r": {
+				S: aws.String("test"),
+			},
+		},
+		TableName: aws.String("Music"),
+		Key: map[string]*dynamodb.AttributeValue{
+			"id": {
+				S: aws.String("keyid"),
+			},
+		},
+		ReturnValues:     aws.String("UPDATED_NEW"),
+		UpdateExpression: aws.String("SET message = :r"),
+	}
+	exp, err := json.Marshal(input.Key)
+	if err != nil {
+		t.Errorf("Couldn't marshal dynamodb input: %v", err)
+	}
+
+	// Actual call
+	dynamoc.UpdateItem(input)
+
+	// Get the span created for dynamo call
+	span := tp.Recorder.GetSpans()[0]
+	// Test related fields
+	assert.Equal(t, constants.ClassNames["DYNAMODB"], span.ClassName)
+	assert.Equal(t, constants.DomainNames["DB"], span.DomainName)
+	assert.Equal(t, constants.DynamoDBRequestTypes["UpdateItem"], span.Tags[constants.SpanTags["OPERATION_TYPE"]])
+	assert.Equal(t, "dynamodb.us-west-2.amazonaws.com", span.Tags[constants.DBTags["DB_INSTANCE"]])
+	assert.Equal(t, "Music", span.Tags[constants.AwsDynamoDBTags["TABLE_NAME"]])
+	assert.Equal(t, constants.DynamoDBRequestTypes["UpdateItem"], span.Tags[constants.DBTags["DB_STATEMENT_TYPE"]])
+	assert.Equal(t, "UpdateItem", span.Tags[constants.AwsSDKTags["REQUEST_NAME"]])
+	assert.Equal(t, true, span.Tags[constants.SpanTags["TOPOLOGY_VERTEX"]])
+	assert.Equal(t, constants.AwsLambdaApplicationDomain, span.Tags[constants.SpanTags["TRIGGER_DOMAIN_NAME"]])
+	assert.Equal(t, constants.AwsLambdaApplicationClass, span.Tags[constants.SpanTags["TRIGGER_CLASS_NAME"]])
+
+	got, err := json.Marshal(span.Tags[constants.DBTags["DB_STATEMENT"]])
+	if err != nil {
+		t.Errorf("Couldn't marshal db_statement tag in the span")
+	}
+	assert.Equal(t, exp, got)
+
+	expectedTraceLinks := []string{
+		"us-west-2:Music:1554912000:UPDATE:214e7d85ccee118350d24b06f2c33d9c",
+		"us-west-2:Music:1554912001:UPDATE:214e7d85ccee118350d24b06f2c33d9c",
+		"us-west-2:Music:1554912002:UPDATE:214e7d85ccee118350d24b06f2c33d9c",
+	}
+
+	assert.Equal(t, expectedTraceLinks, span.Tags[constants.SpanTags["TRACE_LINKS"]])
+
+	// Clear tracer
+	tp.Reset()
+}
+
+func TestDynamoDBUpdateItemAttributeUpdate(t *testing.T) {
+	// Initilize trace plugin to set GlobalTracer of opentracing
+	tp := trace.New()
+	config.DynamoDBTraceInjectionEnabled = true
+
+	sess.Handlers.CompleteAttempt.Clear()
+	sess.Handlers.CompleteAttempt.PushBack(func(r *request.Request) {
+		r.HTTPResponse.Header = http.Header{}
+		r.HTTPResponse.Header.Set("date", "Thu, 10 Apr 2019 16:00:00 GMT")
+	})
+
+	// Create a session and wrap it
+	dynamoc := dynamodb.New(sess)
+
+	input := &dynamodb.UpdateItemInput{
+		AttributeUpdates: map[string]*dynamodb.AttributeValueUpdate{
+			"Genre": {
+				Action: aws.String("PUT"),
+				Value: &dynamodb.AttributeValue{
+					S: aws.String("Rock"),
+				},
+			},
+		},
+		TableName: aws.String("Music"),
+		Key: map[string]*dynamodb.AttributeValue{
+			"id": {
+				S: aws.String("keyid"),
+			},
+		},
+	}
+	exp, err := json.Marshal(input.Key)
+	if err != nil {
+		t.Errorf("Couldn't marshal dynamodb input: %v", err)
+	}
+
+	// Actual call
+	dynamoc.UpdateItem(input)
+
+	// Get the span created for dynamo call
+	span := tp.Recorder.GetSpans()[0]
+	// Test related fields
+	assert.Equal(t, constants.ClassNames["DYNAMODB"], span.ClassName)
+	assert.Equal(t, constants.DomainNames["DB"], span.DomainName)
+	assert.Equal(t, constants.DynamoDBRequestTypes["UpdateItem"], span.Tags[constants.SpanTags["OPERATION_TYPE"]])
+	assert.Equal(t, "dynamodb.us-west-2.amazonaws.com", span.Tags[constants.DBTags["DB_INSTANCE"]])
+	assert.Equal(t, "Music", span.Tags[constants.AwsDynamoDBTags["TABLE_NAME"]])
+	assert.Equal(t, constants.DynamoDBRequestTypes["UpdateItem"], span.Tags[constants.DBTags["DB_STATEMENT_TYPE"]])
+	assert.Equal(t, "UpdateItem", span.Tags[constants.AwsSDKTags["REQUEST_NAME"]])
+	assert.Equal(t, true, span.Tags[constants.SpanTags["TOPOLOGY_VERTEX"]])
+	assert.Equal(t, constants.AwsLambdaApplicationDomain, span.Tags[constants.SpanTags["TRIGGER_DOMAIN_NAME"]])
+	assert.Equal(t, constants.AwsLambdaApplicationClass, span.Tags[constants.SpanTags["TRIGGER_CLASS_NAME"]])
+
+	got, err := json.Marshal(span.Tags[constants.DBTags["DB_STATEMENT"]])
+	if err != nil {
+		t.Errorf("Couldn't marshal db_statement tag in the span")
+	}
+	assert.Equal(t, exp, got)
+	assert.Equal(t, []string{"SAVE:" + span.Context.SpanID}, span.Tags[constants.SpanTags["TRACE_LINKS"]])
+
+	// Clear tracer
+	tp.Reset()
+}
+
+func TestDynamoDeleteItem(t *testing.T) {
+	// Initilize trace plugin to set GlobalTracer of opentracing
+	tp := trace.New()
+
+	sess.Handlers.CompleteAttempt.Clear()
+	sess.Handlers.CompleteAttempt.PushBack(func(r *request.Request) {
+		r.HTTPResponse.Header = http.Header{}
+		r.HTTPResponse.Header.Set("date", "Thu, 10 Apr 2019 16:00:00 GMT")
+	})
+
+	// Create a session and wrap it
+	dynamoc := dynamodb.New(sess)
+
+	input := &dynamodb.DeleteItemInput{
+		TableName: aws.String("Music"),
+		Key: map[string]*dynamodb.AttributeValue{
+			"id": {
+				S: aws.String("keyid"),
+			},
+		},
+	}
+
+	exp, err := json.Marshal(input.Key)
+	if err != nil {
+		t.Errorf("Couldn't marshal dynamodb input: %v", err)
+	}
+
+	dynamoc.DeleteItem(input)
+
+	// Get the span created for dynamo call
+	span := tp.Recorder.GetSpans()[0]
+	// Test related fields
+	assert.Equal(t, constants.ClassNames["DYNAMODB"], span.ClassName)
+	assert.Equal(t, constants.DomainNames["DB"], span.DomainName)
+	assert.Equal(t, constants.DynamoDBRequestTypes["DeleteItem"], span.Tags[constants.SpanTags["OPERATION_TYPE"]])
+	assert.Equal(t, "dynamodb.us-west-2.amazonaws.com", span.Tags[constants.DBTags["DB_INSTANCE"]])
+	assert.Equal(t, "Music", span.Tags[constants.AwsDynamoDBTags["TABLE_NAME"]])
+	assert.Equal(t, constants.DynamoDBRequestTypes["DeleteItem"], span.Tags[constants.DBTags["DB_STATEMENT_TYPE"]])
+	assert.Equal(t, "DeleteItem", span.Tags[constants.AwsSDKTags["REQUEST_NAME"]])
+	assert.Equal(t, true, span.Tags[constants.SpanTags["TOPOLOGY_VERTEX"]])
+	assert.Equal(t, constants.AwsLambdaApplicationDomain, span.Tags[constants.SpanTags["TRIGGER_DOMAIN_NAME"]])
+	assert.Equal(t, constants.AwsLambdaApplicationClass, span.Tags[constants.SpanTags["TRIGGER_CLASS_NAME"]])
+
+	got, err := json.Marshal(span.Tags[constants.DBTags["DB_STATEMENT"]])
+	if err != nil {
+		t.Errorf("Couldn't marshal db_statement tag in the span")
+	}
+	assert.Equal(t, exp, got)
+
+	expectedTraceLinks := []string{
+		"us-west-2:Music:1554912000:DELETE:214e7d85ccee118350d24b06f2c33d9c",
+		"us-west-2:Music:1554912001:DELETE:214e7d85ccee118350d24b06f2c33d9c",
+		"us-west-2:Music:1554912002:DELETE:214e7d85ccee118350d24b06f2c33d9c",
+	}
+
+	assert.Equal(t, expectedTraceLinks, span.Tags[constants.SpanTags["TRACE_LINKS"]])
+
+	// Clear tracer
+	tp.Reset()
+}
+
+func TestDynamoDBPutItemTraceEnabled(t *testing.T) {
+	// Initilize trace plugin to set GlobalTracer of opentracing
+	tp := trace.New()
+	config.DynamoDBTraceInjectionEnabled = true
+	// Create a session and wrap it
+	dynamoc := dynamodb.New(sess)
+	// Actual call
+	input := &dynamodb.PutItemInput{
+		Item: map[string]*dynamodb.AttributeValue{
+			"AlbumTitle": {
+				S: aws.String("Somewhat Famous"),
+			},
+			"Artist": {
+				S: aws.String("No One You Know"),
+			},
+			"SongTitle": {
+				S: aws.String("Call Me Today"),
+			},
+		},
+		ReturnConsumedCapacity: aws.String("TOTAL"),
+		TableName:              aws.String("Music"),
+	}
+
+	exp, err := json.Marshal(input.Item)
+	if err != nil {
+		t.Errorf("Couldn't marshal dynamodb input: %v", err)
+	}
+
+	dynamoc.PutItem(input)
+	// Get the span created for dynamo call
+	span := tp.Recorder.GetSpans()[0]
+	// Test related fields
+	assert.Equal(t, constants.ClassNames["DYNAMODB"], span.ClassName)
+	assert.Equal(t, constants.DomainNames["DB"], span.DomainName)
+	assert.Equal(t, constants.DynamoDBRequestTypes["PutItem"], span.Tags[constants.SpanTags["OPERATION_TYPE"]])
+	assert.Equal(t, "dynamodb.us-west-2.amazonaws.com", span.Tags[constants.DBTags["DB_INSTANCE"]])
+	assert.Equal(t, "Music", span.Tags[constants.AwsDynamoDBTags["TABLE_NAME"]])
+	assert.Equal(t, constants.DynamoDBRequestTypes["PutItem"], span.Tags[constants.DBTags["DB_STATEMENT_TYPE"]])
+	assert.Equal(t, "PutItem", span.Tags[constants.AwsSDKTags["REQUEST_NAME"]])
+	assert.Equal(t, true, span.Tags[constants.SpanTags["TOPOLOGY_VERTEX"]])
+	assert.Equal(t, constants.AwsLambdaApplicationDomain, span.Tags[constants.SpanTags["TRIGGER_DOMAIN_NAME"]])
+	assert.Equal(t, constants.AwsLambdaApplicationClass, span.Tags[constants.SpanTags["TRIGGER_CLASS_NAME"]])
+
+	got, err := json.Marshal(span.Tags[constants.DBTags["DB_STATEMENT"]])
+	if err != nil {
+		t.Errorf("Couldn't marshal db_statement tag in the span")
+	}
+	assert.Equal(t, exp, got)
+	assert.Equal(t, []string{"SAVE:" + span.Context.SpanID}, span.Tags[constants.SpanTags["TRACE_LINKS"]])
+
+	// Clear tracer
+	tp.Reset()
+}
+
+func TestDynamoDBUpdateItemTraceEnabled(t *testing.T) {
+	// Initilize trace plugin to set GlobalTracer of opentracing
+	tp := trace.New()
+	config.DynamoDBTraceInjectionEnabled = true
+	// Create a session and wrap it
+	dynamoc := dynamodb.New(sess)
+
+	input := &dynamodb.UpdateItemInput{
+		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
+			":r": {
+				S: aws.String("test"),
+			},
+		},
+		TableName: aws.String("Music"),
+		Key: map[string]*dynamodb.AttributeValue{
+			"id": {
+				S: aws.String("keyid"),
+			},
+		},
+		ReturnValues:     aws.String("UPDATED_NEW"),
+		UpdateExpression: aws.String("SET message = :r"),
+	}
+	exp, err := json.Marshal(input.Key)
+	if err != nil {
+		t.Errorf("Couldn't marshal dynamodb input: %v", err)
+	}
+
+	// Actual call
+	dynamoc.UpdateItem(input)
+
+	// Get the span created for dynamo call
+	span := tp.Recorder.GetSpans()[0]
+	// Test related fields
+	assert.Equal(t, constants.ClassNames["DYNAMODB"], span.ClassName)
+	assert.Equal(t, constants.DomainNames["DB"], span.DomainName)
+	assert.Equal(t, constants.DynamoDBRequestTypes["UpdateItem"], span.Tags[constants.SpanTags["OPERATION_TYPE"]])
+	assert.Equal(t, "dynamodb.us-west-2.amazonaws.com", span.Tags[constants.DBTags["DB_INSTANCE"]])
+	assert.Equal(t, "Music", span.Tags[constants.AwsDynamoDBTags["TABLE_NAME"]])
+	assert.Equal(t, constants.DynamoDBRequestTypes["UpdateItem"], span.Tags[constants.DBTags["DB_STATEMENT_TYPE"]])
+	assert.Equal(t, "UpdateItem", span.Tags[constants.AwsSDKTags["REQUEST_NAME"]])
+	assert.Equal(t, true, span.Tags[constants.SpanTags["TOPOLOGY_VERTEX"]])
+	assert.Equal(t, constants.AwsLambdaApplicationDomain, span.Tags[constants.SpanTags["TRIGGER_DOMAIN_NAME"]])
+	assert.Equal(t, constants.AwsLambdaApplicationClass, span.Tags[constants.SpanTags["TRIGGER_CLASS_NAME"]])
+
+	got, err := json.Marshal(span.Tags[constants.DBTags["DB_STATEMENT"]])
+	if err != nil {
+		t.Errorf("Couldn't marshal db_statement tag in the span")
+	}
+	assert.Equal(t, exp, got)
+	assert.Equal(t, []string{"SAVE:" + span.Context.SpanID}, span.Tags[constants.SpanTags["TRACE_LINKS"]])
+
+	// Clear tracer
+	tp.Reset()
+}
+
+func TestDynamoDeleteItemTraceEnabled(t *testing.T) {
+	// Initilize trace plugin to set GlobalTracer of opentracing
+	tp := trace.New()
+	config.DynamoDBTraceInjectionEnabled = true
+	// Create a session and wrap it
+	dynamoc := dynamodb.New(sess)
+
+	input := &dynamodb.DeleteItemInput{
+		TableName: aws.String("Music"),
+		Key: map[string]*dynamodb.AttributeValue{
+			"id": {
+				S: aws.String("keyid"),
+			},
+		},
+	}
+
+	exp, err := json.Marshal(input.Key)
+	if err != nil {
+		t.Errorf("Couldn't marshal dynamodb input: %v", err)
+	}
+
+	dynamoc.DeleteItem(input)
+
+	// Get the span created for dynamo call
+	span := tp.Recorder.GetSpans()[0]
+	// Test related fields
+	assert.Equal(t, constants.ClassNames["DYNAMODB"], span.ClassName)
+	assert.Equal(t, constants.DomainNames["DB"], span.DomainName)
+	assert.Equal(t, constants.DynamoDBRequestTypes["DeleteItem"], span.Tags[constants.SpanTags["OPERATION_TYPE"]])
+	assert.Equal(t, "dynamodb.us-west-2.amazonaws.com", span.Tags[constants.DBTags["DB_INSTANCE"]])
+	assert.Equal(t, "Music", span.Tags[constants.AwsDynamoDBTags["TABLE_NAME"]])
+	assert.Equal(t, constants.DynamoDBRequestTypes["DeleteItem"], span.Tags[constants.DBTags["DB_STATEMENT_TYPE"]])
+	assert.Equal(t, "DeleteItem", span.Tags[constants.AwsSDKTags["REQUEST_NAME"]])
+	assert.Equal(t, true, span.Tags[constants.SpanTags["TOPOLOGY_VERTEX"]])
+	assert.Equal(t, constants.AwsLambdaApplicationDomain, span.Tags[constants.SpanTags["TRIGGER_DOMAIN_NAME"]])
+	assert.Equal(t, constants.AwsLambdaApplicationClass, span.Tags[constants.SpanTags["TRIGGER_CLASS_NAME"]])
+
+	got, err := json.Marshal(span.Tags[constants.DBTags["DB_STATEMENT"]])
+	if err != nil {
+		t.Errorf("Couldn't marshal db_statement tag in the span")
+	}
+	assert.Equal(t, exp, got)
+
+	assert.Equal(t, input.ReturnValues, aws.String("ALL_OLD"))
+
 	// Clear tracer
 	tp.Reset()
 }
@@ -169,6 +538,9 @@ func TestDynamoDBGetItem(t *testing.T) {
 		t.Errorf("Couldn't marshal db_statement tag in the span")
 	}
 	assert.Equal(t, exp, got)
+
+	assert.Equal(t, nil, span.Tags[constants.SpanTags["TRACE_LINKS"]])
+
 	// Clear tracer
 	tp.Reset()
 }
@@ -176,6 +548,14 @@ func TestDynamoDBGetItem(t *testing.T) {
 func TestSNSPublish(t *testing.T) {
 	// Initilize trace plugin to set GlobalTracer of opentracing
 	tp := trace.New()
+
+	snsData := sns.PublishOutput{MessageId: aws.String("95df01b4-ee98-5cb9-9903-4c221d41eb5e")}
+
+	sess.Handlers.CompleteAttempt.Clear()
+	sess.Handlers.CompleteAttempt.PushBack(func(r *request.Request) {
+		r.Data = &snsData
+	})
+
 	// Create a session and wrap it
 	snsc := sns.New(sess)
 
@@ -199,6 +579,8 @@ func TestSNSPublish(t *testing.T) {
 	assert.Equal(t, true, span.Tags[constants.SpanTags["TOPOLOGY_VERTEX"]])
 	assert.Equal(t, constants.AwsLambdaApplicationDomain, span.Tags[constants.SpanTags["TRIGGER_DOMAIN_NAME"]])
 	assert.Equal(t, constants.AwsLambdaApplicationClass, span.Tags[constants.SpanTags["TRIGGER_CLASS_NAME"]])
+
+	assert.Equal(t, []string{"95df01b4-ee98-5cb9-9903-4c221d41eb5e"}, span.Tags[constants.SpanTags["TRACE_LINKS"]])
 
 	// Clear tracer
 	tp.Reset()
@@ -257,11 +639,24 @@ func TestSNSCreateTopic(t *testing.T) {
 func TestKinesisPutRecord(t *testing.T) {
 	// Initilize trace plugin to set GlobalTracer of opentracing
 	tp := trace.New()
+
+	kinesisData := &kinesis.PutRecordOutput{
+		ShardId:        aws.String("shardId-000000000000"),
+		SequenceNumber: aws.String("49568167373333333333333333333333333333333333333333333333"),
+	}
+
+	sess.Handlers.CompleteAttempt.Clear()
+	sess.Handlers.CompleteAttempt.PushBack(func(r *request.Request) {
+		r.Data = kinesisData
+	})
+
 	// Create a session and wrap it
 	knssc := kinesis.New(sess)
 	// Actual call
 	knssc.PutRecord(&kinesis.PutRecordInput{
-		StreamName: aws.String("Foo Stream"),
+		Data:         []byte("message"),
+		PartitionKey: aws.String("key1"),
+		StreamName:   aws.String("Foo Stream"),
 	})
 	// Get the span created for dynamo call
 	span := tp.Recorder.GetSpans()[0]
@@ -274,6 +669,73 @@ func TestKinesisPutRecord(t *testing.T) {
 	assert.Equal(t, true, span.Tags[constants.SpanTags["TOPOLOGY_VERTEX"]])
 	assert.Equal(t, constants.AwsLambdaApplicationDomain, span.Tags[constants.SpanTags["TRIGGER_DOMAIN_NAME"]])
 	assert.Equal(t, constants.AwsLambdaApplicationClass, span.Tags[constants.SpanTags["TRIGGER_CLASS_NAME"]])
+
+	expectedTraceLinks := []string{"us-west-2:Foo Stream:shardId-000000000000:49568167373333333333333333333333333333333333333333333333"}
+
+	assert.Equal(t, expectedTraceLinks, span.Tags[constants.SpanTags["TRACE_LINKS"]])
+
+	// Clear tracer
+	tp.Reset()
+}
+
+func TestKinesisPutRecords(t *testing.T) {
+	// Initilize trace plugin to set GlobalTracer of opentracing
+	tp := trace.New()
+
+	kinesisData := &kinesis.PutRecordsOutput{
+		Records: []*kinesis.PutRecordsResultEntry{
+			&kinesis.PutRecordsResultEntry{
+				ShardId:        aws.String("shardId-000000000000"),
+				SequenceNumber: aws.String("49568167373333333333333333333333333333333333333333333333"),
+			},
+			&kinesis.PutRecordsResultEntry{
+				ShardId:        aws.String("shardId-000000000000"),
+				SequenceNumber: aws.String("49568167374444444444444444444444444444444444444444444444"),
+			},
+		},
+	}
+
+	sess.Handlers.CompleteAttempt.Clear()
+	sess.Handlers.CompleteAttempt.PushBack(func(r *request.Request) {
+		r.Data = kinesisData
+	})
+
+	// Create a session and wrap it
+	knssc := kinesis.New(sess)
+
+	entries := []*kinesis.PutRecordsRequestEntry{
+		&kinesis.PutRecordsRequestEntry{
+			Data:         []byte("1"),
+			PartitionKey: aws.String("key1"),
+		},
+		&kinesis.PutRecordsRequestEntry{
+			Data:         []byte("2"),
+			PartitionKey: aws.String("key2"),
+		},
+	}
+	// Actual call
+	knssc.PutRecords(&kinesis.PutRecordsInput{
+		Records:    entries,
+		StreamName: aws.String("Foo Stream"),
+	})
+	// Get the span created for dynamo call
+	span := tp.Recorder.GetSpans()[0]
+	// Test related fields
+	assert.Equal(t, constants.ClassNames["KINESIS"], span.ClassName)
+	assert.Equal(t, constants.DomainNames["STREAM"], span.DomainName)
+	assert.Equal(t, "Foo Stream", span.Tags[constants.AwsKinesisTags["STREAM_NAME"]])
+	assert.Equal(t, "WRITE", span.Tags[constants.SpanTags["OPERATION_TYPE"]])
+	assert.Equal(t, "PutRecords", span.Tags[constants.AwsSDKTags["REQUEST_NAME"]])
+	assert.Equal(t, true, span.Tags[constants.SpanTags["TOPOLOGY_VERTEX"]])
+	assert.Equal(t, constants.AwsLambdaApplicationDomain, span.Tags[constants.SpanTags["TRIGGER_DOMAIN_NAME"]])
+	assert.Equal(t, constants.AwsLambdaApplicationClass, span.Tags[constants.SpanTags["TRIGGER_CLASS_NAME"]])
+
+	expectedTraceLinks := []string{
+		"us-west-2:Foo Stream:shardId-000000000000:49568167373333333333333333333333333333333333333333333333",
+		"us-west-2:Foo Stream:shardId-000000000000:49568167374444444444444444444444444444444444444444444444",
+	}
+
+	assert.ElementsMatch(t, expectedTraceLinks, span.Tags[constants.SpanTags["TRACE_LINKS"]])
 
 	// Clear tracer
 	tp.Reset()
@@ -307,11 +769,19 @@ func TestKinesisGetRecord(t *testing.T) {
 func TestFirehosePutRecord(t *testing.T) {
 	// Initilize trace plugin to set GlobalTracer of opentracing
 	tp := trace.New()
+
+	sess.Handlers.CompleteAttempt.Clear()
+	sess.Handlers.CompleteAttempt.PushBack(func(r *request.Request) {
+		r.HTTPResponse.Header = http.Header{}
+		r.HTTPResponse.Header.Set("date", "Thu, 10 Apr 2019 16:00:00 GMT")
+	})
+
 	// Create a session and wrap it
 	fhc := firehose.New(sess)
 	// Actual call
 	fhc.PutRecord(&firehose.PutRecordInput{
 		DeliveryStreamName: aws.String("Foo Stream"),
+		Record:             &firehose.Record{Data: []byte("test")},
 	})
 	// Get the span created for dynamo call
 	span := tp.Recorder.GetSpans()[0]
@@ -325,6 +795,63 @@ func TestFirehosePutRecord(t *testing.T) {
 	assert.Equal(t, constants.AwsLambdaApplicationDomain, span.Tags[constants.SpanTags["TRIGGER_DOMAIN_NAME"]])
 	assert.Equal(t, constants.AwsLambdaApplicationClass, span.Tags[constants.SpanTags["TRIGGER_CLASS_NAME"]])
 
+	expectedTraceLinks := []string{
+		"us-west-2:Foo Stream:1554912000:098f6bcd4621d373cade4e832627b4f6",
+		"us-west-2:Foo Stream:1554912001:098f6bcd4621d373cade4e832627b4f6",
+		"us-west-2:Foo Stream:1554912002:098f6bcd4621d373cade4e832627b4f6",
+	}
+
+	assert.ElementsMatch(t, expectedTraceLinks, span.Tags[constants.SpanTags["TRACE_LINKS"]])
+
+	// Clear tracer
+	tp.Reset()
+}
+
+func TestFirehosePutRecordBatch(t *testing.T) {
+	// Initilize trace plugin to set GlobalTracer of opentracing
+	tp := trace.New()
+
+	sess.Handlers.CompleteAttempt.Clear()
+	sess.Handlers.CompleteAttempt.PushBack(func(r *request.Request) {
+		r.HTTPResponse.Header = http.Header{}
+		r.HTTPResponse.Header.Set("date", "Thu, 10 Apr 2019 16:00:00 GMT")
+	})
+
+	// Create a session and wrap it
+	fhc := firehose.New(sess)
+
+	recordsBatchInput := &firehose.PutRecordBatchInput{}
+	recordsBatchInput = recordsBatchInput.SetDeliveryStreamName(*aws.String("Foo Stream"))
+
+	records := []*firehose.Record{
+		&firehose.Record{Data: []byte("test")},
+	}
+
+	recordsBatchInput = recordsBatchInput.SetRecords(records)
+
+	// Actual call
+	fhc.PutRecordBatch(recordsBatchInput)
+
+	// Get the span created for dynamo call
+	span := tp.Recorder.GetSpans()[0]
+	// Test related fields
+	assert.Equal(t, constants.ClassNames["FIREHOSE"], span.ClassName)
+	assert.Equal(t, constants.DomainNames["STREAM"], span.DomainName)
+	assert.Equal(t, "Foo Stream", span.Tags[constants.AwsFirehoseTags["STREAM_NAME"]])
+	assert.Equal(t, "WRITE", span.Tags[constants.SpanTags["OPERATION_TYPE"]])
+	assert.Equal(t, "PutRecordBatch", span.Tags[constants.AwsSDKTags["REQUEST_NAME"]])
+	assert.Equal(t, true, span.Tags[constants.SpanTags["TOPOLOGY_VERTEX"]])
+	assert.Equal(t, constants.AwsLambdaApplicationDomain, span.Tags[constants.SpanTags["TRIGGER_DOMAIN_NAME"]])
+	assert.Equal(t, constants.AwsLambdaApplicationClass, span.Tags[constants.SpanTags["TRIGGER_CLASS_NAME"]])
+
+	expectedTraceLinks := []string{
+		"us-west-2:Foo Stream:1554912000:098f6bcd4621d373cade4e832627b4f6",
+		"us-west-2:Foo Stream:1554912001:098f6bcd4621d373cade4e832627b4f6",
+		"us-west-2:Foo Stream:1554912002:098f6bcd4621d373cade4e832627b4f6",
+	}
+
+	assert.ElementsMatch(t, expectedTraceLinks, span.Tags[constants.SpanTags["TRACE_LINKS"]])
+
 	// Clear tracer
 	tp.Reset()
 }
@@ -332,6 +859,13 @@ func TestFirehosePutRecord(t *testing.T) {
 func TestS3GetObject(t *testing.T) {
 	// Initilize trace plugin to set GlobalTracer of opentracing
 	tp := trace.New()
+
+	sess.Handlers.CompleteAttempt.Clear()
+	sess.Handlers.CompleteAttempt.PushBack(func(r *request.Request) {
+		r.HTTPResponse.Header = http.Header{}
+		r.HTTPResponse.Header.Set("x-amz-request-id", "C3D13FE58DE4C810")
+	})
+
 	// Create a session and wrap it
 	s3c := s3.New(sess)
 	// Actual call
@@ -352,6 +886,8 @@ func TestS3GetObject(t *testing.T) {
 	assert.Equal(t, constants.AwsLambdaApplicationDomain, span.Tags[constants.SpanTags["TRIGGER_DOMAIN_NAME"]])
 	assert.Equal(t, constants.AwsLambdaApplicationClass, span.Tags[constants.SpanTags["TRIGGER_CLASS_NAME"]])
 
+	assert.Equal(t, []string{"C3D13FE58DE4C810"}, span.Tags[constants.SpanTags["TRACE_LINKS"]])
+
 	// Clear tracer
 	tp.Reset()
 }
@@ -359,9 +895,15 @@ func TestS3GetObject(t *testing.T) {
 func TestLambdaInvoke(t *testing.T) {
 	// Set application name
 	application.ApplicationName = "test"
-
 	// Initilize trace plugin to set GlobalTracer of opentracing
 	tp := trace.New()
+
+	sess.Handlers.CompleteAttempt.Clear()
+	sess.Handlers.CompleteAttempt.PushBack(func(r *request.Request) {
+		r.HTTPResponse.Header = http.Header{}
+		r.HTTPResponse.Header.Set("X-Amzn-Requestid", "C3D13FE58DE4C810")
+	})
+
 	// Create a session and wrap it
 	lambdac := lambda.New(sess)
 	// Actual call
@@ -385,6 +927,9 @@ func TestLambdaInvoke(t *testing.T) {
 	assert.Equal(t, true, span.Tags[constants.SpanTags["TOPOLOGY_VERTEX"]])
 	assert.Equal(t, constants.AwsLambdaApplicationDomain, span.Tags[constants.SpanTags["TRIGGER_DOMAIN_NAME"]])
 	assert.Equal(t, constants.AwsLambdaApplicationClass, span.Tags[constants.SpanTags["TRIGGER_CLASS_NAME"]])
+
+	assert.Equal(t, []string{"C3D13FE58DE4C810"}, span.Tags[constants.SpanTags["TRACE_LINKS"]])
+
 	exp, err := json.Marshal(input.Payload)
 	if err != nil {
 		t.Errorf("Couldn't marshal lambda payload: %v", err)
@@ -409,6 +954,13 @@ func TestLambdaInvokeWithClientContext(t *testing.T) {
 
 	// Initilize trace plugin to set GlobalTracer of opentracing
 	tp := trace.New()
+
+	sess.Handlers.CompleteAttempt.Clear()
+	sess.Handlers.CompleteAttempt.PushBack(func(r *request.Request) {
+		r.HTTPResponse.Header = http.Header{}
+		r.HTTPResponse.Header.Set("X-Amzn-Requestid", "C3D13FE58DE4C810")
+	})
+
 	// Create a session and wrap it
 	lambdac := lambda.New(sess)
 	// Actual call
@@ -433,6 +985,9 @@ func TestLambdaInvokeWithClientContext(t *testing.T) {
 	assert.Equal(t, true, span.Tags[constants.SpanTags["TOPOLOGY_VERTEX"]])
 	assert.Equal(t, constants.AwsLambdaApplicationDomain, span.Tags[constants.SpanTags["TRIGGER_DOMAIN_NAME"]])
 	assert.Equal(t, constants.AwsLambdaApplicationClass, span.Tags[constants.SpanTags["TRIGGER_CLASS_NAME"]])
+
+	assert.Equal(t, []string{"C3D13FE58DE4C810"}, span.Tags[constants.SpanTags["TRACE_LINKS"]])
+
 	exp, err := json.Marshal(input.Payload)
 	if err != nil {
 		t.Errorf("Couldn't marshal lambda payload: %v", err)
@@ -454,6 +1009,12 @@ func TestLambdaInvokeWithClientContext(t *testing.T) {
 func TestSQSSendMessage(t *testing.T) {
 	// Initilize trace plugin to set GlobalTracer of opentracing
 	tp := trace.New()
+
+	sess.Handlers.CompleteAttempt.Clear()
+	sess.Handlers.CompleteAttempt.PushBack(func(r *request.Request) {
+		r.Data = &sqs.SendMessageOutput{MessageId: aws.String("95df01b4-ee98-5cb9-9903-4c221d41eb5e")}
+	})
+
 	// Create a session and wrap it
 	sqsc := sqs.New(sess)
 
@@ -476,6 +1037,61 @@ func TestSQSSendMessage(t *testing.T) {
 	assert.Equal(t, true, span.Tags[constants.SpanTags["TOPOLOGY_VERTEX"]])
 	assert.Equal(t, constants.AwsLambdaApplicationDomain, span.Tags[constants.SpanTags["TRIGGER_DOMAIN_NAME"]])
 	assert.Equal(t, constants.AwsLambdaApplicationClass, span.Tags[constants.SpanTags["TRIGGER_CLASS_NAME"]])
+
+	assert.Equal(t, []string{"95df01b4-ee98-5cb9-9903-4c221d41eb5e"}, span.Tags[constants.SpanTags["TRACE_LINKS"]])
+
+	// Clear tracer
+	tp.Reset()
+}
+
+func TestSQSSendMessageBatch(t *testing.T) {
+	// Initilize trace plugin to set GlobalTracer of opentracing
+	tp := trace.New()
+
+	mockSqsBatchResult := &sqs.SendMessageBatchResultEntry{MessageId: aws.String("84df12b4-ee98-2cb8-1903-1c234d56eb7e")}
+	mockSqsBatchResult2 := &sqs.SendMessageBatchResultEntry{MessageId: aws.String("95df01b4-ee98-5cb9-9903-4c221d41eb5e")}
+
+	sess.Handlers.CompleteAttempt.Clear()
+	sess.Handlers.CompleteAttempt.PushBack(func(r *request.Request) {
+		r.Data = &sqs.SendMessageBatchOutput{Successful: []*sqs.SendMessageBatchResultEntry{mockSqsBatchResult, mockSqsBatchResult2}}
+	})
+
+	// Create a session and wrap it
+	sqsc := sqs.New(sess)
+
+	// Params will be sent to the publish call included here is the bare minimum params to send a message
+
+	entries := []*sqs.SendMessageBatchRequestEntry{
+		&sqs.SendMessageBatchRequestEntry{
+			Id:          aws.String("1"),
+			MessageBody: aws.String("test"),
+		},
+		&sqs.SendMessageBatchRequestEntry{
+			Id:          aws.String("2"),
+			MessageBody: aws.String("test"),
+		},
+	}
+	params := &sqs.SendMessageBatchInput{
+		Entries:  entries,
+		QueueUrl: aws.String("https://sqs.us-west-2.amazonaws.com/123456789012/test-queue"),
+	}
+
+	sqsc.SendMessageBatch(params)
+
+	// Get the span created for dynamo call
+	span := tp.Recorder.GetSpans()[0]
+	// Test related fields
+	assert.Equal(t, constants.ClassNames["SQS"], span.ClassName)
+	assert.Equal(t, constants.DomainNames["MESSAGING"], span.DomainName)
+	assert.Equal(t, "test-queue", span.Tags[constants.AwsSQSTags["QUEUE_NAME"]])
+	assert.Equal(t, "WRITE", span.Tags[constants.SpanTags["OPERATION_TYPE"]])
+	assert.Equal(t, "SendMessageBatch", span.Tags[constants.AwsSDKTags["REQUEST_NAME"]])
+	assert.Equal(t, true, span.Tags[constants.SpanTags["TOPOLOGY_VERTEX"]])
+	assert.Equal(t, constants.AwsLambdaApplicationDomain, span.Tags[constants.SpanTags["TRIGGER_DOMAIN_NAME"]])
+	assert.Equal(t, constants.AwsLambdaApplicationClass, span.Tags[constants.SpanTags["TRIGGER_CLASS_NAME"]])
+
+	expectedTraceLinks := []string{"84df12b4-ee98-2cb8-1903-1c234d56eb7e", "95df01b4-ee98-5cb9-9903-4c221d41eb5e"}
+	assert.ElementsMatch(t, expectedTraceLinks, span.Tags[constants.SpanTags["TRACE_LINKS"]])
 
 	// Clear tracer
 	tp.Reset()

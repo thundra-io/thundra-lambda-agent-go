@@ -331,8 +331,7 @@ func TestInvocationTags_DynamoDBTrigger(t *testing.T) {
 	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_DOMAIN_NAME"]], constants.DomainNames["DB"])
 	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_CLASS_NAME"]], constants.ClassNames["DYNAMODB"])
 	assert.ElementsMatch(t, invocationTags[constants.SpanTags["TRIGGER_OPERATION_NAMES"]], operationNames)
-	getIncomingTraceLinks()
-	assert.Equal(t, true, false)
+
 }
 
 func TestInvocationTags_DynamoDBTriggerFromInputType(t *testing.T) {

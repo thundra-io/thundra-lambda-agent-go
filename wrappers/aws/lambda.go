@@ -76,7 +76,10 @@ func (i *lambdaIntegration) beforeCall(r *request.Request, span *tracer.RawSpan)
 }
 
 func (i *lambdaIntegration) afterCall(r *request.Request, span *tracer.RawSpan) {
-	xAmzRequestID := r.HTTPResponse.Header.Get("X-Amzn-Requestid")
+	xAmzRequestID := ""
+	if r.HTTPResponse != nil && r.HTTPResponse.Header != nil {
+		xAmzRequestID = r.HTTPResponse.Header.Get("X-Amzn-Requestid")
+	}
 	if xAmzRequestID != "" {
 		span.Tags[constants.SpanTags["TRACE_LINKS"]] = []string{xAmzRequestID}
 	}

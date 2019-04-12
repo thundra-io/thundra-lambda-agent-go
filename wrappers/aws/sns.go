@@ -68,10 +68,15 @@ func (i *snsIntegration) beforeCall(r *request.Request, span *tracer.RawSpan) {
 }
 
 func (i *snsIntegration) afterCall(r *request.Request, span *tracer.RawSpan) {
-	responseValue := reflect.ValueOf(r.Data).Elem()
-	messageID, _ := utils.GetStringFieldFromValue(responseValue, "MessageId")
+	responseValue := reflect.ValueOf(r.Data)
+	if responseValue == (reflect.Value{}) {
+		return
+	}
+	messageID, _ := utils.GetStringFieldFromValue(responseValue.Elem(), "MessageId")
 
-	span.Tags[constants.SpanTags["TRACE_LINKS"]] = []string{messageID}
+	if messageID != "" {
+		span.Tags[constants.SpanTags["TRACE_LINKS"]] = []string{messageID}
+	}
 }
 
 func init() {

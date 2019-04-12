@@ -59,15 +59,26 @@ func (i *kinesisIntegration) beforeCall(r *request.Request, span *tracer.RawSpan
 }
 
 func (i *kinesisIntegration) afterCall(r *request.Request, span *tracer.RawSpan) {
-	responseValue := reflect.ValueOf(r.Data).Elem()
-	traceLinks := i.getTraceLinks(*r.Config.Region, &responseValue, i.getStreamName(r))
+	traceLinks := i.getTraceLinks(r)
 	if traceLinks != nil {
 		span.Tags[constants.SpanTags["TRACE_LINKS"]] = traceLinks
 	}
 }
 
-func (i *kinesisIntegration) getTraceLinks(region string, responseValue *reflect.Value, streamName string) []string {
-	records := responseValue.FieldByName("Records")
+func (i *kinesisIntegration) getTraceLinks(r *request.Request) []string {
+	responseValue := reflect.ValueOf(r.Data)
+
+	if responseValue == (reflect.Value{}) {
+		return nil
+	}
+
+	records := responseValue.Elem().FieldByName("Records")
+	region := ""
+	streamName := i.getStreamName(r)
+
+	if r.Config.Region != nil {
+		region = *r.Config.Region
+	}
 
 	if records != (reflect.Value{}) {
 		var links []string
@@ -81,8 +92,8 @@ func (i *kinesisIntegration) getTraceLinks(region string, responseValue *reflect
 		}
 		return links
 	}
-	if sequenceNumber, ok := utils.GetStringFieldFromValue(*responseValue, "SequenceNumber"); ok {
-		if shardID, ok := utils.GetStringFieldFromValue(*responseValue, "ShardId"); ok {
+	if sequenceNumber, ok := utils.GetStringFieldFromValue(responseValue.Elem(), "SequenceNumber"); ok {
+		if shardID, ok := utils.GetStringFieldFromValue(responseValue.Elem(), "ShardId"); ok {
 			return []string{region + ":" + streamName + ":" + shardID + ":" + sequenceNumber}
 		}
 	}

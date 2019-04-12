@@ -183,9 +183,13 @@ func SetSpanError(span opentracing.Span, err interface{}) {
 }
 
 func GetStringFieldFromValue(value reflect.Value, fieldName string) (string, bool) {
-	field := value.FieldByName(fieldName).Elem()
-	if !field.IsValid() {
-		return "", false
+	field := value.FieldByName(fieldName)
+	if field != (reflect.Value{}) {
+		fieldElem := field.Elem()
+		if !fieldElem.IsValid() {
+			return "", false
+		}
+		return fieldElem.String(), true
 	}
-	return field.String(), true
+	return "", false
 }
