@@ -43,11 +43,155 @@ var testClient = NewTestClient(func(req *http.Request) (*http.Response, error) {
 	return nil, http.ErrServerClosed
 })
 
-var sess = Wrap(session.New(&aws.Config{
+var sess = session.New(&aws.Config{
 	HTTPClient: testClient,
 	Region:     aws.String("us-west-2"),
 	MaxRetries: aws.Int(0),
-}))
+})
+
+func getSessionWithDateResponseHeader() *session.Session {
+	var sess = session.New(&aws.Config{
+		HTTPClient: testClient,
+		Region:     aws.String("us-west-2"),
+		MaxRetries: aws.Int(0),
+	})
+	wrappedSess := Wrap(sess)
+	wrappedSess.Handlers.Build.Clear()
+	wrappedSess.Handlers.Build.PushBack(func(r *request.Request) {
+		r.HTTPResponse = &http.Response{}
+		r.HTTPResponse.Header = http.Header{}
+		r.HTTPResponse.Header.Set("date", "Thu, 10 Apr 2019 16:00:00 GMT")
+	})
+	return wrappedSess
+}
+
+func getSessionWithSnsResponse() *session.Session {
+	var sess = session.New(&aws.Config{
+		HTTPClient: testClient,
+		Region:     aws.String("us-west-2"),
+		MaxRetries: aws.Int(0),
+	})
+	wrappedSess := Wrap(sess)
+
+	snsData := sns.PublishOutput{MessageId: aws.String("95df01b4-ee98-5cb9-9903-4c221d41eb5e")}
+	wrappedSess.Handlers.Build.Clear()
+	wrappedSess.Handlers.Build.PushBack(func(r *request.Request) {
+		r.Data = &snsData
+	})
+
+	return wrappedSess
+}
+
+func getSessionWithKinesisResponse() *session.Session {
+	var sess = session.New(&aws.Config{
+		HTTPClient: testClient,
+		Region:     aws.String("us-west-2"),
+		MaxRetries: aws.Int(0),
+	})
+	kinesisData := &kinesis.PutRecordOutput{
+		ShardId:        aws.String("shardId-000000000000"),
+		SequenceNumber: aws.String("49568167373333333333333333333333333333333333333333333333"),
+	}
+	sess = Wrap(sess)
+	sess.Handlers.Build.Clear()
+	sess.Handlers.Build.PushBack(func(r *request.Request) {
+		r.Data = kinesisData
+	})
+	return sess
+}
+
+func getSessionWithKinesisPutRecordsResponse() *session.Session {
+	var sess = session.New(&aws.Config{
+		HTTPClient: testClient,
+		Region:     aws.String("us-west-2"),
+		MaxRetries: aws.Int(0),
+	})
+	kinesisData := &kinesis.PutRecordsOutput{
+		Records: []*kinesis.PutRecordsResultEntry{
+			&kinesis.PutRecordsResultEntry{
+				ShardId:        aws.String("shardId-000000000000"),
+				SequenceNumber: aws.String("49568167373333333333333333333333333333333333333333333333"),
+			},
+			&kinesis.PutRecordsResultEntry{
+				ShardId:        aws.String("shardId-000000000000"),
+				SequenceNumber: aws.String("49568167374444444444444444444444444444444444444444444444"),
+			},
+		},
+	}
+	sess = Wrap(sess)
+	sess.Handlers.Build.Clear()
+	sess.Handlers.Build.PushBack(func(r *request.Request) {
+		r.Data = kinesisData
+	})
+
+	return sess
+}
+
+func getSessionWithS3Response() *session.Session {
+	var sess = session.New(&aws.Config{
+		HTTPClient: testClient,
+		Region:     aws.String("us-west-2"),
+		MaxRetries: aws.Int(0),
+	})
+	sess = Wrap(sess)
+	sess.Handlers.Build.Clear()
+	sess.Handlers.Build.PushBack(func(r *request.Request) {
+		r.HTTPResponse = &http.Response{}
+		r.HTTPResponse.Header = http.Header{}
+		r.HTTPResponse.Header.Set("x-amz-request-id", "C3D13FE58DE4C810")
+	})
+
+	return sess
+}
+
+func getSessionWithLambdaResponse() *session.Session {
+	var sess = session.New(&aws.Config{
+		HTTPClient: testClient,
+		Region:     aws.String("us-west-2"),
+		MaxRetries: aws.Int(0),
+	})
+	sess = Wrap(sess)
+	sess.Handlers.Build.Clear()
+	sess.Handlers.Build.PushBack(func(r *request.Request) {
+		r.HTTPResponse = &http.Response{}
+		r.HTTPResponse.Header = http.Header{}
+		r.HTTPResponse.Header.Set("X-Amzn-Requestid", "C3D13FE58DE4C810")
+	})
+
+	return sess
+}
+
+func getSessionWithSqsResponse() *session.Session {
+	var sess = session.New(&aws.Config{
+		HTTPClient: testClient,
+		Region:     aws.String("us-west-2"),
+		MaxRetries: aws.Int(0),
+	})
+	sess = Wrap(sess)
+	sess.Handlers.Build.Clear()
+	sess.Handlers.Build.PushBack(func(r *request.Request) {
+		r.Data = &sqs.SendMessageOutput{MessageId: aws.String("95df01b4-ee98-5cb9-9903-4c221d41eb5e")}
+	})
+
+	return sess
+}
+
+func getSessionWithSqsBatchResponse() *session.Session {
+	var sess = session.New(&aws.Config{
+		HTTPClient: testClient,
+		Region:     aws.String("us-west-2"),
+		MaxRetries: aws.Int(0),
+	})
+	mockSqsBatchResult := &sqs.SendMessageBatchResultEntry{MessageId: aws.String("84df12b4-ee98-2cb8-1903-1c234d56eb7e")}
+	mockSqsBatchResult2 := &sqs.SendMessageBatchResultEntry{MessageId: aws.String("95df01b4-ee98-5cb9-9903-4c221d41eb5e")}
+	sess = Wrap(sess)
+	sess.Handlers.Build.Clear()
+	sess.Handlers.Build.PushBack(func(r *request.Request) {
+		r.Data = &sqs.SendMessageBatchOutput{Successful: []*sqs.SendMessageBatchResultEntry{mockSqsBatchResult, mockSqsBatchResult2}}
+	})
+
+	return sess
+}
 
 func getMockBase64EncodedClientContext() string {
 	cc := &lambdacontext.ClientContext{}
@@ -87,13 +231,8 @@ func TestDynamoDBPutItem(t *testing.T) {
 	// Initilize trace plugin to set GlobalTracer of opentracing
 	tp := trace.New()
 
-	sess.Handlers.CompleteAttempt.Clear()
-	sess.Handlers.CompleteAttempt.PushBack(func(r *request.Request) {
-		r.HTTPResponse.Header = http.Header{}
-		r.HTTPResponse.Header.Set("date", "Thu, 10 Apr 2019 16:00:00 GMT")
-	})
-
 	// Create a session and wrap it
+	sess := getSessionWithDateResponseHeader()
 	dynamoc := dynamodb.New(sess)
 	// Actual call
 	input := &dynamodb.PutItemInput{
@@ -151,13 +290,8 @@ func TestDynamoDBUpdateItem(t *testing.T) {
 	// Initilize trace plugin to set GlobalTracer of opentracing
 	tp := trace.New()
 
-	sess.Handlers.CompleteAttempt.Clear()
-	sess.Handlers.CompleteAttempt.PushBack(func(r *request.Request) {
-		r.HTTPResponse.Header = http.Header{}
-		r.HTTPResponse.Header.Set("date", "Thu, 10 Apr 2019 16:00:00 GMT")
-	})
-
 	// Create a session and wrap it
+	sess := getSessionWithDateResponseHeader()
 	dynamoc := dynamodb.New(sess)
 
 	input := &dynamodb.UpdateItemInput{
@@ -220,13 +354,8 @@ func TestDynamoDBUpdateItemAttributeUpdate(t *testing.T) {
 	tp := trace.New()
 	config.DynamoDBTraceInjectionEnabled = true
 
-	sess.Handlers.CompleteAttempt.Clear()
-	sess.Handlers.CompleteAttempt.PushBack(func(r *request.Request) {
-		r.HTTPResponse.Header = http.Header{}
-		r.HTTPResponse.Header.Set("date", "Thu, 10 Apr 2019 16:00:00 GMT")
-	})
-
 	// Create a session and wrap it
+	sess := getSessionWithDateResponseHeader()
 	dynamoc := dynamodb.New(sess)
 
 	input := &dynamodb.UpdateItemInput{
@@ -282,13 +411,8 @@ func TestDynamoDeleteItem(t *testing.T) {
 	// Initilize trace plugin to set GlobalTracer of opentracing
 	tp := trace.New()
 
-	sess.Handlers.CompleteAttempt.Clear()
-	sess.Handlers.CompleteAttempt.PushBack(func(r *request.Request) {
-		r.HTTPResponse.Header = http.Header{}
-		r.HTTPResponse.Header.Set("date", "Thu, 10 Apr 2019 16:00:00 GMT")
-	})
-
 	// Create a session and wrap it
+	sess := getSessionWithDateResponseHeader()
 	dynamoc := dynamodb.New(sess)
 
 	input := &dynamodb.DeleteItemInput{
@@ -344,6 +468,7 @@ func TestDynamoDBPutItemTraceEnabled(t *testing.T) {
 	tp := trace.New()
 	config.DynamoDBTraceInjectionEnabled = true
 	// Create a session and wrap it
+	sess := Wrap(sess)
 	dynamoc := dynamodb.New(sess)
 	// Actual call
 	input := &dynamodb.PutItemInput{
@@ -398,6 +523,7 @@ func TestDynamoDBUpdateItemTraceEnabled(t *testing.T) {
 	tp := trace.New()
 	config.DynamoDBTraceInjectionEnabled = true
 	// Create a session and wrap it
+	sess := Wrap(sess)
 	dynamoc := dynamodb.New(sess)
 
 	input := &dynamodb.UpdateItemInput{
@@ -453,6 +579,7 @@ func TestDynamoDeleteItemTraceEnabled(t *testing.T) {
 	tp := trace.New()
 	config.DynamoDBTraceInjectionEnabled = true
 	// Create a session and wrap it
+	sess := Wrap(sess)
 	dynamoc := dynamodb.New(sess)
 
 	input := &dynamodb.DeleteItemInput{
@@ -501,6 +628,7 @@ func TestDynamoDBGetItem(t *testing.T) {
 	// Initilize trace plugin to set GlobalTracer of opentracing
 	tp := trace.New()
 	// Create a session and wrap it
+	sess := Wrap(sess)
 	dynamoc := dynamodb.New(sess)
 	// Actual call
 	input := &dynamodb.GetItemInput{
@@ -549,14 +677,8 @@ func TestSNSPublish(t *testing.T) {
 	// Initilize trace plugin to set GlobalTracer of opentracing
 	tp := trace.New()
 
-	snsData := sns.PublishOutput{MessageId: aws.String("95df01b4-ee98-5cb9-9903-4c221d41eb5e")}
-
-	sess.Handlers.CompleteAttempt.Clear()
-	sess.Handlers.CompleteAttempt.PushBack(func(r *request.Request) {
-		r.Data = &snsData
-	})
-
 	// Create a session and wrap it
+	sess := getSessionWithSnsResponse()
 	snsc := sns.New(sess)
 
 	// Params will be sent to the publish call included here is the bare minimum params to send a message
@@ -590,6 +712,7 @@ func TestSNSGetTopic(t *testing.T) {
 	// Initilize trace plugin to set GlobalTracer of opentracing
 	tp := trace.New()
 	// Create a session and wrap it
+	sess := Wrap(sess)
 	snsc := sns.New(sess)
 	// Actual call
 	snsc.GetTopicAttributes(&sns.GetTopicAttributesInput{
@@ -615,6 +738,7 @@ func TestSNSCreateTopic(t *testing.T) {
 	// Initilize trace plugin to set GlobalTracer of opentracing
 	tp := trace.New()
 	// Create a session and wrap it
+	sess := Wrap(sess)
 	snsc := sns.New(sess)
 	// Actual call
 	snsc.CreateTopic(&sns.CreateTopicInput{
@@ -640,17 +764,8 @@ func TestKinesisPutRecord(t *testing.T) {
 	// Initilize trace plugin to set GlobalTracer of opentracing
 	tp := trace.New()
 
-	kinesisData := &kinesis.PutRecordOutput{
-		ShardId:        aws.String("shardId-000000000000"),
-		SequenceNumber: aws.String("49568167373333333333333333333333333333333333333333333333"),
-	}
-
-	sess.Handlers.CompleteAttempt.Clear()
-	sess.Handlers.CompleteAttempt.PushBack(func(r *request.Request) {
-		r.Data = kinesisData
-	})
-
 	// Create a session and wrap it
+	sess := getSessionWithKinesisResponse()
 	knssc := kinesis.New(sess)
 	// Actual call
 	knssc.PutRecord(&kinesis.PutRecordInput{
@@ -682,25 +797,8 @@ func TestKinesisPutRecords(t *testing.T) {
 	// Initilize trace plugin to set GlobalTracer of opentracing
 	tp := trace.New()
 
-	kinesisData := &kinesis.PutRecordsOutput{
-		Records: []*kinesis.PutRecordsResultEntry{
-			&kinesis.PutRecordsResultEntry{
-				ShardId:        aws.String("shardId-000000000000"),
-				SequenceNumber: aws.String("49568167373333333333333333333333333333333333333333333333"),
-			},
-			&kinesis.PutRecordsResultEntry{
-				ShardId:        aws.String("shardId-000000000000"),
-				SequenceNumber: aws.String("49568167374444444444444444444444444444444444444444444444"),
-			},
-		},
-	}
-
-	sess.Handlers.CompleteAttempt.Clear()
-	sess.Handlers.CompleteAttempt.PushBack(func(r *request.Request) {
-		r.Data = kinesisData
-	})
-
 	// Create a session and wrap it
+	sess := getSessionWithKinesisPutRecordsResponse()
 	knssc := kinesis.New(sess)
 
 	entries := []*kinesis.PutRecordsRequestEntry{
@@ -745,6 +843,7 @@ func TestKinesisGetRecord(t *testing.T) {
 	// Initilize trace plugin to set GlobalTracer of opentracing
 	tp := trace.New()
 	// Create a session and wrap it
+	sess := Wrap(sess)
 	knssc := kinesis.New(sess)
 	// Actual call
 	knssc.GetRecords(&kinesis.GetRecordsInput{
@@ -770,13 +869,8 @@ func TestFirehosePutRecord(t *testing.T) {
 	// Initilize trace plugin to set GlobalTracer of opentracing
 	tp := trace.New()
 
-	sess.Handlers.CompleteAttempt.Clear()
-	sess.Handlers.CompleteAttempt.PushBack(func(r *request.Request) {
-		r.HTTPResponse.Header = http.Header{}
-		r.HTTPResponse.Header.Set("date", "Thu, 10 Apr 2019 16:00:00 GMT")
-	})
-
 	// Create a session and wrap it
+	sess := getSessionWithDateResponseHeader()
 	fhc := firehose.New(sess)
 	// Actual call
 	fhc.PutRecord(&firehose.PutRecordInput{
@@ -811,13 +905,8 @@ func TestFirehosePutRecordBatch(t *testing.T) {
 	// Initilize trace plugin to set GlobalTracer of opentracing
 	tp := trace.New()
 
-	sess.Handlers.CompleteAttempt.Clear()
-	sess.Handlers.CompleteAttempt.PushBack(func(r *request.Request) {
-		r.HTTPResponse.Header = http.Header{}
-		r.HTTPResponse.Header.Set("date", "Thu, 10 Apr 2019 16:00:00 GMT")
-	})
-
 	// Create a session and wrap it
+	sess := getSessionWithDateResponseHeader()
 	fhc := firehose.New(sess)
 
 	recordsBatchInput := &firehose.PutRecordBatchInput{}
@@ -860,13 +949,8 @@ func TestS3GetObject(t *testing.T) {
 	// Initilize trace plugin to set GlobalTracer of opentracing
 	tp := trace.New()
 
-	sess.Handlers.CompleteAttempt.Clear()
-	sess.Handlers.CompleteAttempt.PushBack(func(r *request.Request) {
-		r.HTTPResponse.Header = http.Header{}
-		r.HTTPResponse.Header.Set("x-amz-request-id", "C3D13FE58DE4C810")
-	})
-
 	// Create a session and wrap it
+	sess := getSessionWithS3Response()
 	s3c := s3.New(sess)
 	// Actual call
 	s3c.GetObject(&s3.GetObjectInput{
@@ -898,13 +982,8 @@ func TestLambdaInvoke(t *testing.T) {
 	// Initilize trace plugin to set GlobalTracer of opentracing
 	tp := trace.New()
 
-	sess.Handlers.CompleteAttempt.Clear()
-	sess.Handlers.CompleteAttempt.PushBack(func(r *request.Request) {
-		r.HTTPResponse.Header = http.Header{}
-		r.HTTPResponse.Header.Set("X-Amzn-Requestid", "C3D13FE58DE4C810")
-	})
-
 	// Create a session and wrap it
+	sess := getSessionWithLambdaResponse()
 	lambdac := lambda.New(sess)
 	// Actual call
 	input := &lambda.InvokeInput{
@@ -955,13 +1034,8 @@ func TestLambdaInvokeWithClientContext(t *testing.T) {
 	// Initilize trace plugin to set GlobalTracer of opentracing
 	tp := trace.New()
 
-	sess.Handlers.CompleteAttempt.Clear()
-	sess.Handlers.CompleteAttempt.PushBack(func(r *request.Request) {
-		r.HTTPResponse.Header = http.Header{}
-		r.HTTPResponse.Header.Set("X-Amzn-Requestid", "C3D13FE58DE4C810")
-	})
-
 	// Create a session and wrap it
+	sess := getSessionWithLambdaResponse()
 	lambdac := lambda.New(sess)
 	// Actual call
 	input := &lambda.InvokeInput{
@@ -1010,12 +1084,8 @@ func TestSQSSendMessage(t *testing.T) {
 	// Initilize trace plugin to set GlobalTracer of opentracing
 	tp := trace.New()
 
-	sess.Handlers.CompleteAttempt.Clear()
-	sess.Handlers.CompleteAttempt.PushBack(func(r *request.Request) {
-		r.Data = &sqs.SendMessageOutput{MessageId: aws.String("95df01b4-ee98-5cb9-9903-4c221d41eb5e")}
-	})
-
 	// Create a session and wrap it
+	sess := getSessionWithSqsResponse()
 	sqsc := sqs.New(sess)
 
 	// Params will be sent to the publish call included here is the bare minimum params to send a message
@@ -1048,15 +1118,8 @@ func TestSQSSendMessageBatch(t *testing.T) {
 	// Initilize trace plugin to set GlobalTracer of opentracing
 	tp := trace.New()
 
-	mockSqsBatchResult := &sqs.SendMessageBatchResultEntry{MessageId: aws.String("84df12b4-ee98-2cb8-1903-1c234d56eb7e")}
-	mockSqsBatchResult2 := &sqs.SendMessageBatchResultEntry{MessageId: aws.String("95df01b4-ee98-5cb9-9903-4c221d41eb5e")}
-
-	sess.Handlers.CompleteAttempt.Clear()
-	sess.Handlers.CompleteAttempt.PushBack(func(r *request.Request) {
-		r.Data = &sqs.SendMessageBatchOutput{Successful: []*sqs.SendMessageBatchResultEntry{mockSqsBatchResult, mockSqsBatchResult2}}
-	})
-
 	// Create a session and wrap it
+	sess := getSessionWithSqsBatchResponse()
 	sqsc := sqs.New(sess)
 
 	// Params will be sent to the publish call included here is the bare minimum params to send a message
@@ -1101,6 +1164,7 @@ func TestNonTracedService(t *testing.T) {
 	// Initilize trace plugin to set GlobalTracer of opentracing
 	tp := trace.New()
 	// Create a session and wrap it
+	sess := Wrap(sess)
 	cwc := cloudwatch.New(sess)
 
 	cwc.GetDashboard(&cloudwatch.GetDashboardInput{
