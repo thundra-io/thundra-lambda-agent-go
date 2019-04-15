@@ -25,6 +25,7 @@ var APIKey string
 var TrustAllCertificates bool
 var MaskDynamoDBStatement bool
 var DynamoDBTraceInjectionEnabled bool
+var LambdaTraceInjectionDisabled bool
 
 var TraceKinesisRequestEnabled bool
 var TraceFirehoseRequestEnabled bool
@@ -49,6 +50,7 @@ func init() {
 	TraceFirehoseRequestEnabled = isTraceFirehoseRequestEnabled()
 	TraceCloudwatchlogRequestEnabled = isTraceCloudwatchlogRequestEnabled()
 	DynamoDBTraceInjectionEnabled = isDynamoDBTraceInjectionEnabled()
+	LambdaTraceInjectionDisabled = isLambdaTraceInjectionDisabled()
 }
 
 func isThundraDisabled() bool {
@@ -241,6 +243,7 @@ func isTraceCloudwatchlogRequestEnabled() bool {
 	}
 	return enabled
 }
+
 func isDynamoDBTraceInjectionEnabled() bool {
 	env := os.Getenv(constants.EnableDynamoDbTraceInjection)
 	enabled, err := strconv.ParseBool(env)
@@ -251,4 +254,16 @@ func isDynamoDBTraceInjectionEnabled() bool {
 		return false
 	}
 	return enabled
+}
+
+func isLambdaTraceInjectionDisabled() bool {
+	env := os.Getenv(constants.DisableLambdaTraceInjection)
+	disabled, err := strconv.ParseBool(env)
+	if err != nil {
+		if env != "" {
+			fmt.Println(err, constants.DisableLambdaTraceInjection+" is not a bool value.")
+		}
+		return false
+	}
+	return disabled
 }

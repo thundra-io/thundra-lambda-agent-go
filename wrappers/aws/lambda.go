@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 
 	"github.com/thundra-io/thundra-lambda-agent-go/application"
+	"github.com/thundra-io/thundra-lambda-agent-go/config"
 	"github.com/thundra-io/thundra-lambda-agent-go/constants"
 
 	"github.com/aws/aws-lambda-go/lambdacontext"
@@ -72,7 +73,10 @@ func (i *lambdaIntegration) beforeCall(r *request.Request, span *tracer.RawSpan)
 	}
 
 	span.Tags = tags
-	i.injectSpanIntoClientContext(r)
+
+	if !config.LambdaTraceInjectionDisabled {
+		i.injectSpanIntoClientContext(r)
+	}
 }
 
 func (i *lambdaIntegration) afterCall(r *request.Request, span *tracer.RawSpan) {

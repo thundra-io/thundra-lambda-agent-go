@@ -44,3 +44,4 @@ const ThundraLambdaTraceFirehoseRequestEnable = "thundra_agent_lambda_trace_fire
 const ThundraLambdaTraceCloudwatchlogRequestEnable = "thundra_agent_lambda_trace_cloudwatchlog_request_enable"
 
 const EnableDynamoDbTraceInjection = "thundra_agent_trace_integrations_dynamodb_trace_injection_enable"
+const DisableLambdaTraceInjection = "thundra_agent_trace_integrations_aws_lambda_traceInjection_disable"
