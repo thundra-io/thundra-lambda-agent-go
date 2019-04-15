@@ -103,19 +103,14 @@ func injectTriggerTagsForDynamoDB(payload json.RawMessage) {
 		if !traceLinkFound {
 			creationTime := record.Change.ApproximateCreationDateTime
 			if creationTime != (events.SecondsEpochTime{}) {
-				if record.EventName == "INSERT" {
+				if record.EventName == "INSERT" || record.EventName == "MODIFY" {
 					if record.Change.NewImage != nil {
 						attributeStr := attributesToStr(record.Change.NewImage)
-						addDynamoDBTraceLinks(&traceLinks, &record, "PUT", tableName, attributeStr)
-					}
-				} else if record.EventName == "MODIFY" {
-					if record.Change.NewImage != nil {
-						attributeStr := attributesToStr(record.Change.NewImage)
-						addDynamoDBTraceLinks(&traceLinks, &record, "PUT", tableName, attributeStr)
+						addDynamoDBTraceLinks(&traceLinks, &record, "SAVE", tableName, attributeStr)
 					}
 					if record.Change.Keys != nil {
 						attributeStr := attributesToStr(record.Change.Keys)
-						addDynamoDBTraceLinks(&traceLinks, &record, "UPDATE", tableName, attributeStr)
+						addDynamoDBTraceLinks(&traceLinks, &record, "SAVE", tableName, attributeStr)
 					}
 				} else if record.EventName == "REMOVE" {
 					if record.Change.Keys != nil {

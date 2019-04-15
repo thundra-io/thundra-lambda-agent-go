@@ -275,9 +275,9 @@ func TestDynamoDBPutItem(t *testing.T) {
 	assert.Equal(t, exp, got)
 
 	expectedTraceLinks := []string{
-		"us-west-2:Music:1554912000:PUT:cd2ecd1787d28c7d589601c6456b2e55",
-		"us-west-2:Music:1554912001:PUT:cd2ecd1787d28c7d589601c6456b2e55",
-		"us-west-2:Music:1554912002:PUT:cd2ecd1787d28c7d589601c6456b2e55",
+		"us-west-2:Music:1554912000:SAVE:cd2ecd1787d28c7d589601c6456b2e55",
+		"us-west-2:Music:1554912001:SAVE:cd2ecd1787d28c7d589601c6456b2e55",
+		"us-west-2:Music:1554912002:SAVE:cd2ecd1787d28c7d589601c6456b2e55",
 	}
 
 	assert.Equal(t, expectedTraceLinks, span.Tags[constants.SpanTags["TRACE_LINKS"]])
@@ -338,9 +338,9 @@ func TestDynamoDBUpdateItem(t *testing.T) {
 	assert.Equal(t, exp, got)
 
 	expectedTraceLinks := []string{
-		"us-west-2:Music:1554912000:UPDATE:214e7d85ccee118350d24b06f2c33d9c",
-		"us-west-2:Music:1554912001:UPDATE:214e7d85ccee118350d24b06f2c33d9c",
-		"us-west-2:Music:1554912002:UPDATE:214e7d85ccee118350d24b06f2c33d9c",
+		"us-west-2:Music:1554912000:SAVE:214e7d85ccee118350d24b06f2c33d9c",
+		"us-west-2:Music:1554912001:SAVE:214e7d85ccee118350d24b06f2c33d9c",
+		"us-west-2:Music:1554912002:SAVE:214e7d85ccee118350d24b06f2c33d9c",
 	}
 
 	assert.Equal(t, expectedTraceLinks, span.Tags[constants.SpanTags["TRACE_LINKS"]])

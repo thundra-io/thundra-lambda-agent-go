@@ -121,7 +121,7 @@ func (i *dynamodbIntegration) getTraceLinks(r *request.Request, span *tracer.Raw
 		case *dynamodb.PutItemInput:
 			if v.Item != nil {
 				strAttributes := attributesToStr(v.Item)
-				return i.generateTraceLinks(region, dateStr, "PUT", dynamodbInfo.TableName, strAttributes)
+				return i.generateTraceLinks(region, dateStr, "SAVE", dynamodbInfo.TableName, strAttributes)
 			}
 		}
 	} else if r.Operation.Name == "UpdateItem" {
@@ -129,7 +129,7 @@ func (i *dynamodbIntegration) getTraceLinks(r *request.Request, span *tracer.Raw
 		case *dynamodb.UpdateItemInput:
 			if v.Key != nil {
 				strAttributes := attributesToStr(v.Key)
-				return i.generateTraceLinks(region, dateStr, "UPDATE", dynamodbInfo.TableName, strAttributes)
+				return i.generateTraceLinks(region, dateStr, "SAVE", dynamodbInfo.TableName, strAttributes)
 			}
 		}
 	} else if r.Operation.Name == "DeleteItem" {
