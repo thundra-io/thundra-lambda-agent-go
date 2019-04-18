@@ -56,8 +56,7 @@ func getSessionWithDateResponseHeader() *session.Session {
 		MaxRetries: aws.Int(0),
 	})
 	wrappedSess := Wrap(sess)
-	wrappedSess.Handlers.Build.Clear()
-	wrappedSess.Handlers.Build.PushBack(func(r *request.Request) {
+	wrappedSess.Handlers.Complete.PushFront(func(r *request.Request) {
 		r.HTTPResponse = &http.Response{}
 		r.HTTPResponse.Header = http.Header{}
 		r.HTTPResponse.Header.Set("date", "Thu, 10 Apr 2019 16:00:00 GMT")
@@ -74,8 +73,7 @@ func getSessionWithSnsResponse() *session.Session {
 	wrappedSess := Wrap(sess)
 
 	snsData := sns.PublishOutput{MessageId: aws.String("95df01b4-ee98-5cb9-9903-4c221d41eb5e")}
-	wrappedSess.Handlers.Build.Clear()
-	wrappedSess.Handlers.Build.PushBack(func(r *request.Request) {
+	wrappedSess.Handlers.Complete.PushFront(func(r *request.Request) {
 		r.Data = &snsData
 	})
 
@@ -93,8 +91,7 @@ func getSessionWithKinesisResponse() *session.Session {
 		SequenceNumber: aws.String("49568167373333333333333333333333333333333333333333333333"),
 	}
 	sess = Wrap(sess)
-	sess.Handlers.Build.Clear()
-	sess.Handlers.Build.PushBack(func(r *request.Request) {
+	sess.Handlers.Complete.PushFront(func(r *request.Request) {
 		r.Data = kinesisData
 	})
 	return sess
@@ -119,8 +116,7 @@ func getSessionWithKinesisPutRecordsResponse() *session.Session {
 		},
 	}
 	sess = Wrap(sess)
-	sess.Handlers.Build.Clear()
-	sess.Handlers.Build.PushBack(func(r *request.Request) {
+	sess.Handlers.Complete.PushFront(func(r *request.Request) {
 		r.Data = kinesisData
 	})
 
@@ -134,8 +130,7 @@ func getSessionWithS3Response() *session.Session {
 		MaxRetries: aws.Int(0),
 	})
 	sess = Wrap(sess)
-	sess.Handlers.Build.Clear()
-	sess.Handlers.Build.PushBack(func(r *request.Request) {
+	sess.Handlers.Complete.PushFront(func(r *request.Request) {
 		r.HTTPResponse = &http.Response{}
 		r.HTTPResponse.Header = http.Header{}
 		r.HTTPResponse.Header.Set("x-amz-request-id", "C3D13FE58DE4C810")
@@ -151,8 +146,7 @@ func getSessionWithLambdaResponse() *session.Session {
 		MaxRetries: aws.Int(0),
 	})
 	sess = Wrap(sess)
-	sess.Handlers.Build.Clear()
-	sess.Handlers.Build.PushBack(func(r *request.Request) {
+	sess.Handlers.Complete.PushFront(func(r *request.Request) {
 		r.HTTPResponse = &http.Response{}
 		r.HTTPResponse.Header = http.Header{}
 		r.HTTPResponse.Header.Set("X-Amzn-Requestid", "C3D13FE58DE4C810")
@@ -168,8 +162,7 @@ func getSessionWithSqsResponse() *session.Session {
 		MaxRetries: aws.Int(0),
 	})
 	sess = Wrap(sess)
-	sess.Handlers.Build.Clear()
-	sess.Handlers.Build.PushBack(func(r *request.Request) {
+	sess.Handlers.Complete.PushFront(func(r *request.Request) {
 		r.Data = &sqs.SendMessageOutput{MessageId: aws.String("95df01b4-ee98-5cb9-9903-4c221d41eb5e")}
 	})
 
@@ -185,8 +178,7 @@ func getSessionWithSqsBatchResponse() *session.Session {
 	mockSqsBatchResult := &sqs.SendMessageBatchResultEntry{MessageId: aws.String("84df12b4-ee98-2cb8-1903-1c234d56eb7e")}
 	mockSqsBatchResult2 := &sqs.SendMessageBatchResultEntry{MessageId: aws.String("95df01b4-ee98-5cb9-9903-4c221d41eb5e")}
 	sess = Wrap(sess)
-	sess.Handlers.Build.Clear()
-	sess.Handlers.Build.PushBack(func(r *request.Request) {
+	sess.Handlers.Complete.PushFront(func(r *request.Request) {
 		r.Data = &sqs.SendMessageBatchOutput{Successful: []*sqs.SendMessageBatchResultEntry{mockSqsBatchResult, mockSqsBatchResult2}}
 	})
 
