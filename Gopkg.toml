@@ -24,9 +24,11 @@
 #   go-tests = true
 #   unused-packages = true
 ignored = [
+  "github.com/lib/pq",
   "github.com/opentracing/*",
   "github.com/aws/aws-lambda-go/*",
   "github.com/aws/aws-sdk-go/*",
+  "github.com/go-sql-driver/mysql",
 ]
 
 [[constraint]]
@@ -39,7 +41,7 @@ ignored = [
 
 [[constraint]]
   name = "github.com/stretchr/testify"
-  version = "1.2.1"
+  version = "1.3.0"
 
 [[constraint]]
   name = "github.com/pkg/errors"
