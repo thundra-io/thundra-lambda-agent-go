@@ -204,5 +204,8 @@ func beforeCall(span *tracer.RawSpan, url, method string, req *http.Request) {
 func afterCall(span *tracer.RawSpan, resp *http.Response) {
 	if resp != nil {
 		span.Tags[constants.HTTPTags["STATUS"]] = resp.StatusCode
+		if _, ok := resp.Header["X-Amz-Apigw-Id"]; ok {
+			span.ClassName = constants.ClassNames["APIGATEWAY"]
+		}
 	}
 }
