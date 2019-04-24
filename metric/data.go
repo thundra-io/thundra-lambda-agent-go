@@ -49,6 +49,8 @@ func (mp *metricPlugin) prepareMetricsData() metricDataModel {
 		SpanID:                    "", // Optional
 		MetricTimestamp:           mp.data.metricTimestamp,
 		Metrics:                   map[string]interface{}{},
-		Tags:                      map[string]interface{}{},
+		Tags: map[string]interface{}{
+			"aws.region": application.FunctionRegion,
+		},
 	}
 }

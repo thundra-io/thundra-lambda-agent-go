@@ -2,11 +2,13 @@ package thundraaws
 
 import (
 	"encoding/json"
+	"reflect"
 
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/thundra-io/thundra-lambda-agent-go/application"
 	"github.com/thundra-io/thundra-lambda-agent-go/constants"
 	"github.com/thundra-io/thundra-lambda-agent-go/tracer"
+	"github.com/thundra-io/thundra-lambda-agent-go/utils"
 )
 
 type kinesisIntegration struct{}
@@ -57,7 +59,46 @@ func (i *kinesisIntegration) beforeCall(r *request.Request, span *tracer.RawSpan
 }
 
 func (i *kinesisIntegration) afterCall(r *request.Request, span *tracer.RawSpan) {
-	return
+	traceLinks := i.getTraceLinks(r)
+	if traceLinks != nil {
+		span.Tags[constants.SpanTags["TRACE_LINKS"]] = traceLinks
+	}
+}
+
+func (i *kinesisIntegration) getTraceLinks(r *request.Request) []string {
+	responseValue := reflect.ValueOf(r.Data)
+
+	if responseValue == (reflect.Value{}) {
+		return nil
+	}
+
+	records := responseValue.Elem().FieldByName("Records")
+	region := ""
+	streamName := i.getStreamName(r)
+
+	if r.Config.Region != nil {
+		region = *r.Config.Region
+	}
+
+	if records != (reflect.Value{}) {
+		var links []string
+		for j := 0; j < records.Len(); j++ {
+			record := records.Index(j).Elem()
+			if sequenceNumber, ok := utils.GetStringFieldFromValue(record, "SequenceNumber"); ok {
+				if shardID, ok := utils.GetStringFieldFromValue(record, "ShardId"); ok {
+					links = append(links, region+":"+streamName+":"+shardID+":"+sequenceNumber)
+				}
+			}
+		}
+		return links
+	}
+	if sequenceNumber, ok := utils.GetStringFieldFromValue(responseValue.Elem(), "SequenceNumber"); ok {
+		if shardID, ok := utils.GetStringFieldFromValue(responseValue.Elem(), "ShardId"); ok {
+			return []string{region + ":" + streamName + ":" + shardID + ":" + sequenceNumber}
+		}
+	}
+
+	return nil
 }
 
 func init() {

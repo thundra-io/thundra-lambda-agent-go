@@ -6,6 +6,7 @@ import (
 	"net/http"
 	gourl "net/url"
 
+	"github.com/thundra-io/thundra-lambda-agent-go/application"
 	"github.com/thundra-io/thundra-lambda-agent-go/tracer"
 	"github.com/thundra-io/thundra-lambda-agent-go/utils"
 
@@ -36,16 +37,18 @@ func (c *ClientWrapper) Do(req *http.Request) (resp *http.Response, err error) {
 func (c *ClientWrapper) DoWithContext(ctx context.Context, req *http.Request) (resp *http.Response, err error) {
 	span, _ := opentracing.StartSpanFromContext(
 		ctx,
-		req.URL.Path,
+		req.URL.Host+req.URL.Path,
 	)
 	defer span.Finish()
 	rawSpan, ok := tracer.GetRaw(span)
 	if ok {
-		beforeCall(rawSpan, req.URL.String(), req.Method)
+		beforeCall(rawSpan, req.URL.String(), req.Method, req)
 	}
 	resp, err = c.Client.Do(req)
 	if err != nil {
 		utils.SetSpanError(span, err)
+	} else if ok {
+		afterCall(rawSpan, resp)
 	}
 	return
 }
@@ -66,11 +69,13 @@ func (c *ClientWrapper) GetWithContext(ctx context.Context, url string) (resp *h
 	defer span.Finish()
 	rawSpan, ok := tracer.GetRaw(span)
 	if ok {
-		beforeCall(rawSpan, url, http.MethodGet)
+		beforeCall(rawSpan, url, http.MethodGet, nil)
 	}
 	resp, err = c.Client.Get(url)
 	if err != nil {
 		utils.SetSpanError(span, err)
+	} else if ok {
+		afterCall(rawSpan, resp)
 	}
 	return
 }
@@ -91,11 +96,13 @@ func (c *ClientWrapper) PostWithContext(ctx context.Context, url, contentType st
 	defer span.Finish()
 	rawSpan, ok := tracer.GetRaw(span)
 	if ok {
-		beforeCall(rawSpan, url, http.MethodPost)
+		beforeCall(rawSpan, url, http.MethodPost, nil)
 	}
 	resp, err = c.Client.Post(url, contentType, body)
 	if err != nil {
 		utils.SetSpanError(span, err)
+	} else if ok {
+		afterCall(rawSpan, resp)
 	}
 	return
 }
@@ -116,11 +123,13 @@ func (c *ClientWrapper) PostFormWithContext(ctx context.Context, url string, dat
 	defer span.Finish()
 	rawSpan, ok := tracer.GetRaw(span)
 	if ok {
-		beforeCall(rawSpan, url, http.MethodPost)
+		beforeCall(rawSpan, url, http.MethodPost, nil)
 	}
 	resp, err = c.Client.PostForm(url, data)
 	if err != nil {
 		utils.SetSpanError(span, err)
+	} else if ok {
+		afterCall(rawSpan, resp)
 	}
 	return
 }
@@ -141,11 +150,13 @@ func (c *ClientWrapper) HeadWithContext(ctx context.Context, url string) (resp *
 	defer span.Finish()
 	rawSpan, ok := tracer.GetRaw(span)
 	if ok {
-		beforeCall(rawSpan, url, http.MethodHead)
+		beforeCall(rawSpan, url, http.MethodHead, nil)
 	}
 	resp, err = c.Client.Head(url)
 	if err != nil {
 		utils.SetSpanError(span, err)
+	} else if ok {
+		afterCall(rawSpan, resp)
 	}
 	return
 }
@@ -159,7 +170,7 @@ func getOperationName(url string) string {
 	return parsedURL.Host + parsedURL.Path
 }
 
-func beforeCall(span *tracer.RawSpan, url, method string) {
+func beforeCall(span *tracer.RawSpan, url, method string, req *http.Request) {
 	span.ClassName = constants.ClassNames["HTTP"]
 	span.DomainName = constants.DomainNames["API"]
 
@@ -176,7 +187,25 @@ func beforeCall(span *tracer.RawSpan, url, method string) {
 		tags[constants.HTTPTags["PATH"]] = parsedURL.Path
 		tags[constants.HTTPTags["HOST"]] = parsedURL.Host
 		tags[constants.HTTPTags["QUERY_PARAMS"]] = parsedURL.Query().Encode()
+		tags[constants.SpanTags["TRIGGER_DOMAIN_NAME"]] = constants.AwsLambdaApplicationDomain
+		tags[constants.SpanTags["TRIGGER_CLASS_NAME"]] = constants.AwsLambdaApplicationClass
+		tags[constants.SpanTags["TRIGGER_OPERATION_NAMES"]] = []string{application.FunctionName}
+		tags[constants.SpanTags["TOPOLOGY_VERTEX"]] = true
 	}
 
 	span.Tags = tags
+
+	if req != nil {
+		req.Header.Add("x-thundra-span-id", span.Context.SpanID)
+		span.Tags[constants.SpanTags["TRACE_LINKS"]] = []string{span.Context.SpanID}
+	}
+}
+
+func afterCall(span *tracer.RawSpan, resp *http.Response) {
+	if resp != nil {
+		span.Tags[constants.HTTPTags["STATUS"]] = resp.StatusCode
+		if _, ok := resp.Header["X-Amz-Apigw-Id"]; ok {
+			span.ClassName = constants.ClassNames["APIGATEWAY"]
+		}
+	}
 }

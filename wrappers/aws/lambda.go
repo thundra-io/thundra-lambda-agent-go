@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 
 	"github.com/thundra-io/thundra-lambda-agent-go/application"
+	"github.com/thundra-io/thundra-lambda-agent-go/config"
 	"github.com/thundra-io/thundra-lambda-agent-go/constants"
 
 	"github.com/aws/aws-lambda-go/lambdacontext"
@@ -72,11 +73,20 @@ func (i *lambdaIntegration) beforeCall(r *request.Request, span *tracer.RawSpan)
 	}
 
 	span.Tags = tags
-	i.injectSpanIntoClientContext(r)
+
+	if !config.LambdaTraceInjectionDisabled {
+		i.injectSpanIntoClientContext(r)
+	}
 }
 
 func (i *lambdaIntegration) afterCall(r *request.Request, span *tracer.RawSpan) {
-	return
+	xAmzRequestID := ""
+	if r.HTTPResponse != nil && r.HTTPResponse.Header != nil {
+		xAmzRequestID = r.HTTPResponse.Header.Get("X-Amzn-Requestid")
+	}
+	if xAmzRequestID != "" {
+		span.Tags[constants.SpanTags["TRACE_LINKS"]] = []string{xAmzRequestID}
+	}
 }
 
 func (i *lambdaIntegration) injectSpanIntoClientContext(r *request.Request) {
@@ -101,7 +111,7 @@ func (i *lambdaIntegration) injectSpanIntoClientContext(r *request.Request) {
 	clientContext.Custom[constants.AwsLambdaTriggerOperationName] = application.ApplicationName
 	clientContext.Custom[constants.AwsLambdaTriggerDomainName] = application.ApplicationDomainName
 	clientContext.Custom[constants.AwsLambdaTriggerClassName] = application.ApplicationClassName
-	
+
 	clientContextJSON, err := json.Marshal(clientContext)
 	if err != nil {
 		return

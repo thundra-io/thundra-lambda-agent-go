@@ -18,15 +18,15 @@
   version = "v1.1.1"
 
 [[projects]]
-  digest = "1:c96d16a4451e48e2c44b2c3531fd8ec9248d822637f1911a88959ca0bcae4a64"
+  digest = "1:440028f55cb322d8cb5b9d5ebec298a00b7d74690a658fe6b1c0c0b44341bfae"
   name = "github.com/go-ole/go-ole"
   packages = [
     ".",
     "oleutil",
   ]
   pruneopts = "UT"
-  revision = "39dc8486bd0952279431257138bc428275b86797"
-  version = "v1.2.2"
+  revision = "97b6244175ae18ea6eef668034fd6565847501c9"
+  version = "v1.2.4"
 
 [[projects]]
   digest = "1:cf31692c14422fa27c83a05292eb5cbe0fb2775972e8f1f8446a71549bd8980b"
@@ -53,7 +53,7 @@
   version = "v1.2.0"
 
 [[projects]]
-  digest = "1:affb500bedd63a0305fd1cca4b37009592c117cadf2cdfbc7a1c71727c1b20eb"
+  digest = "1:2ac9271e469441ccbb11ad54775f6e627ff61028888f51fcb4687a5c4999cda8"
   name = "github.com/shirou/gopsutil"
   packages = [
     "cpu",
@@ -64,8 +64,8 @@
     "process",
   ]
   pruneopts = "UT"
-  revision = "071446942108a03a13cf0717275ad3bdbcb691b4"
-  version = "v2.19.01"
+  revision = "2cbc9195c892b304060269ef280375236d2fcac9"
+  version = "v2.19.03"
 
 [[projects]]
   branch = "master"
@@ -98,14 +98,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:a1914323eabb0da3b4392fb0d34b1ae5b6b531323daf4eeddc355d8000982052"
+  digest = "1:c0b0b67bb6323f4f603950892199a243ee78bbb943605085b6f2dc72daa93bd1"
   name = "golang.org/x/sys"
   packages = [
     "unix",
     "windows",
   ]
   pruneopts = "UT"
-  revision = "41f3e6584952bb034a481797859f6ab34b6803bd"
+  revision = "0ad05ae3009d6413d3363aa09b350b2ec37daf09"
 
 [solve-meta]
   analyzer-name = "dep"
