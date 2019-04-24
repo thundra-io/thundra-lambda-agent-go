@@ -1,4 +1,4 @@
-package thundraredis
+package thundraredigo
 
 import (
 	"bytes"
@@ -9,9 +9,10 @@ import (
 	"strconv"
 
 	"github.com/gomodule/redigo/redis"
-	"github.com/opentracing/opentracing-go"
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/thundra-io/thundra-lambda-agent-go/tracer"
 	"github.com/thundra-io/thundra-lambda-agent-go/utils"
+	tredis "github.com/thundra-io/thundra-lambda-agent-go/wrappers/redis"
 )
 
 type connWrapper struct {
@@ -73,7 +74,7 @@ func (c connWrapper) Do(commandName string, args ...interface{}) (interface{}, e
 
 	rawSpan, ok := tracer.GetRaw(span)
 	if ok {
-		beforeCall(rawSpan, c.host, c.port, commandName, getRedisCommand(commandName, args...))
+		tredis.BeforeCall(rawSpan, c.host, c.port, commandName, getRedisCommand(commandName, args...))
 	}
 
 	reply, err := c.Conn.Do(commandName, args...)
@@ -102,7 +103,7 @@ func (c connWrapper) Send(commandName string, args ...interface{}) error {
 
 	rawSpan, ok := tracer.GetRaw(span)
 	if ok {
-		beforeCall(rawSpan, c.host, c.port, commandName, getRedisCommand(commandName, args...))
+		tredis.BeforeCall(rawSpan, c.host, c.port, commandName, getRedisCommand(commandName, args...))
 	}
 
 	err := c.Conn.Send(commandName, args...)

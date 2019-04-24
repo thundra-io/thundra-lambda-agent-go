@@ -1,4 +1,4 @@
-package thundraredis
+package redis
 
 import (
 	"github.com/thundra-io/thundra-lambda-agent-go/application"
@@ -7,7 +7,7 @@ import (
 	"github.com/thundra-io/thundra-lambda-agent-go/tracer"
 )
 
-func beforeCall(span *tracer.RawSpan, host string, port string, commandName string, command string) {
+func BeforeCall(span *tracer.RawSpan, host string, port string, commandName string, command string) {
 	span.ClassName = constants.ClassNames["REDIS"]
 	span.DomainName = constants.DomainNames["CACHE"]
 
