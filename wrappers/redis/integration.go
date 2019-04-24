@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/thundra-io/thundra-lambda-agent-go/application"
 	"github.com/thundra-io/thundra-lambda-agent-go/config"
@@ -14,7 +15,7 @@ import (
 func BeforeCall(span *tracer.RawSpan, host string, port string, commandName string, command string) {
 	span.ClassName = constants.ClassNames["REDIS"]
 	span.DomainName = constants.DomainNames["CACHE"]
-
+	commandName = strings.ToUpper(commandName)
 	// Set span tags
 	tags := map[string]interface{}{
 		constants.SpanTags["OPERATION_TYPE"]:      constants.RedisCommandTypes[commandName],

@@ -20,6 +20,44 @@ type ClientWrapper struct {
 	port string
 }
 
+type redisResult interface {
+	Args() []interface{}
+	Err() error
+}
+type redisCall struct {
+	cw   *ClientWrapper
+	cn   string
+	span opentracing.Span
+}
+
+func (rc *redisCall) beforeCall() {
+	if rc.cw == nil {
+		return
+	}
+	ctx := rc.cw.Context()
+	span, _ := opentracing.StartSpanFromContext(ctx, rc.cw.host)
+	rc.span = span
+	if rawSpan, ok := tracer.GetRaw(rc.span); ok {
+		tredis.BeforeCall(rawSpan, rc.cw.host, rc.cw.port, rc.cn, rc.cn)
+	}
+}
+
+func (rc *redisCall) afterCall(res redisResult) {
+	defer rc.span.Finish()
+	if err := res.Err(); err != nil {
+		utils.SetSpanError(rc.span, err)
+	}
+	if rawSpan, ok := tracer.GetRaw(rc.span); ok {
+		args := res.Args()
+		commandName := args[0]
+		if commandName.(string) != "" {
+			args[0] = strings.ToUpper(args[0].(string))
+		}
+		command := tredis.GetRedisCommand("", args...)
+		tredis.AfterCall(rawSpan, command)
+	}
+}
+
 var emptyCtx = context.Background()
 
 // NewClient returns a client to the Redis Server specified
@@ -30,63 +68,65 @@ func NewClient(opt *redis.Options) *ClientWrapper {
 	return &ClientWrapper{client, host, port}
 }
 
-func (c *ClientWrapper) startSpan() opentracing.Span {
-	ctx := c.Client.Context()
-	span, _ := opentracing.StartSpanFromContext(ctx, c.host)
-	return span
-}
-
-func setCommand(span *tracer.RawSpan, args []interface{}) {
-	commandName := args[0]
-	if commandName != "" {
-		args[0] = strings.ToUpper(args[0].(string))
+func (c *ClientWrapper) newRedisCall(cn string) *redisCall {
+	return &redisCall{
+		cw: c,
+		cn: cn,
 	}
-	command := tredis.GetRedisCommand("", args...)
-	tredis.AfterCall(span, command)
 }
 
 func (c *ClientWrapper) Ping() *redis.StatusCmd {
-	span := c.startSpan()
-	defer span.Finish()
-	if rawSpan, ok := tracer.GetRaw(span); ok {
-		commandName := "PING"
-		tredis.BeforeCall(rawSpan, c.host, c.port, commandName, commandName)
-	}
+	rc := c.newRedisCall("ping")
+	rc.beforeCall()
 	res := c.Client.Ping()
-	if err := res.Err(); err != nil {
-		utils.SetSpanError(span, err)
-	}
+	rc.afterCall(res)
 	return res
 }
 
 func (c *ClientWrapper) Append(key, value string) *redis.IntCmd {
-	span := c.startSpan()
-	defer span.Finish()
-	rawSpan, ok := tracer.GetRaw(span)
-	if ok {
-		commandName := "APPEND"
-		tredis.BeforeCall(rawSpan, c.host, c.port, commandName, commandName)
-	}
+	rc := c.newRedisCall("append")
+	rc.beforeCall()
 	res := c.Client.Append(key, value)
-	setCommand(rawSpan, res.Args())
-	if err := res.Err(); err != nil {
-		utils.SetSpanError(span, err)
-	}
+	rc.afterCall(res)
 	return res
 }
 
 func (c *ClientWrapper) BLPop(timeout time.Duration, keys ...string) *redis.StringSliceCmd {
-	span := c.startSpan()
-	defer span.Finish()
-	rawSpan, ok := tracer.GetRaw(span)
-	if ok {
-		commandName := "BLPOP"
-		tredis.BeforeCall(rawSpan, c.host, c.port, commandName, commandName)
-	}
+	rc := c.newRedisCall("blpop")
+	rc.beforeCall()
 	res := c.Client.BLPop(timeout, keys...)
-	if err := res.Err(); err != nil {
-		utils.SetSpanError(span, err)
-	}
-	setCommand(rawSpan, res.Args())
+	rc.afterCall(res)
+	return res
+}
+
+func (c *ClientWrapper) BRPop(timeout time.Duration, keys ...string) *redis.StringSliceCmd {
+	rc := c.newRedisCall("brpop")
+	rc.beforeCall()
+	res := c.Client.BRPop(timeout, keys...)
+	rc.afterCall(res)
+	return res
+}
+
+func (c *ClientWrapper) BRPopLPush(source, destination string, timeout time.Duration) *redis.StringCmd {
+	rc := c.newRedisCall("brpoplpush")
+	rc.beforeCall()
+	res := c.Client.BRPopLPush(source, destination, timeout)
+	rc.afterCall(res)
+	return res
+}
+
+func (c *ClientWrapper) BZPopMax(timeout time.Duration, keys ...string) *redis.ZWithKeyCmd {
+	rc := c.newRedisCall("bzpopmax")
+	rc.beforeCall()
+	res := c.Client.BZPopMax(timeout, keys...)
+	rc.afterCall(res)
+	return res
+}
+
+func (c *ClientWrapper) BZPopMin(timeout time.Duration, keys ...string) *redis.ZWithKeyCmd {
+	rc := c.newRedisCall("bzpopmin")
+	rc.beforeCall()
+	res := c.Client.BZPopMin(timeout, keys...)
+	rc.afterCall(res)
 	return res
 }
