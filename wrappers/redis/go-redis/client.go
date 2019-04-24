@@ -130,3 +130,59 @@ func (c *ClientWrapper) BZPopMin(timeout time.Duration, keys ...string) *redis.Z
 	rc.afterCall(res)
 	return res
 }
+
+func (c *ClientWrapper) BgRewriteAOF() *redis.StatusCmd {
+	rc := c.newRedisCall("bgrewriteaof")
+	rc.beforeCall()
+	res := c.Client.BgRewriteAOF()
+	rc.afterCall(res)
+	return res
+}
+
+func (c *ClientWrapper) BgSave() *redis.StatusCmd {
+	rc := c.newRedisCall("bgsave")
+	rc.beforeCall()
+	res := c.Client.BgSave()
+	rc.afterCall(res)
+	return res
+}
+
+func (c *ClientWrapper) BitCount(key string, bitCount *redis.BitCount) *redis.IntCmd {
+	rc := c.newRedisCall("bitcount")
+	rc.beforeCall()
+	res := c.Client.BitCount(key, bitCount)
+	rc.afterCall(res)
+	return res
+}
+
+func (c *ClientWrapper) BitOpAnd(destKey string, keys ...string) *redis.IntCmd {
+	rc := c.newRedisCall("bitopand")
+	rc.beforeCall()
+	res := c.Client.BitOpAnd(destKey, keys...)
+	rc.afterCall(res)
+	return res
+}
+
+func (c *ClientWrapper) BitOpOr(destKey string, keys ...string) *redis.IntCmd {
+	rc := c.newRedisCall("bitopor")
+	rc.beforeCall()
+	res := c.Client.BitOpOr(destKey, keys...)
+	rc.afterCall(res)
+	return res
+}
+
+func (c *ClientWrapper) BitOpXor(destKey string, keys ...string) *redis.IntCmd {
+	rc := c.newRedisCall("bitopxor")
+	rc.beforeCall()
+	res := c.Client.BitOpXor(destKey, keys...)
+	rc.afterCall(res)
+	return res
+}
+
+func (c *ClientWrapper) BitPos(key string, bit int64, pos ...int64) *redis.IntCmd {
+	rc := c.newRedisCall("bitpos")
+	rc.beforeCall()
+	res := c.Client.BitPos(key, bit, pos...)
+	rc.afterCall(res)
+	return res
+}
