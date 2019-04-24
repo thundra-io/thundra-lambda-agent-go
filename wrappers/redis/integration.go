@@ -1,6 +1,10 @@
 package redis
 
 import (
+	"bytes"
+	"fmt"
+	"strconv"
+
 	"github.com/thundra-io/thundra-lambda-agent-go/application"
 	"github.com/thundra-io/thundra-lambda-agent-go/config"
 	"github.com/thundra-io/thundra-lambda-agent-go/constants"
@@ -32,4 +36,32 @@ func BeforeCall(span *tracer.RawSpan, host string, port string, commandName stri
 	}
 
 	span.Tags = tags
+}
+
+func AfterCall(span *tracer.RawSpan, command string) {
+	if !config.MaskRedisCommand {
+		span.Tags[constants.DBTags["DB_STATEMENT"]] = command
+		span.Tags[constants.RedisTags["REDIS_COMMAND"]] = command
+	}
+}
+
+func GetRedisCommand(commandName string, args ...interface{}) string {
+	var b bytes.Buffer
+	b.WriteString(commandName)
+	for _, arg := range args {
+		b.WriteString(" ")
+		switch arg := arg.(type) {
+		case string:
+			b.WriteString(arg)
+		case int:
+			b.WriteString(strconv.Itoa(arg))
+		case int32:
+			b.WriteString(strconv.FormatInt(int64(arg), 10))
+		case int64:
+			b.WriteString(strconv.FormatInt(arg, 10))
+		case fmt.Stringer:
+			b.WriteString(arg.String())
+		}
+	}
+	return b.String()
 }

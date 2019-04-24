@@ -1,12 +1,9 @@
-package thundraredigo
+package tredigo
 
 import (
-	"bytes"
 	"context"
-	"fmt"
 	"net"
 	"net/url"
-	"strconv"
 
 	"github.com/gomodule/redigo/redis"
 	opentracing "github.com/opentracing/opentracing-go"
@@ -74,7 +71,7 @@ func (c connWrapper) Do(commandName string, args ...interface{}) (interface{}, e
 
 	rawSpan, ok := tracer.GetRaw(span)
 	if ok {
-		tredis.BeforeCall(rawSpan, c.host, c.port, commandName, getRedisCommand(commandName, args...))
+		tredis.BeforeCall(rawSpan, c.host, c.port, commandName, tredis.GetRedisCommand(commandName, args...))
 	}
 
 	reply, err := c.Conn.Do(commandName, args...)
@@ -103,7 +100,7 @@ func (c connWrapper) Send(commandName string, args ...interface{}) error {
 
 	rawSpan, ok := tracer.GetRaw(span)
 	if ok {
-		tredis.BeforeCall(rawSpan, c.host, c.port, commandName, getRedisCommand(commandName, args...))
+		tredis.BeforeCall(rawSpan, c.host, c.port, commandName, tredis.GetRedisCommand(commandName, args...))
 	}
 
 	err := c.Conn.Send(commandName, args...)
@@ -111,25 +108,4 @@ func (c connWrapper) Send(commandName string, args ...interface{}) error {
 		utils.SetSpanError(span, err)
 	}
 	return err
-}
-
-func getRedisCommand(commandName string, args ...interface{}) string {
-	var b bytes.Buffer
-	b.WriteString(commandName)
-	for _, arg := range args {
-		b.WriteString(" ")
-		switch arg := arg.(type) {
-		case string:
-			b.WriteString(arg)
-		case int:
-			b.WriteString(strconv.Itoa(arg))
-		case int32:
-			b.WriteString(strconv.FormatInt(int64(arg), 10))
-		case int64:
-			b.WriteString(strconv.FormatInt(arg, 10))
-		case fmt.Stringer:
-			b.WriteString(arg.String())
-		}
-	}
-	return b.String()
 }
