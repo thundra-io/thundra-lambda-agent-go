@@ -186,3 +186,75 @@ func (c *ClientWrapper) BitPos(key string, bit int64, pos ...int64) *redis.IntCm
 	rc.afterCall(res)
 	return res
 }
+
+func (c *ClientWrapper) DBSize() *redis.IntCmd {
+	rc := c.newRedisCall("dbsize")
+	rc.beforeCall()
+	res := c.Client.DBSize()
+	rc.afterCall(res)
+	return res
+}
+
+func (c *ClientWrapper) Decr(key string) *redis.IntCmd {
+	rc := c.newRedisCall("decr")
+	rc.beforeCall()
+	res := c.Client.Decr(key)
+	rc.afterCall(res)
+	return res
+}
+
+func (c *ClientWrapper) DecrBy(key string, decrement int64) *redis.IntCmd {
+	rc := c.newRedisCall("decrby")
+	rc.beforeCall()
+	res := c.Client.DecrBy(key, decrement)
+	rc.afterCall(res)
+	return res
+}
+
+func (c *ClientWrapper) Del(keys ...string) *redis.IntCmd {
+	rc := c.newRedisCall("delete")
+	rc.beforeCall()
+	res := c.Client.Del(key)
+	rc.afterCall(res)
+	return res
+}
+
+func (c *ClientWrapper) Eval(script string, keys []string, args ...interface{}) *redis.Cmd {
+	rc := c.newRedisCall("eval")
+	rc.beforeCall()
+	res := c.Client.Eval(script, keys, args...)
+	rc.afterCall(res)
+	return res
+}
+
+func (c *ClientWrapper) EvalSha(sha1 string, keys []string, args ...interface{}) *redis.Cmd {
+	rc := c.newRedisCall("evalsha")
+	rc.beforeCall()
+	res := c.Client.EvalSha(sha1, keys, args...)
+	rc.afterCall(res)
+	return res
+}
+
+func (c *ClientWrapper) Exists(keys ...string) *redis.IntCmd {
+	rc := c.newRedisCall("exists")
+	rc.beforeCall()
+	res := c.Client.Exists(keys...)
+	rc.afterCall(res)
+	return res
+}
+
+func (c *ClientWrapper) Expire(key string, expiration time.Duration) *redis.BoolCmd {
+	rc := c.newRedisCall("exists")
+	rc.beforeCall()
+	res := c.Client.Expire(key, expiration)
+	rc.afterCall(res)
+	return res
+}
+
+func (c *ClientWrapper) ExpireAt(key string, tm time.Time) *redis.BoolCmd {
+	rc := c.newRedisCall("exists")
+	rc.beforeCall()
+	res := c.Client.ExpireAt(key, tm)
+	rc.afterCall(res)
+	return res
+}
