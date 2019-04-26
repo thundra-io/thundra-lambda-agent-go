@@ -153,7 +153,9 @@ func (s *spanImpl) StartTimestamp() int64 {
 // GetRaw casts opentracing span interface to spanImpl struct
 func GetRaw(ots ot.Span) (*RawSpan, bool) {
 	s, ok := ots.(*spanImpl)
-
+	if !ok {
+		return nil, ok
+	}
 	return &s.raw, ok
 }
 
