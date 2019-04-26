@@ -1,9 +1,15 @@
 package thundraaws
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	"encoding/json"
+	"reflect"
+	"strconv"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws/request"
+	"github.com/aws/aws-sdk-go/service/firehose"
 	"github.com/thundra-io/thundra-lambda-agent-go/application"
 	"github.com/thundra-io/thundra-lambda-agent-go/constants"
 	"github.com/thundra-io/thundra-lambda-agent-go/tracer"
@@ -57,7 +63,76 @@ func (i *firehoseIntegration) beforeCall(r *request.Request, span *tracer.RawSpa
 }
 
 func (i *firehoseIntegration) afterCall(r *request.Request, span *tracer.RawSpan) {
-	return
+
+	traceLinks := i.getTraceLinks(r.Operation.Name, r)
+	if traceLinks != nil {
+		span.Tags[constants.SpanTags["TRACE_LINKS"]] = traceLinks
+	}
+}
+
+func getTimeStamp(dateStr string) int64 {
+	date, err := time.Parse(time.RFC1123, dateStr)
+	timestamp := time.Now().Unix() - 1
+	if err == nil {
+		timestamp = date.Unix()
+	}
+	return timestamp
+}
+
+func (i *firehoseIntegration) getTraceLinks(operationName string, r *request.Request) []string {
+	requestValue := reflect.ValueOf(r.Params)
+	if requestValue == (reflect.Value{}) {
+		return nil
+	}
+
+	streamName := i.getDeliveryStreamName(r)
+	region := ""
+	dateStr := ""
+
+	if r.Config.Region != nil {
+		region = *r.Config.Region
+	}
+	if r.HTTPResponse != nil && r.HTTPResponse.Header != nil {
+		dateStr = r.HTTPResponse.Header.Get("date")
+	}
+
+	if operationName == "PutRecord" {
+		if recordInput, ok := requestValue.Elem().Interface().(firehose.PutRecordInput); ok {
+			if recordInput.Record != nil {
+				data := recordInput.Record.Data
+				return i.generateTraceLinks(region, dateStr, data, streamName)
+			}
+		}
+	} else if operationName == "PutRecordBatch" {
+		records := requestValue.Elem().FieldByName("Records")
+		if records != (reflect.Value{}) {
+			var links []string
+			for j := 0; j < records.Len(); j++ {
+				if record, ok := records.Index(j).Elem().Interface().(firehose.Record); ok {
+					linksForRecord := i.generateTraceLinks(region, dateStr, record.Data, streamName)
+					for _, link := range linksForRecord {
+						links = append(links, link)
+					}
+				}
+			}
+			return links
+		}
+	}
+	return nil
+}
+
+func (i *firehoseIntegration) generateTraceLinks(region string, dateStr string, data []byte, streamName string) []string {
+	var traceLinks []string
+	timestamp := getTimeStamp(dateStr)
+
+	b := md5.Sum(data)
+	dataMD5 := hex.EncodeToString(b[:])
+
+	for j := 0; j < 3; j++ {
+		traceLinks = append(traceLinks, region+":"+streamName+":"+strconv.FormatInt(timestamp+int64(j), 10)+":"+dataMD5)
+	}
+
+	return traceLinks
 }
 
 func init() {

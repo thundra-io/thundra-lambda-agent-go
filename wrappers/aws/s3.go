@@ -65,7 +65,13 @@ func (i *s3Integration) beforeCall(r *request.Request, span *tracer.RawSpan) {
 }
 
 func (i *s3Integration) afterCall(r *request.Request, span *tracer.RawSpan) {
-	return
+	xAmzRequestID := ""
+	if r.HTTPResponse != nil && r.HTTPResponse.Header != nil {
+		xAmzRequestID = r.HTTPResponse.Header.Get("x-amz-request-id")
+	}
+	if xAmzRequestID != "" {
+		span.Tags[constants.SpanTags["TRACE_LINKS"]] = []string{xAmzRequestID}
+	}
 }
 
 func init() {

@@ -36,12 +36,14 @@ func createMockLambdaTriggerContext() context.Context {
 	}
 	c := context.Background()
 	lc.ClientContext = cc
+	lc.AwsRequestID = "aws_request_id"
 	c = lambdacontext.NewContext(c, lc)
 	return c
 }
 
 func TestInvocationTags_SNSTrigger(t *testing.T) {
 	ClearTags()
+	clearTraceLinks()
 
 	eventMock := readJSONFromFile(t, "./testdata/sns-event.json")
 	setInvocationTriggerTags(context.TODO(), eventMock)
@@ -51,10 +53,14 @@ func TestInvocationTags_SNSTrigger(t *testing.T) {
 	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_DOMAIN_NAME"]], constants.DomainNames["MESSAGING"])
 	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_CLASS_NAME"]], constants.ClassNames["SNS"])
 	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_OPERATION_NAMES"]], operationNames)
+
+	traceLinks := getIncomingTraceLinks()
+	assert.ElementsMatch(t, traceLinks, []string{"95df01b4-ee98-5cb9-9903-4c221d41eb5e"})
 }
 
 func TestInvocationTags_SNSTriggerFromInputType(t *testing.T) {
 	ClearTags()
+	clearTraceLinks()
 
 	eventMock := readJSONFromFile(t, "./testdata/sns-event.json")
 	ctx := context.Background()
@@ -68,10 +74,14 @@ func TestInvocationTags_SNSTriggerFromInputType(t *testing.T) {
 	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_DOMAIN_NAME"]], constants.DomainNames["MESSAGING"])
 	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_CLASS_NAME"]], constants.ClassNames["SNS"])
 	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_OPERATION_NAMES"]], operationNames)
+
+	traceLinks := getIncomingTraceLinks()
+	assert.ElementsMatch(t, traceLinks, []string{"95df01b4-ee98-5cb9-9903-4c221d41eb5e"})
 }
 
 func TestInvocationTags_SQSTrigger(t *testing.T) {
 	ClearTags()
+	clearTraceLinks()
 
 	eventMock := readJSONFromFile(t, "./testdata/sqs-event.json")
 	setInvocationTriggerTags(context.TODO(), eventMock)
@@ -81,10 +91,14 @@ func TestInvocationTags_SQSTrigger(t *testing.T) {
 	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_DOMAIN_NAME"]], constants.DomainNames["MESSAGING"])
 	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_CLASS_NAME"]], constants.ClassNames["SQS"])
 	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_OPERATION_NAMES"]], operationNames)
+
+	traceLinks := getIncomingTraceLinks()
+	assert.ElementsMatch(t, traceLinks, []string{"MessageID_1"})
 }
 
 func TestInvocationTags_SQSTriggerFromInputType(t *testing.T) {
 	ClearTags()
+	clearTraceLinks()
 
 	ctx := context.Background()
 	ctx = utils.SetEventTypeToContext(ctx, reflect.TypeOf(events.SQSEvent{}))
@@ -100,6 +114,9 @@ func TestInvocationTags_SQSTriggerFromInputType(t *testing.T) {
 	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_DOMAIN_NAME"]], constants.DomainNames["MESSAGING"])
 	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_CLASS_NAME"]], constants.ClassNames["SQS"])
 	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_OPERATION_NAMES"]], operationNames)
+
+	traceLinks := getIncomingTraceLinks()
+	assert.ElementsMatch(t, traceLinks, []string{"MessageID_1"})
 }
 
 func TestInvocationTags_CFTrigger(t *testing.T) {
@@ -130,6 +147,7 @@ func TestInvocationTags_APIGatewayTrigger(t *testing.T) {
 
 func TestInvocationTags_APIGatewayProxyTrigger(t *testing.T) {
 	ClearTags()
+	clearTraceLinks()
 
 	eventMock := readJSONFromFile(t, "./testdata/apigw-request.json")
 	setInvocationTriggerTags(context.TODO(), eventMock)
@@ -139,10 +157,14 @@ func TestInvocationTags_APIGatewayProxyTrigger(t *testing.T) {
 	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_DOMAIN_NAME"]], constants.DomainNames["API"])
 	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_CLASS_NAME"]], constants.ClassNames["APIGATEWAY"])
 	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_OPERATION_NAMES"]], operationNames)
+
+	traceLinks := getIncomingTraceLinks()
+	assert.Equal(t, traceLinks, []string{"test_span_id"})
 }
 
 func TestInvocationTags_APIGatewayProxyTriggerFromInputType(t *testing.T) {
 	ClearTags()
+	clearTraceLinks()
 
 	ctx := context.Background()
 	ctx = utils.SetEventTypeToContext(ctx, reflect.TypeOf(events.APIGatewayProxyRequest{}))
@@ -160,6 +182,7 @@ func TestInvocationTags_APIGatewayProxyTriggerFromInputType(t *testing.T) {
 
 func TestInvocationTags_S3Trigger(t *testing.T) {
 	ClearTags()
+	clearTraceLinks()
 
 	eventMock := readJSONFromFile(t, "./testdata/s3-event.json")
 	setInvocationTriggerTags(context.TODO(), eventMock)
@@ -220,6 +243,7 @@ func TestInvocationTags_ScheduleTriggerFromInputType(t *testing.T) {
 
 func TestInvocationTags_KinesisTrigger(t *testing.T) {
 	ClearTags()
+	clearTraceLinks()
 
 	eventMock := readJSONFromFile(t, "./testdata/kinesis-event.json")
 	setInvocationTriggerTags(context.TODO(), eventMock)
@@ -229,10 +253,18 @@ func TestInvocationTags_KinesisTrigger(t *testing.T) {
 	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_DOMAIN_NAME"]], constants.DomainNames["STREAM"])
 	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_CLASS_NAME"]], constants.ClassNames["KINESIS"])
 	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_OPERATION_NAMES"]], operationNames)
+
+	traceLinks := getIncomingTraceLinks()
+	expectedLinks := []string{
+		"us-east-1:simple-stream:shardId-000000000000:49568167373333333333333333333333333333333333333333333333",
+		"us-east-1:simple-stream:shardId-000000000000:49568167373333333334444444444444444444444444444444444444",
+	}
+	assert.ElementsMatch(t, traceLinks, expectedLinks)
 }
 
 func TestInvocationTags_KinesisTriggerFromInputType(t *testing.T) {
 	ClearTags()
+	clearTraceLinks()
 
 	ctx := context.Background()
 	ctx = utils.SetEventTypeToContext(ctx, reflect.TypeOf(events.KinesisEvent{}))
@@ -246,10 +278,18 @@ func TestInvocationTags_KinesisTriggerFromInputType(t *testing.T) {
 	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_DOMAIN_NAME"]], constants.DomainNames["STREAM"])
 	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_CLASS_NAME"]], constants.ClassNames["KINESIS"])
 	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_OPERATION_NAMES"]], operationNames)
+
+	traceLinks := getIncomingTraceLinks()
+	expectedLinks := []string{
+		"us-east-1:simple-stream:shardId-000000000000:49568167373333333333333333333333333333333333333333333333",
+		"us-east-1:simple-stream:shardId-000000000000:49568167373333333334444444444444444444444444444444444444",
+	}
+	assert.ElementsMatch(t, traceLinks, expectedLinks)
 }
 
 func TestInvocationTags_KinesisFirehoseTrigger(t *testing.T) {
 	ClearTags()
+	clearTraceLinks()
 
 	eventMock := readJSONFromFile(t, "./testdata/kinesis-firehose-event.json")
 	setInvocationTriggerTags(context.TODO(), eventMock)
@@ -263,6 +303,8 @@ func TestInvocationTags_KinesisFirehoseTrigger(t *testing.T) {
 
 func TestInvocationTags_KinesisFirehoseTriggerFromInputType(t *testing.T) {
 	ClearTags()
+	clearTraceLinks()
+
 	ctx := context.Background()
 	ctx = utils.SetEventTypeToContext(ctx, reflect.TypeOf(events.KinesisFirehoseEvent{}))
 	eventMock := readJSONFromFile(t, "./testdata/kinesis-firehose-event.json")
@@ -279,6 +321,7 @@ func TestInvocationTags_KinesisFirehoseTriggerFromInputType(t *testing.T) {
 
 func TestInvocationTags_DynamoDBTrigger(t *testing.T) {
 	ClearTags()
+	clearTraceLinks()
 
 	eventMock := readJSONFromFile(t, "./testdata/dynamodb-event.json")
 	setInvocationTriggerTags(context.TODO(), eventMock)
@@ -288,10 +331,12 @@ func TestInvocationTags_DynamoDBTrigger(t *testing.T) {
 	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_DOMAIN_NAME"]], constants.DomainNames["DB"])
 	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_CLASS_NAME"]], constants.ClassNames["DYNAMODB"])
 	assert.ElementsMatch(t, invocationTags[constants.SpanTags["TRIGGER_OPERATION_NAMES"]], operationNames)
+
 }
 
 func TestInvocationTags_DynamoDBTriggerFromInputType(t *testing.T) {
 	ClearTags()
+	clearTraceLinks()
 
 	ctx := context.Background()
 	ctx = utils.SetEventTypeToContext(ctx, reflect.TypeOf(events.DynamoDBEvent{}))
@@ -340,6 +385,7 @@ func TestInvocationTags_CloudWatchLogsTriggerFromInputType(t *testing.T) {
 
 func TestInvocationTags_LambdaTrigger(t *testing.T) {
 	ClearTags()
+	clearTraceLinks()
 
 	c := createMockLambdaTriggerContext()
 	setInvocationTriggerTags(c, nil)
@@ -348,6 +394,9 @@ func TestInvocationTags_LambdaTrigger(t *testing.T) {
 	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_DOMAIN_NAME"]], constants.DomainNames["API"])
 	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_CLASS_NAME"]], constants.ClassNames["LAMBDA"])
 	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_OPERATION_NAMES"]], operationNames)
+
+	traceLinks := getIncomingTraceLinks()
+	assert.ElementsMatch(t, traceLinks, []string{"aws_request_id"})
 }
 
 func TestInvocationTags_NilEvent(t *testing.T) {

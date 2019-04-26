@@ -2,12 +2,14 @@ package thundraaws
 
 import (
 	"encoding/json"
+	"reflect"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/thundra-io/thundra-lambda-agent-go/application"
 	"github.com/thundra-io/thundra-lambda-agent-go/constants"
 	"github.com/thundra-io/thundra-lambda-agent-go/tracer"
+	"github.com/thundra-io/thundra-lambda-agent-go/utils"
 )
 
 type snsIntegration struct{}
@@ -66,7 +68,15 @@ func (i *snsIntegration) beforeCall(r *request.Request, span *tracer.RawSpan) {
 }
 
 func (i *snsIntegration) afterCall(r *request.Request, span *tracer.RawSpan) {
-	return
+	responseValue := reflect.ValueOf(r.Data)
+	if responseValue == (reflect.Value{}) {
+		return
+	}
+	messageID, _ := utils.GetStringFieldFromValue(responseValue.Elem(), "MessageId")
+
+	if messageID != "" {
+		span.Tags[constants.SpanTags["TRACE_LINKS"]] = []string{messageID}
+	}
 }
 
 func init() {
