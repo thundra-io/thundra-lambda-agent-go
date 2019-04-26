@@ -52,6 +52,9 @@ func DialURL(rawurl string, options ...redis.DialOption) (redis.Conn, error) {
 	return connWrapper{conn, host, port}, err
 }
 
+// Do wraps the redis.Conn.Do and starts a new span. If context.Context is provided as last argument,
+// the newly created span will be a child of span with the passed context. Otherwise, new span will be
+// created with an empty context.
 func (c connWrapper) Do(commandName string, args ...interface{}) (interface{}, error) {
 	ctx := emptyCtx
 	if n := len(args); n > 0 {
@@ -81,6 +84,9 @@ func (c connWrapper) Do(commandName string, args ...interface{}) (interface{}, e
 	return reply, err
 }
 
+// Send wraps the redis.Conn.Send and starts a new span. If context.Context is provided as last argument,
+// the newly created span will be a child of span with the passed context. Otherwise, new span will be
+// created with an empty context.
 func (c connWrapper) Send(commandName string, args ...interface{}) error {
 	ctx := emptyCtx
 	if n := len(args); n > 0 {
