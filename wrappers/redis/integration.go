@@ -20,7 +20,7 @@ func BeforeCall(span *tracer.RawSpan, host string, port string, commandName stri
 	tags := map[string]interface{}{
 		constants.SpanTags["OPERATION_TYPE"]:      constants.RedisCommandTypes[commandName],
 		constants.DBTags["DB_INSTANCE"]:           host,
-		constants.DBTags["DB_STATEMENT_TYPE"]:     constants.RedisCommandTypes[commandName],
+		constants.DBTags["DB_STATEMENT_TYPE"]:     commandName,
 		constants.DBTags["DB_TYPE"]:               "redis",
 		constants.RedisTags["REDIS_HOST"]:         host,
 		constants.RedisTags["REDIS_COMMAND_TYPE"]: commandName,
