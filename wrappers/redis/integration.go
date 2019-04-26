@@ -15,6 +15,9 @@ import (
 func BeforeCall(span *tracer.RawSpan, host string, port string, commandName string, command string) {
 	span.ClassName = constants.ClassNames["REDIS"]
 	span.DomainName = constants.DomainNames["CACHE"]
+	if len(commandName) == 0 {
+		commandName = strings.Split(command, " ")[0]
+	}
 	commandName = strings.ToUpper(commandName)
 	// Set span tags
 	tags := map[string]interface{}{
@@ -37,13 +40,6 @@ func BeforeCall(span *tracer.RawSpan, host string, port string, commandName stri
 	}
 
 	span.Tags = tags
-}
-
-func AfterCall(span *tracer.RawSpan, command string) {
-	if !config.MaskRedisCommand {
-		span.Tags[constants.DBTags["DB_STATEMENT"]] = command
-		span.Tags[constants.RedisTags["REDIS_COMMAND"]] = command
-	}
 }
 
 func GetRedisCommand(commandName string, args ...interface{}) string {
