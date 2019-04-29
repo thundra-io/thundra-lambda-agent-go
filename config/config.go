@@ -34,6 +34,13 @@ var TraceKinesisRequestEnabled bool
 var TraceFirehoseRequestEnabled bool
 var TraceCloudwatchlogRequestEnabled bool
 
+var ReportRestCompositeBatchSize int
+var ReportCloudwatchCompositeBatchSize int
+
+var ReportRestCompositeDataEnabled bool
+var ReportCloudwatchCompositeDataEnabled bool
+var ReportPublishCloudwatchEnabled bool
+
 func init() {
 	ThundraDisabled = isThundraDisabled()
 	TraceDisabled = isTraceDisabled()
@@ -57,6 +64,11 @@ func init() {
 	TraceCloudwatchlogRequestEnabled = isTraceCloudwatchlogRequestEnabled()
 	DynamoDBTraceInjectionEnabled = isDynamoDBTraceInjectionEnabled()
 	LambdaTraceInjectionDisabled = isLambdaTraceInjectionDisabled()
+	ReportCloudwatchCompositeBatchSize = determineCloudWatchCompositeBatchSize()
+	ReportRestCompositeBatchSize = determineRestCompositeBatchSize()
+	ReportRestCompositeDataEnabled = isRestCompositeDataEnabled()
+	ReportCloudwatchCompositeDataEnabled = isCloudwatchlogCompositeDataEnabled()
+	ReportPublishCloudwatchEnabled = isPublishCloudwatchEnabled()
 }
 
 func isThundraDisabled() bool {
@@ -123,6 +135,42 @@ func determineTimeoutMargin() time.Duration {
 	}
 
 	return time.Duration(i) * time.Millisecond
+}
+
+func determineRestCompositeBatchSize() int {
+	t := os.Getenv(constants.ThundraLambdaReportRestCompositeBatchSize)
+	// environment variable is not set
+	if t == "" {
+		return 100
+	}
+
+	i, err := strconv.Atoi(t)
+
+	// environment variable is not set in the correct format
+	if err != nil {
+		fmt.Printf("%v: %s should be set with an integer\n", err, constants.ThundraLambdaReportRestCompositeBatchSize)
+		return 100
+	}
+
+	return i
+}
+
+func determineCloudWatchCompositeBatchSize() int {
+	t := os.Getenv(constants.ThundraLambdaReportCloudwatchCompositeBatchSize)
+	// environment variable is not set
+	if t == "" {
+		return 10
+	}
+
+	i, err := strconv.Atoi(t)
+
+	// environment variable is not set in the correct format
+	if err != nil {
+		fmt.Printf("%v: %s should be set with an integer\n", err, constants.ThundraLambdaReportCloudwatchCompositeBatchSize)
+		return 10
+	}
+
+	return i
 }
 
 func determineWarmup() bool {
@@ -308,4 +356,40 @@ func isLambdaTraceInjectionDisabled() bool {
 		return false
 	}
 	return disabled
+}
+
+func isCloudwatchlogCompositeDataEnabled() bool {
+	env := os.Getenv(constants.ThundraLambdaReportCloudwatchCompositeEnable)
+	enabled, err := strconv.ParseBool(env)
+	if err != nil {
+		if env != "" {
+			fmt.Println(err, constants.ThundraLambdaReportCloudwatchCompositeEnable+" is not a bool value.")
+		}
+		return true
+	}
+	return enabled
+}
+
+func isRestCompositeDataEnabled() bool {
+	env := os.Getenv(constants.ThundraLambdaReportRestCompositeEnable)
+	enabled, err := strconv.ParseBool(env)
+	if err != nil {
+		if env != "" {
+			fmt.Println(err, constants.ThundraLambdaReportRestCompositeEnable+" is not a bool value.")
+		}
+		return true
+	}
+	return enabled
+}
+
+func isPublishCloudwatchEnabled() bool {
+	env := os.Getenv(constants.ThundraLambdaPublishCloudwatchEnable)
+	enabled, err := strconv.ParseBool(env)
+	if err != nil {
+		if env != "" {
+			fmt.Println(err, constants.ThundraLambdaPublishCloudwatchEnable+" is not a bool value.")
+		}
+		return false
+	}
+	return enabled
 }

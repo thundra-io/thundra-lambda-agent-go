@@ -55,7 +55,7 @@ func newReporter() *reporterImpl {
 func (r *reporterImpl) Collect(messages []plugin.MonitoringDataWrapper) {
 	defer mutex.Unlock()
 	mutex.Lock()
-	if shouldSendAsync == "true" {
+	if shouldSendAsync == "true" && !config.ReportCloudwatchCompositeDataEnabled {
 		sendAsync(messages)
 		return
 	}
@@ -67,6 +67,8 @@ func (r *reporterImpl) Report() {
 	atomic.CompareAndSwapUint32(r.reported, 0, 1)
 	if shouldSendAsync == "false" || shouldSendAsync == "" {
 		r.sendHTTPReq()
+	} else if config.ReportCloudwatchCompositeDataEnabled {
+		r.sendAsyncComposite()
 	}
 }
 
@@ -86,32 +88,93 @@ func (r *reporterImpl) FlushFlag() {
 }
 
 func sendAsync(msg interface{}) {
-	b, err := json.Marshal(&msg)
-	if err != nil {
-		fmt.Println(err)
-		return
+	switch v := msg.(type) {
+	case []plugin.MonitoringDataWrapper:
+		for i := range v {
+			b, err := json.Marshal(v[i])
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+			fmt.Println("Sending ASYNC request to Thundra collector")
+			fmt.Println(string(b))
+		}
+	default:
+		b, err := json.Marshal(&msg)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		fmt.Println("Sending ASYNC request to Thundra collector")
+		fmt.Println(string(b))
 	}
-	fmt.Println("Sending ASYNC request to Thundra collector")
-	fmt.Println(string(b))
+}
+
+func (r *reporterImpl) sendAsyncComposite() {
+	batchSize := config.ReportCloudwatchCompositeBatchSize
+	for i := 0; i < len(r.messageQueue); i += batchSize {
+		end := i + batchSize
+		if end > len(r.messageQueue) {
+			end = len(r.messageQueue)
+		}
+		baseData := plugin.PrepareBaseData()
+		compositeData := plugin.WrapMonitoringData(plugin.PrepareCompositeData(baseData, r.messageQueue[i:end]), "Composite")
+		sendAsync(compositeData)
+	}
 }
 
 func (r *reporterImpl) sendHTTPReq() {
 	if config.DebugEnabled {
 		fmt.Printf("MessageQueue:\n %+v \n", r.messageQueue)
 	}
-	b, err := json.Marshal(r.messageQueue)
-	if err != nil {
-		fmt.Println("Error in marshalling ", err)
+	targetURL := collectorURL + constants.MonitoringDataPath
+	if config.ReportRestCompositeDataEnabled {
+		targetURL = collectorURL + constants.CompositeMonitoringDataPath
 	}
 
-	targetURL := collectorURL + constants.MonitoringDataPath
 	if config.DebugEnabled {
 		fmt.Println("Sending HTTP request to Thundra collector: " + targetURL)
 	}
 
-	req, err := http.NewRequest("POST", targetURL, bytes.NewBuffer(b))
+	batchSize := config.ReportRestCompositeBatchSize
+	var wg sync.WaitGroup
+	for i := 0; i < len(r.messageQueue); i += batchSize {
+
+		end := i + batchSize
+
+		if end > len(r.messageQueue) {
+			end = len(r.messageQueue)
+		}
+		if config.ReportRestCompositeDataEnabled {
+			baseData := plugin.PrepareBaseData()
+			compositeData := plugin.WrapMonitoringData(plugin.PrepareCompositeData(baseData, r.messageQueue[i:end]), "Composite")
+
+			b, err := json.Marshal(compositeData)
+			if err != nil {
+				fmt.Println("Error in marshalling ", err)
+				return
+			}
+			wg.Add(1)
+			go r.sendBatch(targetURL, b, &wg)
+		} else {
+			b, err := json.Marshal(r.messageQueue[i:end])
+			if err != nil {
+				fmt.Println("Error in marshalling ", err)
+				return
+			}
+			wg.Add(1)
+			go r.sendBatch(targetURL, b, &wg)
+		}
+	}
+	wg.Wait()
+}
+
+func (r *reporterImpl) sendBatch(targetURL string, messages []byte, wg *sync.WaitGroup) {
+	defer wg.Done()
+	req, err := http.NewRequest("POST", targetURL, bytes.NewBuffer(messages))
 	if err != nil {
 		fmt.Println("Error http.NewRequest: ", err)
+		return
 	}
 	req.Close = true
 	req.Header.Set("Authorization", "ApiKey "+config.APIKey)
@@ -125,11 +188,12 @@ func (r *reporterImpl) sendHTTPReq() {
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		fmt.Println("ioutil.ReadAll(resp.Body): ", err)
+	} else if config.DebugEnabled {
+		fmt.Println("response Body:", string(body))
 	}
 	if config.DebugEnabled {
 		fmt.Println("response Status:", resp.Status)
 		fmt.Println("response Headers:", resp.Header)
-		fmt.Println("response Body:", string(body))
 	}
 	resp.Body.Close()
 }

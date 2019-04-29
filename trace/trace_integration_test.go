@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/thundra-io/thundra-lambda-agent-go/agent"
 	"github.com/thundra-io/thundra-lambda-agent-go/application"
+	"github.com/thundra-io/thundra-lambda-agent-go/config"
 	"github.com/thundra-io/thundra-lambda-agent-go/constants"
 	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 	"github.com/thundra-io/thundra-lambda-agent-go/test"
@@ -106,6 +107,7 @@ func TestTrace(t *testing.T) {
 	}
 	for i, testCase := range testCases {
 		t.Run(fmt.Sprintf("testCase[%d] %s", i, testCase.name), func(t *testing.T) {
+			config.ReportRestCompositeDataEnabled = false
 			test.PrepareEnvironment()
 
 			r := test.NewMockReporter()
@@ -134,17 +136,17 @@ func TestTrace(t *testing.T) {
 			}
 			assert.NotNil(t, td.ID)
 			assert.Equal(t, traceType, td.Type)
-			assert.Equal(t, constants.AgentVersion, td.AgentVersion)
-			assert.Equal(t, constants.DataModelVersion, td.DataModelVersion)
-			assert.Equal(t, test.AppID, td.ApplicationID)
-			assert.Equal(t, application.ApplicationDomainName, td.ApplicationDomainName)
-			assert.Equal(t, application.ApplicationClassName, td.ApplicationClassName)
-			assert.Equal(t, test.ApplicationName, td.ApplicationName)
-			assert.Equal(t, test.FunctionVersion, td.ApplicationVersion)
-			assert.Equal(t, test.ApplicationStage, td.ApplicationStage)
-			assert.Equal(t, application.ApplicationRuntime, td.ApplicationRuntime)
-			assert.Equal(t, application.ApplicationRuntimeVersion, td.ApplicationRuntimeVersion)
-			assert.NotNil(t, td.ApplicationTags)
+			assert.Equal(t, constants.AgentVersion, *td.AgentVersion)
+			assert.Equal(t, constants.DataModelVersion, *td.DataModelVersion)
+			assert.Equal(t, test.AppID, *td.ApplicationID)
+			assert.Equal(t, application.ApplicationDomainName, *td.ApplicationDomainName)
+			assert.Equal(t, application.ApplicationClassName, *td.ApplicationClassName)
+			assert.Equal(t, test.ApplicationName, *td.ApplicationName)
+			assert.Equal(t, test.FunctionVersion, *td.ApplicationVersion)
+			assert.Equal(t, test.ApplicationStage, *td.ApplicationStage)
+			assert.Equal(t, application.ApplicationRuntime, *td.ApplicationRuntime)
+			assert.Equal(t, application.ApplicationRuntimeVersion, *td.ApplicationRuntimeVersion)
+			assert.NotNil(t, *td.ApplicationTags)
 
 			assert.NotNil(t, td.RootSpanID)
 
@@ -152,7 +154,6 @@ func TestTrace(t *testing.T) {
 			assert.True(t, td.StartTimestamp < td.FinishTimestamp)
 			assert.True(t, td.FinishTimestamp <= invocationEndTime)
 			assert.True(t, int64(duration) <= td.Duration)
-
 
 			if testCase.expected.err != nil {
 				assert.Equal(t, testCase.expected.err, errVal)
@@ -205,6 +206,7 @@ func TestPanic(t *testing.T) {
 	}
 	for i, testCase := range testCases {
 		t.Run(fmt.Sprintf("testCase[%d] %s", i, testCase.name), func(t *testing.T) {
+			config.ReportRestCompositeDataEnabled = false
 			test.PrepareEnvironment()
 
 			r := test.NewMockReporter()
@@ -233,17 +235,17 @@ func TestPanic(t *testing.T) {
 					}
 					assert.NotNil(t, td.ID)
 					assert.Equal(t, traceType, td.Type)
-					assert.Equal(t, constants.AgentVersion, td.AgentVersion)
-					assert.Equal(t, constants.DataModelVersion, td.DataModelVersion)
-					assert.Equal(t, test.AppID, td.ApplicationID)
-					assert.Equal(t, application.ApplicationDomainName, td.ApplicationDomainName)
-					assert.Equal(t, application.ApplicationClassName, td.ApplicationClassName)
-					assert.Equal(t, test.ApplicationName, td.ApplicationName)
-					assert.Equal(t, test.FunctionVersion, td.ApplicationVersion)
-					assert.Equal(t, test.ApplicationStage, td.ApplicationStage)
-					assert.Equal(t, application.ApplicationRuntime, td.ApplicationRuntime)
-					assert.Equal(t, application.ApplicationRuntimeVersion, td.ApplicationRuntimeVersion)
-					assert.NotNil(t, td.ApplicationTags)
+					assert.Equal(t, constants.AgentVersion, *td.AgentVersion)
+					assert.Equal(t, constants.DataModelVersion, *td.DataModelVersion)
+					assert.Equal(t, test.AppID, *td.ApplicationID)
+					assert.Equal(t, application.ApplicationDomainName, *td.ApplicationDomainName)
+					assert.Equal(t, application.ApplicationClassName, *td.ApplicationClassName)
+					assert.Equal(t, test.ApplicationName, *td.ApplicationName)
+					assert.Equal(t, test.FunctionVersion, *td.ApplicationVersion)
+					assert.Equal(t, test.ApplicationStage, *td.ApplicationStage)
+					assert.Equal(t, application.ApplicationRuntime, *td.ApplicationRuntime)
+					assert.Equal(t, application.ApplicationRuntimeVersion, *td.ApplicationRuntimeVersion)
+					assert.NotNil(t, *td.ApplicationTags)
 
 					assert.NotNil(t, td.RootSpanID)
 

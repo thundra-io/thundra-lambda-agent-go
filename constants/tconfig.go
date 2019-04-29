@@ -21,6 +21,7 @@ const ThundraDisableAwsIntegration = "thundra_agent_lambda_trace_integrations_aw
 const DefaultTimeoutMargin = 200
 const DefaultCollectorURL = "https://api.thundra.io/v1"
 const MonitoringDataPath = "/monitoring-data"
+const CompositeMonitoringDataPath = "/composite-monitoring-data"
 
 const ThundraAPIKey = "thundra_apiKey"
 const ThundraLambdaPublishCloudwatchEnable = "thundra_agent_lambda_publish_cloudwatch_enable"
@@ -50,3 +51,8 @@ const EnableDynamoDbTraceInjection = "thundra_agent_trace_integrations_dynamodb_
 const DisableLambdaTraceInjection = "thundra_agent_trace_integrations_aws_lambda_traceInjection_disable"
 
 const MaxTracedHttpBodySize = 128 * 1024
+const ThundraLambdaReportRestCompositeBatchSize = "thundra_agent_lambda_report_rest_composite_batchsize"
+const ThundraLambdaReportCloudwatchCompositeBatchSize = "thundra_agent_lambda_report_cloudwatch_composite_batchsize"
+
+const ThundraLambdaReportRestCompositeEnable = "thundra_agent_lambda_report_rest_composite_enable"
+const ThundraLambdaReportCloudwatchCompositeEnable = "thundra_agent_lambda_report_cloudwatch_composite_enable"
