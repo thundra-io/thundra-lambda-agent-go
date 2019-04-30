@@ -83,35 +83,3 @@ func (c connWrapper) Do(commandName string, args ...interface{}) (interface{}, e
 	}
 	return reply, err
 }
-
-// Send wraps the redis.Conn.Send and starts a new span. If context.Context is provided as last argument,
-// the newly created span will be a child of span with the passed context. Otherwise, new span will be
-// created with an empty context.
-func (c connWrapper) Send(commandName string, args ...interface{}) error {
-	ctx := emptyCtx
-	if n := len(args); n > 0 {
-		var ok bool
-		if ctx, ok = args[n-1].(context.Context); ok {
-			args = args[:n-1]
-		} else {
-			ctx = emptyCtx
-		}
-	}
-
-	span, _ := opentracing.StartSpanFromContext(
-		ctx,
-		c.host,
-	)
-	defer span.Finish()
-
-	rawSpan, ok := tracer.GetRaw(span)
-	if ok {
-		tredis.BeforeCall(rawSpan, c.host, c.port, commandName, tredis.GetRedisCommand(commandName, args...))
-	}
-
-	err := c.Conn.Send(commandName, args...)
-	if err != nil {
-		utils.SetSpanError(span, err)
-	}
-	return err
-}
