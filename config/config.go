@@ -141,7 +141,7 @@ func determineRestCompositeBatchSize() int {
 	t := os.Getenv(constants.ThundraLambdaReportRestCompositeBatchSize)
 	// environment variable is not set
 	if t == "" {
-		return 100
+		return constants.ThundraLambdaReportRestCompositeBatchSizeDefault
 	}
 
 	i, err := strconv.Atoi(t)
@@ -149,7 +149,7 @@ func determineRestCompositeBatchSize() int {
 	// environment variable is not set in the correct format
 	if err != nil {
 		fmt.Printf("%v: %s should be set with an integer\n", err, constants.ThundraLambdaReportRestCompositeBatchSize)
-		return 100
+		return constants.ThundraLambdaReportRestCompositeBatchSizeDefault
 	}
 
 	return i
@@ -159,7 +159,7 @@ func determineCloudWatchCompositeBatchSize() int {
 	t := os.Getenv(constants.ThundraLambdaReportCloudwatchCompositeBatchSize)
 	// environment variable is not set
 	if t == "" {
-		return 10
+		return constants.ThundraLambdaReportCloudwatchCompositeBatchSizeDefault
 	}
 
 	i, err := strconv.Atoi(t)
@@ -167,7 +167,7 @@ func determineCloudWatchCompositeBatchSize() int {
 	// environment variable is not set in the correct format
 	if err != nil {
 		fmt.Printf("%v: %s should be set with an integer\n", err, constants.ThundraLambdaReportCloudwatchCompositeBatchSize)
-		return 10
+		return constants.ThundraLambdaReportCloudwatchCompositeBatchSizeDefault
 	}
 
 	return i

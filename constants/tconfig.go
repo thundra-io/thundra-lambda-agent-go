@@ -56,3 +56,6 @@ const ThundraLambdaReportCloudwatchCompositeBatchSize = "thundra_agent_lambda_re
 
 const ThundraLambdaReportRestCompositeEnable = "thundra_agent_lambda_report_rest_composite_enable"
 const ThundraLambdaReportCloudwatchCompositeEnable = "thundra_agent_lambda_report_cloudwatch_composite_enable"
+
+const ThundraLambdaReportRestCompositeBatchSizeDefault = 100
+const ThundraLambdaReportCloudwatchCompositeBatchSizeDefault = 10
