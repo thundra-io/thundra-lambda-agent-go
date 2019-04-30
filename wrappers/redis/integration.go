@@ -42,6 +42,13 @@ func BeforeCall(span *tracer.RawSpan, host string, port string, commandName stri
 	span.Tags = tags
 }
 
+func AfterCall(span *tracer.RawSpan, command string) {
+	if !config.MaskRedisCommand {
+		span.Tags[constants.DBTags["DB_STATEMENT"]] = command
+		span.Tags[constants.RedisTags["REDIS_COMMAND"]] = command
+	}
+}
+
 func GetRedisCommand(commandName string, args ...interface{}) string {
 	var b bytes.Buffer
 	b.WriteString(commandName)

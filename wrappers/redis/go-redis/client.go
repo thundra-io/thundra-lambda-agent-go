@@ -1,6 +1,7 @@
 package tgoredis
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"net"
@@ -25,10 +26,22 @@ type ClientWrapper struct {
 	ctx  context.Context
 }
 
+// Pipeliner is used to trace pipelines executed on a Redis server
+type Pipeliner struct {
+	redis.Pipeliner
+
+	host string
+	port string
+	ctx  context.Context
+	cw   *ClientWrapper
+}
+
 type redisCall struct {
-	cw      *ClientWrapper
-	command string
-	span    opentracing.Span
+	cw       *ClientWrapper
+	command  string
+	span     opentracing.Span
+	pipeline bool
+	err      error
 }
 
 func (rc *redisCall) beforeCall() {
@@ -39,17 +52,24 @@ func (rc *redisCall) beforeCall() {
 	span, _ := opentracing.StartSpanFromContext(ctx, rc.cw.host)
 	rc.span = span
 	if rawSpan, ok := tracer.GetRaw(rc.span); ok {
-		tredis.BeforeCall(rawSpan, rc.cw.host, rc.cw.port, "", rc.command)
+		commandName := ""
+		if rc.pipeline {
+			commandName = "pipeline"
+		}
+		tredis.BeforeCall(rawSpan, rc.cw.host, rc.cw.port, commandName, rc.command)
 	}
 }
 
-func (rc *redisCall) afterCall(err error) {
+func (rc *redisCall) afterCall() {
 	if rc.span == nil {
 		return
 	}
 	defer rc.span.Finish()
-	if err != nil {
-		utils.SetSpanError(rc.span, err)
+	if rc.err != nil {
+		utils.SetSpanError(rc.span, rc.err)
+	}
+	if rawSpan, ok := tracer.GetRaw(rc.span); ok {
+		tredis.AfterCall(rawSpan, rc.command)
 	}
 }
 
@@ -89,6 +109,42 @@ func (cw *ClientWrapper) WithContext(ctx context.Context) *ClientWrapper {
 	return cw
 }
 
+// Pipeline creates a Pipeline from a ClientWrapper
+func (cw *ClientWrapper) Pipeline() redis.Pipeliner {
+	cw.mu.RLock()
+	ctx := cw.ctx
+	cw.mu.RUnlock()
+	return &Pipeliner{
+		Pipeliner: cw.Client.Pipeline(),
+		host:      cw.host,
+		port:      cw.port,
+		cw:        cw,
+		ctx:       ctx,
+	}
+}
+
+// ExecWithContext calls Pipeline.Exec(). It ensures that the resulting Redis calls
+// are traced, and that emitted spans are children of the given Context.
+func (p *Pipeliner) ExecWithContext(ctx context.Context) ([]redis.Cmder, error) {
+	return p.execWithContext(ctx)
+}
+
+// Exec calls Pipeline.Exec() ensuring that the resulting Redis calls are traced.
+func (p *Pipeliner) Exec() ([]redis.Cmder, error) {
+	return p.execWithContext(p.ctx)
+}
+
+func (p *Pipeliner) execWithContext(ctx context.Context) ([]redis.Cmder, error) {
+	rc := &redisCall{
+		cw: p.cw,
+	}
+	rc.beforeCall()
+	cmds, err := p.Pipeliner.Exec()
+	rc.command = multipleCommandString(cmds)
+	rc.afterCall()
+	return cmds, err
+}
+
 // Context returns the current active context of the ClientWrapper
 func (cw *ClientWrapper) Context() context.Context {
 	cw.mu.RLock()
@@ -104,14 +160,23 @@ func processWrapper(cw *ClientWrapper) func(oldProcess func(cmd redis.Cmder) err
 			rc := &redisCall{
 				cw:      cw,
 				command: raw,
-				span:    nil,
 			}
 			rc.beforeCall()
 			err := oldProcess(cmd)
-			rc.afterCall(err)
+			rc.err = err
+			rc.afterCall()
 			return err
 		}
 	}
+}
+
+func multipleCommandString(cmds []redis.Cmder) string {
+	var b bytes.Buffer
+	for _, cmd := range cmds {
+		b.WriteString(getCommandString(cmd))
+		b.WriteString("\n")
+	}
+	return b.String()
 }
 
 func getCommandString(cmd redis.Cmder) string {
