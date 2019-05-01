@@ -185,16 +185,20 @@ func (r *reporterImpl) sendBatch(targetURL string, messages []byte, wg *sync.Wai
 		fmt.Println("Error client.Do(req): ", err)
 		return
 	}
+	if config.DebugEnabled {
+		fmt.Println("response Status:", resp.Status)
+		fmt.Println("response Headers:", resp.Header)
+	}
+	if resp.Body == nil {
+		return
+	}
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		fmt.Println("ioutil.ReadAll(resp.Body): ", err)
 	} else if config.DebugEnabled {
 		fmt.Println("response Body:", string(body))
 	}
-	if config.DebugEnabled {
-		fmt.Println("response Status:", resp.Status)
-		fmt.Println("response Headers:", resp.Header)
-	}
+
 	resp.Body.Close()
 }
 
