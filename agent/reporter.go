@@ -138,6 +138,7 @@ func (r *reporterImpl) sendHTTPReq() {
 
 	batchSize := config.ReportRestCompositeBatchSize
 	var wg sync.WaitGroup
+	ch := make(chan string)
 	for i := 0; i < len(r.messageQueue); i += batchSize {
 
 		end := i + batchSize
@@ -155,7 +156,7 @@ func (r *reporterImpl) sendHTTPReq() {
 				return
 			}
 			wg.Add(1)
-			go r.sendBatch(targetURL, b, &wg)
+			go r.sendBatch(targetURL, b, &wg, ch)
 		} else {
 			b, err := json.Marshal(r.messageQueue[i:end])
 			if err != nil {
@@ -163,17 +164,30 @@ func (r *reporterImpl) sendHTTPReq() {
 				return
 			}
 			wg.Add(1)
-			go r.sendBatch(targetURL, b, &wg)
+			go r.sendBatch(targetURL, b, &wg, ch)
 		}
 	}
+	go printDebugLogs(ch)
+
 	wg.Wait()
+
+	close(ch)
 }
 
-func (r *reporterImpl) sendBatch(targetURL string, messages []byte, wg *sync.WaitGroup) {
+func printDebugLogs(ch <-chan string) {
+	for {
+		select {
+		case str := <-ch:
+			fmt.Print(str)
+		}
+	}
+}
+
+func (r *reporterImpl) sendBatch(targetURL string, messages []byte, wg *sync.WaitGroup, ch chan<- string) {
 	defer wg.Done()
 	req, err := http.NewRequest("POST", targetURL, bytes.NewBuffer(messages))
 	if err != nil {
-		fmt.Println("Error http.NewRequest: ", err)
+		ch <- fmt.Sprintln("Error http.NewRequest: ", err)
 		return
 	}
 	req.Close = true
@@ -182,21 +196,21 @@ func (r *reporterImpl) sendBatch(targetURL string, messages []byte, wg *sync.Wai
 
 	resp, err := r.client.Do(req)
 	if err != nil {
-		fmt.Println("Error client.Do(req): ", err)
+		ch <- fmt.Sprintln("Error client.Do(req): ", err)
 		return
 	}
 	if config.DebugEnabled {
-		fmt.Println("response Status:", resp.Status)
-		fmt.Println("response Headers:", resp.Header)
+		ch <- fmt.Sprintln("response Status:", resp.Status)
+		ch <- fmt.Sprintln("response Headers:", resp.Header)
 	}
 	if resp.Body == nil {
 		return
 	}
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		fmt.Println("ioutil.ReadAll(resp.Body): ", err)
+		ch <- fmt.Sprintln("ioutil.ReadAll(resp.Body): ", err)
 	} else if config.DebugEnabled {
-		fmt.Println("response Body:", string(body))
+		ch <- fmt.Sprintln("response Body:", string(body))
 	}
 
 	resp.Body.Close()
