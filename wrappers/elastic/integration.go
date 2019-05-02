@@ -23,7 +23,7 @@ func BeforeCall(span *tracer.RawSpan, req *http.Request) {
 	tags := map[string]interface{}{
 		constants.SpanTags["OPERATION_TYPE"]:          method,
 		constants.EsTags["ES_HOSTS"]:                  []string{host},
-		constants.EsTags["ES_URI"]:                    req.RequestURI,
+		constants.EsTags["ES_URI"]:                    req.URL.Path,
 		constants.EsTags["ES_METHOD"]:                 method,
 		constants.EsTags["ES_PARAMS"]:                 req.URL.Query().Encode(),
 		constants.DBTags["DB_TYPE"]:                   "elasticsearch",

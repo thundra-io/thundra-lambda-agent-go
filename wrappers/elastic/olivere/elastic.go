@@ -25,7 +25,7 @@ func Wrap(c *http.Client) *http.Client {
 func (t *roundTripperWrapper) RoundTrip(req *http.Request) (resp *http.Response, err error) {
 	span, _ := opentracing.StartSpanFromContext(
 		req.Context(),
-		req.RequestURI,
+		req.URL.Path,
 	)
 	defer span.Finish()
 	rawSpan, ok := tracer.GetRaw(span)

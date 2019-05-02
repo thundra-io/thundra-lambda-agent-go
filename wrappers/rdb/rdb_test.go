@@ -50,7 +50,6 @@ func (s *IntegrationSuite) TestRdbIntegration(t *testing.T, query string, driver
 		assert.Equal(t, strings.ToLower(driverName), span.Tags[constants.DBTags["DB_TYPE"]])
 		assert.Equal(t, query, span.Tags[constants.DBTags["DB_STATEMENT"]])
 		assert.Equal(t, strings.ToUpper(strings.Split(query, " ")[0]), span.Tags[constants.DBTags["DB_STATEMENT_TYPE"]])
-		assert.Equal(t, strings.ToUpper(strings.Split(query, " ")[0]), span.Tags[constants.DBTags["DB_STATEMENT_TYPE"]])
 		// Clear tracer
 		tp.Reset()
 	})
@@ -80,7 +79,6 @@ func (s *IntegrationSuite) TestRdbIntegration(t *testing.T, query string, driver
 		assert.Equal(t, strings.ToLower(driverName), span.Tags[constants.DBTags["DB_TYPE"]])
 		assert.Equal(t, query, span.Tags[constants.DBTags["DB_STATEMENT"]])
 		assert.Equal(t, strings.ToUpper(strings.Split(query, " ")[0]), span.Tags[constants.DBTags["DB_STATEMENT_TYPE"]])
-		assert.Equal(t, strings.ToUpper(strings.Split(query, " ")[0]), span.Tags[constants.DBTags["DB_STATEMENT_TYPE"]])
 		tp.Reset()
 	})
 
@@ -100,7 +98,6 @@ func (s *IntegrationSuite) TestRdbIntegration(t *testing.T, query string, driver
 		assert.Equal(t, strings.ToUpper(strings.Split(query, " ")[0]), span.Tags[constants.DBTags["DB_STATEMENT_TYPE"]])
 		assert.Equal(t, strings.ToLower(driverName), span.Tags[constants.DBTags["DB_TYPE"]])
 		assert.Equal(t, query, span.Tags[constants.DBTags["DB_STATEMENT"]])
-		assert.Equal(t, strings.ToUpper(strings.Split(query, " ")[0]), span.Tags[constants.DBTags["DB_STATEMENT_TYPE"]])
 		assert.Equal(t, strings.ToUpper(strings.Split(query, " ")[0]), span.Tags[constants.DBTags["DB_STATEMENT_TYPE"]])
 		// Clear tracer
 		tp.Reset()
@@ -131,7 +128,6 @@ func (s *IntegrationSuite) TestRdbIntegration(t *testing.T, query string, driver
 		assert.Equal(t, strings.ToLower(driverName), span.Tags[constants.DBTags["DB_TYPE"]])
 		assert.Equal(t, query, span.Tags[constants.DBTags["DB_STATEMENT"]])
 		assert.Equal(t, strings.ToUpper(strings.Split(query, " ")[0]), span.Tags[constants.DBTags["DB_STATEMENT_TYPE"]])
-		assert.Equal(t, strings.ToUpper(strings.Split(query, " ")[0]), span.Tags[constants.DBTags["DB_STATEMENT_TYPE"]])
 		tp.Reset()
 	})
 
@@ -160,7 +156,6 @@ func (s *IntegrationSuite) TestRdbIntegration(t *testing.T, query string, driver
 		assert.Equal(t, strings.ToLower(driverName), span.Tags[constants.DBTags["DB_TYPE"]])
 		assert.Equal(t, query, span.Tags[constants.DBTags["DB_STATEMENT"]])
 		assert.Equal(t, strings.ToUpper(strings.Split(query, " ")[0]), span.Tags[constants.DBTags["DB_STATEMENT_TYPE"]])
-		assert.Equal(t, strings.ToUpper(strings.Split(query, " ")[0]), span.Tags[constants.DBTags["DB_STATEMENT_TYPE"]])
 		tp.Reset()
 	})
 
@@ -187,7 +182,6 @@ func (s *IntegrationSuite) TestRdbIntegration(t *testing.T, query string, driver
 		assert.Equal(t, strings.ToUpper(strings.Split(query, " ")[0]), span.Tags[constants.DBTags["DB_STATEMENT_TYPE"]])
 		assert.Equal(t, strings.ToLower(driverName), span.Tags[constants.DBTags["DB_TYPE"]])
 		assert.Equal(t, query, span.Tags[constants.DBTags["DB_STATEMENT"]])
-		assert.Equal(t, strings.ToUpper(strings.Split(query, " ")[0]), span.Tags[constants.DBTags["DB_STATEMENT_TYPE"]])
 		assert.Equal(t, strings.ToUpper(strings.Split(query, " ")[0]), span.Tags[constants.DBTags["DB_STATEMENT_TYPE"]])
 		tp.Reset()
 	})
@@ -225,7 +219,6 @@ func (s *IntegrationSuite) TestRdbIntegration(t *testing.T, query string, driver
 		assert.Equal(t, strings.ToLower(driverName), span.Tags[constants.DBTags["DB_TYPE"]])
 		assert.Equal(t, query, span.Tags[constants.DBTags["DB_STATEMENT"]])
 		assert.Equal(t, strings.ToUpper(strings.Split(query, " ")[0]), span.Tags[constants.DBTags["DB_STATEMENT_TYPE"]])
-		assert.Equal(t, strings.ToUpper(strings.Split(query, " ")[0]), span.Tags[constants.DBTags["DB_STATEMENT_TYPE"]])
 		tp.Reset()
 	})
 
@@ -252,7 +245,6 @@ func (s *IntegrationSuite) TestRdbIntegration(t *testing.T, query string, driver
 		assert.Equal(t, strings.ToUpper(strings.Split(query, " ")[0]), span.Tags[constants.DBTags["DB_STATEMENT_TYPE"]])
 		assert.Equal(t, strings.ToLower(driverName), span.Tags[constants.DBTags["DB_TYPE"]])
 		assert.Equal(t, query, span.Tags[constants.DBTags["DB_STATEMENT"]])
-		assert.Equal(t, strings.ToUpper(strings.Split(query, " ")[0]), span.Tags[constants.DBTags["DB_STATEMENT_TYPE"]])
 		assert.Equal(t, strings.ToUpper(strings.Split(query, " ")[0]), span.Tags[constants.DBTags["DB_STATEMENT_TYPE"]])
 		tp.Reset()
 	})
@@ -289,7 +281,6 @@ func (s *IntegrationSuite) TestRdbIntegration(t *testing.T, query string, driver
 		assert.Equal(t, strings.ToUpper(strings.Split(query, " ")[0]), span.Tags[constants.DBTags["DB_STATEMENT_TYPE"]])
 		assert.Equal(t, strings.ToLower(driverName), span.Tags[constants.DBTags["DB_TYPE"]])
 		assert.Equal(t, query, span.Tags[constants.DBTags["DB_STATEMENT"]])
-		assert.Equal(t, strings.ToUpper(strings.Split(query, " ")[0]), span.Tags[constants.DBTags["DB_STATEMENT_TYPE"]])
 		assert.Equal(t, strings.ToUpper(strings.Split(query, " ")[0]), span.Tags[constants.DBTags["DB_STATEMENT_TYPE"]])
 		tp.Reset()
 	})
