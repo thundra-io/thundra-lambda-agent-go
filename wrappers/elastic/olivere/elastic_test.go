@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/thundra-io/thundra-lambda-agent-go/config"
 	"github.com/thundra-io/thundra-lambda-agent-go/constants"
 	"github.com/thundra-io/thundra-lambda-agent-go/trace"
 	elasticv6 "gopkg.in/olivere/elastic.v6"
@@ -192,8 +193,7 @@ func TestErrorNotExistentURL(t *testing.T) {
 	)
 
 	// Delete Document
-	_, err := client.Delete().Index("twitter").Type("_docs").Id("1").Do(context.Background())
-	assert.NotNil(t, err)
+	client.Delete().Index("twitter").Type("_docs").Id("1").Do(context.Background())
 
 	// Get the span created
 	span := tp.Recorder.GetSpans()[0]
@@ -214,10 +214,46 @@ func TestErrorNotExistentURL(t *testing.T) {
 	assert.Equal(t, constants.AwsLambdaApplicationClass, span.Tags[constants.SpanTags["TRIGGER_CLASS_NAME"]])
 	assert.Equal(t, true, span.Tags[constants.SpanTags["TOPOLOGY_VERTEX"]])
 
-	assert.Equal(t, true, span.Tags[constants.SpanTags["TOPOLOGY_VERTEX"]])
-
 	assert.True(t, span.Tags[constants.AwsError].(bool))
 	assert.Equal(t, "OpError", span.Tags[constants.AwsErrorKind].(string))
+
+	tp.Reset()
+}
+
+func TestMaskBody(t *testing.T) {
+	config.MaskEsBody = true
+	// Initilize trace plugin to set GlobalTracer of opentracing
+	tp := trace.New()
+
+	var httpClient = Wrap(&http.Client{})
+	var client, _ = elasticv6.NewClient(
+		elasticv6.SetURL("http://localhost:9200"),
+		elasticv6.SetHttpClient(httpClient),
+		elasticv6.SetSniff(false),
+		elasticv6.SetHealthcheck(false),
+	)
+
+	// Delete Document
+	client.Delete().Index("twitter").Type("_docs").Id("1").Do(context.Background())
+
+	// Get the span created
+	span := tp.Recorder.GetSpans()[0]
+
+	assert.Equal(t, constants.ClassNames["ELASTICSEARCH"], span.ClassName)
+	assert.Equal(t, constants.DomainNames["DB"], span.DomainName)
+	assert.Equal(t, "/twitter/_docs/1", span.OperationName)
+	assert.ElementsMatch(t, []string{"localhost:9200"}, span.Tags[constants.EsTags["ES_HOSTS"]])
+	assert.Equal(t, "DELETE", span.Tags[constants.EsTags["ES_METHOD"]])
+	assert.Equal(t, "/twitter/_docs/1", span.Tags[constants.EsTags["ES_URI"]])
+	assert.Equal(t, "elasticsearch", span.Tags[constants.DBTags["DB_TYPE"]])
+	assert.Equal(t, "DELETE", span.Tags[constants.SpanTags["OPERATION_TYPE"]])
+
+	assert.Equal(t, []string{""}, span.Tags[constants.SpanTags["TRIGGER_OPERATION_NAMES"]])
+	assert.Equal(t, constants.AwsLambdaApplicationDomain, span.Tags[constants.SpanTags["TRIGGER_DOMAIN_NAME"]])
+	assert.Equal(t, constants.AwsLambdaApplicationClass, span.Tags[constants.SpanTags["TRIGGER_CLASS_NAME"]])
+	assert.Equal(t, true, span.Tags[constants.SpanTags["TOPOLOGY_VERTEX"]])
+
+	assert.Nil(t, span.Tags[constants.EsTags["ES_BODY"]])
 
 	tp.Reset()
 }
