@@ -1,12 +1,12 @@
-package telastic
+package thundraelastic
 
 import (
 	"net/http"
 
-	"github.com/opentracing/opentracing-go"
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/thundra-io/thundra-lambda-agent-go/tracer"
 	"github.com/thundra-io/thundra-lambda-agent-go/utils"
-	thundraelastic "github.com/thundra-io/thundra-lambda-agent-go/wrappers/elastic"
+	"github.com/thundra-io/thundra-lambda-agent-go/wrappers/elastic"
 )
 
 type roundTripperWrapper struct {
@@ -30,13 +30,13 @@ func (t *roundTripperWrapper) RoundTrip(req *http.Request) (resp *http.Response,
 	defer span.Finish()
 	rawSpan, ok := tracer.GetRaw(span)
 	if ok {
-		thundraelastic.BeforeCall(rawSpan, req)
+		elastic.BeforeCall(rawSpan, req)
 	}
 	resp, err = t.RoundTripper.RoundTrip(req)
 	if err != nil {
 		utils.SetSpanError(span, err)
 	} else if ok {
-		thundraelastic.AfterCall(rawSpan, resp)
+		elastic.AfterCall(rawSpan, resp)
 	}
 	return
 }
