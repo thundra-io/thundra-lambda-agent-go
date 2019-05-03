@@ -144,3 +144,41 @@ func TestUnknownCommand(t *testing.T) {
 
 	tp.Reset()
 }
+
+func TestPipeline(t *testing.T) {
+	// Initilize trace plugin to set GlobalTracer of opentracing
+	tp := trace.New()
+
+	c := NewClient(&redis.Options{
+		Addr: "localhost:6379",
+	})
+	pipe := c.Pipeline()
+	defer c.Close()
+
+	pipe.Set("foo", "bar", 0)
+	pipe.Get("foo")
+	pipe.Incr("pipeline_counter")
+
+	_, err := pipe.Exec()
+
+	assert.NoError(t, err)
+
+	span := tp.Recorder.GetSpans()[0]
+	assert.Equal(t, constants.ClassNames["REDIS"], span.ClassName)
+	assert.Equal(t, constants.DomainNames["CACHE"], span.DomainName)
+	assert.Equal(t, "", span.Tags[constants.SpanTags["OPERATION_TYPE"]])
+	assert.Equal(t, "localhost", span.Tags[constants.DBTags["DB_INSTANCE"]])
+	assert.Equal(t, "PIPELINE", span.Tags[constants.DBTags["DB_STATEMENT_TYPE"]])
+	assert.Equal(t, "redis", span.Tags[constants.DBTags["DB_TYPE"]])
+	assert.Equal(t, "localhost", span.Tags[constants.RedisTags["REDIS_HOST"]])
+	assert.Equal(t, "PIPELINE", span.Tags[constants.RedisTags["REDIS_COMMAND_TYPE"]])
+	assert.Equal(t, constants.AwsLambdaApplicationDomain, span.Tags[constants.SpanTags["TRIGGER_DOMAIN_NAME"]])
+	assert.Equal(t, constants.AwsLambdaApplicationClass, span.Tags[constants.SpanTags["TRIGGER_CLASS_NAME"]])
+	assert.Equal(t, []string{application.FunctionName}, span.Tags[constants.SpanTags["TRIGGER_OPERATION_NAMES"]])
+	assert.Equal(t, true, span.Tags[constants.SpanTags["TOPOLOGY_VERTEX"]])
+
+	assert.Equal(t, "set foo bar\nget foo\nincr pipeline_counter", span.Tags[constants.DBTags["DB_STATEMENT"]])
+	assert.Equal(t, "set foo bar\nget foo\nincr pipeline_counter", span.Tags[constants.RedisTags["REDIS_COMMAND"]])
+
+	tp.Reset()
+}

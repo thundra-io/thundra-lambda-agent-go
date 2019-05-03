@@ -136,7 +136,8 @@ func (p *Pipeliner) Exec() ([]redis.Cmder, error) {
 
 func (p *Pipeliner) execWithContext(ctx context.Context) ([]redis.Cmder, error) {
 	rc := &redisCall{
-		cw: p.cw,
+		cw:       p.cw,
+		pipeline: true,
 	}
 	rc.beforeCall()
 	cmds, err := p.Pipeliner.Exec()
@@ -172,10 +173,13 @@ func processWrapper(cw *ClientWrapper) func(oldProcess func(cmd redis.Cmder) err
 
 func multipleCommandString(cmds []redis.Cmder) string {
 	var b bytes.Buffer
-	for _, cmd := range cmds {
+	for i, cmd := range cmds {
 		b.WriteString(getCommandString(cmd))
-		b.WriteString("\n")
+		if i != (len(cmds) - 1) {
+			b.WriteString("\n")
+		}
 	}
+
 	return b.String()
 }
 
