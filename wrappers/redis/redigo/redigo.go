@@ -1,4 +1,4 @@
-package tredigo
+package thundraredigo
 
 import (
 	"context"

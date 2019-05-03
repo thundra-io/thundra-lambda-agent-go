@@ -1,4 +1,4 @@
-package tgoredis
+package thundragoredis
 
 import (
 	"bytes"

@@ -29,6 +29,8 @@ ignored = [
   "github.com/aws/aws-lambda-go/*",
   "github.com/aws/aws-sdk-go/*",
   "github.com/go-sql-driver/mysql",
+  "github.com/gomodule/redigo/redis",
+  "github.com/go-redis/redis",
 ]
 
 [[constraint]]
