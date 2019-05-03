@@ -141,6 +141,7 @@ func (p *Pipeliner) execWithContext(ctx context.Context) ([]redis.Cmder, error) 
 	}
 	rc.beforeCall()
 	cmds, err := p.Pipeliner.Exec()
+	rc.err = err
 	rc.command = multipleCommandString(cmds)
 	rc.afterCall()
 	return cmds, err
