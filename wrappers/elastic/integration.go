@@ -1,8 +1,8 @@
 package thundraelastic
 
 import (
-	"bytes"
-	"io/ioutil"
+	"bufio"
+	"io"
 	"net/http"
 
 	"github.com/thundra-io/thundra-lambda-agent-go/application"
@@ -10,6 +10,11 @@ import (
 	"github.com/thundra-io/thundra-lambda-agent-go/constants"
 	"github.com/thundra-io/thundra-lambda-agent-go/tracer"
 )
+
+type readCloser struct {
+	io.Reader
+	io.Closer
+}
 
 func BeforeCall(span *tracer.RawSpan, req *http.Request) {
 	span.ClassName = constants.ClassNames["ELASTICSEARCH"]
@@ -34,13 +39,8 @@ func BeforeCall(span *tracer.RawSpan, req *http.Request) {
 	}
 
 	if req.Body != nil {
-		body, err := ioutil.ReadAll(req.Body)
-		if err == nil {
-			esBody = string(body)
-			req.Body = ioutil.NopCloser(bytes.NewBuffer(body))
-		}
+		esBody, req.Body = readRequestBody(req.Body, int(req.ContentLength))
 	}
-
 	if !config.MaskEsBody {
 		tags[constants.EsTags["ES_BODY"]] = esBody
 	}
@@ -50,4 +50,25 @@ func BeforeCall(span *tracer.RawSpan, req *http.Request) {
 
 func AfterCall(span *tracer.RawSpan, resp *http.Response) {
 
+}
+
+func readRequestBody(body io.ReadCloser, contentLength int) (string, io.ReadCloser) {
+	bodySize := constants.MaxTracedHttpBodySize
+	if contentLength > 0 && contentLength < bodySize {
+		bodySize = contentLength
+	}
+	rd := bufio.NewReaderSize(body, bodySize)
+
+	rc := readCloser{
+		Reader: rd,
+		Closer: body,
+	}
+	bodyLimited, err := rd.Peek(bodySize)
+	if err == io.EOF {
+		err = nil
+	}
+	if err != nil {
+		return "", rc
+	}
+	return string(bodyLimited), rc
 }

@@ -29,6 +29,7 @@ ignored = [
   "github.com/aws/aws-lambda-go/*",
   "github.com/aws/aws-sdk-go/*",
   "github.com/go-sql-driver/mysql",
+  "gopkg.in/olivere/elastic.v6",
 ]
 
 [[constraint]]

@@ -46,3 +46,5 @@ const ThundraMaskEsBody = "thundra_agent_lambda_trace_integrations_elasticsearch
 
 const EnableDynamoDbTraceInjection = "thundra_agent_trace_integrations_dynamodb_trace_injection_enable"
 const DisableLambdaTraceInjection = "thundra_agent_trace_integrations_aws_lambda_traceInjection_disable"
+
+const MaxTracedHttpBodySize = 128 * 1024
