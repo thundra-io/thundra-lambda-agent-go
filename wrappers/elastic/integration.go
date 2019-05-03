@@ -1,4 +1,4 @@
-package thundraelastic
+package elastic
 
 import (
 	"bytes"

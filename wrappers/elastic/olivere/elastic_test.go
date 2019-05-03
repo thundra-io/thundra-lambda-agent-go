@@ -1,4 +1,4 @@
-package telastic
+package thundraelastic
 
 import (
 	"context"
