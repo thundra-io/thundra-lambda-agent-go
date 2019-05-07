@@ -96,7 +96,6 @@ func sendAsync(msg interface{}) {
 				fmt.Println(err)
 				return
 			}
-			fmt.Println("Sending ASYNC request to Thundra collector")
 			fmt.Println(string(b))
 		}
 	default:
@@ -105,7 +104,6 @@ func sendAsync(msg interface{}) {
 			fmt.Println(err)
 			return
 		}
-		fmt.Println("Sending ASYNC request to Thundra collector")
 		fmt.Println(string(b))
 	}
 }
