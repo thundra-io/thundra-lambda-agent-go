@@ -232,6 +232,11 @@ func isEsBodyMasked() bool {
 	if err != nil {
 		if env != "" {
 			fmt.Println(err, constants.ThundraMaskEsBody+" is not a bool value.")
+		}
+		return false
+	}
+	return masked
+}
 
 func isRedisCommandMasked() bool {
 	env := os.Getenv(constants.ThundraMaskRedisCommand)
