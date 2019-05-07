@@ -30,6 +30,8 @@ ignored = [
   "github.com/aws/aws-sdk-go/*",
   "github.com/go-sql-driver/mysql",
   "gopkg.in/olivere/elastic.v6",
+  "github.com/gomodule/redigo/redis",
+  "github.com/go-redis/redis",
 ]
 
 [[constraint]]
