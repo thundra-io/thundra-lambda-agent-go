@@ -27,6 +27,7 @@ var MaskDynamoDBStatement bool
 var DynamoDBTraceInjectionEnabled bool
 var LambdaTraceInjectionDisabled bool
 var MaskRDBStatement bool
+var MaskEsBody bool
 var MaskRedisCommand bool
 
 var TraceKinesisRequestEnabled bool
@@ -49,6 +50,7 @@ func init() {
 	TrustAllCertificates = trustAllCertificates()
 	MaskDynamoDBStatement = isDynamoDBStatementsMasked()
 	MaskRDBStatement = isRDBStatementsMasked()
+	MaskEsBody = isEsBodyMasked()
 	MaskRedisCommand = isRedisCommandMasked()
 	TraceKinesisRequestEnabled = isTraceKinesisRequestEnabled()
 	TraceFirehoseRequestEnabled = isTraceFirehoseRequestEnabled()
@@ -218,6 +220,18 @@ func isRDBStatementsMasked() bool {
 	if err != nil {
 		if env != "" {
 			fmt.Println(err, constants.ThundraMaskRDBStatement+" is not a bool value.")
+		}
+		return false
+	}
+	return masked
+}
+
+func isEsBodyMasked() bool {
+	env := os.Getenv(constants.ThundraMaskEsBody)
+	masked, err := strconv.ParseBool(env)
+	if err != nil {
+		if env != "" {
+			fmt.Println(err, constants.ThundraMaskEsBody+" is not a bool value.")
 		}
 		return false
 	}

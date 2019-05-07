@@ -85,6 +85,14 @@ var DBTags = map[string]string{
 	"DB_USER":           "db.user",
 }
 
+var EsTags = map[string]string{
+	"ES_URI":    "elasticsearch.uri",
+	"ES_METHOD": "elasticsearch.method",
+	"ES_PARAMS": "elasticsearch.params",
+	"ES_BODY":   "elasticsearch.body",
+	"ES_HOSTS":  "elasticsearch.hosts",
+}
+
 var AwsDynamoDBTags = map[string]string{
 	"TABLE_NAME":        "aws.dynamodb.table.name",
 	"REQUEST_THROTTLED": "aws.dynamodb.request.throttled",

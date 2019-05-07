@@ -44,6 +44,9 @@ const ThundraMaskRedisCommand = "thundra_agent_lambda_trace_integrations_redis_c
 const ThundraLambdaTraceKinesisRequestEnable = "thundra_agent_lambda_trace_kinesis_request_enable"
 const ThundraLambdaTraceFirehoseRequestEnable = "thundra_agent_lambda_trace_firehose_request_enable"
 const ThundraLambdaTraceCloudwatchlogRequestEnable = "thundra_agent_lambda_trace_cloudwatchlog_request_enable"
+const ThundraMaskEsBody = "thundra_agent_lambda_trace_integrations_elasticsearch_body_mask"
 
 const EnableDynamoDbTraceInjection = "thundra_agent_trace_integrations_dynamodb_trace_injection_enable"
 const DisableLambdaTraceInjection = "thundra_agent_trace_integrations_aws_lambda_traceInjection_disable"
+
+const MaxTracedHttpBodySize = 128 * 1024
