@@ -1,7 +1,7 @@
 package metric
 
 import (
-	"fmt"
+	"log"
 	"runtime"
 
 	uuid "github.com/satori/go.uuid"
@@ -13,7 +13,7 @@ func prepareHeapMetricsData(metric *metricPlugin, memStats *runtime.MemStats, ba
 
 	memPercent, err := proc.MemoryPercent()
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
 
 	base.Metrics = map[string]interface{}{

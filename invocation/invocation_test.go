@@ -3,7 +3,7 @@ package invocation
 import (
 	"context"
 	"errors"
-	"fmt"
+	"log"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -37,7 +37,7 @@ func TestInvocationData_AfterExecution(t *testing.T) {
 	data, _ := ip.AfterExecution(context.TODO(), nil, nil, nil)
 	d, ok := data[0].Data.(invocationDataModel)
 	if !ok {
-		fmt.Println("Can not convert to invocationDataModel")
+		log.Println("Can not convert to invocationDataModel")
 	}
 
 	now := utils.GetTimestamp()
@@ -60,7 +60,7 @@ func TestInvocationData_AfterExecutionWithError(t *testing.T) {
 	data, _ := ip.AfterExecution(context.TODO(), nil, nil, err)
 	d, ok := data[0].Data.(invocationDataModel)
 	if !ok {
-		fmt.Println("Can not convert to invocationDataModel")
+		log.Println("Can not convert to invocationDataModel")
 	}
 
 	assert.True(t, d.Erroneous)

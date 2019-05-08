@@ -1,7 +1,7 @@
 package thundra
 
 import (
-	"fmt"
+	"log"
 
 	"github.com/thundra-io/thundra-lambda-agent-go/agent"
 	ip "github.com/thundra-io/thundra-lambda-agent-go/invocation"
@@ -28,7 +28,7 @@ func addDefaultPlugins(a *agent.Agent) *agent.Agent {
 // thundra agent integrates with given handler
 func Wrap(handler interface{}) interface{} {
 	if agentInstance == nil {
-		fmt.Println("thundra.go: agentInstance is nil")
+		log.Println("thundra.go: agentInstance is nil")
 		return handler
 	}
 

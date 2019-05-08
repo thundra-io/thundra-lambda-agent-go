@@ -1,7 +1,7 @@
 package metric
 
 import (
-	"fmt"
+	"log"
 
 	uuid "github.com/satori/go.uuid"
 	"github.com/shirou/gopsutil/net"
@@ -67,7 +67,7 @@ func takeNetFrame(mp *metricPlugin) *netFrame {
 func sampleNetStat() *net.IOCountersStat {
 	netIOStat, err := net.IOCounters(false)
 	if err != nil {
-		fmt.Println("Error sampling net stat", err)
+		log.Println("Error sampling net stat", err)
 		return nil
 	}
 	return &netIOStat[all]

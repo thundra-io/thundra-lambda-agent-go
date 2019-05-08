@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"testing"
 	"time"
 
@@ -123,7 +124,7 @@ func TestTrace(t *testing.T) {
 			//Monitor Data
 			msg, err := getWrappedTraceData(r.MessageQueue)
 			if err != nil {
-				fmt.Println(err)
+				log.Println(err)
 				return
 			}
 			assert.Equal(t, traceType, msg.Type)
@@ -132,7 +133,7 @@ func TestTrace(t *testing.T) {
 			//Trace Data
 			td, ok := msg.Data.(traceDataModel)
 			if !ok {
-				fmt.Println("Can not convert to trace data")
+				log.Println("Can not convert to trace data")
 			}
 			assert.NotNil(t, td.ID)
 			assert.Equal(t, traceType, td.Type)
@@ -222,7 +223,7 @@ func TestPanic(t *testing.T) {
 					//Monitor Data
 					msg, err := getWrappedTraceData(r.MessageQueue)
 					if err != nil {
-						fmt.Println(err)
+						log.Println(err)
 						return
 					}
 					assert.Equal(t, traceType, msg.Type)
@@ -231,7 +232,7 @@ func TestPanic(t *testing.T) {
 					//Trace Data
 					td, ok := msg.Data.(traceDataModel)
 					if !ok {
-						fmt.Println("Can not convert to trace data")
+						log.Println("Can not convert to trace data")
 					}
 					assert.NotNil(t, td.ID)
 					assert.Equal(t, traceType, td.Type)
@@ -305,14 +306,14 @@ func TestTimeout(t *testing.T) {
 
 		msg, err := getRootSpanData(r.MessageQueue)
 		if err != nil {
-			fmt.Println(err)
+			log.Println(err)
 			return
 		}
 
 		//Trace Data
 		rsd, ok := msg.Data.(spanDataModel)
 		if !ok {
-			fmt.Println("Can not convert to trace data")
+			log.Println("Can not convert to trace data")
 		}
 
 		assert.Equal(t, true, rsd.Tags[constants.AwsLambdaInvocationTimeout])

@@ -1,7 +1,7 @@
 package metric
 
 import (
-	"fmt"
+	"log"
 
 	uuid "github.com/satori/go.uuid"
 	"github.com/shirou/gopsutil/mem"
@@ -14,12 +14,12 @@ func prepareMemoryMetricsData(mp *metricPlugin, base metricDataModel) metricData
 
 	memInfo, err := mem.VirtualMemory()
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
 
 	procMemInfo, err := proc.MemoryInfo()
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
 
 	base.Metrics = map[string]interface{}{

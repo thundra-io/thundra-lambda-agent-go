@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"crypto/tls"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 	"sync"
@@ -89,10 +89,10 @@ func sendAsync(data []plugin.MonitoringDataWrapper) {
 	for i := range data {
 		b, err := json.Marshal(data[i])
 		if err != nil {
-			fmt.Println(err)
+			log.Println(err)
 			return
 		}
-		fmt.Println(string(b))
+		log.Println(string(b))
 	}
 }
 
@@ -112,7 +112,7 @@ func (r *reporterImpl) sendAsyncComposite() {
 
 func (r *reporterImpl) sendHTTPReq() {
 	if config.DebugEnabled {
-		fmt.Printf("MessageQueue:\n %+v \n", r.messageQueue)
+		log.Printf("MessageQueue:\n %+v \n", r.messageQueue)
 	}
 	targetURL := collectorURL + constants.MonitoringDataPath
 	if config.ReportRestCompositeDataEnabled {
@@ -120,12 +120,11 @@ func (r *reporterImpl) sendHTTPReq() {
 	}
 
 	if config.DebugEnabled {
-		fmt.Println("Sending HTTP request to Thundra collector: " + targetURL)
+		log.Println("Sending HTTP request to Thundra collector: " + targetURL)
 	}
 
 	batchSize := config.ReportRestCompositeBatchSize
 	var wg sync.WaitGroup
-	ch := make(chan string)
 	for i := 0; i < len(r.messageQueue); i += batchSize {
 
 		end := i + batchSize
@@ -135,47 +134,34 @@ func (r *reporterImpl) sendHTTPReq() {
 		}
 		if config.ReportRestCompositeDataEnabled {
 			baseData := plugin.PrepareBaseData()
-			compositeData := plugin.PrepareCompositeData(baseData, r.messageQueue[i:end]) 
+			compositeData := plugin.PrepareCompositeData(baseData, r.messageQueue[i:end])
 			wrappedCompositeData := plugin.WrapMonitoringData(compositeData, "Composite")
 
 			b, err := json.Marshal(wrappedCompositeData)
 			if err != nil {
-				fmt.Println("Error in marshalling ", err)
+				log.Println("Error in marshalling ", err)
 				return
 			}
 			wg.Add(1)
-			go r.sendBatch(targetURL, b, &wg, ch)
+			go r.sendBatch(targetURL, b, &wg)
 		} else {
 			b, err := json.Marshal(r.messageQueue[i:end])
 			if err != nil {
-				fmt.Println("Error in marshalling ", err)
+				log.Println("Error in marshalling ", err)
 				return
 			}
 			wg.Add(1)
-			go r.sendBatch(targetURL, b, &wg, ch)
+			go r.sendBatch(targetURL, b, &wg)
 		}
 	}
-	go printDebugLogs(ch)
-
 	wg.Wait()
-
-	close(ch)
 }
 
-func printDebugLogs(ch <-chan string) {
-	for {
-		select {
-		case str := <-ch:
-			fmt.Print(str)
-		}
-	}
-}
-
-func (r *reporterImpl) sendBatch(targetURL string, messages []byte, wg *sync.WaitGroup, ch chan<- string) {
+func (r *reporterImpl) sendBatch(targetURL string, messages []byte, wg *sync.WaitGroup) {
 	defer wg.Done()
 	req, err := http.NewRequest("POST", targetURL, bytes.NewBuffer(messages))
 	if err != nil {
-		ch <- fmt.Sprintln("Error http.NewRequest: ", err)
+		log.Println("Error http.NewRequest:", err)
 		return
 	}
 	req.Close = true
@@ -184,21 +170,21 @@ func (r *reporterImpl) sendBatch(targetURL string, messages []byte, wg *sync.Wai
 
 	resp, err := r.client.Do(req)
 	if err != nil {
-		ch <- fmt.Sprintln("Error client.Do(req): ", err)
+		log.Println("Error client.Do(req):", err)
 		return
 	}
 	if config.DebugEnabled {
-		ch <- fmt.Sprintln("response Status:", resp.Status)
-		ch <- fmt.Sprintln("response Headers:", resp.Header)
+		log.Println("response Status:", resp.Status)
+		log.Println("response Headers:", resp.Header)
 	}
 	if resp.Body == nil {
 		return
 	}
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		ch <- fmt.Sprintln("ioutil.ReadAll(resp.Body): ", err)
+		log.Println("ioutil.ReadAll(resp.Body): ", err)
 	} else if config.DebugEnabled {
-		ch <- fmt.Sprintln("response Body:", string(body))
+		log.Println("response Body:", string(body))
 	}
 
 	resp.Body.Close()

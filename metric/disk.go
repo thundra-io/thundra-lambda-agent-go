@@ -1,7 +1,7 @@
 package metric
 
 import (
-	"fmt"
+	"log"
 
 	uuid "github.com/satori/go.uuid"
 	"github.com/shirou/gopsutil/process"
@@ -55,7 +55,7 @@ func takeDiskFrame(mp *metricPlugin) *diskFrame {
 func sampleDiskStat() *process.IOCountersStat {
 	diskStat, err := proc.IOCounters()
 	if err != nil {
-		fmt.Println("Error sampling disk stat", err)
+		log.Println("Error sampling disk stat", err)
 	}
 	return diskStat
 }
