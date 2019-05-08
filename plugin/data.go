@@ -64,8 +64,8 @@ func PrepareBaseData() BaseDataModel {
 }
 
 func GetBaseData() BaseDataModel {
-	if (config.ReportRestCompositeDataEnabled && !config.ReportPublishCloudwatchEnabled) ||
-		(config.ReportPublishCloudwatchEnabled && config.ReportCloudwatchCompositeDataEnabled) {
+	if (config.ReportRestCompositeDataEnabled && !config.ReportCloudwatchEnabled) ||
+		(config.ReportCloudwatchEnabled && config.ReportCloudwatchCompositeDataEnabled) {
 		return BaseDataModel{}
 	}
 	return PrepareBaseData()

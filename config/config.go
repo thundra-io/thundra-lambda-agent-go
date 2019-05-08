@@ -40,7 +40,7 @@ var ReportCloudwatchCompositeBatchSize int
 
 var ReportRestCompositeDataEnabled bool
 var ReportCloudwatchCompositeDataEnabled bool
-var ReportPublishCloudwatchEnabled bool
+var ReportCloudwatchEnabled bool
 
 func init() {
 	ThundraDisabled = isThundraDisabled()
@@ -69,7 +69,7 @@ func init() {
 	ReportRestCompositeBatchSize = determineRestCompositeBatchSize()
 	ReportRestCompositeDataEnabled = isRestCompositeDataEnabled()
 	ReportCloudwatchCompositeDataEnabled = isCloudwatchlogCompositeDataEnabled()
-	ReportPublishCloudwatchEnabled = isPublishCloudwatchEnabled()
+	ReportCloudwatchEnabled = isReportCloudwatchEnabled()
 }
 
 func isThundraDisabled() bool {
@@ -383,12 +383,12 @@ func isRestCompositeDataEnabled() bool {
 	return enabled
 }
 
-func isPublishCloudwatchEnabled() bool {
-	env := os.Getenv(constants.ThundraLambdaPublishCloudwatchEnable)
+func isReportCloudwatchEnabled() bool {
+	env := os.Getenv(constants.ThundraLambdaReportCloudwatchEnable)
 	enabled, err := strconv.ParseBool(env)
 	if err != nil {
 		if env != "" {
-			log.Println(err, constants.ThundraLambdaPublishCloudwatchEnable+" is not a bool value.")
+			log.Println(err, constants.ThundraLambdaReportCloudwatchEnable+" is not a bool value.")
 		}
 		return false
 	}

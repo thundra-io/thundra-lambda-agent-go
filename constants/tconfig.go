@@ -24,7 +24,7 @@ const MonitoringDataPath = "/monitoring-data"
 const CompositeMonitoringDataPath = "/composite-monitoring-data"
 
 const ThundraAPIKey = "thundra_apiKey"
-const ThundraLambdaPublishCloudwatchEnable = "thundra_agent_lambda_publish_cloudwatch_enable"
+const ThundraLambdaReportCloudwatchEnable = "thundra_agent_lambda_report_cloudwatch_enable"
 const ThundraLambdaReportRestBaseURL = "thundra_agent_lambda_report_rest_baseUrl"
 const ThundraLambdaWarmupWarmupAware = "thundra_agent_lambda_warmup_warmupAware"
 const ThundraLambdaTimeoutMargin = "thundra_agent_lambda_timeout_margin"

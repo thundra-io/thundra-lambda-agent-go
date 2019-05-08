@@ -47,7 +47,7 @@ func TestCollect(t *testing.T) {
 }
 
 func TestCollectAsyncCompositeDisabled(t *testing.T) {
-	config.ReportPublishCloudwatchEnabled = true
+	config.ReportCloudwatchEnabled = true
 	config.ReportCloudwatchCompositeDataEnabled = false
 	test.PrepareEnvironment()
 	messages := []plugin.MonitoringDataWrapper{plugin.WrapMonitoringData(mockData, "Invocation")}

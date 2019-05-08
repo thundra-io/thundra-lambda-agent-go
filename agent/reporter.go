@@ -54,7 +54,7 @@ func newReporter() *reporterImpl {
 func (r *reporterImpl) Collect(messages []plugin.MonitoringDataWrapper) {
 	defer mutex.Unlock()
 	mutex.Lock()
-	if config.ReportPublishCloudwatchEnabled && !config.ReportCloudwatchCompositeDataEnabled {
+	if config.ReportCloudwatchEnabled && !config.ReportCloudwatchCompositeDataEnabled {
 		sendAsync(messages)
 		return
 	}
@@ -64,7 +64,7 @@ func (r *reporterImpl) Collect(messages []plugin.MonitoringDataWrapper) {
 // Report sends the data to collector
 func (r *reporterImpl) Report() {
 	atomic.CompareAndSwapUint32(r.reported, 0, 1)
-	if !config.ReportPublishCloudwatchEnabled {
+	if !config.ReportCloudwatchEnabled {
 		r.sendHTTPReq()
 	} else if config.ReportCloudwatchCompositeDataEnabled {
 		r.sendAsyncComposite()
