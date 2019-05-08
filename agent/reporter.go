@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/tls"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -92,7 +93,7 @@ func sendAsync(data []plugin.MonitoringDataWrapper) {
 			log.Println(err)
 			return
 		}
-		log.Println(string(b))
+		fmt.Println(string(b))
 	}
 }
 
