@@ -31,12 +31,10 @@ type reporterImpl struct {
 	reported     *uint32
 }
 
-var shouldSendAsync string
 var collectorURL string
 var mutex = &sync.Mutex{}
 
 func init() {
-	shouldSendAsync = os.Getenv(constants.ThundraLambdaPublishCloudwatchEnable)
 	if url := os.Getenv(constants.ThundraLambdaReportRestBaseURL); url != "" {
 		collectorURL = url
 	} else {
@@ -55,7 +53,7 @@ func newReporter() *reporterImpl {
 func (r *reporterImpl) Collect(messages []plugin.MonitoringDataWrapper) {
 	defer mutex.Unlock()
 	mutex.Lock()
-	if shouldSendAsync == "true" && !config.ReportCloudwatchCompositeDataEnabled {
+	if config.ReportPublishCloudwatchEnabled && !config.ReportCloudwatchCompositeDataEnabled {
 		sendAsync(messages)
 		return
 	}
@@ -65,7 +63,7 @@ func (r *reporterImpl) Collect(messages []plugin.MonitoringDataWrapper) {
 // Report sends the data to collector
 func (r *reporterImpl) Report() {
 	atomic.CompareAndSwapUint32(r.reported, 0, 1)
-	if shouldSendAsync == "false" || shouldSendAsync == "" {
+	if !config.ReportPublishCloudwatchEnabled {
 		r.sendHTTPReq()
 	} else if config.ReportCloudwatchCompositeDataEnabled {
 		r.sendAsyncComposite()
@@ -137,9 +135,10 @@ func (r *reporterImpl) sendHTTPReq() {
 		}
 		if config.ReportRestCompositeDataEnabled {
 			baseData := plugin.PrepareBaseData()
-			compositeData := plugin.WrapMonitoringData(plugin.PrepareCompositeData(baseData, r.messageQueue[i:end]), "Composite")
+			compositeData := plugin.PrepareCompositeData(baseData, r.messageQueue[i:end]) 
+			wrappedCompositeData := plugin.WrapMonitoringData(compositeData, "Composite")
 
-			b, err := json.Marshal(compositeData)
+			b, err := json.Marshal(wrappedCompositeData)
 			if err != nil {
 				fmt.Println("Error in marshalling ", err)
 				return

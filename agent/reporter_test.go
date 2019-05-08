@@ -47,7 +47,7 @@ func TestCollect(t *testing.T) {
 }
 
 func TestCollectAsyncCompositeDisabled(t *testing.T) {
-	shouldSendAsync = "true"
+	config.ReportPublishCloudwatchEnabled = true
 	config.ReportCloudwatchCompositeDataEnabled = false
 	test.PrepareEnvironment()
 	messages := []plugin.MonitoringDataWrapper{plugin.WrapMonitoringData(mockData, "Invocation")}
@@ -73,7 +73,6 @@ func TestClearData(t *testing.T) {
 }
 
 func TestReportComposite(t *testing.T) {
-	shouldSendAsync = "false"
 	test.PrepareEnvironment()
 	messages := []plugin.MonitoringDataWrapper{plugin.WrapMonitoringData(mockData, "Invocation")}
 	testReporter := newTestReporter(func(req *http.Request) (*http.Response, error) {
@@ -89,7 +88,6 @@ func TestReportComposite(t *testing.T) {
 }
 
 func TestReportCompositeDisabled(t *testing.T) {
-	shouldSendAsync = "false"
 	config.ReportRestCompositeDataEnabled = false
 	test.PrepareEnvironment()
 	messages := []plugin.MonitoringDataWrapper{plugin.WrapMonitoringData(mockData, "Invocation")}
