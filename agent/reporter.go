@@ -87,19 +87,9 @@ func (r *reporterImpl) FlushFlag() {
 	atomic.CompareAndSwapUint32(r.Reported(), 1, 0)
 }
 
-func sendAsync(msg interface{}) {
-	switch v := msg.(type) {
-	case []plugin.MonitoringDataWrapper:
-		for i := range v {
-			b, err := json.Marshal(v[i])
-			if err != nil {
-				fmt.Println(err)
-				return
-			}
-			fmt.Println(string(b))
-		}
-	default:
-		b, err := json.Marshal(&msg)
+func sendAsync(data []plugin.MonitoringDataWrapper) {
+	for i := range data {
+		b, err := json.Marshal(data[i])
 		if err != nil {
 			fmt.Println(err)
 			return
@@ -116,8 +106,9 @@ func (r *reporterImpl) sendAsyncComposite() {
 			end = len(r.messageQueue)
 		}
 		baseData := plugin.PrepareBaseData()
-		compositeData := plugin.WrapMonitoringData(plugin.PrepareCompositeData(baseData, r.messageQueue[i:end]), "Composite")
-		sendAsync(compositeData)
+		compositeData := plugin.PrepareCompositeData(baseData, r.messageQueue[i:end])
+		wrappedCompositeData := plugin.WrapMonitoringData(compositeData, "Composite")
+		sendAsync([]plugin.MonitoringDataWrapper{wrappedCompositeData})
 	}
 }
 
