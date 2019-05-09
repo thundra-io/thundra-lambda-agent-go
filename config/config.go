@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -34,6 +35,13 @@ var TraceKinesisRequestEnabled bool
 var TraceFirehoseRequestEnabled bool
 var TraceCloudwatchlogRequestEnabled bool
 
+var ReportRestCompositeBatchSize int
+var ReportCloudwatchCompositeBatchSize int
+
+var ReportRestCompositeDataEnabled bool
+var ReportCloudwatchCompositeDataEnabled bool
+var ReportCloudwatchEnabled bool
+
 func init() {
 	ThundraDisabled = isThundraDisabled()
 	TraceDisabled = isTraceDisabled()
@@ -57,6 +65,11 @@ func init() {
 	TraceCloudwatchlogRequestEnabled = isTraceCloudwatchlogRequestEnabled()
 	DynamoDBTraceInjectionEnabled = isDynamoDBTraceInjectionEnabled()
 	LambdaTraceInjectionDisabled = isLambdaTraceInjectionDisabled()
+	ReportCloudwatchCompositeBatchSize = determineCloudWatchCompositeBatchSize()
+	ReportRestCompositeBatchSize = determineRestCompositeBatchSize()
+	ReportRestCompositeDataEnabled = isRestCompositeDataEnabled()
+	ReportCloudwatchCompositeDataEnabled = isCloudwatchlogCompositeDataEnabled()
+	ReportCloudwatchEnabled = isReportCloudwatchEnabled()
 }
 
 func isThundraDisabled() bool {
@@ -64,7 +77,7 @@ func isThundraDisabled() bool {
 	disabled, err := strconv.ParseBool(env)
 	if err != nil {
 		if env != "" {
-			fmt.Println(err, " thundra_lambda_disable is not a bool value. Thundra is enabled by default.")
+			log.Println(err, " thundra_lambda_disable is not a bool value. Thundra is enabled by default.")
 		}
 		return false
 	}
@@ -76,7 +89,7 @@ func isTraceDisabled() bool {
 	disabled, err := strconv.ParseBool(env)
 	if err != nil {
 		if env != "" {
-			fmt.Println(err, constants.ThundraDisableTrace+" is not a bool value. Trace plugin is enabled by default.")
+			log.Println(err, constants.ThundraDisableTrace+" is not a bool value. Trace plugin is enabled by default.")
 		}
 		return false
 	}
@@ -88,7 +101,7 @@ func isMetricDisabled() bool {
 	disabled, err := strconv.ParseBool(env)
 	if err != nil {
 		if env != "" {
-			fmt.Println(err, constants.ThundraDisableMetric+" is not a bool value. Metric plugin is enabled by default.")
+			log.Println(err, constants.ThundraDisableMetric+" is not a bool value. Metric plugin is enabled by default.")
 		}
 		return false
 	}
@@ -100,7 +113,7 @@ func isLogDisabled() bool {
 	disabled, err := strconv.ParseBool(env)
 	if err != nil {
 		if env != "" {
-			fmt.Println(err, constants.ThundraDisableLog+" is not a bool value. Log plugin is enabled by default.")
+			log.Println(err, constants.ThundraDisableLog+" is not a bool value. Log plugin is enabled by default.")
 		}
 		return false
 	}
@@ -125,12 +138,48 @@ func determineTimeoutMargin() time.Duration {
 	return time.Duration(i) * time.Millisecond
 }
 
+func determineRestCompositeBatchSize() int {
+	t := os.Getenv(constants.ThundraLambdaReportRestCompositeBatchSize)
+	// environment variable is not set
+	if t == "" {
+		return constants.ThundraLambdaReportRestCompositeBatchSizeDefault
+	}
+
+	i, err := strconv.Atoi(t)
+
+	// environment variable is not set in the correct format
+	if err != nil {
+		fmt.Printf("%v: %s should be set with an integer\n", err, constants.ThundraLambdaReportRestCompositeBatchSize)
+		return constants.ThundraLambdaReportRestCompositeBatchSizeDefault
+	}
+
+	return i
+}
+
+func determineCloudWatchCompositeBatchSize() int {
+	t := os.Getenv(constants.ThundraLambdaReportCloudwatchCompositeBatchSize)
+	// environment variable is not set
+	if t == "" {
+		return constants.ThundraLambdaReportCloudwatchCompositeBatchSizeDefault
+	}
+
+	i, err := strconv.Atoi(t)
+
+	// environment variable is not set in the correct format
+	if err != nil {
+		fmt.Printf("%v: %s should be set with an integer\n", err, constants.ThundraLambdaReportCloudwatchCompositeBatchSize)
+		return constants.ThundraLambdaReportCloudwatchCompositeBatchSizeDefault
+	}
+
+	return i
+}
+
 func determineWarmup() bool {
 	w := os.Getenv(constants.ThundraLambdaWarmupWarmupAware)
 	b, err := strconv.ParseBool(w)
 	if err != nil {
 		if w != "" {
-			fmt.Println(err, " thundra_lambda_warmup_warmupAware should be set with a boolean.")
+			log.Println(err, " thundra_lambda_warmup_warmupAware should be set with a boolean.")
 		}
 		return false
 	}
@@ -140,7 +189,7 @@ func determineWarmup() bool {
 func determineAPIKey() string {
 	apiKey := os.Getenv(constants.ThundraAPIKey)
 	if apiKey == "" {
-		fmt.Println("Error no APIKey in env variables")
+		log.Println("Error no APIKey in env variables")
 	}
 	return apiKey
 }
@@ -166,7 +215,7 @@ func isTraceRequestDisabled() bool {
 	disabled, err := strconv.ParseBool(env)
 	if err != nil {
 		if env != "" {
-			fmt.Println(err, constants.ThundraDisableTraceRequest+"is not a bool value. Trace request is not disabled.")
+			log.Println(err, constants.ThundraDisableTraceRequest+"is not a bool value. Trace request is not disabled.")
 		}
 		return false
 	}
@@ -178,7 +227,7 @@ func isTraceResponseDisabled() bool {
 	disabled, err := strconv.ParseBool(env)
 	if err != nil {
 		if env != "" {
-			fmt.Println(err, constants.ThundraDisableTraceResponse+" is not a bool value. Trace response is not disabled.")
+			log.Println(err, constants.ThundraDisableTraceResponse+" is not a bool value. Trace response is not disabled.")
 		}
 		return false
 	}
@@ -195,7 +244,7 @@ func isAwsIntegrationDisabled() bool {
 	disabled, err := strconv.ParseBool(env)
 	if err != nil {
 		if env != "" {
-			fmt.Println(err, constants.ThundraDisableAwsIntegration+" is not a bool value.")
+			log.Println(err, constants.ThundraDisableAwsIntegration+" is not a bool value.")
 		}
 		return false
 	}
@@ -207,7 +256,7 @@ func isDynamoDBStatementsMasked() bool {
 	masked, err := strconv.ParseBool(env)
 	if err != nil {
 		if env != "" {
-			fmt.Println(err, constants.ThundraMaskDynamoDBStatement+" is not a bool value.")
+			log.Println(err, constants.ThundraMaskDynamoDBStatement+" is not a bool value.")
 		}
 		return false
 	}
@@ -219,7 +268,7 @@ func isRDBStatementsMasked() bool {
 	masked, err := strconv.ParseBool(env)
 	if err != nil {
 		if env != "" {
-			fmt.Println(err, constants.ThundraMaskRDBStatement+" is not a bool value.")
+			log.Println(err, constants.ThundraMaskRDBStatement+" is not a bool value.")
 		}
 		return false
 	}
@@ -231,7 +280,7 @@ func isEsBodyMasked() bool {
 	masked, err := strconv.ParseBool(env)
 	if err != nil {
 		if env != "" {
-			fmt.Println(err, constants.ThundraMaskEsBody+" is not a bool value.")
+			log.Println(err, constants.ThundraMaskEsBody+" is not a bool value.")
 		}
 		return false
 	}
@@ -243,7 +292,7 @@ func isRedisCommandMasked() bool {
 	masked, err := strconv.ParseBool(env)
 	if err != nil {
 		if env != "" {
-			fmt.Println(err, constants.ThundraMaskRedisCommand+" is not a bool value.")
+			log.Println(err, constants.ThundraMaskRedisCommand+" is not a bool value.")
 		}
 		return false
 	}
@@ -255,7 +304,7 @@ func isTraceKinesisRequestEnabled() bool {
 	enabled, err := strconv.ParseBool(env)
 	if err != nil {
 		if env != "" {
-			fmt.Println(err, constants.ThundraLambdaTraceKinesisRequestEnable+" is not a bool value.")
+			log.Println(err, constants.ThundraLambdaTraceKinesisRequestEnable+" is not a bool value.")
 		}
 		return false
 	}
@@ -267,7 +316,7 @@ func isTraceFirehoseRequestEnabled() bool {
 	enabled, err := strconv.ParseBool(env)
 	if err != nil {
 		if env != "" {
-			fmt.Println(err, constants.ThundraLambdaTraceFirehoseRequestEnable+" is not a bool value.")
+			log.Println(err, constants.ThundraLambdaTraceFirehoseRequestEnable+" is not a bool value.")
 		}
 		return false
 	}
@@ -279,7 +328,7 @@ func isTraceCloudwatchlogRequestEnabled() bool {
 	enabled, err := strconv.ParseBool(env)
 	if err != nil {
 		if env != "" {
-			fmt.Println(err, constants.ThundraLambdaTraceCloudwatchlogRequestEnable+" is not a bool value.")
+			log.Println(err, constants.ThundraLambdaTraceCloudwatchlogRequestEnable+" is not a bool value.")
 		}
 		return false
 	}
@@ -291,7 +340,7 @@ func isDynamoDBTraceInjectionEnabled() bool {
 	enabled, err := strconv.ParseBool(env)
 	if err != nil {
 		if env != "" {
-			fmt.Println(err, constants.EnableDynamoDbTraceInjection+" is not a bool value.")
+			log.Println(err, constants.EnableDynamoDbTraceInjection+" is not a bool value.")
 		}
 		return false
 	}
@@ -303,9 +352,45 @@ func isLambdaTraceInjectionDisabled() bool {
 	disabled, err := strconv.ParseBool(env)
 	if err != nil {
 		if env != "" {
-			fmt.Println(err, constants.DisableLambdaTraceInjection+" is not a bool value.")
+			log.Println(err, constants.DisableLambdaTraceInjection+" is not a bool value.")
 		}
 		return false
 	}
 	return disabled
+}
+
+func isCloudwatchlogCompositeDataEnabled() bool {
+	env := os.Getenv(constants.ThundraLambdaReportCloudwatchCompositeEnable)
+	enabled, err := strconv.ParseBool(env)
+	if err != nil {
+		if env != "" {
+			log.Println(err, constants.ThundraLambdaReportCloudwatchCompositeEnable+" is not a bool value.")
+		}
+		return true
+	}
+	return enabled
+}
+
+func isRestCompositeDataEnabled() bool {
+	env := os.Getenv(constants.ThundraLambdaReportRestCompositeEnable)
+	enabled, err := strconv.ParseBool(env)
+	if err != nil {
+		if env != "" {
+			log.Println(err, constants.ThundraLambdaReportRestCompositeEnable+" is not a bool value.")
+		}
+		return true
+	}
+	return enabled
+}
+
+func isReportCloudwatchEnabled() bool {
+	env := os.Getenv(constants.ThundraLambdaReportCloudwatchEnable)
+	enabled, err := strconv.ParseBool(env)
+	if err != nil {
+		if env != "" {
+			log.Println(err, constants.ThundraLambdaReportCloudwatchEnable+" is not a bool value.")
+		}
+		return false
+	}
+	return enabled
 }

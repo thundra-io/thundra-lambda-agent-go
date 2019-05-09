@@ -3,11 +3,12 @@ package invocation
 import (
 	"context"
 	"errors"
-	"fmt"
+	"log"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/thundra-io/thundra-lambda-agent-go/application"
+	"github.com/thundra-io/thundra-lambda-agent-go/config"
 	"github.com/thundra-io/thundra-lambda-agent-go/constants"
 	"github.com/thundra-io/thundra-lambda-agent-go/test"
 	"github.com/thundra-io/thundra-lambda-agent-go/utils"
@@ -36,7 +37,7 @@ func TestInvocationData_AfterExecution(t *testing.T) {
 	data, _ := ip.AfterExecution(context.TODO(), nil, nil, nil)
 	d, ok := data[0].Data.(invocationDataModel)
 	if !ok {
-		fmt.Println("Can not convert to invocationDataModel")
+		log.Println("Can not convert to invocationDataModel")
 	}
 
 	now := utils.GetTimestamp()
@@ -59,7 +60,7 @@ func TestInvocationData_AfterExecutionWithError(t *testing.T) {
 	data, _ := ip.AfterExecution(context.TODO(), nil, nil, err)
 	d, ok := data[0].Data.(invocationDataModel)
 	if !ok {
-		fmt.Println("Can not convert to invocationDataModel")
+		log.Println("Can not convert to invocationDataModel")
 	}
 
 	assert.True(t, d.Erroneous)
@@ -75,20 +76,46 @@ func TestPrepareDataStaticFields(t *testing.T) {
 	data := i.prepareData(context.TODO())
 	assert.NotNil(t, data.ID)
 	assert.Equal(t, "Invocation", data.Type)
-	assert.Equal(t, constants.AgentVersion, data.AgentVersion)
-	assert.Equal(t, constants.DataModelVersion, data.DataModelVersion)
-	assert.Equal(t, test.AppID, data.ApplicationID)
-	assert.Equal(t, application.ApplicationDomainName, data.ApplicationDomainName)
-	assert.Equal(t, application.ApplicationClassName, data.ApplicationClassName)
-	assert.Equal(t, application.ApplicationName, data.ApplicationName)
-	assert.Equal(t, application.ApplicationVersion, data.ApplicationVersion)
-	assert.Equal(t, application.ApplicationStage, data.ApplicationStage)
-	assert.Equal(t, application.ApplicationRuntime, data.ApplicationRuntime)
-	assert.Equal(t, application.ApplicationRuntimeVersion, data.ApplicationRuntimeVersion)
-	assert.NotNil(t, data.ApplicationTags)
+	assert.Nil(t, data.AgentVersion)
+	assert.Nil(t, data.DataModelVersion)
+	assert.Nil(t, data.ApplicationID)
+	assert.Nil(t, data.ApplicationDomainName)
+	assert.Nil(t, data.ApplicationClassName)
+	assert.Nil(t, data.ApplicationName)
+	assert.Nil(t, data.ApplicationVersion)
+	assert.Nil(t, data.ApplicationStage)
+	assert.Nil(t, data.ApplicationRuntime)
+	assert.Nil(t, data.ApplicationRuntimeVersion)
+	assert.Nil(t, data.ApplicationTags)
 
 	assert.Equal(t, "AWS Lambda", data.FunctionPlatform)
-	assert.Equal(t, application.ApplicationName, data.ApplicationName)
+	assert.Equal(t, application.FunctionRegion, data.FunctionRegion)
+	assert.NotNil(t, data.Tags)
+
+	test.CleanEnvironment()
+	ClearTags()
+}
+
+func TestPrepareDataStaticFieldsCompositeDataDisabled(t *testing.T) {
+	config.ReportRestCompositeDataEnabled = false
+	test.PrepareEnvironment()
+	i := New()
+	data := i.prepareData(context.TODO())
+	assert.NotNil(t, data.ID)
+	assert.Equal(t, "Invocation", data.Type)
+	assert.Equal(t, constants.AgentVersion, *data.AgentVersion)
+	assert.Equal(t, constants.DataModelVersion, *data.DataModelVersion)
+	assert.Equal(t, test.AppID, *data.ApplicationID)
+	assert.Equal(t, application.ApplicationDomainName, *data.ApplicationDomainName)
+	assert.Equal(t, application.ApplicationClassName, *data.ApplicationClassName)
+	assert.Equal(t, application.ApplicationName, *data.ApplicationName)
+	assert.Equal(t, application.ApplicationVersion, *data.ApplicationVersion)
+	assert.Equal(t, application.ApplicationStage, *data.ApplicationStage)
+	assert.Equal(t, application.ApplicationRuntime, *data.ApplicationRuntime)
+	assert.Equal(t, application.ApplicationRuntimeVersion, *data.ApplicationRuntimeVersion)
+	assert.NotNil(t, *data.ApplicationTags)
+
+	assert.Equal(t, "AWS Lambda", data.FunctionPlatform)
 	assert.Equal(t, application.FunctionRegion, data.FunctionRegion)
 	assert.NotNil(t, data.Tags)
 

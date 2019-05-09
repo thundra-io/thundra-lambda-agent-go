@@ -2,6 +2,7 @@ package agent
 
 import (
 	"fmt"
+	"log"
 	"reflect"
 	"strconv"
 	"strings"
@@ -15,7 +16,7 @@ import (
 func checkAndHandleWarmupRequest(event interface{}, eventType reflect.Type) bool {
 	// Check if the event is an empty struct
 	if isZeroEvent(event, eventType) {
-		fmt.Println("Received warmup request as empty message. Handling with 100 milliseconds delay ...")
+		log.Println("Received warmup request as empty message. Handling with 100 milliseconds delay ...")
 		time.Sleep(time.Millisecond * 100)
 		return true
 	}
@@ -42,14 +43,14 @@ func checkAndHandleWarmupRequest(event interface{}, eventType reflect.Type) bool
 					if k == "wait" {
 						w, err := strconv.Atoi(v)
 						if err != nil {
-							fmt.Println(err)
+							log.Println(err)
 						} else {
 							delay += w
 						}
 					}
 				}
 			}
-			fmt.Println("Received warmup request as warmup message. Handling with ", delay, " milliseconds delay ...")
+			log.Println("Received warmup request as warmup message. Handling with ", delay, " milliseconds delay ...")
 			time.Sleep(time.Millisecond * time.Duration(delay))
 			return true
 		}

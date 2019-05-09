@@ -2,7 +2,7 @@ package log
 
 import (
 	"encoding/json"
-	"fmt"
+	"log"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -116,7 +116,7 @@ func TestLogManagerWrite(t *testing.T) {
 	p1, err1 := json.Marshal("testMessage")
 	p2, err2 := json.Marshal("anotherTestMessage")
 	if err1 != nil || err2 != nil {
-		fmt.Println(err1, err2)
+		log.Println(err1, err2)
 	}
 	logManager.Write(p1)
 	logManager.Write(p2)

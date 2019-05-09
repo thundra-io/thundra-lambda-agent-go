@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
+	"log"
 	"testing"
 
 	"github.com/stretchr/testify/mock"
@@ -62,7 +62,7 @@ func createRawMessage() json.RawMessage {
 
 	req, err := json.Marshal(event)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
 	return req
 }

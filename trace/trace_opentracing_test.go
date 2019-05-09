@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"testing"
 	"time"
 
@@ -92,14 +93,14 @@ func TestSpanTransformation(t *testing.T) {
 			// Trace Data
 			_, ok := msg.Data.(traceDataModel)
 			if !ok {
-				fmt.Println("Can not convert to trace data")
+				log.Println("Can not convert to trace data")
 			}
 
 			msg = r.MessageQueue[2]
 			// Root Span Data
 			rsd, ok := msg.Data.(spanDataModel)
 			if !ok {
-				fmt.Println("Can not convert to span data")
+				log.Println("Can not convert to span data")
 			}
 			assert.Equal(t, "test-operation", rsd.OperationName)
 
@@ -115,12 +116,12 @@ func TestSpanTransformation(t *testing.T) {
 				// Child span data
 				f1Span, ok := f1Msg.Data.(spanDataModel)
 				if !ok {
-					fmt.Println("Can not convert f1 span data")
+					log.Println("Can not convert f1 span data")
 				}
 
 				f2Span, ok := f2Msg.Data.(spanDataModel)
 				if !ok {
-					fmt.Println("Can not convert f2 span data")
+					log.Println("Can not convert f2 span data")
 				}
 
 				assert.Equal(t, "f1", f1Span.OperationName)

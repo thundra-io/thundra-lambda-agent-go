@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	ApplicationName     = "TestFunctionName"
+	ApplicationName  = "TestFunctionName"
 	LogStreamName    = "2018/01/01/[$LATEST]1234567890"
 	AppID            = "1234567890"
 	FunctionVersion  = "$Version"

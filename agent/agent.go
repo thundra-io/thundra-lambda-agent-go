@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"sort"
 	"time"
 
@@ -98,7 +99,7 @@ func (a *Agent) CatchTimeout(ctx context.Context, payload json.RawMessage) {
 	timeoutChannel := timer.C
 	select {
 	case <-timeoutChannel:
-		fmt.Println("Function is timed out")
+		log.Println("Function is timed out")
 		a.ExecutePostHooks(ctx, payload, nil, timeoutError{})
 		return
 	case <-ctx.Done():
