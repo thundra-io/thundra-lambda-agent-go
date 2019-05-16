@@ -96,6 +96,12 @@ func (mp *metricPlugin) AfterExecution(ctx context.Context, request json.RawMess
 
 	base := mp.prepareMetricsData()
 
+	if GetSampler() != nil {
+		if !GetSampler().IsSampled(base) {
+			return stats, ctx
+		}
+	}
+
 	if !mp.disableGCMetrics {
 		mp.data.endGCCount = mStats.NumGC
 		mp.data.endPauseTotalNs = mStats.PauseTotalNs
