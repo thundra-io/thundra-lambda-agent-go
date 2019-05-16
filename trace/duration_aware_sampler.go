@@ -26,6 +26,10 @@ func (d *durationAwareSampler) IsSampled(message interface{}) bool {
 	return false
 }
 
-func NewDurationAwareSampler(duration int64, longerThan bool) samplers.Sampler {
+func NewDurationAwareSampler(duration int64, longerThanArr ...bool) samplers.Sampler {
+	var longerThan bool
+	if len(longerThanArr) > 0 {
+		longerThan = longerThanArr[0]
+	}
 	return &durationAwareSampler{duration: duration, longerThan: longerThan}
 }

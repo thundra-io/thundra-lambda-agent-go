@@ -3,6 +3,9 @@ package samplers
 import (
 	"sync/atomic"
 	"time"
+
+	"github.com/thundra-io/thundra-lambda-agent-go/config"
+	"github.com/thundra-io/thundra-lambda-agent-go/constants"
 )
 
 type timeAwareSampler struct {
@@ -21,6 +24,16 @@ func (t *timeAwareSampler) IsSampled(interface{}) bool {
 	return sampled
 }
 
-func NewTimeAwareSampler(freq int64) Sampler {
+func NewTimeAwareSampler(params ...int64) Sampler {
+	var freq int64
+
+	if config.SamplingTimeFrequency > 0 {
+		freq = int64(config.SamplingTimeFrequency)
+	} else if len(params) > 0 {
+		freq = params[0]
+	} else {
+		freq = int64(constants.DefaultSamplingTimeFreq)
+	}
+
 	return &timeAwareSampler{timeFreq: freq}
 }
