@@ -32,6 +32,7 @@ ignored = [
   "gopkg.in/olivere/elastic.v6",
   "github.com/gomodule/redigo/redis",
   "github.com/go-redis/redis",
+  "go.mongodb.org/mongo-driver/event"
 ]
 
 [[constraint]]
