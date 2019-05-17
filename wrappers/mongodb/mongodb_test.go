@@ -2,7 +2,6 @@ package thundramongo
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -111,7 +110,6 @@ func TestCommandUpdate(t *testing.T) {
 	command := bson.M{}
 	bson.UnmarshalExtJSON([]byte(span.Tags[constants.MongoDBTags["MONGODB_COMMAND"]].(string)), false, &command)
 
-	fmt.Println(command)
 	assert.Equal(t, "posts", command["update"])
 	assert.Equal(t, primitive.M(primitive.M{"name": "Mike"}), command["updates"].(primitive.A)[0].(primitive.M)["q"])
 
