@@ -25,6 +25,10 @@ jobs:
         ports:
           - "127.0.0.1:6379:6379"
 
+      - image: mongo
+        ports:
+          - "127.0.0.1:27017:27017"
+
     working_directory: /go/src/github.com/thundra-io/thundra-lambda-agent-go
     steps:
       - checkout

@@ -305,4 +305,171 @@ var ClassNames = map[string]string{
 	"APIGATEWAY":    "AWS-APIGateway",
 	"CLOUDWATCHLOG": "AWS-CloudWatch-Log",
 	"SCHEDULE":      "AWS-CloudWatch-Schedule",
+	"MONGODB":       "MONGODB",
+}
+
+var MongoDBTags = map[string]string{
+	"MONGODB_COMMAND":      "mongodb.command",
+	"MONGODB_COMMAND_NAME": "mongodb.command.name",
+	"MONGODB_COLLECTION":   "mongodb.collection.name",
+}
+
+var MongoDBCommandTypes = map[string]string{
+	// Aggregate Commands
+	"AGGREGATE": "READ",
+	"COUNT":     "READ",
+	"DISTINCT":  "READ",
+	"GROUP":     "READ",
+	"MAPREDUCE": "READ",
+
+	// Geospatial Commands
+	"GEONEAR":   "READ",
+	"GEOSEARCH": "READ",
+
+	// Query and Write Operation Commands
+	"DELETE":                 "DELETE",
+	"EVAL":                   "EXECUTE",
+	"FIND":                   "READ",
+	"FINDANDMODIFY":          "WRITE",
+	"GETLASTERROR":           "READ",
+	"GETMORE":                "READ",
+	"GETPREVERROR":           "READ",
+	"INSERT":                 "WRITE",
+	"PARALLELCOLLECTIONSCAN": "READ",
+	"RESETERROR":             "WRITE",
+	"UPDATE":                 "WRITE",
+
+	// Query Plan Cache Commands
+	"PLANCACHECLEAR":           "DELETE",
+	"PLANCACHECLEARFILTERS":    "DELETE",
+	"PLANCACHELISTFILTERS":     "READ",
+	"PLANCACHELISTPLANS":       "READ",
+	"PLANCACHELISTQUERYSHAPES": "READ",
+	"PLANCACHESETFILTER":       "WRITE",
+
+	// Authentication Commands
+	"AUTHENTICATE": "EXECUTE",
+	"LOGOUT":       "EXECUTE",
+
+	// User Management Commands
+	"CREATEUSER":               "WRITE",
+	"DROPALLUSERSFROMDATABASE": "DELETE",
+	"DROPUSER":                 "DELETE",
+	"GRANROLESTOUSER":          "WRITE",
+	"REVOKEROLESFROMUSER":      "WRITE",
+	"UPDATEUSER":               "WRITE",
+	"USERSINFO":                "READ",
+
+	// Role Management Commands
+	"CREATEROLE":               "WRITE",
+	"DROPROLE":                 "DELETE",
+	"DROPALLROLESFROMDATABASE": "DELETE",
+	"GRANTPRIVILEGESTOROLE":    "WRITE",
+	"GRANTROLESTOROLE":         "WRITE",
+	"INVALIDATEUSERCACHE":      "DELETE",
+	"REVOKEPRIVILEGESFROMROLE": "WRITE",
+	"REVOKEROLESFROMROLE":      "WRITE",
+	"ROLESINFO":                "READ",
+	"UPDATEROLE":               "WRITE",
+
+	// Replication Commands
+	"ISMASTER":                   "READ",
+	"REPLSETABORTPRIMARYCATCHUP": "EXECUTE",
+	"REPLSETFREEZE":              "EXECUTE",
+	"REPLSETGETCONFIG":           "READ",
+	"REPLSETGETSTATUS":           "READ",
+	"REPLSETINITIATE":            "EXECUTE",
+	"REPLSETMAINTENANCE":         "EXECUTE",
+	"REPLSETRECONFIG":            "EXECUTE",
+	"REPLSETRESIZEOPLOG":         "EXECUTE",
+	"REPLSETSTEPDOWN":            "EXECUTE",
+	"REPLSETSYNCFROM":            "EXECUTE",
+
+	// Sharding Commands
+	"ADDSHARD":            "EXECUTE",
+	"ADDSHARDTOZONE":      "EXECUTE",
+	"BALANCERSTART":       "EXECUTE",
+	"BALANCERSTATUS":      "READ",
+	"BALANCERSTOP":        "EXECUTE",
+	"CLEANUPORPHANED":     "EXECUTE",
+	"ENABLESHARDING":      "EXECUTE",
+	"FLUSHROUTERCONFIG":   "EXECUTE",
+	"ISDBGRID":            "READ",
+	"LISTSHARDS":          "READ",
+	"MOVEPRIMARY":         "EXECUTE",
+	"MERGECHUNKS":         "EXECUTE",
+	"REMOVESHARD":         "EXECUTE",
+	"REMOVESHARDFROMZONE": "EXECUTE",
+	"SHARDCOLLECTION":     "EXECUTE",
+	"SHARDINGSTATE":       "READ",
+	"SPLIT":               "EXECUTE",
+	"UPDATEZONEKEYRANGE":  "EXECUTE",
+
+	// Session Commands
+	"ABORTTRANSACTION":         "EXECUTE",
+	"COMMITTRANSACTION":        "EXECUTE",
+	"ENDSESSIONS":              "EXECUTE",
+	"KILLALLSESSIONS":          "EXECUTE",
+	"KILLALLSESSIONSBYPATTERN": "EXECUTE",
+	"KILLSESSIONS":             "EXECUTE",
+	"REFRESHSESSIONS":          "EXECUTE",
+	"STARTSESSION":             "EXECUTE",
+
+	// Administration Commands
+	"CLONE":                          "EXECUTE",
+	"CLONECOLLECTION":                "EXECUTE",
+	"CLONECOLLECTIONASCAPPED":        "EXECUTE",
+	"COLLMOD":                        "WRITE",
+	"COMPACT":                        "EXECUTE",
+	"CONVERTTOCAPPED":                "EXECUTE",
+	"COPYDB":                         "EXECUTE",
+	"CREATE":                         "WRITE",
+	"CREATEINDEXES":                  "WRITE",
+	"CURRENTOP":                      "READ",
+	"DROP":                           "DELETE",
+	"DROPDATABASE":                   "DELETE",
+	"DROPINDEXES":                    "DELETE",
+	"FILEMD5":                        "READ",
+	"FSYNC":                          "EXECUTE",
+	"FSYNCUNLOCK":                    "EXECUTE",
+	"GETPARAMETER":                   "READ",
+	"KILLCURSORS":                    "EXECUTE",
+	"KILLOP":                         "EXECUTE",
+	"LISTCOLLECTIONS":                "READ",
+	"LISTDATABASES":                  "READ",
+	"LISTINDEXES":                    "READ",
+	"LOGROTATE":                      "EXECUTE",
+	"REINDEX":                        "WRITE",
+	"RENAMECOLLECTION":               "WRITE",
+	"REPAIRDATABASE":                 "EXECUTE",
+	"SETFEATURECOMPATIBILITYVERSION": "WRITE",
+	"SETPARAMETER":                   "WRITE",
+	"SHUTDOWN":                       "EXECUTE",
+	"TOUCH":                          "EXECUTE",
+
+	// Diagnostic Commands
+	"BUILDINFO":          "READ",
+	"COLLSTATS":          "READ",
+	"CONNPOOLSTATS":      "READ",
+	"CONNECTIONSTATUS":   "READ",
+	"CURSORINFO":         "READ",
+	"DBHASH":             "READ",
+	"DBSTATS":            "READ",
+	"DIAGLOGGING":        "READ",
+	"EXPLAIN":            "READ",
+	"FEATURES":           "READ",
+	"GETCMDLINEOPTS":     "READ",
+	"GETLOG":             "READ",
+	"HOSTINFO":           "READ",
+	"LISTCOMMANDS":       "READ",
+	"PROFILE":            "READ",
+	"SERVERSTATUS":       "READ",
+	"SHARDCONNPOOLSTATS": "READ",
+	"TOP":                "READ",
+
+	// Free Monitoring Commands
+	"SETFREEMONITORING": "EXECUTE",
+
+	// Auditing Commands
+	"LOGAPPLICATIONMESSAGE": "EXECUTE",
 }
