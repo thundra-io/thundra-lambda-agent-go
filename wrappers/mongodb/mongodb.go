@@ -107,7 +107,13 @@ func beforeCall(span *tracer.RawSpan, event *event.CommandStartedEvent) {
 
 	if !config.MaskMongoDBCommand {
 		if event.Command != nil {
-			tags[constants.MongoDBTags["MONGODB_COMMAND"]] = event.Command.String()
+			command := event.Command.String()
+			size := len(command)
+			if size > constants.DefaultMongoDBSizeLimit {
+				size = constants.DefaultMongoDBSizeLimit
+			}
+
+			tags[constants.MongoDBTags["MONGODB_COMMAND"]] = event.Command.String()[:size]
 		} else {
 			tags[constants.MongoDBTags["MONGODB_COMMAND"]] = ""
 		}
