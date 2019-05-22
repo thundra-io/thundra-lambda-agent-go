@@ -979,7 +979,7 @@ func TestLambdaInvoke(t *testing.T) {
 	lambdac := lambda.New(sess)
 	// Actual call
 	input := &lambda.InvokeInput{
-		FunctionName:   aws.String("a-lambda-function"),
+		FunctionName:   aws.String("a-lambda-function:42"),
 		Payload:        []byte("\"foobar\""),
 		InvocationType: aws.String("RequestResponse"),
 		Qualifier:      aws.String("function-qualifier"),
@@ -1015,6 +1015,30 @@ func TestLambdaInvoke(t *testing.T) {
 	clientContextGot := *input.ClientContext
 
 	assert.Equal(t, clientContextExp, string(clientContextGot))
+	// Clear tracer
+	tp.Reset()
+}
+
+func TestLambdaInvokeFunctionArn(t *testing.T) {
+	// Initilize trace plugin to set GlobalTracer of opentracing
+	tp := trace.New()
+
+	// Create a session and wrap it
+	sess := getSessionWithLambdaResponse()
+	lambdac := lambda.New(sess)
+	// Actual call
+	input := &lambda.InvokeInput{
+		FunctionName:   aws.String("arn:aws:lambda:us-west-2:123456789012:function:a-lambda-function"),
+		Payload:        []byte("\"foobar\""),
+		InvocationType: aws.String("RequestResponse"),
+		Qualifier:      aws.String("function-qualifier"),
+	}
+	lambdac.Invoke(input)
+	// Get the span created for dynamo call
+	span := tp.Recorder.GetSpans()[0]
+	// Test related fields
+	assert.Equal(t, "a-lambda-function", span.Tags[constants.AwsLambdaTags["FUNCTION_NAME"]])
+
 	// Clear tracer
 	tp.Reset()
 }

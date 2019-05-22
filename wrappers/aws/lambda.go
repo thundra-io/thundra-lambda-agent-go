@@ -3,6 +3,7 @@ package thundraaws
 import (
 	"encoding/base64"
 	"encoding/json"
+	"strings"
 
 	"github.com/thundra-io/thundra-lambda-agent-go/application"
 	"github.com/thundra-io/thundra-lambda-agent-go/config"
@@ -38,9 +39,28 @@ func (i *lambdaIntegration) getLambdaInfo(r *request.Request) *lambdaParams {
 func (i *lambdaIntegration) getOperationName(r *request.Request) string {
 	lambdaInfo := i.getLambdaInfo(r)
 	if len(lambdaInfo.FunctionName) > 0 {
-		return lambdaInfo.FunctionName
+		return i.getFunctionName(lambdaInfo.FunctionName)
 	}
 	return constants.AWSServiceRequest
+}
+
+func (i *lambdaIntegration) getFunctionName(name string) string {
+	functionName := name
+	pos := strings.LastIndex(name, ":function:")
+	if pos != -1 {
+		posAfter := pos + len(":function:")
+		if posAfter >= len(name) {
+			functionName = ""
+		}
+		functionName = name[posAfter:len(name)]
+	}
+
+	// Strip version number if exists
+	pos = strings.IndexByte(functionName, ':')
+	if pos != -1 && pos < len(functionName) {
+		functionName = functionName[:pos]
+	}
+	return functionName
 }
 
 func (i *lambdaIntegration) beforeCall(r *request.Request, span *tracer.RawSpan) {
@@ -53,7 +73,7 @@ func (i *lambdaIntegration) beforeCall(r *request.Request, span *tracer.RawSpan)
 	lambdaInfo := i.getLambdaInfo(r)
 
 	tags := map[string]interface{}{
-		constants.AwsLambdaTags["FUNCTION_NAME"]:      lambdaInfo.FunctionName,
+		constants.AwsLambdaTags["FUNCTION_NAME"]:      i.getFunctionName(lambdaInfo.FunctionName),
 		constants.SpanTags["OPERATION_TYPE"]:          operationType,
 		constants.AwsSDKTags["REQUEST_NAME"]:          operationName,
 		constants.SpanTags["TOPOLOGY_VERTEX"]:         true,
