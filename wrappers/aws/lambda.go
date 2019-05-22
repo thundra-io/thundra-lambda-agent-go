@@ -44,16 +44,23 @@ func (i *lambdaIntegration) getOperationName(r *request.Request) string {
 	return constants.AWSServiceRequest
 }
 
-func (i *lambdaIntegration) getFunctionName(functionName string) string {
-	pos := strings.LastIndex(functionName, ":function:")
-	if pos == -1 {
-		return functionName
+func (i *lambdaIntegration) getFunctionName(name string) string {
+	functionName := name
+	pos := strings.LastIndex(name, ":function:")
+	if pos != -1 {
+		posAfter := pos + len(":function:")
+		if posAfter >= len(name) {
+			functionName = ""
+		}
+		functionName = name[posAfter:len(name)]
 	}
-	posAfter := pos + len(":function:")
-	if posAfter >= len(functionName) {
-		return ""
+
+	// Strip version number if exists
+	pos = strings.IndexByte(functionName, ':')
+	if pos != -1 && pos < len(functionName) {
+		functionName = functionName[:pos]
 	}
-	return functionName[posAfter:len(functionName)]
+	return functionName
 }
 
 func (i *lambdaIntegration) beforeCall(r *request.Request, span *tracer.RawSpan) {

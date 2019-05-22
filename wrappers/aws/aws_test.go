@@ -979,7 +979,7 @@ func TestLambdaInvoke(t *testing.T) {
 	lambdac := lambda.New(sess)
 	// Actual call
 	input := &lambda.InvokeInput{
-		FunctionName:   aws.String("a-lambda-function"),
+		FunctionName:   aws.String("a-lambda-function:42"),
 		Payload:        []byte("\"foobar\""),
 		InvocationType: aws.String("RequestResponse"),
 		Qualifier:      aws.String("function-qualifier"),
