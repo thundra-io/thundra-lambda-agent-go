@@ -35,6 +35,7 @@ type invocationDataModel struct {
 	Tags               map[string]interface{} `json:"tags"`
 	IncomingTraceLinks []string               `json:"incomingTraceLinks"`
 	OutgoingTraceLinks []string               `json:"outgoingTraceLinks"`
+	Resources          []Resource             `json:"resources"`
 }
 
 func (ip *invocationPlugin) prepareData(ctx context.Context) invocationDataModel {
@@ -66,6 +67,7 @@ func (ip *invocationPlugin) prepareData(ctx context.Context) invocationDataModel
 		IncomingTraceLinks: getIncomingTraceLinks(),
 		OutgoingTraceLinks: getOutgoingTraceLinks(),
 		Tags:               tags,
+		Resources:          getResources(spanID),
 	}
 }
 

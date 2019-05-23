@@ -58,7 +58,6 @@ func (ip *invocationPlugin) BeforeExecution(ctx context.Context, request json.Ra
 			plugin.TriggerClassName = triggerClassName
 		}
 	}
-
 	return ctx
 }
 

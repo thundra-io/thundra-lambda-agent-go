@@ -59,6 +59,5 @@ const ThundraLambdaReportRestCompositeEnable = "thundra_agent_lambda_report_rest
 const ThundraLambdaReportCloudwatchCompositeEnable = "thundra_agent_lambda_report_cloudwatch_composite_enable"
 
 const ThundraLambdaReportRestCompositeBatchSizeDefault = 100
-const ThundraLambdaReportCloudwatchCompositeBatchSizeDefault = 10
-
+const ThundraLambdaReportCloudwatchCompositeBatchSizeDefault = 100
 const DefaultMongoDBSizeLimit = 128 * 1024
