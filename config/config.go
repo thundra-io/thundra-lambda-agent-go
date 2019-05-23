@@ -30,6 +30,7 @@ var LambdaTraceInjectionDisabled bool
 var MaskRDBStatement bool
 var MaskEsBody bool
 var MaskRedisCommand bool
+var MaskMongoDBCommand bool
 
 var TraceKinesisRequestEnabled bool
 var TraceFirehoseRequestEnabled bool
@@ -70,6 +71,7 @@ func init() {
 	ReportRestCompositeDataEnabled = isRestCompositeDataEnabled()
 	ReportCloudwatchCompositeDataEnabled = isCloudwatchlogCompositeDataEnabled()
 	ReportCloudwatchEnabled = isReportCloudwatchEnabled()
+	MaskMongoDBCommand = isMongoDBCommandMasked()
 }
 
 func isThundraDisabled() bool {
@@ -293,6 +295,18 @@ func isRedisCommandMasked() bool {
 	if err != nil {
 		if env != "" {
 			log.Println(err, constants.ThundraMaskRedisCommand+" is not a bool value.")
+		}
+		return false
+	}
+	return masked
+}
+
+func isMongoDBCommandMasked() bool {
+	env := os.Getenv(constants.ThundraMaskMongoDBCommand)
+	masked, err := strconv.ParseBool(env)
+	if err != nil {
+		if env != "" {
+			log.Println(err, constants.ThundraMaskMongoDBCommand+" is not a bool value.")
 		}
 		return false
 	}

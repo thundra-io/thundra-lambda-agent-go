@@ -41,6 +41,7 @@ const ApplicationTagPrefixProp = "thundra_agent_lambda_application_tag_"
 const ThundraMaskDynamoDBStatement = "thundra_agent_lambda_trace_integrations_aws_dynamodb_statement_mask"
 const ThundraMaskRDBStatement = "thundra_agent_lambda_trace_integrations_rdb_statement_mask"
 const ThundraMaskRedisCommand = "thundra_agent_lambda_trace_integrations_redis_command_mask"
+const ThundraMaskMongoDBCommand = "thundra_agent_lambda_trace_integrations_mongodb_command_mask"
 
 const ThundraLambdaTraceKinesisRequestEnable = "thundra_agent_lambda_trace_kinesis_request_enable"
 const ThundraLambdaTraceFirehoseRequestEnable = "thundra_agent_lambda_trace_firehose_request_enable"
@@ -59,3 +60,4 @@ const ThundraLambdaReportCloudwatchCompositeEnable = "thundra_agent_lambda_repor
 
 const ThundraLambdaReportRestCompositeBatchSizeDefault = 100
 const ThundraLambdaReportCloudwatchCompositeBatchSizeDefault = 100
+const DefaultMongoDBSizeLimit = 128 * 1024
