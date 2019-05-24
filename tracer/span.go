@@ -1,6 +1,7 @@
 package tracer
 
 import (
+	logger "log"
 	"sync"
 	"time"
 
@@ -20,6 +21,7 @@ type spanImpl struct {
 // Finish is the last call that is made
 func (s *spanImpl) Finish() {
 	s.FinishWithOptions(ot.FinishOptions{})
+	s.onFinished()
 }
 
 // FinishWithOptions finishes span and adds the given options to it
@@ -168,4 +170,48 @@ func (s *spanImpl) setParent(parentCtx SpanContext) {
 			s.raw.Context.Baggage[k] = v
 		}
 	}
+}
+
+func OnSpanStarted(ots ot.Span) {
+	if span, ok := ots.(*spanImpl); ok {
+		span.onStarted()
+	}
+}
+
+func (s *spanImpl) onStarted() {
+	spanListeners := s.tracer.GetSpanListeners()
+
+	for _, sl := range spanListeners {
+		s.handleOnSpanStarted(sl)
+	}
+}
+
+func (s *spanImpl) onFinished() {
+	spanListeners := s.tracer.GetSpanListeners()
+
+	for _, sl := range spanListeners {
+		s.handleOnSpanFinished(sl)
+	}
+}
+
+func (s *spanImpl) handleOnSpanStarted(listener ThundraSpanListener) {
+	defer func() {
+		if !listener.PanicOnError() {
+			if r := recover(); r != nil {
+				logger.Println("Recovered in f", r)
+			}
+		}
+	}()
+	listener.OnSpanStarted(s)
+}
+
+func (s *spanImpl) handleOnSpanFinished(listener ThundraSpanListener) {
+	defer func() {
+		if !listener.PanicOnError() {
+			if r := recover(); r != nil {
+				logger.Println("Recovered in f", r)
+			}
+		}
+	}()
+	listener.OnSpanFinished(s)
 }

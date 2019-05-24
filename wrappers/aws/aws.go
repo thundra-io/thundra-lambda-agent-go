@@ -43,6 +43,7 @@ func validateHandler(r *request.Request) {
 		return
 	}
 	i.beforeCall(r, rawSpan)
+	tracer.OnSpanStarted(span)
 }
 
 func completeHandler(r *request.Request) {

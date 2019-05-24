@@ -83,16 +83,6 @@ func (tr *tracePlugin) BeforeExecution(ctx context.Context, request json.RawMess
 		StartTime: startTimeInMs,
 	}
 
-	return ctx
-}
-
-// AfterExecution executes the necessary tasks after the invocation
-func (tr *tracePlugin) AfterExecution(ctx context.Context, request json.RawMessage, response interface{}, err interface{}) ([]plugin.MonitoringDataWrapper, context.Context) {
-	finishTime, ctx := plugin.EndTimeFromContext(ctx)
-	tr.Data.FinishTime = finishTime
-	tr.Data.Duration = tr.Data.FinishTime - tr.Data.StartTime
-	tr.RootSpan.FinishWithOptions(opentracing.FinishOptions{FinishTime: utils.MsToTime(finishTime)})
-
 	// Add root span data
 	rawRootSpan, ok := tracer.GetRaw(tr.RootSpan)
 	if ok {
@@ -108,8 +98,21 @@ func (tr *tracePlugin) AfterExecution(ctx context.Context, request json.RawMessa
 	tr.RootSpan.SetTag(constants.AwsLambdaLogGroupName, application.LogGroupName)
 	tr.RootSpan.SetTag(constants.AwsLambdaLogStreamName, application.LogStreamName)
 	tr.RootSpan.SetTag(constants.AwsLambdaInvocationColdStart, invocationCount == 1)
-	tr.RootSpan.SetTag(constants.AwsLambdaInvocationTimeout, utils.IsTimeout(err))
 	tr.RootSpan.SetTag(constants.AwsLambdaInvocationRequestId, application.GetAwsRequestID(ctx))
+
+	tracer.OnSpanStarted(tr.RootSpan)
+
+	return ctx
+}
+
+// AfterExecution executes the necessary tasks after the invocation
+func (tr *tracePlugin) AfterExecution(ctx context.Context, request json.RawMessage, response interface{}, err interface{}) ([]plugin.MonitoringDataWrapper, context.Context) {
+	finishTime, ctx := plugin.EndTimeFromContext(ctx)
+	tr.Data.FinishTime = finishTime
+	tr.Data.Duration = tr.Data.FinishTime - tr.Data.StartTime
+	tr.RootSpan.FinishWithOptions(opentracing.FinishOptions{FinishTime: utils.MsToTime(finishTime)})
+
+	tr.RootSpan.SetTag(constants.AwsLambdaInvocationTimeout, utils.IsTimeout(err))
 
 	// Disable request data sending for cloudwatchlog, firehose and kinesis if not
 	// enabled by configuration because requests can get too big for these

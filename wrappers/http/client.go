@@ -44,6 +44,7 @@ func (c *ClientWrapper) DoWithContext(ctx context.Context, req *http.Request) (r
 	if ok {
 		beforeCall(rawSpan, req.URL.String(), req.Method, req)
 	}
+	tracer.OnSpanStarted(span)
 	resp, err = c.Client.Do(req)
 	if err != nil {
 		utils.SetSpanError(span, err)
@@ -71,6 +72,7 @@ func (c *ClientWrapper) GetWithContext(ctx context.Context, url string) (resp *h
 	if ok {
 		beforeCall(rawSpan, url, http.MethodGet, nil)
 	}
+	tracer.OnSpanStarted(span)
 	resp, err = c.Client.Get(url)
 	if err != nil {
 		utils.SetSpanError(span, err)
@@ -98,6 +100,7 @@ func (c *ClientWrapper) PostWithContext(ctx context.Context, url, contentType st
 	if ok {
 		beforeCall(rawSpan, url, http.MethodPost, nil)
 	}
+	tracer.OnSpanStarted(span)
 	resp, err = c.Client.Post(url, contentType, body)
 	if err != nil {
 		utils.SetSpanError(span, err)
@@ -125,6 +128,7 @@ func (c *ClientWrapper) PostFormWithContext(ctx context.Context, url string, dat
 	if ok {
 		beforeCall(rawSpan, url, http.MethodPost, nil)
 	}
+	tracer.OnSpanStarted(span)
 	resp, err = c.Client.PostForm(url, data)
 	if err != nil {
 		utils.SetSpanError(span, err)
@@ -152,6 +156,7 @@ func (c *ClientWrapper) HeadWithContext(ctx context.Context, url string) (resp *
 	if ok {
 		beforeCall(rawSpan, url, http.MethodHead, nil)
 	}
+	tracer.OnSpanStarted(span)
 	resp, err = c.Client.Head(url)
 	if err != nil {
 		utils.SetSpanError(span, err)

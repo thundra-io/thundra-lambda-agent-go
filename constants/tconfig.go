@@ -38,6 +38,9 @@ const ApplicationVersionProp = "thundra_agent_lambda_application_version"
 const ApplicationStageProp = "thundra_agent_lambda_application_stage"
 const ApplicationTagPrefixProp = "thundra_agent_lambda_application_tag_"
 
+const ThundraLambdaSpanListener = "thundra_agent_lambda_trace_span_listener"
+const ThundraLambdaSpanListenerInfoTag = "thundra.span_listener.info"
+
 const ThundraMaskDynamoDBStatement = "thundra_agent_lambda_trace_integrations_aws_dynamodb_statement_mask"
 const ThundraMaskRDBStatement = "thundra_agent_lambda_trace_integrations_rdb_statement_mask"
 const ThundraMaskRedisCommand = "thundra_agent_lambda_trace_integrations_redis_command_mask"

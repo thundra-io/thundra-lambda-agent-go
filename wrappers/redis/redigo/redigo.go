@@ -77,6 +77,7 @@ func (c connWrapper) Do(commandName string, args ...interface{}) (interface{}, e
 		tredis.BeforeCall(rawSpan, c.host, c.port, commandName, tredis.GetRedisCommand(commandName, args...))
 	}
 
+	tracer.OnSpanStarted(span)
 	reply, err := c.Conn.Do(commandName, args...)
 	if err != nil {
 		utils.SetSpanError(span, err)
