@@ -144,7 +144,6 @@ func (r *reporterImpl) sendHTTPReq() {
 				return
 			}
 			wg.Add(1)
-			fmt.Println(string(b))
 			go r.sendBatch(targetURL, b, &wg)
 		} else {
 			b, err := json.Marshal(r.messageQueue[i:end])
