@@ -36,7 +36,7 @@ func TestCommandInsert(t *testing.T) {
 	// Get the span created
 	span := tp.Recorder.GetSpans()[0]
 
-	assert.Equal(t, "INSERT", span.OperationName)
+	assert.Equal(t, "test", span.OperationName)
 	assert.Equal(t, constants.ClassNames["MONGODB"], span.ClassName)
 	assert.Equal(t, constants.DomainNames["DB"], span.DomainName)
 
@@ -89,7 +89,7 @@ func TestCommandUpdate(t *testing.T) {
 	// Get the span created
 	span := tp.Recorder.GetSpans()[0]
 
-	assert.Equal(t, "UPDATE", span.OperationName)
+	assert.Equal(t, "test", span.OperationName)
 	assert.Equal(t, constants.ClassNames["MONGODB"], span.ClassName)
 	assert.Equal(t, constants.DomainNames["DB"], span.DomainName)
 
@@ -130,7 +130,7 @@ func TestCommandFailed(t *testing.T) {
 	// Get the span created
 	span := tp.Recorder.GetSpans()[0]
 
-	assert.Equal(t, "UNKNOWN_COMMAND", span.OperationName)
+	assert.Equal(t, "test", span.OperationName)
 	assert.Equal(t, constants.ClassNames["MONGODB"], span.ClassName)
 	assert.Equal(t, constants.DomainNames["DB"], span.DomainName)
 
