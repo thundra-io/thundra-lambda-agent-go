@@ -1,7 +1,6 @@
-package trace
+package samplers
 
 import (
-	"github.com/thundra-io/thundra-lambda-agent-go/samplers"
 	"github.com/thundra-io/thundra-lambda-agent-go/tracer"
 )
 
@@ -20,6 +19,6 @@ func (e *errorAwareSampler) IsSampled(message interface{}) bool {
 	return false
 }
 
-func NewErrorAwareSampler() samplers.Sampler {
+func NewErrorAwareSampler() Sampler {
 	return &errorAwareSampler{}
 }

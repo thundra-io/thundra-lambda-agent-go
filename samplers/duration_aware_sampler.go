@@ -1,7 +1,6 @@
-package trace
+package samplers
 
 import (
-	"github.com/thundra-io/thundra-lambda-agent-go/samplers"
 	"github.com/thundra-io/thundra-lambda-agent-go/tracer"
 )
 
@@ -26,7 +25,7 @@ func (d *durationAwareSampler) IsSampled(message interface{}) bool {
 	return false
 }
 
-func NewDurationAwareSampler(duration int64, longerThanArr ...bool) samplers.Sampler {
+func NewDurationAwareSampler(duration int64, longerThanArr ...bool) Sampler {
 	var longerThan bool
 	if len(longerThanArr) > 0 {
 		longerThan = longerThanArr[0]

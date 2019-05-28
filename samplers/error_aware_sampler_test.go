@@ -1,4 +1,4 @@
-package trace
+package samplers
 
 import (
 	"testing"
