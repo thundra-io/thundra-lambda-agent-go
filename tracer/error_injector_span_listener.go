@@ -50,7 +50,7 @@ func (e *ErrorInjectorSpanListener) ableToRaise() bool {
 func (e *ErrorInjectorSpanListener) addInfoTags(span *spanImpl, err error) {
 	infoTags := map[string]interface{}{
 		"type":              "error_injecter_span_listener",
-		"error_type":        reflect.TypeOf(err),
+		"error_type":        reflect.TypeOf(err).String(),
 		"error_message":     err.Error(),
 		"inject_on_finish":  e.InjectOnFinish,
 		"inject_count_freq": e.InjectCountFreq,
