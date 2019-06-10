@@ -21,9 +21,6 @@ func newMockSampler(sampled bool) Sampler {
 func TestWithNoSamplers(t *testing.T) {
 	cms := NewCompositeSampler(nil, "")
 	assert.False(t, cms.IsSampled(nil))
-
-	var samplers []Sampler
-	cms = NewCompositeSampler(samplers, "")
 }
 
 func TestAndOperator(t *testing.T) {
