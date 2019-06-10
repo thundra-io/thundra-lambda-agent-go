@@ -1,7 +1,6 @@
 package config
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"strconv"
@@ -84,7 +83,7 @@ func boolFromEnv(key string, defaultValue bool) bool {
 	value, err := strconv.ParseBool(env)
 	if err != nil {
 		if env != "" {
-			log.Println(err, key+" is not a bool value.")
+			log.Printf("%v: %s is not a bool value", err, key)
 		}
 		return defaultValue
 	}
@@ -102,7 +101,7 @@ func intFromEnv(key string, defaultValue int) int {
 
 	// environment variable is not set in the correct format
 	if err != nil {
-		fmt.Printf("%v: %s should be set with an integer\n", err, key)
+		log.Printf("%v: %s should be set with an integer\n", err, key)
 		return defaultValue
 	}
 	return i
@@ -135,7 +134,7 @@ func determineTimeoutMargin() time.Duration {
 
 	// environment variable is not set in the correct format
 	if err != nil {
-		fmt.Printf("%v: %s should be set with an integer\n", err, constants.ThundraLambdaTimeoutMargin)
+		log.Printf("%v: %s should be set with an integer\n", err, constants.ThundraLambdaTimeoutMargin)
 		return time.Duration(constants.DefaultTimeoutMargin) * time.Millisecond
 	}
 
