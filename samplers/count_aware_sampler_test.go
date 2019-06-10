@@ -23,14 +23,17 @@ func TestCountFreqFromEnv(t *testing.T) {
 }
 
 func TestFreqFromParam(t *testing.T) {
-	cas := NewCountAwareSampler(10)
+	config.SamplingCountFrequency = -1
+	cas := NewCountAwareSampler(5)
 
-	assert.Equal(t, int64(10), cas.(*countAwareSampler).countFreq)
+	assert.Equal(t, int64(5), cas.(*countAwareSampler).countFreq)
 }
 
 func TestSampledCountAware(t *testing.T) {
+	config.SamplingCountFrequency = -1
 	cas := NewCountAwareSampler(2)
 
 	assert.True(t, cas.IsSampled(nil))
 	assert.False(t, cas.IsSampled(nil))
+	assert.True(t, cas.IsSampled(nil))
 }
