@@ -17,8 +17,8 @@ func (t *timeAwareSampler) IsSampled(interface{}) bool {
 	sampled := false
 	now := time.Now().UnixNano() / (int64(time.Millisecond) / int64(time.Nanosecond))
 	latestTime := atomic.LoadInt64(&t.latestTime)
-	atomic.StoreInt64(&t.latestTime, now)
 	if now > latestTime+t.timeFreq {
+		atomic.StoreInt64(&t.latestTime, now)
 		sampled = true
 	}
 	return sampled
