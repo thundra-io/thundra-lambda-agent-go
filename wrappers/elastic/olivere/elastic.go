@@ -32,6 +32,7 @@ func (t *roundTripperWrapper) RoundTrip(req *http.Request) (resp *http.Response,
 	if ok {
 		elastic.BeforeCall(rawSpan, req)
 	}
+	tracer.OnSpanStarted(span)
 	resp, err = t.RoundTripper.RoundTrip(req)
 	if err != nil {
 		utils.SetSpanError(span, err)

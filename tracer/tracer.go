@@ -96,3 +96,12 @@ func (t *tracerImpl) Inject(sc ot.SpanContext, format interface{}, carrier inter
 func (t *tracerImpl) Extract(format interface{}, carrier interface{}) (ot.SpanContext, error) {
 	return nil, errors.New("Extract has not been supported yet")
 }
+
+func (t *tracerImpl) AddSpanListener(listener ThundraSpanListener) {
+	RegisterSpanListener(listener)
+}
+
+func (t *tracerImpl) GetSpanListeners() []ThundraSpanListener {
+	return GetSpanListeners()
+}
+

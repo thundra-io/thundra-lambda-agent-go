@@ -57,6 +57,7 @@ func (rc *redisCall) beforeCall() {
 			commandName = "pipeline"
 		}
 		tredis.BeforeCall(rawSpan, rc.cw.host, rc.cw.port, commandName, rc.command)
+		tracer.OnSpanStarted(span)
 	}
 }
 

@@ -128,6 +128,7 @@ func (c *ConnWrapper) Exec(query string, args []driver.Value) (res driver.Result
 	if ok {
 		c.integration.beforeCall(query, rawSpan, c.dsn)
 	}
+	tracer.OnSpanStarted(span)
 
 	if execer, ok := c.Conn.(driver.Execer); ok {
 		res, err = execer.Exec(query, args)
@@ -155,6 +156,7 @@ func (c *ConnWrapper) ExecContext(ctx context.Context, query string, args []driv
 	if ok {
 		c.integration.beforeCall(query, rawSpan, c.dsn)
 	}
+	tracer.OnSpanStarted(span)
 
 	if execContext, ok := c.Conn.(driver.ExecerContext); ok {
 		res, err = execContext.ExecContext(ctxWithSpan, query, args)
@@ -203,6 +205,8 @@ func (c *ConnWrapper) Query(query string, args []driver.Value) (rows driver.Rows
 	if ok {
 		c.integration.beforeCall(query, rawSpan, c.dsn)
 	}
+	tracer.OnSpanStarted(span)
+
 	if queryer, ok := c.Conn.(driver.Queryer); ok {
 		rows, err = queryer.Query(query, args)
 		if err != nil {
@@ -229,6 +233,7 @@ func (c *ConnWrapper) QueryContext(ctx context.Context, query string, args []dri
 	if ok {
 		c.integration.beforeCall(query, rawSpan, c.dsn)
 	}
+	tracer.OnSpanStarted(span)
 
 	if queryerContext, ok := c.Conn.(driver.QueryerContext); ok {
 		res, err := queryerContext.QueryContext(ctxWithSpan, query, args)
@@ -279,6 +284,7 @@ func (s StmtWrapper) Exec(args []driver.Value) (res driver.Result, err error) {
 	if ok {
 		s.integration.beforeCall(s.query, rawSpan, s.dsn)
 	}
+	tracer.OnSpanStarted(span)
 
 	res, err = s.Stmt.Exec(args)
 	if err != nil {
@@ -303,6 +309,7 @@ func (s StmtWrapper) ExecContext(ctx context.Context, args []driver.NamedValue) 
 	if ok {
 		s.integration.beforeCall(s.query, rawSpan, s.dsn)
 	}
+	tracer.OnSpanStarted(span)
 
 	if stmtExecContext, ok := s.Stmt.(driver.StmtExecContext); ok {
 		res, err = stmtExecContext.ExecContext(ctxWithSpan, args)
@@ -343,6 +350,7 @@ func (s StmtWrapper) Query(args []driver.Value) (rows driver.Rows, err error) {
 	if ok {
 		s.integration.beforeCall(s.query, rawSpan, s.dsn)
 	}
+	tracer.OnSpanStarted(span)
 
 	rows, err = s.Stmt.Query(args)
 	if err != nil {
@@ -366,6 +374,7 @@ func (s StmtWrapper) QueryContext(ctx context.Context, args []driver.NamedValue)
 	if ok {
 		s.integration.beforeCall(s.query, rawSpan, s.dsn)
 	}
+	tracer.OnSpanStarted(span)
 
 	if stmtQueryContext, ok := s.Stmt.(driver.StmtQueryContext); ok {
 		rows, err = stmtQueryContext.QueryContext(ctxWithSpan, args)

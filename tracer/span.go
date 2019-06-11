@@ -1,6 +1,7 @@
 package tracer
 
 import (
+	logger "log"
 	"sync"
 	"time"
 
@@ -31,7 +32,10 @@ func (s *spanImpl) FinishWithOptions(opts ot.FinishOptions) {
 	}
 
 	s.Lock()
-	defer s.Unlock()
+	defer func() {
+		s.Unlock()
+		s.onFinished()
+	}()
 
 	for _, lr := range opts.LogRecords {
 		s.appendLog(lr)
@@ -168,4 +172,48 @@ func (s *spanImpl) setParent(parentCtx SpanContext) {
 			s.raw.Context.Baggage[k] = v
 		}
 	}
+}
+
+func OnSpanStarted(ots ot.Span) {
+	if span, ok := ots.(*spanImpl); ok {
+		span.onStarted()
+	}
+}
+
+func (s *spanImpl) onStarted() {
+	spanListeners := s.tracer.GetSpanListeners()
+
+	for _, sl := range spanListeners {
+		s.handleOnSpanStarted(sl)
+	}
+}
+
+func (s *spanImpl) onFinished() {
+	spanListeners := s.tracer.GetSpanListeners()
+
+	for _, sl := range spanListeners {
+		s.handleOnSpanFinished(sl)
+	}
+}
+
+func (s *spanImpl) handleOnSpanStarted(listener ThundraSpanListener) {
+	defer func() {
+		if !listener.PanicOnError() {
+			if r := recover(); r != nil {
+				logger.Println("Recovered in f", r)
+			}
+		}
+	}()
+	listener.OnSpanStarted(s)
+}
+
+func (s *spanImpl) handleOnSpanFinished(listener ThundraSpanListener) {
+	defer func() {
+		if !listener.PanicOnError() {
+			if r := recover(); r != nil {
+				logger.Println("Recovered in f", r)
+			}
+		}
+	}()
+	listener.OnSpanFinished(s)
 }
