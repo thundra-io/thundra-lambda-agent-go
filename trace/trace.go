@@ -3,6 +3,7 @@ package trace
 import (
 	"context"
 	"encoding/json"
+	logger "log"
 	"sync"
 
 	"github.com/thundra-io/thundra-lambda-agent-go/config"
@@ -110,7 +111,8 @@ func (tr *tracePlugin) AfterExecution(ctx context.Context, request json.RawMessa
 	finishTime, ctx := plugin.EndTimeFromContext(ctx)
 	tr.Data.FinishTime = finishTime
 	tr.Data.Duration = tr.Data.FinishTime - tr.Data.StartTime
-	tr.RootSpan.FinishWithOptions(opentracing.FinishOptions{FinishTime: utils.MsToTime(finishTime)})
+
+	tr.finishRootSpan()
 
 	tr.RootSpan.SetTag(constants.AwsLambdaInvocationTimeout, utils.IsTimeout(err))
 
@@ -167,6 +169,15 @@ func (tr *tracePlugin) AfterExecution(ctx context.Context, request json.RawMessa
 	tr.Reset()
 
 	return traceArr, ctx
+}
+
+func (tr *tracePlugin) finishRootSpan() {
+	defer func() {
+		if r := recover(); r != nil {
+			logger.Println("Recovered in f", r)
+		}
+	}()
+	tr.RootSpan.FinishWithOptions(opentracing.FinishOptions{FinishTime: utils.MsToTime(tr.Data.FinishTime)})
 }
 
 // Reset clears the recorded data for the next invocation

@@ -21,7 +21,6 @@ type spanImpl struct {
 // Finish is the last call that is made
 func (s *spanImpl) Finish() {
 	s.FinishWithOptions(ot.FinishOptions{})
-	s.onFinished()
 }
 
 // FinishWithOptions finishes span and adds the given options to it
@@ -33,7 +32,10 @@ func (s *spanImpl) FinishWithOptions(opts ot.FinishOptions) {
 	}
 
 	s.Lock()
-	defer s.Unlock()
+	defer func() {
+		s.Unlock()
+		s.onFinished()
+	}()
 
 	for _, lr := range opts.LogRecords {
 		s.appendLog(lr)
