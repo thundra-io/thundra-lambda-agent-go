@@ -155,9 +155,17 @@ func (tr *tracePlugin) AfterExecution(ctx context.Context, request json.RawMessa
 	traceArr = append(traceArr, plugin.WrapMonitoringData(td, traceType))
 
 	spanList := tr.Recorder.GetSpans()
-	for _, s := range spanList {
-		sd := tr.prepareSpanDataModel(ctx, s)
-		traceArr = append(traceArr, plugin.WrapMonitoringData(sd, spanType))
+
+	sampled := true
+	sampler := GetSampler()
+	if len(spanList) > 0 && sampler != nil {
+		sampled = sampler.IsSampled(spanList[0])
+	}
+	if sampled {
+		for _, s := range spanList {
+			sd := tr.prepareSpanDataModel(ctx, s)
+			traceArr = append(traceArr, plugin.WrapMonitoringData(sd, spanType))
+		}
 	}
 
 	// Clear trace plugin data for next invocation

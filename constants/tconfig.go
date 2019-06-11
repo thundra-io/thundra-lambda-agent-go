@@ -61,3 +61,9 @@ const ThundraLambdaReportCloudwatchCompositeEnable = "thundra_agent_lambda_repor
 const ThundraLambdaReportRestCompositeBatchSizeDefault = 100
 const ThundraLambdaReportCloudwatchCompositeBatchSizeDefault = 100
 const DefaultMongoDBSizeLimit = 128 * 1024
+
+const ThundraAgentMetricTimeAwareSamplerTimeFreq = "thundra_agent_lambda_metric_sample_sampler_timeAware_timeFreq"
+const ThundraAgentMetricCountAwareSamplerCountFreq = "thundra_agent_lambda_metric_sample_sampler_countAware_countFreq"
+
+const DefaultSamplingTimeFreq = 5 * 60 * 1000
+const DefaultSamplingCountFreq = 100

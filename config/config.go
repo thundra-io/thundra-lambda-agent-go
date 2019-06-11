@@ -1,7 +1,6 @@
 package config
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"strconv"
@@ -43,6 +42,9 @@ var ReportRestCompositeDataEnabled bool
 var ReportCloudwatchCompositeDataEnabled bool
 var ReportCloudwatchEnabled bool
 
+var SamplingCountFrequency int
+var SamplingTimeFrequency int
+
 func init() {
 	ThundraDisabled = isThundraDisabled()
 	TraceDisabled = isTraceDisabled()
@@ -72,54 +74,53 @@ func init() {
 	ReportCloudwatchCompositeDataEnabled = isCloudwatchlogCompositeDataEnabled()
 	ReportCloudwatchEnabled = isReportCloudwatchEnabled()
 	MaskMongoDBCommand = isMongoDBCommandMasked()
+	SamplingCountFrequency = determineSamplingCountFreq()
+	SamplingTimeFrequency = determineSamplingTimeFreq()
+}
+
+func boolFromEnv(key string, defaultValue bool) bool {
+	env := os.Getenv(key)
+	value, err := strconv.ParseBool(env)
+	if err != nil {
+		if env != "" {
+			log.Printf("%v: %s is not a bool value", err, key)
+		}
+		return defaultValue
+	}
+	return value
+}
+
+func intFromEnv(key string, defaultValue int) int {
+	t := os.Getenv(key)
+	// environment variable is not set
+	if t == "" {
+		return defaultValue
+	}
+
+	i, err := strconv.Atoi(t)
+
+	// environment variable is not set in the correct format
+	if err != nil {
+		log.Printf("%v: %s should be set with an integer\n", err, key)
+		return defaultValue
+	}
+	return i
 }
 
 func isThundraDisabled() bool {
-	env := os.Getenv(constants.ThundraLambdaDisable)
-	disabled, err := strconv.ParseBool(env)
-	if err != nil {
-		if env != "" {
-			log.Println(err, " thundra_lambda_disable is not a bool value. Thundra is enabled by default.")
-		}
-		return false
-	}
-	return disabled
+	return boolFromEnv(constants.ThundraLambdaDisable, false)
 }
 
 func isTraceDisabled() bool {
-	env := os.Getenv(constants.ThundraDisableTrace)
-	disabled, err := strconv.ParseBool(env)
-	if err != nil {
-		if env != "" {
-			log.Println(err, constants.ThundraDisableTrace+" is not a bool value. Trace plugin is enabled by default.")
-		}
-		return false
-	}
-	return disabled
+	return boolFromEnv(constants.ThundraDisableTrace, false)
 }
 
 func isMetricDisabled() bool {
-	env := os.Getenv(constants.ThundraDisableMetric)
-	disabled, err := strconv.ParseBool(env)
-	if err != nil {
-		if env != "" {
-			log.Println(err, constants.ThundraDisableMetric+" is not a bool value. Metric plugin is enabled by default.")
-		}
-		return false
-	}
-	return disabled
+	return boolFromEnv(constants.ThundraDisableMetric, false)
 }
 
 func isLogDisabled() bool {
-	env := os.Getenv(constants.ThundraDisableLog)
-	disabled, err := strconv.ParseBool(env)
-	if err != nil {
-		if env != "" {
-			log.Println(err, constants.ThundraDisableLog+" is not a bool value. Log plugin is enabled by default.")
-		}
-		return false
-	}
-	return disabled
+	return boolFromEnv(constants.ThundraDisableLog, false)
 }
 
 func determineTimeoutMargin() time.Duration {
@@ -133,7 +134,7 @@ func determineTimeoutMargin() time.Duration {
 
 	// environment variable is not set in the correct format
 	if err != nil {
-		fmt.Printf("%v: %s should be set with an integer\n", err, constants.ThundraLambdaTimeoutMargin)
+		log.Printf("%v: %s should be set with an integer\n", err, constants.ThundraLambdaTimeoutMargin)
 		return time.Duration(constants.DefaultTimeoutMargin) * time.Millisecond
 	}
 
@@ -141,51 +142,15 @@ func determineTimeoutMargin() time.Duration {
 }
 
 func determineRestCompositeBatchSize() int {
-	t := os.Getenv(constants.ThundraLambdaReportRestCompositeBatchSize)
-	// environment variable is not set
-	if t == "" {
-		return constants.ThundraLambdaReportRestCompositeBatchSizeDefault
-	}
-
-	i, err := strconv.Atoi(t)
-
-	// environment variable is not set in the correct format
-	if err != nil {
-		fmt.Printf("%v: %s should be set with an integer\n", err, constants.ThundraLambdaReportRestCompositeBatchSize)
-		return constants.ThundraLambdaReportRestCompositeBatchSizeDefault
-	}
-
-	return i
+	return intFromEnv(constants.ThundraLambdaReportRestCompositeBatchSize, constants.ThundraLambdaReportRestCompositeBatchSizeDefault)
 }
 
 func determineCloudWatchCompositeBatchSize() int {
-	t := os.Getenv(constants.ThundraLambdaReportCloudwatchCompositeBatchSize)
-	// environment variable is not set
-	if t == "" {
-		return constants.ThundraLambdaReportCloudwatchCompositeBatchSizeDefault
-	}
-
-	i, err := strconv.Atoi(t)
-
-	// environment variable is not set in the correct format
-	if err != nil {
-		fmt.Printf("%v: %s should be set with an integer\n", err, constants.ThundraLambdaReportCloudwatchCompositeBatchSize)
-		return constants.ThundraLambdaReportCloudwatchCompositeBatchSizeDefault
-	}
-
-	return i
+	return intFromEnv(constants.ThundraLambdaReportCloudwatchCompositeBatchSize, constants.ThundraLambdaReportCloudwatchCompositeBatchSizeDefault)
 }
 
 func determineWarmup() bool {
-	w := os.Getenv(constants.ThundraLambdaWarmupWarmupAware)
-	b, err := strconv.ParseBool(w)
-	if err != nil {
-		if w != "" {
-			log.Println(err, " thundra_lambda_warmup_warmupAware should be set with a boolean.")
-		}
-		return false
-	}
-	return b
+	return boolFromEnv(constants.ThundraLambdaWarmupWarmupAware, false)
 }
 
 func determineAPIKey() string {
@@ -213,27 +178,11 @@ func trustAllCertificates() bool {
 }
 
 func isTraceRequestDisabled() bool {
-	env := os.Getenv(constants.ThundraDisableTraceRequest)
-	disabled, err := strconv.ParseBool(env)
-	if err != nil {
-		if env != "" {
-			log.Println(err, constants.ThundraDisableTraceRequest+"is not a bool value. Trace request is not disabled.")
-		}
-		return false
-	}
-	return disabled
+	return boolFromEnv(constants.ThundraDisableTraceRequest, false)
 }
 
 func isTraceResponseDisabled() bool {
-	env := os.Getenv(constants.ThundraDisableTraceResponse)
-	disabled, err := strconv.ParseBool(env)
-	if err != nil {
-		if env != "" {
-			log.Println(err, constants.ThundraDisableTraceResponse+" is not a bool value. Trace response is not disabled.")
-		}
-		return false
-	}
-	return disabled
+	return boolFromEnv(constants.ThundraDisableTraceResponse, false)
 }
 
 func determineLogLevel() string {
@@ -242,169 +191,65 @@ func determineLogLevel() string {
 }
 
 func isAwsIntegrationDisabled() bool {
-	env := os.Getenv(constants.ThundraDisableAwsIntegration)
-	disabled, err := strconv.ParseBool(env)
-	if err != nil {
-		if env != "" {
-			log.Println(err, constants.ThundraDisableAwsIntegration+" is not a bool value.")
-		}
-		return false
-	}
-	return disabled
+	return boolFromEnv(constants.ThundraDisableAwsIntegration, false)
 }
 
 func isDynamoDBStatementsMasked() bool {
-	env := os.Getenv(constants.ThundraMaskDynamoDBStatement)
-	masked, err := strconv.ParseBool(env)
-	if err != nil {
-		if env != "" {
-			log.Println(err, constants.ThundraMaskDynamoDBStatement+" is not a bool value.")
-		}
-		return false
-	}
-	return masked
+	return boolFromEnv(constants.ThundraMaskDynamoDBStatement, false)
 }
 
 func isRDBStatementsMasked() bool {
-	env := os.Getenv(constants.ThundraMaskRDBStatement)
-	masked, err := strconv.ParseBool(env)
-	if err != nil {
-		if env != "" {
-			log.Println(err, constants.ThundraMaskRDBStatement+" is not a bool value.")
-		}
-		return false
-	}
-	return masked
+	return boolFromEnv(constants.ThundraMaskRDBStatement, false)
 }
 
 func isEsBodyMasked() bool {
-	env := os.Getenv(constants.ThundraMaskEsBody)
-	masked, err := strconv.ParseBool(env)
-	if err != nil {
-		if env != "" {
-			log.Println(err, constants.ThundraMaskEsBody+" is not a bool value.")
-		}
-		return false
-	}
-	return masked
+	return boolFromEnv(constants.ThundraMaskEsBody, false)
 }
 
 func isRedisCommandMasked() bool {
-	env := os.Getenv(constants.ThundraMaskRedisCommand)
-	masked, err := strconv.ParseBool(env)
-	if err != nil {
-		if env != "" {
-			log.Println(err, constants.ThundraMaskRedisCommand+" is not a bool value.")
-		}
-		return false
-	}
-	return masked
+	return boolFromEnv(constants.ThundraMaskRedisCommand, false)
 }
 
 func isMongoDBCommandMasked() bool {
-	env := os.Getenv(constants.ThundraMaskMongoDBCommand)
-	masked, err := strconv.ParseBool(env)
-	if err != nil {
-		if env != "" {
-			log.Println(err, constants.ThundraMaskMongoDBCommand+" is not a bool value.")
-		}
-		return false
-	}
-	return masked
+	return boolFromEnv(constants.ThundraMaskMongoDBCommand, false)
 }
 
 func isTraceKinesisRequestEnabled() bool {
-	env := os.Getenv(constants.ThundraLambdaTraceKinesisRequestEnable)
-	enabled, err := strconv.ParseBool(env)
-	if err != nil {
-		if env != "" {
-			log.Println(err, constants.ThundraLambdaTraceKinesisRequestEnable+" is not a bool value.")
-		}
-		return false
-	}
-	return enabled
+	return boolFromEnv(constants.ThundraLambdaTraceKinesisRequestEnable, false)
 }
 
 func isTraceFirehoseRequestEnabled() bool {
-	env := os.Getenv(constants.ThundraLambdaTraceFirehoseRequestEnable)
-	enabled, err := strconv.ParseBool(env)
-	if err != nil {
-		if env != "" {
-			log.Println(err, constants.ThundraLambdaTraceFirehoseRequestEnable+" is not a bool value.")
-		}
-		return false
-	}
-	return enabled
+	return boolFromEnv(constants.ThundraLambdaTraceFirehoseRequestEnable, false)
 }
 
 func isTraceCloudwatchlogRequestEnabled() bool {
-	env := os.Getenv(constants.ThundraLambdaTraceCloudwatchlogRequestEnable)
-	enabled, err := strconv.ParseBool(env)
-	if err != nil {
-		if env != "" {
-			log.Println(err, constants.ThundraLambdaTraceCloudwatchlogRequestEnable+" is not a bool value.")
-		}
-		return false
-	}
-	return enabled
+	return boolFromEnv(constants.ThundraLambdaTraceCloudwatchlogRequestEnable, false)
 }
 
 func isDynamoDBTraceInjectionEnabled() bool {
-	env := os.Getenv(constants.EnableDynamoDbTraceInjection)
-	enabled, err := strconv.ParseBool(env)
-	if err != nil {
-		if env != "" {
-			log.Println(err, constants.EnableDynamoDbTraceInjection+" is not a bool value.")
-		}
-		return false
-	}
-	return enabled
+	return boolFromEnv(constants.EnableDynamoDbTraceInjection, false)
 }
 
 func isLambdaTraceInjectionDisabled() bool {
-	env := os.Getenv(constants.DisableLambdaTraceInjection)
-	disabled, err := strconv.ParseBool(env)
-	if err != nil {
-		if env != "" {
-			log.Println(err, constants.DisableLambdaTraceInjection+" is not a bool value.")
-		}
-		return false
-	}
-	return disabled
+	return boolFromEnv(constants.DisableLambdaTraceInjection, false)
 }
 
 func isCloudwatchlogCompositeDataEnabled() bool {
-	env := os.Getenv(constants.ThundraLambdaReportCloudwatchCompositeEnable)
-	enabled, err := strconv.ParseBool(env)
-	if err != nil {
-		if env != "" {
-			log.Println(err, constants.ThundraLambdaReportCloudwatchCompositeEnable+" is not a bool value.")
-		}
-		return true
-	}
-	return enabled
+	return boolFromEnv(constants.ThundraLambdaReportCloudwatchCompositeEnable, true)
 }
 
 func isRestCompositeDataEnabled() bool {
-	env := os.Getenv(constants.ThundraLambdaReportRestCompositeEnable)
-	enabled, err := strconv.ParseBool(env)
-	if err != nil {
-		if env != "" {
-			log.Println(err, constants.ThundraLambdaReportRestCompositeEnable+" is not a bool value.")
-		}
-		return true
-	}
-	return enabled
+	return boolFromEnv(constants.ThundraLambdaReportRestCompositeEnable, true)
 }
 
 func isReportCloudwatchEnabled() bool {
-	env := os.Getenv(constants.ThundraLambdaReportCloudwatchEnable)
-	enabled, err := strconv.ParseBool(env)
-	if err != nil {
-		if env != "" {
-			log.Println(err, constants.ThundraLambdaReportCloudwatchEnable+" is not a bool value.")
-		}
-		return false
-	}
-	return enabled
+	return boolFromEnv(constants.ThundraLambdaReportCloudwatchEnable, false)
+}
+
+func determineSamplingCountFreq() int {
+	return intFromEnv(constants.ThundraAgentMetricCountAwareSamplerCountFreq, -1)
+}
+
+func determineSamplingTimeFreq() int {
+	return intFromEnv(constants.ThundraAgentMetricTimeAwareSamplerTimeFreq, -1)
 }

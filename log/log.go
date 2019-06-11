@@ -33,7 +33,10 @@ func (p *logPlugin) AfterExecution(ctx context.Context, request json.RawMessage,
 	var collectedData []plugin.MonitoringDataWrapper
 	for _, l := range logManager.logs {
 		data := prepareLogData(l)
-		collectedData = append(collectedData, plugin.WrapMonitoringData(data, logType))
+		sampler := GetSampler()
+		if sampler == nil || sampler.IsSampled(data) {
+			collectedData = append(collectedData, plugin.WrapMonitoringData(data, logType))
+		}
 	}
 	return collectedData, ctx
 }
@@ -42,7 +45,10 @@ func (p *logPlugin) OnPanic(ctx context.Context, request json.RawMessage, err in
 	var collectedData []plugin.MonitoringDataWrapper
 	for _, l := range logManager.logs {
 		data := prepareLogData(l)
-		collectedData = append(collectedData, plugin.WrapMonitoringData(data, logType))
+		sampler := GetSampler()
+		if sampler == nil || sampler.IsSampled(data) {
+			collectedData = append(collectedData, plugin.WrapMonitoringData(data, logType))
+		}
 	}
 	return collectedData
 }
