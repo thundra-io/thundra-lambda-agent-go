@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/thundra-io/thundra-lambda-agent-go/application"
+	"github.com/thundra-io/thundra-lambda-agent-go/config"
 	"github.com/thundra-io/thundra-lambda-agent-go/constants"
 	"github.com/thundra-io/thundra-lambda-agent-go/utils"
 
@@ -14,6 +15,21 @@ import (
 )
 
 type sqsIntegration struct{}
+
+func (i *sqsIntegration) getSQSMessage(r *request.Request) string {
+	inp := &struct {
+		MessageBody string
+	}{}
+
+	m, err := json.Marshal(r.Params)
+	if err != nil {
+		return ""
+	}
+	if err = json.Unmarshal(m, inp); err != nil {
+		return ""
+	}
+	return inp.MessageBody
+}
 
 func (i *sqsIntegration) getQueueName(r *request.Request) string {
 	fields := struct {
@@ -59,6 +75,10 @@ func (i *sqsIntegration) beforeCall(r *request.Request, span *tracer.RawSpan) {
 		constants.SpanTags["TRIGGER_OPERATION_NAMES"]: []string{application.FunctionName},
 		constants.SpanTags["TRIGGER_DOMAIN_NAME"]:     constants.AwsLambdaApplicationDomain,
 		constants.SpanTags["TRIGGER_CLASS_NAME"]:      constants.AwsLambdaApplicationClass,
+	}
+
+	if !config.MaskSQSMessage {
+		tags[constants.AwsSQSTags["MESSAGE"]] = i.getSQSMessage(r)
 	}
 
 	span.Tags = tags
