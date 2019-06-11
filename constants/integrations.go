@@ -9,6 +9,7 @@ var HTTPTags = map[string]string{
 	"HOST":         "http.host",
 	"STATUS":       "http.status_code",
 	"QUERY_PARAMS": "http.query_params",
+	"BODY":         "http.body",
 }
 
 var DynamoDBRequestTypes = map[string]string{
@@ -100,10 +101,12 @@ var AwsDynamoDBTags = map[string]string{
 
 var AwsSQSTags = map[string]string{
 	"QUEUE_NAME": "aws.sqs.queue.name",
+	"MESSAGE":    "aws.sqs.message",
 }
 
 var AwsSNSTags = map[string]string{
 	"TOPIC_NAME": "aws.sns.topic.name",
+	"MESSAGE":    "aws.sns.message",
 }
 
 var AwsKinesisTags = map[string]string{
