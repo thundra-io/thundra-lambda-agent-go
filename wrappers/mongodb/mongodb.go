@@ -31,7 +31,7 @@ func NewCommandMonitor() *event.CommandMonitor {
 }
 
 func (c *commandMonitor) started(ctx context.Context, event *event.CommandStartedEvent) {
-	span, _ := opentracing.StartSpanFromContext(ctx, strings.ToUpper(event.CommandName))
+	span, _ := opentracing.StartSpanFromContext(ctx, event.DatabaseName)
 	rawSpan, ok := tracer.GetRaw(span)
 	if !ok {
 		return
