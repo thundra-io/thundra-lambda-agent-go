@@ -31,18 +31,19 @@ func NewCommandMonitor() *event.CommandMonitor {
 }
 
 func (c *commandMonitor) started(ctx context.Context, event *event.CommandStartedEvent) {
-	span, _ := opentracing.StartSpanFromContext(ctx, strings.ToUpper(event.CommandName))
+	span, _ := opentracing.StartSpanFromContext(ctx, event.DatabaseName)
 	rawSpan, ok := tracer.GetRaw(span)
 	if !ok {
 		return
 	}
 
-	c.Lock()
 	// Store span to use it on command finished
+	c.Lock()
 	c.spans[spanKey{event.ConnectionID, event.RequestID}] = span
 	c.Unlock()
-
+	
 	beforeCall(rawSpan, event)
+	tracer.OnSpanStarted(span)
 }
 
 func (c *commandMonitor) succeeded(ctx context.Context, event *event.CommandSucceededEvent) {
