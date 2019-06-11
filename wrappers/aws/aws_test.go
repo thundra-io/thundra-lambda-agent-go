@@ -666,6 +666,7 @@ func TestDynamoDBGetItem(t *testing.T) {
 }
 
 func TestSNSPublish(t *testing.T) {
+	config.MaskSNSMessage = false
 	// Initilize trace plugin to set GlobalTracer of opentracing
 	tp := trace.New()
 
@@ -674,8 +675,9 @@ func TestSNSPublish(t *testing.T) {
 	snsc := sns.New(sess)
 
 	// Params will be sent to the publish call included here is the bare minimum params to send a message
+	message := "foobar"
 	params := &sns.PublishInput{
-		Message:  aws.String("message"),
+		Message:  aws.String(message),
 		TopicArn: aws.String("arn:aws:sns:us-west-2:123456789012:gsg-signup-notifications"),
 	}
 
@@ -693,6 +695,45 @@ func TestSNSPublish(t *testing.T) {
 	assert.Equal(t, true, span.Tags[constants.SpanTags["TOPOLOGY_VERTEX"]])
 	assert.Equal(t, constants.AwsLambdaApplicationDomain, span.Tags[constants.SpanTags["TRIGGER_DOMAIN_NAME"]])
 	assert.Equal(t, constants.AwsLambdaApplicationClass, span.Tags[constants.SpanTags["TRIGGER_CLASS_NAME"]])
+	assert.Equal(t, message, span.Tags[constants.AwsSNSTags["MESSAGE"]])
+
+	assert.Equal(t, []string{"95df01b4-ee98-5cb9-9903-4c221d41eb5e"}, span.Tags[constants.SpanTags["TRACE_LINKS"]])
+
+	// Clear tracer
+	tp.Reset()
+}
+
+func TestSNSPublishWithMaskedMessage(t *testing.T) {
+	config.MaskSNSMessage = true
+	// Initilize trace plugin to set GlobalTracer of opentracing
+	tp := trace.New()
+
+	// Create a session and wrap it
+	sess := getSessionWithSnsResponse()
+	snsc := sns.New(sess)
+
+	// Params will be sent to the publish call included here is the bare minimum params to send a message
+	message := "foobar"
+	params := &sns.PublishInput{
+		Message:  aws.String(message),
+		TopicArn: aws.String("arn:aws:sns:us-west-2:123456789012:gsg-signup-notifications"),
+	}
+
+	// Call to publish message
+	snsc.Publish(params)
+
+	// Get the span created for dynamo call
+	span := tp.Recorder.GetSpans()[0]
+	// Test related fields
+	assert.Equal(t, constants.ClassNames["SNS"], span.ClassName)
+	assert.Equal(t, constants.DomainNames["MESSAGING"], span.DomainName)
+	assert.Equal(t, "gsg-signup-notifications", span.Tags[constants.AwsSNSTags["TOPIC_NAME"]])
+	assert.Equal(t, "WRITE", span.Tags[constants.SpanTags["OPERATION_TYPE"]])
+	assert.Equal(t, "Publish", span.Tags[constants.AwsSDKTags["REQUEST_NAME"]])
+	assert.Equal(t, true, span.Tags[constants.SpanTags["TOPOLOGY_VERTEX"]])
+	assert.Equal(t, constants.AwsLambdaApplicationDomain, span.Tags[constants.SpanTags["TRIGGER_DOMAIN_NAME"]])
+	assert.Equal(t, constants.AwsLambdaApplicationClass, span.Tags[constants.SpanTags["TRIGGER_CLASS_NAME"]])
+	assert.Nil(t, span.Tags[constants.AwsSNSTags["MESSAGE"]])
 
 	assert.Equal(t, []string{"95df01b4-ee98-5cb9-9903-4c221d41eb5e"}, span.Tags[constants.SpanTags["TRACE_LINKS"]])
 

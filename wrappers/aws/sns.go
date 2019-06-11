@@ -1,6 +1,7 @@
 package thundraaws
 
 import (
+	"github.com/thundra-io/thundra-lambda-agent-go/config"
 	"encoding/json"
 	"reflect"
 	"strings"
@@ -13,6 +14,21 @@ import (
 )
 
 type snsIntegration struct{}
+
+func (i *snsIntegration) getSNSMessage(r *request.Request) string {
+	inp := &struct{
+		Message string
+	}{}
+	
+	m, err := json.Marshal(r.Params)
+	if err != nil {
+		return ""
+	}
+	if err = json.Unmarshal(m, inp); err != nil {
+		return ""
+	}
+	return inp.Message
+}
 
 func (i *snsIntegration) getTopicName(r *request.Request) string {
 	fields := struct {
@@ -62,6 +78,10 @@ func (i *snsIntegration) beforeCall(r *request.Request, span *tracer.RawSpan) {
 		constants.SpanTags["TRIGGER_OPERATION_NAMES"]: []string{application.FunctionName},
 		constants.SpanTags["TRIGGER_DOMAIN_NAME"]:     constants.AwsLambdaApplicationDomain,
 		constants.SpanTags["TRIGGER_CLASS_NAME"]:      constants.AwsLambdaApplicationClass,
+	}
+	
+	if !config.MaskSNSMessage {
+		tags[constants.AwsSNSTags["MESSAGE"]] = i.getSNSMessage(r)
 	}
 
 	span.Tags = tags
