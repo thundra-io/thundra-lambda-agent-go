@@ -200,7 +200,7 @@ func (s *spanImpl) handleOnSpanStarted(listener ThundraSpanListener) {
 	defer func() {
 		if !listener.PanicOnError() {
 			if r := recover(); r != nil {
-				logger.Println("Recovered in f", r)
+				logger.Println("Error on span started:", r)
 			}
 		}
 	}()
@@ -211,7 +211,7 @@ func (s *spanImpl) handleOnSpanFinished(listener ThundraSpanListener) {
 	defer func() {
 		if !listener.PanicOnError() {
 			if r := recover(); r != nil {
-				logger.Println("Recovered in f", r)
+				logger.Println("Error on span finished:", r)
 			}
 		}
 	}()
