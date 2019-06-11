@@ -174,7 +174,7 @@ func (tr *tracePlugin) AfterExecution(ctx context.Context, request json.RawMessa
 func (tr *tracePlugin) finishRootSpan() {
 	defer func() {
 		if r := recover(); r != nil {
-			logger.Println("Recovered in f", r)
+			logger.Println("Error while finishing the root span:", r)
 		}
 	}()
 	tr.RootSpan.FinishWithOptions(opentracing.FinishOptions{FinishTime: utils.MsToTime(tr.Data.FinishTime)})
