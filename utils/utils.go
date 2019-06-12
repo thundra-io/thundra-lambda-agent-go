@@ -1,10 +1,12 @@
 package utils
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"reflect"
 	"strconv"
@@ -192,4 +194,29 @@ func GetStringFieldFromValue(value reflect.Value, fieldName string) (string, boo
 		return fieldElem.String(), true
 	}
 	return "", false
+}
+
+type readCloser struct {
+	io.Reader
+	io.Closer
+}
+
+func ReadRequestBody(body io.ReadCloser, contentLength int) (string, io.ReadCloser) {
+	bodySizeToRead := constants.MaxTracedHttpBodySize
+	if contentLength > 0 && contentLength < bodySizeToRead {
+		bodySizeToRead = contentLength
+	}
+	rd := bufio.NewReaderSize(body, bodySizeToRead)
+	rc := readCloser{
+		Reader: rd,
+		Closer: body,
+	}
+	bodyRead, err := rd.Peek(bodySizeToRead)
+	if err == io.EOF {
+		err = nil
+	}
+	if err != nil {
+		return "", rc
+	}
+	return string(bodyRead), rc
 }

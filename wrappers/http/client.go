@@ -6,6 +6,8 @@ import (
 	"net/http"
 	gourl "net/url"
 
+	"github.com/thundra-io/thundra-lambda-agent-go/config"
+
 	"github.com/thundra-io/thundra-lambda-agent-go/application"
 	"github.com/thundra-io/thundra-lambda-agent-go/tracer"
 	"github.com/thundra-io/thundra-lambda-agent-go/utils"
@@ -198,12 +200,17 @@ func beforeCall(span *tracer.RawSpan, url, method string, req *http.Request) {
 		tags[constants.SpanTags["TOPOLOGY_VERTEX"]] = true
 	}
 
-	span.Tags = tags
-
 	if req != nil {
 		req.Header.Add("x-thundra-span-id", span.Context.SpanID)
-		span.Tags[constants.SpanTags["TRACE_LINKS"]] = []string{span.Context.SpanID}
+		tags[constants.SpanTags["TRACE_LINKS"]] = []string{span.Context.SpanID}
+		if !config.MaskHTTPBody && req.Body != nil {
+			body := ""
+			body, req.Body = utils.ReadRequestBody(req.Body, int(req.ContentLength))
+			tags[constants.HTTPTags["BODY"]] = body
+		}
 	}
+
+	span.Tags = tags
 }
 
 func afterCall(span *tracer.RawSpan, resp *http.Response) {

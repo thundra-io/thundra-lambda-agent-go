@@ -105,7 +105,7 @@ func TestGetDoc(t *testing.T) {
 	assert.ElementsMatch(t, []string{"localhost:9200"}, span.Tags[constants.EsTags["ES_HOSTS"]])
 	assert.Equal(t, "GET", span.Tags[constants.EsTags["ES_METHOD"]])
 	assert.Equal(t, "/twitter/_docs/1", span.Tags[constants.EsTags["ES_URI"]])
-	assert.Equal(t, "", span.Tags[constants.EsTags["ES_BODY"]])
+	assert.Nil(t, span.Tags[constants.EsTags["ES_BODY"]])
 
 	assert.Equal(t, "elasticsearch", span.Tags[constants.DBTags["DB_TYPE"]])
 
@@ -136,7 +136,7 @@ func TestDeleteDoc(t *testing.T) {
 	assert.ElementsMatch(t, []string{"localhost:9200"}, span.Tags[constants.EsTags["ES_HOSTS"]])
 	assert.Equal(t, "DELETE", span.Tags[constants.EsTags["ES_METHOD"]])
 	assert.Equal(t, "/twitter/_docs/1", span.Tags[constants.EsTags["ES_URI"]])
-	assert.Equal(t, "", span.Tags[constants.EsTags["ES_BODY"]])
+	assert.Nil(t, span.Tags[constants.EsTags["ES_BODY"]])
 
 	assert.Equal(t, "elasticsearch", span.Tags[constants.DBTags["DB_TYPE"]])
 
@@ -167,7 +167,7 @@ func TestRefresh(t *testing.T) {
 	assert.ElementsMatch(t, []string{"localhost:9200"}, span.Tags[constants.EsTags["ES_HOSTS"]])
 	assert.Equal(t, "DELETE", span.Tags[constants.EsTags["ES_METHOD"]])
 	assert.Equal(t, "/twitter/_docs/1", span.Tags[constants.EsTags["ES_URI"]])
-	assert.Equal(t, "", span.Tags[constants.EsTags["ES_BODY"]])
+	assert.Nil(t, span.Tags[constants.EsTags["ES_BODY"]])
 
 	assert.Equal(t, "elasticsearch", span.Tags[constants.DBTags["DB_TYPE"]])
 
@@ -204,7 +204,7 @@ func TestErrorNotExistentURL(t *testing.T) {
 	assert.ElementsMatch(t, []string{"localhost:9201"}, span.Tags[constants.EsTags["ES_HOSTS"]])
 	assert.Equal(t, "DELETE", span.Tags[constants.EsTags["ES_METHOD"]])
 	assert.Equal(t, "/twitter/_docs/1", span.Tags[constants.EsTags["ES_URI"]])
-	assert.Equal(t, "", span.Tags[constants.EsTags["ES_BODY"]])
+	assert.Nil(t, span.Tags[constants.EsTags["ES_BODY"]])
 
 	assert.Equal(t, "elasticsearch", span.Tags[constants.DBTags["DB_TYPE"]])
 
