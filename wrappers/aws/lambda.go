@@ -82,7 +82,7 @@ func (i *lambdaIntegration) beforeCall(r *request.Request, span *tracer.RawSpan)
 		constants.SpanTags["TRIGGER_CLASS_NAME"]:      constants.AwsLambdaApplicationClass,
 	}
 
-	if lambdaInfo.Payload != "" {
+	if !config.MaskLambdaPayload && lambdaInfo.Payload != "" {
 		tags[constants.AwsLambdaTags["INVOCATION_PAYLOAD"]] = lambdaInfo.Payload
 	}
 	if lambdaInfo.Qualifier != "" {

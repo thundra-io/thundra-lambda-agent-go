@@ -77,8 +77,10 @@ func (i *sqsIntegration) beforeCall(r *request.Request, span *tracer.RawSpan) {
 		constants.SpanTags["TRIGGER_CLASS_NAME"]:      constants.AwsLambdaApplicationClass,
 	}
 
-	if !config.MaskSQSMessage {
-		tags[constants.AwsSQSTags["MESSAGE"]] = i.getSQSMessage(r)
+	message := i.getSQSMessage(r)
+
+	if !config.MaskSQSMessage && message != "" {
+		tags[constants.AwsSQSTags["MESSAGE"]] = message
 	}
 
 	span.Tags = tags

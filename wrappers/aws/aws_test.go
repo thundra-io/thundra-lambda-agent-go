@@ -1010,6 +1010,7 @@ func TestS3GetObject(t *testing.T) {
 }
 
 func TestLambdaInvoke(t *testing.T) {
+	config.MaskLambdaPayload = false
 	// Set application name
 	application.ApplicationName = "test"
 	// Initilize trace plugin to set GlobalTracer of opentracing
@@ -1060,6 +1061,50 @@ func TestLambdaInvoke(t *testing.T) {
 	tp.Reset()
 }
 
+func TestLambdaInvokeWithMaskedPayload(t *testing.T) {
+	config.MaskLambdaPayload = true
+	// Set application name
+	application.ApplicationName = "test"
+	// Initilize trace plugin to set GlobalTracer of opentracing
+	tp := trace.New()
+
+	// Create a session and wrap it
+	sess := getSessionWithLambdaResponse()
+	lambdac := lambda.New(sess)
+	// Actual call
+	input := &lambda.InvokeInput{
+		FunctionName:   aws.String("a-lambda-function:42"),
+		Payload:        []byte("\"foobar\""),
+		InvocationType: aws.String("RequestResponse"),
+		Qualifier:      aws.String("function-qualifier"),
+	}
+	lambdac.Invoke(input)
+	// Get the span created for dynamo call
+	span := tp.Recorder.GetSpans()[0]
+	// Test related fields
+	assert.Equal(t, constants.ClassNames["LAMBDA"], span.ClassName)
+	assert.Equal(t, constants.DomainNames["API"], span.DomainName)
+	assert.Equal(t, "a-lambda-function", span.Tags[constants.AwsLambdaTags["FUNCTION_NAME"]])
+	assert.Equal(t, "RequestResponse", span.Tags[constants.AwsLambdaTags["INVOCATION_TYPE"]])
+	assert.Equal(t, "function-qualifier", span.Tags[constants.AwsLambdaTags["FUNCTION_QUALIFIER"]])
+	assert.Equal(t, "CALL", span.Tags[constants.SpanTags["OPERATION_TYPE"]])
+	assert.Equal(t, "Invoke", span.Tags[constants.AwsSDKTags["REQUEST_NAME"]])
+	assert.Equal(t, true, span.Tags[constants.SpanTags["TOPOLOGY_VERTEX"]])
+	assert.Equal(t, constants.AwsLambdaApplicationDomain, span.Tags[constants.SpanTags["TRIGGER_DOMAIN_NAME"]])
+	assert.Equal(t, constants.AwsLambdaApplicationClass, span.Tags[constants.SpanTags["TRIGGER_CLASS_NAME"]])
+
+	assert.Equal(t, []string{"C3D13FE58DE4C810"}, span.Tags[constants.SpanTags["TRACE_LINKS"]])
+
+	assert.Nil(t, span.Tags[constants.AwsLambdaTags["INVOCATION_PAYLOAD"]])
+
+	clientContextExp := getBase64EncodedClientContext()
+	clientContextGot := *input.ClientContext
+
+	assert.Equal(t, clientContextExp, string(clientContextGot))
+	// Clear tracer
+	tp.Reset()
+}
+
 func TestLambdaInvokeFunctionArn(t *testing.T) {
 	// Initilize trace plugin to set GlobalTracer of opentracing
 	tp := trace.New()
@@ -1085,6 +1130,7 @@ func TestLambdaInvokeFunctionArn(t *testing.T) {
 }
 
 func TestLambdaInvokeWithClientContext(t *testing.T) {
+	config.MaskLambdaPayload = false
 	// Set application name
 	application.ApplicationName = "test"
 

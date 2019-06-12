@@ -1,10 +1,11 @@
 package thundraaws
 
 import (
-	"github.com/thundra-io/thundra-lambda-agent-go/config"
 	"encoding/json"
 	"reflect"
 	"strings"
+
+	"github.com/thundra-io/thundra-lambda-agent-go/config"
 
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/thundra-io/thundra-lambda-agent-go/application"
@@ -16,10 +17,10 @@ import (
 type snsIntegration struct{}
 
 func (i *snsIntegration) getSNSMessage(r *request.Request) string {
-	inp := &struct{
+	inp := &struct {
 		Message string
 	}{}
-	
+
 	m, err := json.Marshal(r.Params)
 	if err != nil {
 		return ""
@@ -79,9 +80,11 @@ func (i *snsIntegration) beforeCall(r *request.Request, span *tracer.RawSpan) {
 		constants.SpanTags["TRIGGER_DOMAIN_NAME"]:     constants.AwsLambdaApplicationDomain,
 		constants.SpanTags["TRIGGER_CLASS_NAME"]:      constants.AwsLambdaApplicationClass,
 	}
-	
-	if !config.MaskSNSMessage {
-		tags[constants.AwsSNSTags["MESSAGE"]] = i.getSNSMessage(r)
+
+	message := i.getSNSMessage(r)
+
+	if !config.MaskSNSMessage && message != "" {
+		tags[constants.AwsSNSTags["MESSAGE"]] = message
 	}
 
 	span.Tags = tags
