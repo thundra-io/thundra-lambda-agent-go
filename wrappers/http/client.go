@@ -1,6 +1,7 @@
 package thundrahttp
 
 import (
+	"bytes"
 	"context"
 	"io"
 	"io/ioutil"
@@ -129,7 +130,7 @@ func (c *ClientWrapper) PostFormWithContext(ctx context.Context, url string, dat
 	defer span.Finish()
 	rawSpan, ok := tracer.GetRaw(span)
 	if ok {
-		beforeCall(rawSpan, url, http.MethodPost, nil, nil)
+		beforeCall(rawSpan, url, http.MethodPost, nil, ioutil.NopCloser(bytes.NewBufferString(data.Encode())))
 	}
 	tracer.OnSpanStarted(span)
 	resp, err = c.Client.PostForm(url, data)
