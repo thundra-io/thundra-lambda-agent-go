@@ -86,6 +86,7 @@ func (ip *invocationPlugin) prepareTags(ctx context.Context) map[string]interfac
 	tags[constants.AwsLambdaLogGroupName] = application.LogGroupName
 	tags[constants.AwsLambdaLogStreamName] = application.LogStreamName
 	tags[constants.AwsLambdaMemoryLimit] = application.MemoryLimit
+	tags[constants.AwsLambdaMemoryUsage] = application.MemoryUsed
 	tags[constants.AwsLambdaName] = application.ApplicationName
 	tags[constants.AwsRegion] = application.FunctionRegion
 	return tags

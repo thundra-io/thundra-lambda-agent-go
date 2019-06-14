@@ -19,6 +19,7 @@ var ApplicationVersion string
 var ApplicationStage string
 var FunctionRegion string
 var MemoryLimit int
+var MemoryUsed int
 var LogGroupName string
 var LogStreamName string
 var FunctionARN string

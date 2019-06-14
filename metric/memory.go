@@ -4,29 +4,25 @@ import (
 	"log"
 
 	uuid "github.com/satori/go.uuid"
-	"github.com/shirou/gopsutil/mem"
 	"github.com/thundra-io/thundra-lambda-agent-go/application"
 )
+
+const miBToB = 1024 * 1024
 
 func prepareMemoryMetricsData(mp *metricPlugin, base metricDataModel) metricDataModel {
 	base.ID = uuid.NewV4().String()
 	base.MetricName = memoryMetric
 
-	memInfo, err := mem.VirtualMemory()
-	if err != nil {
-		log.Println(err)
-	}
-
 	procMemInfo, err := proc.MemoryInfo()
 	if err != nil {
 		log.Println(err)
 	}
+	
+	application.MemoryUsed = int(procMemInfo.RSS / miBToB)
 
 	base.Metrics = map[string]interface{}{
 		appUsedMemory: procMemInfo.RSS,
-		appMaxMemory:  application.MemoryLimit * 1024 * 1024,
-		sysUsedMemory: memInfo.Used,
-		sysMaxMemory:  memInfo.Total,
+		appMaxMemory:  application.MemoryLimit * miBToB,
 	}
 
 	return base
