@@ -38,7 +38,7 @@ jobs:
           command: >
             git clone --branch v6.15.3
             https://github.com/go-redis/redis
-            wrappers/redis/go-redis/vendor/github.com/go-redis
+            wrappers/redis/go-redis/vendor/github.com/go-redis/redis
 
       - run: go get -v -t ./...
 
