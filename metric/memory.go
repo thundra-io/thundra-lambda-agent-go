@@ -22,7 +22,7 @@ func prepareMemoryMetricsData(mp *metricPlugin, base metricDataModel) metricData
 
 	base.Metrics = map[string]interface{}{
 		appUsedMemory: procMemInfo.RSS,
-		appMaxMemory:  application.MemoryLimit * 1024 * 1024,
+		appMaxMemory:  application.MemoryLimit * miBToB,
 	}
 
 	return base
