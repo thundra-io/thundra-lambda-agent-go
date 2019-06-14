@@ -70,3 +70,8 @@ const ThundraAgentMetricCountAwareSamplerCountFreq = "thundra_agent_lambda_metri
 
 const DefaultSamplingTimeFreq = 5 * 60 * 1000
 const DefaultSamplingCountFreq = 100
+
+const ThundraMaskSNSMessage = "thundra_agent_lambda_trace_integrations_aws_sns_message_mask"
+const ThundraMaskSQSMessage = "thundra_agent_lambda_trace_integrations_aws_sqs_message_mask"
+const ThundraMaskLambdaPayload = "thundra_agent_lambda_trace_integrations_aws_lambda_payload_mask"
+const ThundraMaskHTTPBody = "thundra_agent_lambda_trace_integrations_aws_http_body_mask"

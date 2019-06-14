@@ -30,6 +30,10 @@ var MaskRDBStatement bool
 var MaskEsBody bool
 var MaskRedisCommand bool
 var MaskMongoDBCommand bool
+var MaskSNSMessage bool
+var MaskSQSMessage bool
+var MaskLambdaPayload bool
+var MaskHTTPBody bool
 
 var TraceKinesisRequestEnabled bool
 var TraceFirehoseRequestEnabled bool
@@ -46,36 +50,43 @@ var SamplingCountFrequency int
 var SamplingTimeFrequency int
 
 func init() {
-	ThundraDisabled = isThundraDisabled()
-	TraceDisabled = isTraceDisabled()
-	MetricDisabled = isMetricDisabled()
-	LogDisabled = isLogDisabled()
-	AwsIntegrationDisabled = isAwsIntegrationDisabled()
-	TraceRequestDisabled = isTraceRequestDisabled()
-	TraceResponseDisabled = isTraceResponseDisabled()
-	DebugEnabled = isThundraDebugEnabled()
-	TimeoutMargin = determineTimeoutMargin()
-	WarmupEnabled = determineWarmup()
+	ThundraDisabled = boolFromEnv(constants.ThundraLambdaDisable, false)
+	TraceDisabled = boolFromEnv(constants.ThundraDisableTrace, false)
+	MetricDisabled = boolFromEnv(constants.ThundraDisableMetric, false)
+	LogDisabled = boolFromEnv(constants.ThundraDisableLog, false)
+	AwsIntegrationDisabled = boolFromEnv(constants.ThundraDisableAwsIntegration, false)
+	TraceRequestDisabled = boolFromEnv(constants.ThundraDisableTraceRequest, false)
+	TraceResponseDisabled = boolFromEnv(constants.ThundraDisableTraceResponse, false)
+	DebugEnabled = boolFromEnv(constants.ThundraLambdaDebugEnable, false)
+	TimeoutMargin = time.Duration(intFromEnv(constants.ThundraLambdaTimeoutMargin,
+		constants.DefaultTimeoutMargin)) * time.Millisecond
+	WarmupEnabled = boolFromEnv(constants.ThundraLambdaWarmupWarmupAware, false)
 	APIKey = determineAPIKey()
 	LogLevel = determineLogLevel()
-	TrustAllCertificates = trustAllCertificates()
-	MaskDynamoDBStatement = isDynamoDBStatementsMasked()
-	MaskRDBStatement = isRDBStatementsMasked()
-	MaskEsBody = isEsBodyMasked()
-	MaskRedisCommand = isRedisCommandMasked()
-	TraceKinesisRequestEnabled = isTraceKinesisRequestEnabled()
-	TraceFirehoseRequestEnabled = isTraceFirehoseRequestEnabled()
-	TraceCloudwatchlogRequestEnabled = isTraceCloudwatchlogRequestEnabled()
-	DynamoDBTraceInjectionEnabled = isDynamoDBTraceInjectionEnabled()
-	LambdaTraceInjectionDisabled = isLambdaTraceInjectionDisabled()
-	ReportCloudwatchCompositeBatchSize = determineCloudWatchCompositeBatchSize()
-	ReportRestCompositeBatchSize = determineRestCompositeBatchSize()
-	ReportRestCompositeDataEnabled = isRestCompositeDataEnabled()
-	ReportCloudwatchCompositeDataEnabled = isCloudwatchlogCompositeDataEnabled()
-	ReportCloudwatchEnabled = isReportCloudwatchEnabled()
-	MaskMongoDBCommand = isMongoDBCommandMasked()
-	SamplingCountFrequency = determineSamplingCountFreq()
-	SamplingTimeFrequency = determineSamplingTimeFreq()
+	TrustAllCertificates = boolFromEnv(constants.ThundraTrustAllCertificates, false)
+	MaskDynamoDBStatement = boolFromEnv(constants.ThundraMaskDynamoDBStatement, false)
+	MaskRDBStatement = boolFromEnv(constants.ThundraMaskRDBStatement, false)
+	MaskEsBody = boolFromEnv(constants.ThundraMaskEsBody, false)
+	MaskRedisCommand = boolFromEnv(constants.ThundraMaskRedisCommand, false)
+	TraceKinesisRequestEnabled = boolFromEnv(constants.ThundraLambdaTraceKinesisRequestEnable, false)
+	TraceFirehoseRequestEnabled = boolFromEnv(constants.ThundraLambdaTraceFirehoseRequestEnable, false)
+	TraceCloudwatchlogRequestEnabled = boolFromEnv(constants.ThundraLambdaTraceCloudwatchlogRequestEnable, false)
+	DynamoDBTraceInjectionEnabled = boolFromEnv(constants.EnableDynamoDbTraceInjection, false)
+	LambdaTraceInjectionDisabled = boolFromEnv(constants.DisableLambdaTraceInjection, false)
+	ReportCloudwatchCompositeBatchSize = intFromEnv(constants.ThundraLambdaReportCloudwatchCompositeBatchSize,
+		constants.ThundraLambdaReportCloudwatchCompositeBatchSizeDefault)
+	ReportRestCompositeBatchSize = intFromEnv(constants.ThundraLambdaReportRestCompositeBatchSize,
+		constants.ThundraLambdaReportRestCompositeBatchSizeDefault)
+	ReportRestCompositeDataEnabled = boolFromEnv(constants.ThundraLambdaReportRestCompositeEnable, true)
+	ReportCloudwatchCompositeDataEnabled = boolFromEnv(constants.ThundraLambdaReportCloudwatchCompositeEnable, true)
+	ReportCloudwatchEnabled = boolFromEnv(constants.ThundraLambdaReportCloudwatchEnable, false)
+	MaskMongoDBCommand = boolFromEnv(constants.ThundraMaskMongoDBCommand, false)
+	SamplingCountFrequency = intFromEnv(constants.ThundraAgentMetricCountAwareSamplerCountFreq, -1)
+	SamplingTimeFrequency = intFromEnv(constants.ThundraAgentMetricTimeAwareSamplerTimeFreq, -1)
+	MaskSNSMessage = boolFromEnv(constants.ThundraMaskSNSMessage, false)
+	MaskSQSMessage = boolFromEnv(constants.ThundraMaskSQSMessage, false)
+	MaskLambdaPayload = boolFromEnv(constants.ThundraMaskLambdaPayload, false)
+	MaskHTTPBody = boolFromEnv(constants.ThundraMaskHTTPBody, false)
 }
 
 func boolFromEnv(key string, defaultValue bool) bool {
@@ -107,52 +118,6 @@ func intFromEnv(key string, defaultValue int) int {
 	return i
 }
 
-func isThundraDisabled() bool {
-	return boolFromEnv(constants.ThundraLambdaDisable, false)
-}
-
-func isTraceDisabled() bool {
-	return boolFromEnv(constants.ThundraDisableTrace, false)
-}
-
-func isMetricDisabled() bool {
-	return boolFromEnv(constants.ThundraDisableMetric, false)
-}
-
-func isLogDisabled() bool {
-	return boolFromEnv(constants.ThundraDisableLog, false)
-}
-
-func determineTimeoutMargin() time.Duration {
-	t := os.Getenv(constants.ThundraLambdaTimeoutMargin)
-	// environment variable is not set
-	if t == "" {
-		return time.Duration(constants.DefaultTimeoutMargin) * time.Millisecond
-	}
-
-	i, err := strconv.ParseInt(t, 10, 32)
-
-	// environment variable is not set in the correct format
-	if err != nil {
-		log.Printf("%v: %s should be set with an integer\n", err, constants.ThundraLambdaTimeoutMargin)
-		return time.Duration(constants.DefaultTimeoutMargin) * time.Millisecond
-	}
-
-	return time.Duration(i) * time.Millisecond
-}
-
-func determineRestCompositeBatchSize() int {
-	return intFromEnv(constants.ThundraLambdaReportRestCompositeBatchSize, constants.ThundraLambdaReportRestCompositeBatchSizeDefault)
-}
-
-func determineCloudWatchCompositeBatchSize() int {
-	return intFromEnv(constants.ThundraLambdaReportCloudwatchCompositeBatchSize, constants.ThundraLambdaReportCloudwatchCompositeBatchSizeDefault)
-}
-
-func determineWarmup() bool {
-	return boolFromEnv(constants.ThundraLambdaWarmupWarmupAware, false)
-}
-
 func determineAPIKey() string {
 	apiKey := os.Getenv(constants.ThundraAPIKey)
 	if apiKey == "" {
@@ -177,79 +142,7 @@ func trustAllCertificates() bool {
 	return b
 }
 
-func isTraceRequestDisabled() bool {
-	return boolFromEnv(constants.ThundraDisableTraceRequest, false)
-}
-
-func isTraceResponseDisabled() bool {
-	return boolFromEnv(constants.ThundraDisableTraceResponse, false)
-}
-
 func determineLogLevel() string {
 	level := os.Getenv(constants.ThundraLogLogLevel)
 	return strings.ToUpper(level)
-}
-
-func isAwsIntegrationDisabled() bool {
-	return boolFromEnv(constants.ThundraDisableAwsIntegration, false)
-}
-
-func isDynamoDBStatementsMasked() bool {
-	return boolFromEnv(constants.ThundraMaskDynamoDBStatement, false)
-}
-
-func isRDBStatementsMasked() bool {
-	return boolFromEnv(constants.ThundraMaskRDBStatement, false)
-}
-
-func isEsBodyMasked() bool {
-	return boolFromEnv(constants.ThundraMaskEsBody, false)
-}
-
-func isRedisCommandMasked() bool {
-	return boolFromEnv(constants.ThundraMaskRedisCommand, false)
-}
-
-func isMongoDBCommandMasked() bool {
-	return boolFromEnv(constants.ThundraMaskMongoDBCommand, false)
-}
-
-func isTraceKinesisRequestEnabled() bool {
-	return boolFromEnv(constants.ThundraLambdaTraceKinesisRequestEnable, false)
-}
-
-func isTraceFirehoseRequestEnabled() bool {
-	return boolFromEnv(constants.ThundraLambdaTraceFirehoseRequestEnable, false)
-}
-
-func isTraceCloudwatchlogRequestEnabled() bool {
-	return boolFromEnv(constants.ThundraLambdaTraceCloudwatchlogRequestEnable, false)
-}
-
-func isDynamoDBTraceInjectionEnabled() bool {
-	return boolFromEnv(constants.EnableDynamoDbTraceInjection, false)
-}
-
-func isLambdaTraceInjectionDisabled() bool {
-	return boolFromEnv(constants.DisableLambdaTraceInjection, false)
-}
-
-func isCloudwatchlogCompositeDataEnabled() bool {
-	return boolFromEnv(constants.ThundraLambdaReportCloudwatchCompositeEnable, true)
-}
-
-func isRestCompositeDataEnabled() bool {
-	return boolFromEnv(constants.ThundraLambdaReportRestCompositeEnable, true)
-}
-
-func isReportCloudwatchEnabled() bool {
-	return boolFromEnv(constants.ThundraLambdaReportCloudwatchEnable, false)
-}
-
-func determineSamplingCountFreq() int {
-	return intFromEnv(constants.ThundraAgentMetricCountAwareSamplerCountFreq, -1)
-}
-
-func determineSamplingTimeFreq() int {
-	return intFromEnv(constants.ThundraAgentMetricTimeAwareSamplerTimeFreq, -1)
 }

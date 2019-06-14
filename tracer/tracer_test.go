@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	duration      = 100
+	duration      = 10
 	operationName = "creating-bubble"
 	className     = "Test Class"
 	domainName    = "Test Domain"

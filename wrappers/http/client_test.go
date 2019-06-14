@@ -7,6 +7,8 @@ import (
 	"net/url"
 	"testing"
 
+	"github.com/thundra-io/thundra-lambda-agent-go/config"
+
 	"github.com/thundra-io/thundra-lambda-agent-go/tracer"
 
 	opentracing "github.com/opentracing/opentracing-go"
@@ -75,6 +77,7 @@ func TestHTTPGetWithContext(t *testing.T) {
 }
 
 func TestHTTPPost(t *testing.T) {
+	config.MaskHTTPBody = false
 	// Initilize trace plugin to set GlobalTracer of opentracing
 	tp := trace.New()
 	// Actual call
@@ -96,6 +99,35 @@ func TestHTTPPost(t *testing.T) {
 	assert.Equal(t, "Error", span.Tags[constants.AwsErrorKind].(string))
 	assert.Equal(t, "Post https://httpbin.org/post?foo=bar: http: Server closed",
 		span.Tags[constants.AwsErrorMessage].(string))
+	assert.Equal(t, jsonStr, span.Tags[constants.HTTPTags["BODY"]])
+	// Clear tracer
+	tp.Reset()
+}
+
+func TestHTTPPostWithMaskedBody(t *testing.T) {
+	config.MaskHTTPBody = true
+	// Initilize trace plugin to set GlobalTracer of opentracing
+	tp := trace.New()
+	// Actual call
+	jsonStr := `{"title":"Foobar"}`
+	resp, err := client.Post("https://httpbin.org/post?foo=bar", "application/json", bytes.NewBufferString(jsonStr))
+	// Get the span created for http call
+	span := tp.Recorder.GetSpans()[0]
+	// Test HTTP related fields of span
+	assert.NotNil(t, err)
+	assert.Nil(t, resp)
+	assert.Equal(t, constants.ClassNames["HTTP"], span.ClassName)
+	assert.Equal(t, constants.DomainNames["API"], span.DomainName)
+	assert.Equal(t, "httpbin.org", span.Tags[constants.HTTPTags["HOST"]].(string))
+	assert.Equal(t, http.MethodPost, span.Tags[constants.HTTPTags["METHOD"]].(string))
+	assert.Equal(t, "/post", span.Tags[constants.HTTPTags["PATH"]].(string))
+	assert.Equal(t, "foo=bar", span.Tags[constants.HTTPTags["QUERY_PARAMS"]].(string))
+	assert.Equal(t, "httpbin.org/post", span.Tags[constants.HTTPTags["URL"]].(string))
+	assert.True(t, span.Tags[constants.AwsError].(bool))
+	assert.Equal(t, "Error", span.Tags[constants.AwsErrorKind].(string))
+	assert.Equal(t, "Post https://httpbin.org/post?foo=bar: http: Server closed",
+		span.Tags[constants.AwsErrorMessage].(string))
+	assert.Nil(t, span.Tags[constants.HTTPTags["BODY"]])
 	// Clear tracer
 	tp.Reset()
 }
@@ -119,6 +151,7 @@ func TestHTTPPostWithContext(t *testing.T) {
 }
 
 func TestHTTPPostForm(t *testing.T) {
+	config.MaskHTTPBody = false
 	// Initilize trace plugin to set GlobalTracer of opentracing
 	tp := trace.New()
 	// Actual call
@@ -143,6 +176,7 @@ func TestHTTPPostForm(t *testing.T) {
 	assert.Equal(t, "Error", span.Tags[constants.AwsErrorKind].(string))
 	assert.Equal(t, "Post https://httpbin.org/post?foo=bar: http: Server closed",
 		span.Tags[constants.AwsErrorMessage].(string))
+	assert.Equal(t, v.Encode(), span.Tags[constants.HTTPTags["BODY"]])
 	// Clear tracer
 	tp.Reset()
 }
@@ -169,10 +203,12 @@ func TestHTTPPostFormWithContext(t *testing.T) {
 }
 
 func TestHTTPDo(t *testing.T) {
+	config.MaskHTTPBody = false
 	// Initilize trace plugin to set GlobalTracer of opentracing
 	tp := trace.New()
 	// Actual call
-	req, _ := http.NewRequest(http.MethodGet, "https://httpbin.org/get?foo=bar", nil)
+	jsonStr := `{"title":"Foobar"}`
+	req, _ := http.NewRequest(http.MethodGet, "https://httpbin.org/get?foo=bar", bytes.NewBufferString(jsonStr))
 	resp, err := client.Do(req)
 	// Get the span created for http call
 	span := tp.Recorder.GetSpans()[0]
@@ -190,6 +226,7 @@ func TestHTTPDo(t *testing.T) {
 	assert.Equal(t, "Error", span.Tags[constants.AwsErrorKind].(string))
 	assert.Equal(t, "Get https://httpbin.org/get?foo=bar: http: Server closed",
 		span.Tags[constants.AwsErrorMessage].(string))
+	assert.Equal(t, jsonStr, span.Tags[constants.HTTPTags["BODY"]])
 	// Clear tracer
 	tp.Reset()
 }

@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	duration     = 500
+	duration     = 10
 	testAPIKey   = "testApiKey"
 	errorMessage = "Error Message"
 	errorKind    = "errorString"

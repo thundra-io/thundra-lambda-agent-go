@@ -1,10 +1,14 @@
 package thundrahttp
 
 import (
+	"bytes"
 	"context"
 	"io"
+	"io/ioutil"
 	"net/http"
 	gourl "net/url"
+
+	"github.com/thundra-io/thundra-lambda-agent-go/config"
 
 	"github.com/thundra-io/thundra-lambda-agent-go/application"
 	"github.com/thundra-io/thundra-lambda-agent-go/tracer"
@@ -42,7 +46,7 @@ func (c *ClientWrapper) DoWithContext(ctx context.Context, req *http.Request) (r
 	defer span.Finish()
 	rawSpan, ok := tracer.GetRaw(span)
 	if ok {
-		beforeCall(rawSpan, req.URL.String(), req.Method, req)
+		beforeCall(rawSpan, req.URL.String(), req.Method, req, req.Body)
 	}
 	tracer.OnSpanStarted(span)
 	resp, err = c.Client.Do(req)
@@ -70,7 +74,7 @@ func (c *ClientWrapper) GetWithContext(ctx context.Context, url string) (resp *h
 	defer span.Finish()
 	rawSpan, ok := tracer.GetRaw(span)
 	if ok {
-		beforeCall(rawSpan, url, http.MethodGet, nil)
+		beforeCall(rawSpan, url, http.MethodGet, nil, nil)
 	}
 	tracer.OnSpanStarted(span)
 	resp, err = c.Client.Get(url)
@@ -98,7 +102,7 @@ func (c *ClientWrapper) PostWithContext(ctx context.Context, url, contentType st
 	defer span.Finish()
 	rawSpan, ok := tracer.GetRaw(span)
 	if ok {
-		beforeCall(rawSpan, url, http.MethodPost, nil)
+		beforeCall(rawSpan, url, http.MethodPost, nil, ioutil.NopCloser(body))
 	}
 	tracer.OnSpanStarted(span)
 	resp, err = c.Client.Post(url, contentType, body)
@@ -126,7 +130,7 @@ func (c *ClientWrapper) PostFormWithContext(ctx context.Context, url string, dat
 	defer span.Finish()
 	rawSpan, ok := tracer.GetRaw(span)
 	if ok {
-		beforeCall(rawSpan, url, http.MethodPost, nil)
+		beforeCall(rawSpan, url, http.MethodPost, nil, ioutil.NopCloser(bytes.NewBufferString(data.Encode())))
 	}
 	tracer.OnSpanStarted(span)
 	resp, err = c.Client.PostForm(url, data)
@@ -154,7 +158,7 @@ func (c *ClientWrapper) HeadWithContext(ctx context.Context, url string) (resp *
 	defer span.Finish()
 	rawSpan, ok := tracer.GetRaw(span)
 	if ok {
-		beforeCall(rawSpan, url, http.MethodHead, nil)
+		beforeCall(rawSpan, url, http.MethodHead, nil, nil)
 	}
 	tracer.OnSpanStarted(span)
 	resp, err = c.Client.Head(url)
@@ -175,7 +179,7 @@ func getOperationName(url string) string {
 	return parsedURL.Host + parsedURL.Path
 }
 
-func beforeCall(span *tracer.RawSpan, url, method string, req *http.Request) {
+func beforeCall(span *tracer.RawSpan, url, method string, req *http.Request, body io.ReadCloser) {
 	span.ClassName = constants.ClassNames["HTTP"]
 	span.DomainName = constants.DomainNames["API"]
 
@@ -198,12 +202,23 @@ func beforeCall(span *tracer.RawSpan, url, method string, req *http.Request) {
 		tags[constants.SpanTags["TOPOLOGY_VERTEX"]] = true
 	}
 
-	span.Tags = tags
+	var bodyLen int64 = constants.MaxTracedHttpBodySize
 
 	if req != nil {
 		req.Header.Add("x-thundra-span-id", span.Context.SpanID)
-		span.Tags[constants.SpanTags["TRACE_LINKS"]] = []string{span.Context.SpanID}
+		tags[constants.SpanTags["TRACE_LINKS"]] = []string{span.Context.SpanID}
+		bodyLen = req.ContentLength
 	}
+
+	if !config.MaskHTTPBody && body != nil {
+		bodyRead, newReadCloser := utils.ReadRequestBody(body, int(bodyLen))
+		if req != nil {
+			req.Body = newReadCloser
+		}
+		tags[constants.HTTPTags["BODY"]] = bodyRead
+	}
+
+	span.Tags = tags
 }
 
 func afterCall(span *tracer.RawSpan, resp *http.Response) {
