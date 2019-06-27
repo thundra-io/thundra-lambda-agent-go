@@ -32,9 +32,10 @@ func Wrap(s *session.Session) *session.Session {
 }
 
 func validateHandler(r *request.Request) {
-	i, ok := integrations[r.ClientInfo.ServiceID]
+	serviceID := r.ClientInfo.ServiceID
+	i, ok := integrations[serviceID]
 	if !ok {
-		return
+		i = newAWSServiceIntegration(serviceID)
 	}
 	span, ctxWithSpan := opentracing.StartSpanFromContext(r.Context(), i.getOperationName(r))
 	r.SetContext(ctxWithSpan)
