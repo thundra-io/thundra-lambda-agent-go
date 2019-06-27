@@ -1,8 +1,6 @@
 package thundraaws
 
 import (
-	"strings"
-
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/thundra-io/thundra-lambda-agent-go/constants"
 	"github.com/thundra-io/thundra-lambda-agent-go/tracer"
@@ -24,10 +22,11 @@ func (i *defaultAWSIntegration) getOperationName(r *request.Request) string {
 
 func (i *defaultAWSIntegration) beforeCall(r *request.Request, span *tracer.RawSpan) {
 	span.ClassName = constants.ClassNames["AWSSERVICE"]
-	span.DomainName = constants.DomainNames["API"]
+	span.DomainName = constants.DomainNames["AWS"]
 
 	tags := map[string]interface{}{
-		constants.AwsSDKTags["REQUEST_NAME"]: strings.ToLower(i.ServiceName),
+		constants.AwsSDKTags["SERVICE_NAME"]: i.ServiceName,
+		constants.AwsSDKTags["REQUEST_NAME"]: r.Operation.Name,
 	}
 	span.Tags = tags
 }

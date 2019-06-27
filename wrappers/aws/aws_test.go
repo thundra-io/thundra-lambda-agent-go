@@ -1313,6 +1313,13 @@ func TestNonTracedService(t *testing.T) {
 	cwc.GetDashboard(&cloudwatch.GetDashboardInput{
 		DashboardName: aws.String("foo"),
 	})
-	assert.Equal(t, 0, len(tp.Recorder.GetSpans()))
+
+	span := tp.Recorder.GetSpans()[0]
+
+	assert.Equal(t, constants.ClassNames["AWSSERVICE"], span.ClassName)
+	assert.Equal(t, constants.DomainNames["AWS"], span.DomainName)
+	assert.Equal(t, "CloudWatch", span.Tags[constants.AwsSDKTags["SERVICE_NAME"]])
+	assert.Equal(t, "GetDashboard", span.Tags[constants.AwsSDKTags["REQUEST_NAME"]])
+
 	tp.Reset()
 }
