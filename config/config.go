@@ -34,6 +34,7 @@ var MaskSNSMessage bool
 var MaskSQSMessage bool
 var MaskLambdaPayload bool
 var MaskHTTPBody bool
+var MaskAthenaStatement bool
 
 var TraceKinesisRequestEnabled bool
 var TraceFirehoseRequestEnabled bool
@@ -65,6 +66,7 @@ func init() {
 	LogLevel = determineLogLevel()
 	TrustAllCertificates = boolFromEnv(constants.ThundraTrustAllCertificates, false)
 	MaskDynamoDBStatement = boolFromEnv(constants.ThundraMaskDynamoDBStatement, false)
+	MaskAthenaStatement = boolFromEnv(constants.ThundraMaskAthenaStatement, false)
 	MaskRDBStatement = boolFromEnv(constants.ThundraMaskRDBStatement, false)
 	MaskEsBody = boolFromEnv(constants.ThundraMaskEsBody, false)
 	MaskRedisCommand = boolFromEnv(constants.ThundraMaskRedisCommand, false)
