@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/service/athena"
+
 	"github.com/aws/aws-sdk-go/aws/request"
 
 	"github.com/aws/aws-lambda-go/lambdacontext"
@@ -180,6 +182,36 @@ func getSessionWithSqsBatchResponse() *session.Session {
 	sess = Wrap(sess)
 	sess.Handlers.Complete.PushFront(func(r *request.Request) {
 		r.Data = &sqs.SendMessageBatchOutput{Successful: []*sqs.SendMessageBatchResultEntry{mockSqsBatchResult, mockSqsBatchResult2}}
+	})
+
+	return sess
+}
+
+func getSessionWithAthenaStartQueryExecResponse() *session.Session {
+	var sess = session.New(&aws.Config{
+		HTTPClient: testClient,
+		Region:     aws.String("us-west-2"),
+		MaxRetries: aws.Int(0),
+	})
+	mockAthenaSQER := &athena.StartQueryExecutionOutput{QueryExecutionId: aws.String("95df01b4-ee98-5cb9-9903-4c221d41eb5e")}
+	sess = Wrap(sess)
+	sess.Handlers.Complete.PushFront(func(r *request.Request) {
+		r.Data = &mockAthenaSQER
+	})
+
+	return sess
+}
+
+func getSessionWithAthenaCreateNamedQuery() *session.Session {
+	var sess = session.New(&aws.Config{
+		HTTPClient: testClient,
+		Region:     aws.String("us-west-2"),
+		MaxRetries: aws.Int(0),
+	})
+	mockAthenaCNQR := &athena.CreateNamedQueryOutput{NamedQueryId: aws.String("95df01b4-ee98-5cb9-9903-4c221d41eb5e")}
+	sess = Wrap(sess)
+	sess.Handlers.Complete.PushFront(func(r *request.Request) {
+		r.Data = &mockAthenaCNQR
 	})
 
 	return sess
@@ -1298,6 +1330,205 @@ func TestSQSSendMessageBatch(t *testing.T) {
 
 	expectedTraceLinks := []string{"84df12b4-ee98-2cb8-1903-1c234d56eb7e", "95df01b4-ee98-5cb9-9903-4c221d41eb5e"}
 	assert.ElementsMatch(t, expectedTraceLinks, span.Tags[constants.SpanTags["TRACE_LINKS"]])
+
+	// Clear tracer
+	tp.Reset()
+}
+
+func TestAthenaStartQueryExec(t *testing.T) {
+	// Initilize trace plugin to set GlobalTracer of opentracing
+	tp := trace.New()
+
+	// Create a session and wrap it
+	sess := getSessionWithAthenaStartQueryExecResponse()
+	athenac := athena.New(sess)
+
+	input := &athena.StartQueryExecutionInput{
+		QueryExecutionContext: &athena.QueryExecutionContext{
+			Database: aws.String("sample-db"),
+		},
+		ResultConfiguration: &athena.ResultConfiguration{
+			OutputLocation: aws.String("sample-output-location"),
+		},
+		QueryString: aws.String("sample-query"),
+	}
+	athenac.StartQueryExecution(input)
+
+	// Get the span created for dynamo call
+	span := tp.Recorder.GetSpans()[0]
+
+	// Test related fields
+	assert.Equal(t, constants.ClassNames["ATHENA"], span.ClassName)
+	assert.Equal(t, constants.DomainNames["DB"], span.DomainName)
+	assert.Equal(t, "EXECUTE", span.Tags[constants.SpanTags["OPERATION_TYPE"]])
+	assert.Equal(t, "StartQueryExecution", span.Tags[constants.AwsSDKTags["REQUEST_NAME"]])
+	assert.Equal(t, "sample-db", span.Tags[constants.DBTags["DB_INSTANCE"]])
+	assert.Equal(t, "sample-output-location", span.Tags[constants.AwsAthenaTags["S3_OUTPUT_LOCATION"]])
+	assert.Equal(t, "sample-query", span.Tags[constants.DBTags["DB_STATEMENT"]])
+
+	// Clear tracer
+	tp.Reset()
+}
+
+func TestAthenaStopQueryExec(t *testing.T) {
+	// Initilize trace plugin to set GlobalTracer of opentracing
+	tp := trace.New()
+
+	// Create a session and wrap it
+	sess := getSessionWithAthenaStartQueryExecResponse()
+	athenac := athena.New(sess)
+	qeid := "98765432-1111-1111-1111-12345678910"
+	input := &athena.StopQueryExecutionInput{
+		QueryExecutionId: aws.String(qeid),
+	}
+	athenac.StopQueryExecution(input)
+
+	// Get the span created for dynamo call
+	span := tp.Recorder.GetSpans()[0]
+
+	// Test related fields
+	assert.Equal(t, constants.ClassNames["ATHENA"], span.ClassName)
+	assert.Equal(t, constants.DomainNames["DB"], span.DomainName)
+	assert.Equal(t, "EXECUTE", span.Tags[constants.SpanTags["OPERATION_TYPE"]])
+	assert.Equal(t, "StopQueryExecution", span.Tags[constants.AwsSDKTags["REQUEST_NAME"]])
+	assert.Nil(t, span.Tags[constants.DBTags["DB_INSTANCE"]])
+	assert.Equal(t, []string{qeid},
+		span.Tags[constants.AwsAthenaTags["REQUEST_QUERY_EXECUTION_IDS"]])
+	assert.Nil(t, span.Tags[constants.AwsAthenaTags["REQUEST_NAMED_QUERY_IDS"]])
+	assert.Nil(t, span.Tags[constants.AwsAthenaTags["RESPONSE_NAMED_QUERY_IDS"]])
+	assert.Equal(t, true, span.Tags[constants.SpanTags["TOPOLOGY_VERTEX"]])
+	assert.Equal(t, constants.AwsLambdaApplicationDomain, span.Tags[constants.SpanTags["TRIGGER_DOMAIN_NAME"]])
+	assert.Equal(t, constants.AwsLambdaApplicationClass, span.Tags[constants.SpanTags["TRIGGER_CLASS_NAME"]])
+
+	// Clear tracer
+	tp.Reset()
+}
+
+func TestAthenaStatementMasked(t *testing.T) {
+	config.MaskAthenaStatement = true
+	// Initilize trace plugin to set GlobalTracer of opentracing
+	tp := trace.New()
+
+	// Create a session and wrap it
+	sess := getSessionWithAthenaStartQueryExecResponse()
+	athenac := athena.New(sess)
+
+	input := &athena.StartQueryExecutionInput{
+		QueryExecutionContext: &athena.QueryExecutionContext{
+			Database: aws.String("sample-db"),
+		},
+		ResultConfiguration: &athena.ResultConfiguration{
+			OutputLocation: aws.String("sample-output-location"),
+		},
+		QueryString: aws.String("sample-query"),
+	}
+	athenac.StartQueryExecution(input)
+
+	// Get the span created for dynamo call
+	span := tp.Recorder.GetSpans()[0]
+
+	// Test related fields
+	assert.Equal(t, constants.ClassNames["ATHENA"], span.ClassName)
+	assert.Equal(t, constants.DomainNames["DB"], span.DomainName)
+	assert.Equal(t, "EXECUTE", span.Tags[constants.SpanTags["OPERATION_TYPE"]])
+	assert.Equal(t, "StartQueryExecution", span.Tags[constants.AwsSDKTags["REQUEST_NAME"]])
+	assert.Equal(t, "sample-db", span.Tags[constants.DBTags["DB_INSTANCE"]])
+	assert.Equal(t, "sample-output-location", span.Tags[constants.AwsAthenaTags["S3_OUTPUT_LOCATION"]])
+	assert.Nil(t, span.Tags[constants.DBTags["DB_STATEMENT"]])
+
+	// Clear tracer
+	tp.Reset()
+	config.MaskAthenaStatement = false
+}
+
+func TestAthenaBatchGetNamedQuery(t *testing.T) {
+	// Initilize trace plugin to set GlobalTracer of opentracing
+	tp := trace.New()
+
+	// Create a session and wrap it
+	sess := getSessionWithAthenaStartQueryExecResponse()
+	athenac := athena.New(sess)
+
+	input := &athena.BatchGetNamedQueryInput{
+		NamedQueryIds: []*string{aws.String("test-1"), aws.String("test-2")},
+	}
+	athenac.BatchGetNamedQuery(input)
+
+	// Get the span created for dynamo call
+	span := tp.Recorder.GetSpans()[0]
+
+	// Test related fields
+	assert.Equal(t, constants.ClassNames["ATHENA"], span.ClassName)
+	assert.Equal(t, constants.DomainNames["DB"], span.DomainName)
+	assert.Equal(t, "READ", span.Tags[constants.SpanTags["OPERATION_TYPE"]])
+	assert.Equal(t, "BatchGetNamedQuery", span.Tags[constants.AwsSDKTags["REQUEST_NAME"]])
+	assert.ElementsMatch(t, []string{"test-1", "test-2"}, span.Tags[constants.AwsAthenaTags["REQUEST_NAMED_QUERY_IDS"]])
+	assert.Nil(t, span.Tags[constants.AwsAthenaTags["S3_OUTPUT_LOCATION"]])
+	assert.Nil(t, span.Tags[constants.DBTags["DB_INSTANCE"]])
+	assert.Nil(t, span.Tags[constants.DBTags["DB_STATEMENT"]])
+
+	// Clear tracer
+	tp.Reset()
+}
+
+func TestAthenaBatchGetQueryExec(t *testing.T) {
+	// Initilize trace plugin to set GlobalTracer of opentracing
+	tp := trace.New()
+
+	// Create a session and wrap it
+	sess := getSessionWithAthenaStartQueryExecResponse()
+	athenac := athena.New(sess)
+
+	input := &athena.BatchGetQueryExecutionInput{
+		QueryExecutionIds: []*string{aws.String("test-1"), aws.String("test-2")},
+	}
+	athenac.BatchGetQueryExecution(input)
+
+	// Get the span created for dynamo call
+	span := tp.Recorder.GetSpans()[0]
+
+	// Test related fields
+	assert.Equal(t, constants.ClassNames["ATHENA"], span.ClassName)
+	assert.Equal(t, constants.DomainNames["DB"], span.DomainName)
+	assert.Equal(t, "READ", span.Tags[constants.SpanTags["OPERATION_TYPE"]])
+	assert.Equal(t, "BatchGetQueryExecution", span.Tags[constants.AwsSDKTags["REQUEST_NAME"]])
+	assert.ElementsMatch(t, []string{"test-1", "test-2"}, span.Tags[constants.AwsAthenaTags["REQUEST_QUERY_EXECUTION_IDS"]])
+	assert.Nil(t, span.Tags[constants.AwsAthenaTags["S3_OUTPUT_LOCATION"]])
+	assert.Nil(t, span.Tags[constants.DBTags["DB_INSTANCE"]])
+	assert.Nil(t, span.Tags[constants.DBTags["DB_STATEMENT"]])
+
+	// Clear tracer
+	tp.Reset()
+}
+
+func TestAthenaCreateNamedQuery(t *testing.T) {
+	// Initilize trace plugin to set GlobalTracer of opentracing
+	tp := trace.New()
+
+	// Create a session and wrap it
+	sess := getSessionWithAthenaCreateNamedQuery()
+	athenac := athena.New(sess)
+	expNQID := "95df01b4-ee98-5cb9-9903-4c221d41eb5e"
+
+	input := &athena.CreateNamedQueryInput{
+		Database:    aws.String("sample-db"),
+		Name:        aws.String("sample-name"),
+		QueryString: aws.String("sample-query"),
+	}
+	athenac.CreateNamedQuery(input)
+
+	// Get the span created for dynamo call
+	span := tp.Recorder.GetSpans()[0]
+
+	// Test related fields
+	assert.Equal(t, constants.ClassNames["ATHENA"], span.ClassName)
+	assert.Equal(t, constants.DomainNames["DB"], span.DomainName)
+	assert.Equal(t, "WRITE", span.Tags[constants.SpanTags["OPERATION_TYPE"]])
+	assert.Equal(t, "CreateNamedQuery", span.Tags[constants.AwsSDKTags["REQUEST_NAME"]])
+	assert.Equal(t, []string{expNQID}, span.Tags[constants.AwsAthenaTags["RESPONSE_NAMED_QUERY_IDS"]])
+	assert.Equal(t, "sample-db", span.Tags[constants.DBTags["DB_INSTANCE"]])
+	assert.Equal(t, "sample-query", span.Tags[constants.DBTags["DB_STATEMENT"]])
+	assert.Nil(t, span.Tags[constants.AwsAthenaTags["S3_OUTPUT_LOCATION"]])
 
 	// Clear tracer
 	tp.Reset()

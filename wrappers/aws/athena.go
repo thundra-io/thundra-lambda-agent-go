@@ -78,8 +78,14 @@ func (i *athenaIntegration) getQueryExecutionIDs(named bool) []string {
 		}
 	}
 	if qeidsInterface, ok := i.fields[multiFieldName]; ok {
-		if qeids, ok := qeidsInterface.([]string); ok {
-			return qeids
+		if qeids, ok := qeidsInterface.([]interface{}); ok {
+			res := []string{}
+			for _, p := range qeids {
+				if v, ok := p.(string); ok {
+					res = append(res, v)
+				}
+			}
+			return res
 		}
 	}
 	return []string{}
@@ -131,7 +137,9 @@ func (i *athenaIntegration) beforeCall(r *request.Request, span *tracer.RawSpan)
 	}
 
 	if !config.MaskAthenaStatement {
-		tags[constants.DBTags["DB_STATEMENT"]] = i.getQuery()
+		if q := i.getQuery(); len(q) > 0 {
+			tags[constants.DBTags["DB_STATEMENT"]] = q
+		}
 	}
 
 	span.Tags = tags
