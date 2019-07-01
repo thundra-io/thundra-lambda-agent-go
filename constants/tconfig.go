@@ -75,3 +75,5 @@ const ThundraMaskSNSMessage = "thundra_agent_lambda_trace_integrations_aws_sns_m
 const ThundraMaskSQSMessage = "thundra_agent_lambda_trace_integrations_aws_sqs_message_mask"
 const ThundraMaskLambdaPayload = "thundra_agent_lambda_trace_integrations_aws_lambda_payload_mask"
 const ThundraMaskHTTPBody = "thundra_agent_lambda_trace_integrations_aws_http_body_mask"
+
+const ThundraAgentTraceIntegrationsHttpUrlDepth = "thundra_agent_trace_integrations_http_url_depth"

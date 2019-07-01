@@ -59,6 +59,33 @@ func TestHTTPGet(t *testing.T) {
 	tp.Reset()
 }
 
+func TestHTTPGetWithMultiRoute(t *testing.T) {
+	config.HTTPIntegrationUrlPathDepth = 2
+	// Initilize trace plugin to set GlobalTracer of opentracing
+	tp := trace.New()
+	// Actual call
+	resp, err := client.Get("https://httpbin.org/asd/qwe/zxc?foo=bar")
+	// Get the span created for http call
+	span := tp.Recorder.GetSpans()[0]
+	// Test HTTP related fields of span
+	assert.Nil(t, resp)
+	assert.NotNil(t, err)
+	assert.Equal(t, constants.ClassNames["HTTP"], span.ClassName)
+	assert.Equal(t, constants.DomainNames["API"], span.DomainName)
+	assert.Equal(t, "httpbin.org/asd/qwe", span.OperationName)
+	assert.Equal(t, "httpbin.org", span.Tags[constants.HTTPTags["HOST"]].(string))
+	assert.Equal(t, http.MethodGet, span.Tags[constants.HTTPTags["METHOD"]].(string))
+	assert.Equal(t, "/asd/qwe/zxc", span.Tags[constants.HTTPTags["PATH"]].(string))
+	assert.Equal(t, "foo=bar", span.Tags[constants.HTTPTags["QUERY_PARAMS"]].(string))
+	assert.Equal(t, "httpbin.org/asd/qwe/zxc", span.Tags[constants.HTTPTags["URL"]].(string))
+	assert.True(t, span.Tags[constants.AwsError].(bool))
+	assert.Equal(t, "Error", span.Tags[constants.AwsErrorKind].(string))
+	assert.Equal(t, "Get https://httpbin.org/asd/qwe/zxc?foo=bar: http: Server closed",
+		span.Tags[constants.AwsErrorMessage].(string))
+	// Clear tracer
+	tp.Reset()
+}
+
 func TestHTTPGetWithContext(t *testing.T) {
 	// Initilize trace plugin to set GlobalTracer of opentracing
 	tp := trace.New()

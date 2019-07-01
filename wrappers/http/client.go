@@ -41,7 +41,7 @@ func (c *ClientWrapper) Do(req *http.Request) (resp *http.Response, err error) {
 func (c *ClientWrapper) DoWithContext(ctx context.Context, req *http.Request) (resp *http.Response, err error) {
 	span, _ := opentracing.StartSpanFromContext(
 		ctx,
-		req.URL.Host+req.URL.Path,
+		req.URL.Host+getNormalizedPath(req.URL.Path),
 	)
 	defer span.Finish()
 	rawSpan, ok := tracer.GetRaw(span)
@@ -176,7 +176,29 @@ func getOperationName(url string) string {
 	if err != nil {
 		return ""
 	}
-	return parsedURL.Host + parsedURL.Path
+	return parsedURL.Host + getNormalizedPath(parsedURL.Path)
+}
+
+func getNormalizedPath(urlPath string) string {
+	depth := config.HTTPIntegrationUrlPathDepth
+
+	pathSeperatorCount := 0
+	buff := bytes.NewBufferString("")
+	var prevChar byte = '-'
+
+	for i := 0; i < len(urlPath); i++ {
+		if string(urlPath[i]) == "/" && prevChar != '/' {
+			pathSeperatorCount++
+		}
+		if pathSeperatorCount > depth {
+			break
+		}
+		buff.WriteByte(urlPath[i])
+
+		prevChar = urlPath[i]
+	}
+
+	return buff.String()
 }
 
 func beforeCall(span *tracer.RawSpan, url, method string, req *http.Request, body io.ReadCloser) {

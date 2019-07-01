@@ -49,6 +49,8 @@ var ReportCloudwatchEnabled bool
 var SamplingCountFrequency int
 var SamplingTimeFrequency int
 
+var HTTPIntegrationUrlPathDepth int
+
 func init() {
 	ThundraDisabled = boolFromEnv(constants.ThundraLambdaDisable, false)
 	TraceDisabled = boolFromEnv(constants.ThundraDisableTrace, false)
@@ -87,6 +89,7 @@ func init() {
 	MaskSQSMessage = boolFromEnv(constants.ThundraMaskSQSMessage, false)
 	MaskLambdaPayload = boolFromEnv(constants.ThundraMaskLambdaPayload, false)
 	MaskHTTPBody = boolFromEnv(constants.ThundraMaskHTTPBody, false)
+	HTTPIntegrationUrlPathDepth = intFromEnv(constants.ThundraAgentTraceIntegrationsHttpUrlDepth, 1)
 }
 
 func boolFromEnv(key string, defaultValue bool) bool {
