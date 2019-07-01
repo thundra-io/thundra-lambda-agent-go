@@ -220,3 +220,15 @@ func ReadRequestBody(body io.ReadCloser, contentLength int) (string, io.ReadClos
 	}
 	return string(bodyRead), rc
 }
+
+func SerializeToMap(data interface{}) map[string]interface{} {
+	res := map[string]interface{}{}
+	m, err := json.Marshal(data)
+	if err != nil {
+		return nil
+	}
+	if err = json.Unmarshal(m, &res); err != nil {
+		return nil
+	}
+	return res
+}

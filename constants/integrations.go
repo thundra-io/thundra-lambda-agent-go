@@ -339,7 +339,7 @@ var ClassNames = map[string]string{
 	"CLOUDWATCHLOG": "AWS-CloudWatch-Log",
 	"SCHEDULE":      "AWS-CloudWatch-Schedule",
 	"MONGODB":       "MONGODB",
-	"ATHENA":        "ATHENA",
+	"ATHENA":        "AWS-Athena",
 }
 
 var MongoDBTags = map[string]string{
