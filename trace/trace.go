@@ -6,6 +6,7 @@ import (
 	logger "log"
 	"sync"
 
+	"github.com/aws/aws-lambda-go/events"
 	"github.com/thundra-io/thundra-lambda-agent-go/config"
 
 	opentracing "github.com/opentracing/opentracing-go"
@@ -126,6 +127,26 @@ func (tr *tracePlugin) AfterExecution(ctx context.Context, request json.RawMessa
 	}
 	if enableRequestData {
 		tr.RootSpan.SetTag(constants.AwsLambdaInvocationRequest, request)
+	}
+
+	if plugin.TriggerClassName == constants.ClassNames["APIGATEWAY"] {
+		if response != nil {
+			responseInterface, ok := (response).(*interface{})
+			if ok {
+				APIGwResponse, ok := (*responseInterface).(events.APIGatewayProxyResponse)
+				if ok {
+					if APIGwResponse.Headers == nil {
+						APIGwResponse.Headers = make(map[string]string)
+					}
+					var APIGWRequest events.APIGatewayProxyRequest
+					json.Unmarshal(request, &APIGWRequest)
+					APIGwResponse.Headers[constants.AwsLambdaTriggerResourceName] = APIGWRequest.Resource
+
+					*responseInterface = APIGwResponse
+				}
+			}
+
+		}
 	}
 
 	// TODO: Serialize response properly

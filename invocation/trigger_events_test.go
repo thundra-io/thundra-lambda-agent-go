@@ -152,7 +152,7 @@ func TestInvocationTags_APIGatewayProxyTrigger(t *testing.T) {
 	eventMock := readJSONFromFile(t, "./testdata/apigw-request.json")
 	setInvocationTriggerTags(context.TODO(), eventMock)
 
-	operationNames := []string{"gy415nuibc.execute-api.us-east-1.amazonaws.com/testStage/hello/world"}
+	operationNames := []string{"/{proxy+}"}
 
 	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_DOMAIN_NAME"]], constants.DomainNames["API"])
 	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_CLASS_NAME"]], constants.ClassNames["APIGATEWAY"])
@@ -173,7 +173,7 @@ func TestInvocationTags_APIGatewayProxyTriggerFromInputType(t *testing.T) {
 	ok := injectTriggerTagsFromInputType(ctx, eventMock)
 	assert.True(t, ok)
 
-	operationNames := []string{"gy415nuibc.execute-api.us-east-1.amazonaws.com/testStage/hello/world"}
+	operationNames := []string{"/{proxy+}"}
 
 	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_DOMAIN_NAME"]], constants.DomainNames["API"])
 	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_CLASS_NAME"]], constants.ClassNames["APIGATEWAY"])
@@ -493,5 +493,5 @@ func TestInvocationTags_APIGatewayProxyPayloadWithMissingFields(t *testing.T) {
 
 	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_DOMAIN_NAME"]], constants.DomainNames["API"])
 	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_CLASS_NAME"]], constants.ClassNames["APIGATEWAY"])
-	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_OPERATION_NAMES"]], []string{""})
+	assert.Equal(t, invocationTags[constants.SpanTags["TRIGGER_OPERATION_NAMES"]], []string{"/{proxy+}"})
 }

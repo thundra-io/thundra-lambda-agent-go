@@ -381,11 +381,7 @@ func injectTriggerTagsForAPIGatewayProxy(payload json.RawMessage) {
 	domainName := constants.DomainNames["API"]
 	className := constants.ClassNames["APIGATEWAY"]
 
-	path := ""
-	if e.Headers["Host"] != "" {
-		path = e.Headers["Host"] + "/" + e.RequestContext.Stage + e.Path
-	}
-	var operationNames = []string{path}
+	var operationNames = []string{e.Resource}
 
 	if e.Headers != nil {
 		spanID := e.Headers["x-thundra-span-id"]

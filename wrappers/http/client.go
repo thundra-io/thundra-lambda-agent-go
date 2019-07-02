@@ -249,5 +249,12 @@ func afterCall(span *tracer.RawSpan, resp *http.Response) {
 		if _, ok := resp.Header["X-Amz-Apigw-Id"]; ok {
 			span.ClassName = constants.ClassNames["APIGATEWAY"]
 		}
+
+		if _, ok := resp.Header["X-Thundra-Resource-Name"]; ok {
+			resourceNameHeader := resp.Header["X-Thundra-Resource-Name"]
+			if len(resourceNameHeader) > 0 {
+				span.OperationName = resourceNameHeader[0]
+			}
+		}
 	}
 }
