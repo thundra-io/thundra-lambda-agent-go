@@ -128,11 +128,41 @@ var AwsS3Tags = map[string]string{
 	"OBJECT_NAME": "aws.s3.object.name",
 }
 
+var AwsAthenaTags = map[string]string{
+	"S3_OUTPUT_LOCATION":           "aws.athena.s3.outputLocation",
+	"REQUEST_QUERY_EXECUTION_IDS":  "aws.athena.request.query.executionIds",
+	"RESPONSE_QUERY_EXECUTION_IDS": "aws.athena.response.query.executionIds",
+	"REQUEST_NAMED_QUERY_IDS":      "aws.athena.request.namedQuery.ids",
+	"RESPONSE_NAMED_QUERY_IDS":     "aws.athena.response.namedQuery.ids",
+}
+
 var AwsLambdaTags = map[string]string{
 	"FUNCTION_NAME":      "aws.lambda.name",
 	"FUNCTION_QUALIFIER": "aws.lambda.qualifier",
 	"INVOCATION_TYPE":    "aws.lambda.invocation.type",
 	"INVOCATION_PAYLOAD": "aws.lambda.invocation.payload",
+}
+
+var AwsAthenaOperationTypes = map[string]string{
+	"BatchGetNamedQuery":     "READ",
+	"BatchGetQueryExecution": "READ",
+	"CreateNamedQuery":       "WRITE",
+	"CreateWorkGroup":        "WRITE",
+	"DeleteNamedQuery":       "DELETE",
+	"DeleteWorkGroup":        "DELETE",
+	"GetNamedQuery":          "READ",
+	"GetQueryExecution":      "READ",
+	"GetQueryResults":        "READ",
+	"GetWorkGroup":           "READ",
+	"ListNamedQueries":       "READ",
+	"ListQueryExecutions":    "READ",
+	"ListTagsForResource":    "READ",
+	"ListWorkGroups":         "READ",
+	"StartQueryExecution":    "EXECUTE",
+	"StopQueryExecution":     "EXECUTE",
+	"TagResource":            "WRITE",
+	"UntagResource":          "DELETE",
+	"UpdateWorkGroup":        "WRITE",
 }
 
 var RedisCommandTypes = map[string]string{
@@ -309,6 +339,7 @@ var ClassNames = map[string]string{
 	"CLOUDWATCHLOG": "AWS-CloudWatch-Log",
 	"SCHEDULE":      "AWS-CloudWatch-Schedule",
 	"MONGODB":       "MONGODB",
+	"ATHENA":        "AWS-Athena",
 }
 
 var MongoDBTags = map[string]string{
