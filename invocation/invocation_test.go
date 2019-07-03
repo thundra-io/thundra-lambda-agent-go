@@ -136,7 +136,7 @@ func TestInvocationTags(t *testing.T) {
 	}
 
 	for k, v := range tags {
-		SetTag(k, v)
+		SetAgentTag(k, v)
 	}
 
 	assert.Equal(t, len(invocationTags), len(tags))

@@ -60,9 +60,9 @@ type eventTypeKey key
 var void struct{}
 
 func injectTriggerTagsToInvocation(domainName string, className string, operationNames []string) {
-	SetTag(constants.SpanTags["TRIGGER_DOMAIN_NAME"], domainName)
-	SetTag(constants.SpanTags["TRIGGER_CLASS_NAME"], className)
-	SetTag(constants.SpanTags["TRIGGER_OPERATION_NAMES"], operationNames)
+	SetAgentTag(constants.SpanTags["TRIGGER_DOMAIN_NAME"], domainName)
+	SetAgentTag(constants.SpanTags["TRIGGER_CLASS_NAME"], className)
+	SetAgentTag(constants.SpanTags["TRIGGER_OPERATION_NAMES"], operationNames)
 }
 
 func injectTriggerTagsForDynamoDB(payload json.RawMessage) {
