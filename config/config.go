@@ -52,6 +52,9 @@ var SamplingTimeFrequency int
 
 var HTTPIntegrationUrlPathDepth int
 
+var AwsLambdaFunctionMemorySize int
+var AwsLambdaRegion string
+
 func init() {
 	ThundraDisabled = boolFromEnv(constants.ThundraLambdaDisable, false)
 	TraceDisabled = boolFromEnv(constants.ThundraDisableTrace, false)
@@ -61,8 +64,6 @@ func init() {
 	TraceRequestDisabled = boolFromEnv(constants.ThundraDisableTraceRequest, false)
 	TraceResponseDisabled = boolFromEnv(constants.ThundraDisableTraceResponse, false)
 	DebugEnabled = boolFromEnv(constants.ThundraLambdaDebugEnable, false)
-	TimeoutMargin = time.Duration(intFromEnv(constants.ThundraLambdaTimeoutMargin,
-		constants.DefaultTimeoutMargin)) * time.Millisecond
 	WarmupEnabled = boolFromEnv(constants.ThundraLambdaWarmupWarmupAware, false)
 	APIKey = determineAPIKey()
 	LogLevel = determineLogLevel()
@@ -92,6 +93,10 @@ func init() {
 	MaskLambdaPayload = boolFromEnv(constants.ThundraMaskLambdaPayload, false)
 	MaskHTTPBody = boolFromEnv(constants.ThundraMaskHTTPBody, false)
 	HTTPIntegrationUrlPathDepth = intFromEnv(constants.ThundraAgentTraceIntegrationsHttpUrlDepth, 1)
+	AwsLambdaFunctionMemorySize = intFromEnv(constants.AwsLambdaFunctionMemorySize, -1)
+	AwsLambdaRegion = os.Getenv(constants.AwsLambdaRegion)
+	TimeoutMargin = time.Duration(intFromEnv(constants.ThundraLambdaTimeoutMargin,
+		getDefaultTimeoutMargin())) * time.Millisecond
 }
 
 func boolFromEnv(key string, defaultValue bool) bool {
@@ -150,4 +155,26 @@ func trustAllCertificates() bool {
 func determineLogLevel() string {
 	level := os.Getenv(constants.ThundraLogLogLevel)
 	return strings.ToUpper(level)
+}
+
+func getDefaultTimeoutMargin() int {
+	region := AwsLambdaRegion
+	memory := AwsLambdaFunctionMemorySize
+	timeoutMargin := 1000
+
+	if region == "us-west-2" {
+		timeoutMargin = 200
+	} else if strings.HasPrefix(region, "us-west-") {
+		timeoutMargin = 400
+	} else if strings.HasPrefix(region, "us-") || strings.HasPrefix(region, "ca-") {
+		timeoutMargin = 600
+	} else if strings.HasPrefix(region, "ca-") {
+		timeoutMargin = 800
+	}
+
+	normalizedTimeoutMargin := int((384.0 / float64(memory)) * float64(timeoutMargin))
+	if normalizedTimeoutMargin > timeoutMargin {
+		return normalizedTimeoutMargin
+	}
+	return timeoutMargin
 }

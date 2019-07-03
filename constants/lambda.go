@@ -26,3 +26,6 @@ const AwsLambdaTriggerOperationName = "x-thundra-trigger-operation-name"
 const AwsLambdaTriggerDomainName = "x-thundra-trigger-domain-name"
 const AwsLambdaTriggerClassName = "x-thundra-trigger-class-name"
 const AwsLambdaTriggerResourceName = "x-thundra-resource-name"
+
+const AwsLambdaFunctionMemorySize = "AWS_LAMBDA_FUNCTION_MEMORY_SIZE"
+const AwsLambdaRegion = "AWS_REGION"
