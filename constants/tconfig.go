@@ -52,8 +52,8 @@ const ThundraLambdaTraceCloudwatchlogRequestEnable = "thundra_agent_lambda_trace
 const ThundraMaskEsBody = "thundra_agent_lambda_trace_integrations_elasticsearch_body_mask"
 const ThundraMaskAthenaStatement = "thundra_agent_lambda_trace_integrations_aws_athena_statement_mask"
 
-const EnableDynamoDbTraceInjection = "thundra_agent_trace_integrations_dynamodb_trace_injection_enable"
-const DisableLambdaTraceInjection = "thundra_agent_trace_integrations_aws_lambda_traceInjection_disable"
+const EnableDynamoDbTraceInjection = "thundra_agent_lambda_trace_integrations_dynamodb_trace_injection_enable"
+const DisableLambdaTraceInjection = "thundra_agent_lambda_trace_integrations_aws_lambda_traceInjection_disable"
 
 const MaxTracedHttpBodySize = 128 * 1024
 const ThundraLambdaReportRestCompositeBatchSize = "thundra_agent_lambda_report_rest_composite_batchsize"
@@ -77,4 +77,4 @@ const ThundraMaskSQSMessage = "thundra_agent_lambda_trace_integrations_aws_sqs_m
 const ThundraMaskLambdaPayload = "thundra_agent_lambda_trace_integrations_aws_lambda_payload_mask"
 const ThundraMaskHTTPBody = "thundra_agent_lambda_trace_integrations_aws_http_body_mask"
 
-const ThundraAgentTraceIntegrationsHttpUrlDepth = "thundra_agent_trace_integrations_http_url_depth"
+const ThundraAgentTraceIntegrationsHttpUrlDepth = "thundra_agent_lambda_trace_integrations_http_url_depth"
