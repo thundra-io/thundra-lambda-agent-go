@@ -97,7 +97,7 @@ func (a *Agent) Wrap(handler interface{}) interface{} {
 			val = nil
 		}
 
-		a.ExecutePostHooks(ctxAfterPreHooks, payload, val, err)
+		a.ExecutePostHooks(ctxAfterPreHooks, payload, &val, err)
 
 		return val, err
 	}
