@@ -33,6 +33,7 @@ type invocationDataModel struct {
 	ColdStart          bool                   `json:"coldStart"`       // Shows if the invocationPlugin is cold started
 	Timeout            bool                   `json:"timeout"`         // Shows if the invocationPlugin is timed out
 	Tags               map[string]interface{} `json:"tags"`
+	UserTags           map[string]interface{} `json:"userTags"`
 	IncomingTraceLinks []string               `json:"incomingTraceLinks"`
 	OutgoingTraceLinks []string               `json:"outgoingTraceLinks"`
 	Resources          []Resource             `json:"resources"`
@@ -67,6 +68,7 @@ func (ip *invocationPlugin) prepareData(ctx context.Context) invocationDataModel
 		IncomingTraceLinks: getIncomingTraceLinks(),
 		OutgoingTraceLinks: getOutgoingTraceLinks(),
 		Tags:               tags,
+		UserTags:           userInvocationTags,
 		Resources:          getResources(spanID),
 	}
 }

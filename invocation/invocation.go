@@ -52,8 +52,8 @@ func (ip *invocationPlugin) BeforeExecution(ctx context.Context, request json.Ra
 	}
 
 	setInvocationTriggerTags(ctx, request)
-	if GetTag(constants.SpanTags["TRIGGER_CLASS_NAME"]) != nil {
-		triggerClassName, ok := GetTag(constants.SpanTags["TRIGGER_CLASS_NAME"]).(string)
+	if GetAgentTag(constants.SpanTags["TRIGGER_CLASS_NAME"]) != nil {
+		triggerClassName, ok := GetAgentTag(constants.SpanTags["TRIGGER_CLASS_NAME"]).(string)
 		if ok {
 			plugin.TriggerClassName = triggerClassName
 		}

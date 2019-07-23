@@ -124,7 +124,7 @@ func TestPrepareDataStaticFieldsCompositeDataDisabled(t *testing.T) {
 }
 
 func TestInvocationTags(t *testing.T) {
-	tags := map[string]interface{}{
+	agentTags := map[string]interface{}{
 		"boolKey":   true,
 		"intKey":    37,
 		"floatKey":  3.14,
@@ -135,16 +135,38 @@ func TestInvocationTags(t *testing.T) {
 		},
 	}
 
-	for k, v := range tags {
+	userTags := map[string]interface{}{
+		"boolKey":   false,
+		"intKey":    73,
+		"floatKey":  6.21,
+		"stringKey": "barfoo",
+		"dictKey": map[string]string{
+			"key1": "val3",
+			"key2": "val4",
+		},
+	}
+
+	for k, v := range agentTags {
+		SetAgentTag(k, v)
+	}
+
+	for k, v := range userTags {
 		SetTag(k, v)
 	}
 
-	assert.Equal(t, len(invocationTags), len(tags))
-	assert.Equal(t, invocationTags["boolKey"], tags["boolKey"])
-	assert.Equal(t, invocationTags["intKey"], tags["intKey"])
-	assert.Equal(t, invocationTags["floatKey"], tags["floatKey"])
-	assert.Equal(t, invocationTags["stringKey"], tags["stringKey"])
-	assert.Equal(t, invocationTags["dictKey"], tags["dictKey"])
+	assert.Equal(t, len(invocationTags), len(agentTags))
+	assert.Equal(t, invocationTags["boolKey"], agentTags["boolKey"])
+	assert.Equal(t, invocationTags["intKey"], agentTags["intKey"])
+	assert.Equal(t, invocationTags["floatKey"], agentTags["floatKey"])
+	assert.Equal(t, invocationTags["stringKey"], agentTags["stringKey"])
+	assert.Equal(t, invocationTags["dictKey"], agentTags["dictKey"])
+
+	assert.Equal(t, len(userInvocationTags), len(userTags))
+	assert.Equal(t, userInvocationTags["boolKey"], userTags["boolKey"])
+	assert.Equal(t, userInvocationTags["intKey"], userTags["intKey"])
+	assert.Equal(t, userInvocationTags["floatKey"], userTags["floatKey"])
+	assert.Equal(t, userInvocationTags["stringKey"], userTags["stringKey"])
+	assert.Equal(t, userInvocationTags["dictKey"], userTags["dictKey"])
 
 	ClearTags()
 }
