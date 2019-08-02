@@ -39,7 +39,7 @@ func init() {
 	if url := os.Getenv(constants.ThundraLambdaReportRestBaseURL); url != "" {
 		collectorURL = url
 	} else {
-		collectorURL = constants.DefaultCollectorURL
+		collectorURL = config.CollectorUrl
 	}
 }
 

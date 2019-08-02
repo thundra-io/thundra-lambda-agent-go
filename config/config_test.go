@@ -33,3 +33,21 @@ func TestGetDefaultTimeoutMargin(t *testing.T) {
 	timeoutMargin = getDefaultTimeoutMargin()
 	assert.Equal(t, 1500, timeoutMargin)
 }
+
+func TestGetNearestCollector(t *testing.T) {
+	AwsLambdaRegion = "us-west-1"
+	collector := getNearestCollector()
+	assert.Equal(t, "api.thundra.io", collector)
+
+	AwsLambdaRegion = "us-east-1"
+	collector = getNearestCollector()
+	assert.Equal(t, "api-us-east-1.thundra.io", collector)
+
+	AwsLambdaRegion = "eu-west-1"
+	collector = getNearestCollector()
+	assert.Equal(t, "api-eu-west-2.thundra.io", collector)
+
+	AwsLambdaRegion = "ap-"
+	collector = getNearestCollector()
+	assert.Equal(t, "api-ap-northeast-1.thundra.io", collector)
+}
