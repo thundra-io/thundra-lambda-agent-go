@@ -92,6 +92,9 @@ func (a *Agent) CatchTimeout(ctx context.Context, payload json.RawMessage) {
 		return
 	}
 	timeoutDuration := deadline.Add(-a.TimeoutMargin)
+	if config.DebugEnabled {
+		log.Println("Timeout margin:", a.TimeoutMargin)
+	}
 	if time.Now().After(timeoutDuration) {
 		return
 	}

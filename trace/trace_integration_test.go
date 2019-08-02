@@ -267,10 +267,10 @@ func TestPanic(t *testing.T) {
 }
 
 func TestTimeout(t *testing.T) {
-	const timeoutDuration = 1
+	const timeoutDuration = 2
 	timeOutFunction := func(s string) string {
 		// Let it run longer than timeoutDuration
-		time.Sleep(time.Second * 2 * time.Duration(timeoutDuration))
+		time.Sleep(time.Second * 3 * time.Duration(timeoutDuration))
 		return fmt.Sprintf("Happy monitoring with %s!", s)
 	}
 
