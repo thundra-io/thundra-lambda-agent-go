@@ -1,12 +1,13 @@
 package constants
 
-const AwsFunctionPlatform = "AWS Lambda"
+const ApplicationPlatform = "AWS Lambda"
 const AwsDefaultRegion = "AWS_DEFAULT_REGION"
 const ThundraLambdaDebugEnable = "thundra_lambda_debug_enable"
 const AwsLambdaInvocationRequestId = "aws.lambda.invocation.request_id"
 const AwsLambdaInvocationRequest = "aws.lambda.invocation.request"
 const AwsLambdaInvocationResponse = "aws.lambda.invocation.response"
 const AwsLambdaARN = "aws.lambda.arn"
+const AwsAccountNo = "aws.account_no"
 const AwsLambdaInvocationColdStart = "aws.lambda.invocation.coldstart"
 const AwsLambdaInvocationTimeout = "aws.lambda.invocation.timeout"
 const AwsLambdaLogGroupName = "aws.lambda.log_group_name"
