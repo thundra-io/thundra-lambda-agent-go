@@ -136,6 +136,15 @@ func GetInvokedFunctionArn(ctx context.Context) string {
 	return lc.InvokedFunctionArn
 }
 
+// GetAwsAccountNo returns Aws Account Number if available.
+func GetAwsAccountNo(arn string) string {
+	arnParts := strings.Split(arn, ":")
+	if len(arnParts) > 4 {
+		return arnParts[4]
+	}
+	return ""
+}
+
 // GetAwsRequestID returns AwsRequestID if available.
 func GetAwsRequestID(ctx context.Context) string {
 	lc, ok := lambdacontext.FromContext(ctx)

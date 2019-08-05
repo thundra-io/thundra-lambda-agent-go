@@ -88,7 +88,7 @@ func TestPrepareDataStaticFields(t *testing.T) {
 	assert.Nil(t, data.ApplicationRuntimeVersion)
 	assert.Nil(t, data.ApplicationTags)
 
-	assert.Equal(t, "AWS Lambda", data.FunctionPlatform)
+	assert.Equal(t, "AWS Lambda", data.ApplicationPlatform)
 	assert.Equal(t, application.FunctionRegion, data.FunctionRegion)
 	assert.NotNil(t, data.Tags)
 
@@ -115,7 +115,7 @@ func TestPrepareDataStaticFieldsCompositeDataDisabled(t *testing.T) {
 	assert.Equal(t, application.ApplicationRuntimeVersion, *data.ApplicationRuntimeVersion)
 	assert.NotNil(t, *data.ApplicationTags)
 
-	assert.Equal(t, "AWS Lambda", data.FunctionPlatform)
+	assert.Equal(t, "AWS Lambda", data.ApplicationPlatform)
 	assert.Equal(t, application.FunctionRegion, data.FunctionRegion)
 	assert.NotNil(t, data.Tags)
 
