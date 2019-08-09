@@ -21,6 +21,8 @@ var TraceResponseDisabled bool
 var TimeoutMargin time.Duration
 var WarmupEnabled bool
 var DebugEnabled bool
+var Http4xxErrorDisabled bool
+var Http5xxErrorDisabled bool
 var APIKey string
 var TrustAllCertificates bool
 var MaskDynamoDBStatement bool
@@ -67,6 +69,8 @@ func init() {
 	TraceResponseDisabled = boolFromEnv(constants.ThundraDisableTraceResponse, false)
 	DebugEnabled = boolFromEnv(constants.ThundraLambdaDebugEnable, false)
 	WarmupEnabled = boolFromEnv(constants.ThundraLambdaWarmupWarmupAware, false)
+	Http4xxErrorDisabled = boolFromEnv(constants.ThundraDisableHttp4xxError, false)
+	Http5xxErrorDisabled = boolFromEnv(constants.ThundraDisableHttp5xxError, false)
 	APIKey = determineAPIKey()
 	LogLevel = determineLogLevel()
 	TrustAllCertificates = boolFromEnv(constants.ThundraTrustAllCertificates, false)

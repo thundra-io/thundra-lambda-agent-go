@@ -256,5 +256,15 @@ func afterCall(span *tracer.RawSpan, resp *http.Response) {
 				span.OperationName = resourceNameHeader[0]
 			}
 		}
+		if !config.Http4xxErrorDisabled && resp.StatusCode >= 400 && resp.StatusCode <= 499 {
+			span.Tags[constants.AwsError] = true
+			span.Tags[constants.AwsErrorKind] = "HttpError"
+			span.Tags[constants.AwsErrorMessage] = resp.Status
+		}
+		if !config.Http5xxErrorDisabled && resp.StatusCode >= 500 && resp.StatusCode <= 599 {
+			span.Tags[constants.AwsError] = true
+			span.Tags[constants.AwsErrorKind] = "HttpError"
+			span.Tags[constants.AwsErrorMessage] = resp.Status
+		}
 	}
 }

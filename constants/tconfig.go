@@ -18,6 +18,9 @@ const ThundraLogLogLevel = "thundra_log_logLevel"
 
 const ThundraDisableAwsIntegration = "thundra_agent_lambda_trace_integrations_aws_disable"
 
+const ThundraDisableHttp4xxError = "thundra_agent_trace_integrations_http_set_error_on_4xx_response_code_disable"
+const ThundraDisableHttp5xxError = "thundra_agent_trace_integrations_http_set_error_on_5xx_response_code_disable"
+
 const DefaultTimeoutMargin = 200
 const DefaultCollectorURL = "https://api.thundra.io/v1"
 const MonitoringDataPath = "/monitoring-data"
