@@ -170,3 +170,11 @@ func TestInvocationTags(t *testing.T) {
 
 	ClearTags()
 }
+
+func TestSetError(t *testing.T) {
+	err := errors.New("custom error")
+	SetError(err)
+	assert.NotEqual(t, nil, userError)
+	assert.Equal(t, "errorString", utils.GetErrorType(userError))
+	assert.Equal(t, "custom error", utils.GetErrorMessage(userError))
+}
