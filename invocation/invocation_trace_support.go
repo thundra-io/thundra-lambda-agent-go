@@ -14,14 +14,15 @@ var incomingTraceLinks = make([]string, 0)
 
 // Resource type stores information about resources in spans
 type Resource struct {
-	ResourceType       string   `json:"resourceType"`
-	ResourceName       string   `json:"resourceName"`
-	ResourceOperation  string   `json:"resourceOperation"`
-	ResourceCount      int      `json:"resourceCount"`
-	ResourceErrorCount int      `json:"resourceErrorCount"`
-	ResourceDuration   int64    `json:"resourceDuration"`
-	ResourceErrors     []string `json:"resourceErrors"`
-	resourceErrorsMap  map[string]struct{}
+	ResourceType        string   `json:"resourceType"`
+	ResourceName        string   `json:"resourceName"`
+	ResourceOperation   string   `json:"resourceOperation"`
+	ResourceCount       int      `json:"resourceCount"`
+	ResourceErrorCount  int      `json:"resourceErrorCount"`
+	ResourceDuration    int64    `json:"resourceDuration"`
+	ResourceMaxDuration int64    `json:"resourceMaxDuration"`
+	ResourceErrors      []string `json:"resourceErrors"`
+	resourceErrorsMap   map[string]struct{}
 }
 
 func (r *Resource) accept(rawSpan *tracer.RawSpan) bool {
@@ -43,6 +44,9 @@ func (r *Resource) merge(rawSpan *tracer.RawSpan) {
 	}
 	r.ResourceCount++
 	r.ResourceDuration += rawSpan.Duration()
+	if rawSpan.Duration() > r.ResourceMaxDuration {
+		r.ResourceMaxDuration = rawSpan.Duration()
+	}
 	erroneous, ok := rawSpan.GetTag(constants.AwsError).(bool)
 	if ok && erroneous {
 		r.ResourceErrorCount++
@@ -76,13 +80,14 @@ func NewResource(rawSpan *tracer.RawSpan) (*Resource, error) {
 	}
 
 	resource := Resource{
-		ResourceType:       rawSpan.ClassName,
-		ResourceName:       rawSpan.OperationName,
-		ResourceOperation:  operationType,
-		ResourceCount:      1,
-		ResourceErrorCount: errorCount,
-		ResourceDuration:   rawSpan.Duration(),
-		resourceErrorsMap:  resourceErrorsMap,
+		ResourceType:        rawSpan.ClassName,
+		ResourceName:        rawSpan.OperationName,
+		ResourceOperation:   operationType,
+		ResourceCount:       1,
+		ResourceErrorCount:  errorCount,
+		ResourceDuration:    rawSpan.Duration(),
+		ResourceMaxDuration: rawSpan.Duration(),
+		resourceErrorsMap:   resourceErrorsMap,
 	}
 	return &resource, nil
 }
