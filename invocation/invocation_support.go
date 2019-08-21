@@ -40,7 +40,7 @@ func SetError(exception error) {
 }
 
 // ClearTags clears the invocation tags
-func ClearTags() {
+func Clear() {
 	invocationTags = make(map[string]interface{})
 	userInvocationTags = make(map[string]interface{})
 	userError = nil

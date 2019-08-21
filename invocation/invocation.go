@@ -92,7 +92,7 @@ func (ip *invocationPlugin) AfterExecution(ctx context.Context, request json.Raw
 }
 
 func (ip *invocationPlugin) Reset() {
-	ClearTags()
+	Clear()
 	clearTraceLinks()
 }
 
