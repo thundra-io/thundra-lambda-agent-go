@@ -48,7 +48,7 @@ func TestInvocationData_AfterExecution(t *testing.T) {
 	assert.False(t, d.Timeout)
 	assert.Equal(t, "Invocation", data[0].Type)
 
-	ClearTags()
+	Clear()
 }
 
 func TestInvocationData_AfterExecutionWithError(t *testing.T) {
@@ -67,7 +67,7 @@ func TestInvocationData_AfterExecutionWithError(t *testing.T) {
 	assert.Equal(t, testErrorMessage, d.ErrorMessage)
 	assert.Equal(t, testErrorType, d.ErrorType)
 
-	ClearTags()
+	Clear()
 }
 
 func TestPrepareDataStaticFields(t *testing.T) {
@@ -93,7 +93,7 @@ func TestPrepareDataStaticFields(t *testing.T) {
 	assert.NotNil(t, data.Tags)
 
 	test.CleanEnvironment()
-	ClearTags()
+	Clear()
 }
 
 func TestPrepareDataStaticFieldsCompositeDataDisabled(t *testing.T) {
@@ -120,7 +120,7 @@ func TestPrepareDataStaticFieldsCompositeDataDisabled(t *testing.T) {
 	assert.NotNil(t, data.Tags)
 
 	test.CleanEnvironment()
-	ClearTags()
+	Clear()
 }
 
 func TestInvocationTags(t *testing.T) {
@@ -168,7 +168,7 @@ func TestInvocationTags(t *testing.T) {
 	assert.Equal(t, userInvocationTags["stringKey"], userTags["stringKey"])
 	assert.Equal(t, userInvocationTags["dictKey"], userTags["dictKey"])
 
-	ClearTags()
+	Clear()
 }
 
 func TestSetError(t *testing.T) {

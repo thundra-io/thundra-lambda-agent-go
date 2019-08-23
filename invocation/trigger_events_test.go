@@ -42,7 +42,7 @@ func createMockLambdaTriggerContext() context.Context {
 }
 
 func TestInvocationTags_SNSTrigger(t *testing.T) {
-	ClearTags()
+	Clear()
 	clearTraceLinks()
 
 	eventMock := readJSONFromFile(t, "./testdata/sns-event.json")
@@ -59,7 +59,7 @@ func TestInvocationTags_SNSTrigger(t *testing.T) {
 }
 
 func TestInvocationTags_SNSTriggerFromInputType(t *testing.T) {
-	ClearTags()
+	Clear()
 	clearTraceLinks()
 
 	eventMock := readJSONFromFile(t, "./testdata/sns-event.json")
@@ -80,7 +80,7 @@ func TestInvocationTags_SNSTriggerFromInputType(t *testing.T) {
 }
 
 func TestInvocationTags_SQSTrigger(t *testing.T) {
-	ClearTags()
+	Clear()
 	clearTraceLinks()
 
 	eventMock := readJSONFromFile(t, "./testdata/sqs-event.json")
@@ -97,7 +97,7 @@ func TestInvocationTags_SQSTrigger(t *testing.T) {
 }
 
 func TestInvocationTags_SQSTriggerFromInputType(t *testing.T) {
-	ClearTags()
+	Clear()
 	clearTraceLinks()
 
 	ctx := context.Background()
@@ -120,7 +120,7 @@ func TestInvocationTags_SQSTriggerFromInputType(t *testing.T) {
 }
 
 func TestInvocationTags_CFTrigger(t *testing.T) {
-	ClearTags()
+	Clear()
 
 	eventMock := readJSONFromFile(t, "./testdata/cf-event.json")
 	setInvocationTriggerTags(context.TODO(), eventMock)
@@ -133,7 +133,7 @@ func TestInvocationTags_CFTrigger(t *testing.T) {
 }
 
 func TestInvocationTags_APIGatewayTrigger(t *testing.T) {
-	ClearTags()
+	Clear()
 
 	eventMock := readJSONFromFile(t, "./testdata/api-gw.json")
 	setInvocationTriggerTags(context.TODO(), eventMock)
@@ -146,7 +146,7 @@ func TestInvocationTags_APIGatewayTrigger(t *testing.T) {
 }
 
 func TestInvocationTags_APIGatewayProxyTrigger(t *testing.T) {
-	ClearTags()
+	Clear()
 	clearTraceLinks()
 
 	eventMock := readJSONFromFile(t, "./testdata/apigw-request.json")
@@ -163,7 +163,7 @@ func TestInvocationTags_APIGatewayProxyTrigger(t *testing.T) {
 }
 
 func TestInvocationTags_APIGatewayProxyTriggerFromInputType(t *testing.T) {
-	ClearTags()
+	Clear()
 	clearTraceLinks()
 
 	ctx := context.Background()
@@ -181,7 +181,7 @@ func TestInvocationTags_APIGatewayProxyTriggerFromInputType(t *testing.T) {
 }
 
 func TestInvocationTags_S3Trigger(t *testing.T) {
-	ClearTags()
+	Clear()
 	clearTraceLinks()
 
 	eventMock := readJSONFromFile(t, "./testdata/s3-event.json")
@@ -195,7 +195,7 @@ func TestInvocationTags_S3Trigger(t *testing.T) {
 }
 
 func TestInvocationTags_S3TriggerFromInputType(t *testing.T) {
-	ClearTags()
+	Clear()
 
 	ctx := context.Background()
 	ctx = utils.SetEventTypeToContext(ctx, reflect.TypeOf(events.S3Event{}))
@@ -212,7 +212,7 @@ func TestInvocationTags_S3TriggerFromInputType(t *testing.T) {
 }
 
 func TestInvocationTags_ScheduleTrigger(t *testing.T) {
-	ClearTags()
+	Clear()
 
 	eventMock := readJSONFromFile(t, "./testdata/schedule-event.json")
 	setInvocationTriggerTags(context.TODO(), eventMock)
@@ -225,7 +225,7 @@ func TestInvocationTags_ScheduleTrigger(t *testing.T) {
 }
 
 func TestInvocationTags_ScheduleTriggerFromInputType(t *testing.T) {
-	ClearTags()
+	Clear()
 
 	ctx := context.Background()
 	ctx = utils.SetEventTypeToContext(ctx, reflect.TypeOf(events.CloudWatchEvent{}))
@@ -242,7 +242,7 @@ func TestInvocationTags_ScheduleTriggerFromInputType(t *testing.T) {
 }
 
 func TestInvocationTags_KinesisTrigger(t *testing.T) {
-	ClearTags()
+	Clear()
 	clearTraceLinks()
 
 	eventMock := readJSONFromFile(t, "./testdata/kinesis-event.json")
@@ -263,7 +263,7 @@ func TestInvocationTags_KinesisTrigger(t *testing.T) {
 }
 
 func TestInvocationTags_KinesisTriggerFromInputType(t *testing.T) {
-	ClearTags()
+	Clear()
 	clearTraceLinks()
 
 	ctx := context.Background()
@@ -288,7 +288,7 @@ func TestInvocationTags_KinesisTriggerFromInputType(t *testing.T) {
 }
 
 func TestInvocationTags_KinesisFirehoseTrigger(t *testing.T) {
-	ClearTags()
+	Clear()
 	clearTraceLinks()
 
 	eventMock := readJSONFromFile(t, "./testdata/kinesis-firehose-event.json")
@@ -302,7 +302,7 @@ func TestInvocationTags_KinesisFirehoseTrigger(t *testing.T) {
 }
 
 func TestInvocationTags_KinesisFirehoseTriggerFromInputType(t *testing.T) {
-	ClearTags()
+	Clear()
 	clearTraceLinks()
 
 	ctx := context.Background()
@@ -320,7 +320,7 @@ func TestInvocationTags_KinesisFirehoseTriggerFromInputType(t *testing.T) {
 }
 
 func TestInvocationTags_DynamoDBTrigger(t *testing.T) {
-	ClearTags()
+	Clear()
 	clearTraceLinks()
 
 	eventMock := readJSONFromFile(t, "./testdata/dynamodb-event.json")
@@ -335,7 +335,7 @@ func TestInvocationTags_DynamoDBTrigger(t *testing.T) {
 }
 
 func TestInvocationTags_DynamoDBTriggerFromInputType(t *testing.T) {
-	ClearTags()
+	Clear()
 	clearTraceLinks()
 
 	ctx := context.Background()
@@ -353,7 +353,7 @@ func TestInvocationTags_DynamoDBTriggerFromInputType(t *testing.T) {
 }
 
 func TestInvocationTags_CloudWatchLogsTrigger(t *testing.T) {
-	ClearTags()
+	Clear()
 
 	eventMock := readJSONFromFile(t, "./testdata/cloudwatch-logs-event.json")
 	setInvocationTriggerTags(context.TODO(), eventMock)
@@ -366,7 +366,7 @@ func TestInvocationTags_CloudWatchLogsTrigger(t *testing.T) {
 }
 
 func TestInvocationTags_CloudWatchLogsTriggerFromInputType(t *testing.T) {
-	ClearTags()
+	Clear()
 
 	ctx := context.Background()
 	ctx = utils.SetEventTypeToContext(ctx, reflect.TypeOf(events.CloudwatchLogsEvent{}))
@@ -384,7 +384,7 @@ func TestInvocationTags_CloudWatchLogsTriggerFromInputType(t *testing.T) {
 }
 
 func TestInvocationTags_LambdaTrigger(t *testing.T) {
-	ClearTags()
+	Clear()
 	clearTraceLinks()
 
 	c := createMockLambdaTriggerContext()
@@ -400,7 +400,7 @@ func TestInvocationTags_LambdaTrigger(t *testing.T) {
 }
 
 func TestInvocationTags_NilEvent(t *testing.T) {
-	ClearTags()
+	Clear()
 
 	setInvocationTriggerTags(context.TODO(), nil)
 
@@ -410,7 +410,7 @@ func TestInvocationTags_NilEvent(t *testing.T) {
 }
 
 func TestInvocationTags_UnknownInputEventFromInput(t *testing.T) {
-	ClearTags()
+	Clear()
 
 	ctx := context.Background()
 	ctx = utils.SetEventTypeToContext(ctx, reflect.TypeOf(events.CognitoEvent{}))
@@ -425,7 +425,7 @@ func TestInvocationTags_UnknownInputEventFromInput(t *testing.T) {
 }
 
 func TestInvocationTags_MalformedPayloadJSON(t *testing.T) {
-	ClearTags()
+	Clear()
 
 	eventMock := readJSONFromFile(t, "./testdata/dynamodb-event-malformed.json")
 	setInvocationTriggerTags(context.Background(), eventMock)
@@ -436,7 +436,7 @@ func TestInvocationTags_MalformedPayloadJSON(t *testing.T) {
 }
 
 func TestInvocationTags_MalformedEventWithInputType(t *testing.T) {
-	ClearTags()
+	Clear()
 
 	ctx := context.Background()
 	ctx = utils.SetEventTypeToContext(ctx, reflect.TypeOf(events.DynamoDBEvent{}))
@@ -449,7 +449,7 @@ func TestInvocationTags_MalformedEventWithInputType(t *testing.T) {
 }
 
 func TestInvocationTags_IncorrectInputEventTypeForPayload(t *testing.T) {
-	ClearTags()
+	Clear()
 	ctx := context.Background()
 	ctx = utils.SetEventTypeToContext(ctx, reflect.TypeOf(events.SQSEvent{}))
 
@@ -464,7 +464,7 @@ func TestInvocationTags_IncorrectInputEventTypeForPayload(t *testing.T) {
 }
 
 func TestInvocationTags_DynamoDBPayloadWithInvalidField(t *testing.T) {
-	ClearTags()
+	Clear()
 
 	eventMock := readJSONFromFile(t, "./testdata/dynamodb-event-wrong-arn.json")
 	setInvocationTriggerTags(context.Background(), eventMock)
@@ -475,7 +475,7 @@ func TestInvocationTags_DynamoDBPayloadWithInvalidField(t *testing.T) {
 }
 
 func TestInvocationTags_APIGatewayPayloadWithMissingFields(t *testing.T) {
-	ClearTags()
+	Clear()
 
 	eventMock := readJSONFromFile(t, "./testdata/api-gw-missing-fields.json")
 	setInvocationTriggerTags(context.Background(), eventMock)
@@ -486,7 +486,7 @@ func TestInvocationTags_APIGatewayPayloadWithMissingFields(t *testing.T) {
 }
 
 func TestInvocationTags_APIGatewayProxyPayloadWithMissingFields(t *testing.T) {
-	ClearTags()
+	Clear()
 
 	eventMock := readJSONFromFile(t, "./testdata/apigw-request-missing-fields.json")
 	setInvocationTriggerTags(context.Background(), eventMock)

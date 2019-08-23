@@ -39,7 +39,7 @@ func SetError(exception error) {
 	userError = exception
 }
 
-// ClearTags clears the invocation tags
+// Clear clears the invocation tags and error
 func Clear() {
 	invocationTags = make(map[string]interface{})
 	userInvocationTags = make(map[string]interface{})
