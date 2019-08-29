@@ -26,7 +26,7 @@ func Wrap(c *http.Client) *http.Client {
 }
 
 func getNormalizedPath(path string) string {
-	depth := config.ESIntegrationUrlPathDepth
+	depth := config.EsIntegrationUrlPathDepth
 	if depth <= 0 {
 		return ""
 	}

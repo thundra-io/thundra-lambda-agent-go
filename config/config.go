@@ -53,7 +53,7 @@ var SamplingCountFrequency int
 var SamplingTimeFrequency int
 
 var HTTPIntegrationUrlPathDepth int
-var ESIntegrationUrlPathDepth int
+var EsIntegrationUrlPathDepth int
 
 var AwsLambdaFunctionMemorySize int
 var AwsLambdaRegion string
@@ -100,7 +100,7 @@ func init() {
 	MaskLambdaPayload = boolFromEnv(constants.ThundraMaskLambdaPayload, false)
 	MaskHTTPBody = boolFromEnv(constants.ThundraMaskHTTPBody, false)
 	HTTPIntegrationUrlPathDepth = intFromEnv(constants.ThundraAgentTraceIntegrationsHttpUrlDepth, 1)
-	ESIntegrationUrlPathDepth = intFromEnv(constants.ThundraAgentTraceIntegrationsESUrlDepth, 1)
+	EsIntegrationUrlPathDepth = intFromEnv(constants.ThundraAgentTraceIntegrationsEsUrlDepth, 1)
 	AwsLambdaFunctionMemorySize = intFromEnv(constants.AwsLambdaFunctionMemorySize, -1)
 	AwsLambdaRegion = os.Getenv(constants.AwsLambdaRegion)
 	TimeoutMargin = time.Duration(intFromEnv(constants.ThundraLambdaTimeoutMargin,

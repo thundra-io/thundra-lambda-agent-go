@@ -55,7 +55,7 @@ func TestCreateIndex(t *testing.T) {
 }
 
 func TestIndex(t *testing.T) {
-	config.ESIntegrationUrlPathDepth = 3
+	config.EsIntegrationUrlPathDepth = 3
 	// Initilize trace plugin to set GlobalTracer of opentracing
 	tp := trace.New()
 
@@ -223,7 +223,7 @@ func TestErrorNotExistentURL(t *testing.T) {
 
 func TestMaskBody(t *testing.T) {
 	config.MaskEsBody = true
-	config.ESIntegrationUrlPathDepth = 2
+	config.EsIntegrationUrlPathDepth = 2
 	// Initilize trace plugin to set GlobalTracer of opentracing
 	tp := trace.New()
 
