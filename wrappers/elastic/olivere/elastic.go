@@ -27,7 +27,12 @@ func Wrap(c *http.Client) *http.Client {
 
 func getNormalizedPath(path string) string {
 	depth := config.ESIntegrationUrlPathDepth
+	if depth <= 0 {
+		return ""
+	}
+
 	pathSlice := strings.Split(path, "/")
+
 	//filter empty string
 	n := 0
 	for _, x := range pathSlice {
@@ -37,11 +42,14 @@ func getNormalizedPath(path string) string {
 		}
 	}
 	pathSlice = pathSlice[:n]
-	pathLength := len(pathSlice)
 
+	// check out of bounds
+	pathLength := len(pathSlice)
 	if depth > pathLength {
 		depth = pathLength
 	}
+
+	//slice till depth
 	pathSlice = pathSlice[:depth]
 	return "/" + strings.Join(pathSlice, "/")
 }
