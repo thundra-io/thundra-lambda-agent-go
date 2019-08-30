@@ -55,6 +55,7 @@ func TestCreateIndex(t *testing.T) {
 }
 
 func TestIndex(t *testing.T) {
+	config.EsIntegrationUrlPathDepth = 3
 	// Initilize trace plugin to set GlobalTracer of opentracing
 	tp := trace.New()
 
@@ -222,6 +223,7 @@ func TestErrorNotExistentURL(t *testing.T) {
 
 func TestMaskBody(t *testing.T) {
 	config.MaskEsBody = true
+	config.EsIntegrationUrlPathDepth = 2
 	// Initilize trace plugin to set GlobalTracer of opentracing
 	tp := trace.New()
 
@@ -241,7 +243,7 @@ func TestMaskBody(t *testing.T) {
 
 	assert.Equal(t, constants.ClassNames["ELASTICSEARCH"], span.ClassName)
 	assert.Equal(t, constants.DomainNames["DB"], span.DomainName)
-	assert.Equal(t, "/twitter/_docs/1", span.OperationName)
+	assert.Equal(t, "/twitter/_docs", span.OperationName)
 	assert.ElementsMatch(t, []string{"localhost:9200"}, span.Tags[constants.EsTags["ES_HOSTS"]])
 	assert.Equal(t, "DELETE", span.Tags[constants.EsTags["ES_METHOD"]])
 	assert.Equal(t, "/twitter/_docs/1", span.Tags[constants.EsTags["ES_URI"]])

@@ -81,3 +81,4 @@ const ThundraMaskLambdaPayload = "thundra_agent_lambda_trace_integrations_aws_la
 const ThundraMaskHTTPBody = "thundra_agent_lambda_trace_integrations_aws_http_body_mask"
 
 const ThundraAgentTraceIntegrationsHttpUrlDepth = "thundra_agent_lambda_trace_integrations_http_url_depth"
+const ThundraAgentTraceIntegrationsEsUrlDepth = "thundra_agent_lambda_trace_integrations_elasticsearch_path_depth"
