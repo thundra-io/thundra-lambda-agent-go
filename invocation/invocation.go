@@ -66,6 +66,14 @@ func (ip *invocationPlugin) AfterExecution(ctx context.Context, request json.Raw
 	ip.data.finishTimestamp = finishTime
 	ip.data.duration = ip.data.finishTimestamp - ip.data.startTimestamp
 
+	if userError != nil {
+		ip.data.erroneous = true
+		ip.data.errorMessage = utils.GetErrorMessage(userError)
+		ip.data.errorType = utils.GetErrorType(userError)
+		ip.data.errorCode = defaultErrorCode
+		utils.SetSpanError(ip.rootSpan, userError)
+	}
+
 	if err != nil {
 		ip.data.erroneous = true
 		ip.data.errorMessage = utils.GetErrorMessage(err)
@@ -84,7 +92,7 @@ func (ip *invocationPlugin) AfterExecution(ctx context.Context, request json.Raw
 }
 
 func (ip *invocationPlugin) Reset() {
-	ClearTags()
+	Clear()
 	clearTraceLinks()
 }
 

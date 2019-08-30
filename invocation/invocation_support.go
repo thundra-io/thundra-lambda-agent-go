@@ -2,6 +2,7 @@ package invocation
 
 var invocationTags = make(map[string]interface{})
 var userInvocationTags = make(map[string]interface{})
+var userError error
 
 // SetTag sets the given tag for invocation
 func SetTag(key string, value interface{}) {
@@ -33,8 +34,14 @@ func GetAgentTags() map[string]interface{} {
 	return invocationTags
 }
 
-// ClearTags clears the invocation tags
-func ClearTags() {
+// set error provided from user
+func SetError(exception error) {
+	userError = exception
+}
+
+// Clear clears the invocation tags and error
+func Clear() {
 	invocationTags = make(map[string]interface{})
 	userInvocationTags = make(map[string]interface{})
+	userError = nil
 }
