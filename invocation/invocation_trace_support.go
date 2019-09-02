@@ -2,13 +2,13 @@ package invocation
 
 import (
 	"errors"
-	"math"
 	"strings"
 
 	"github.com/thundra-io/thundra-lambda-agent-go/config"
 	"github.com/thundra-io/thundra-lambda-agent-go/constants"
 	"github.com/thundra-io/thundra-lambda-agent-go/trace"
 	"github.com/thundra-io/thundra-lambda-agent-go/tracer"
+	"github.com/thundra-io/thundra-lambda-agent-go/utils"
 )
 
 var incomingTraceLinks = make([]string, 0)
@@ -46,7 +46,7 @@ func (r *Resource) merge(rawSpan *tracer.RawSpan) {
 	}
 	r.ResourceCount++
 	r.ResourceDuration += rawSpan.Duration()
-	r.ResourceAvgDuration = math.Round(float64(r.ResourceDuration)/float64(r.ResourceCount)*100) / 100
+	r.ResourceAvgDuration = utils.Round(float64(r.ResourceDuration)/float64(r.ResourceCount)*100) / 100
 	if rawSpan.Duration() > r.ResourceMaxDuration {
 		r.ResourceMaxDuration = rawSpan.Duration()
 	}

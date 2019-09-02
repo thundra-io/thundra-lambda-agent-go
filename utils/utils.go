@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math"
 	"os"
 	"reflect"
 	"strconv"
@@ -231,4 +232,13 @@ func SerializeToMap(data interface{}) map[string]interface{} {
 		return nil
 	}
 	return res
+}
+
+// Round returns the nearest integer, rounding ties away from zero.
+func Round(x float64) float64 {
+	t := math.Trunc(x)
+	if math.Abs(x-t) >= 0.5 {
+		return t + math.Copysign(1, x)
+	}
+	return t
 }
