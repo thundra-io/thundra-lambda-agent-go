@@ -2,6 +2,7 @@ package invocation
 
 import (
 	"errors"
+	"math"
 	"strings"
 
 	"github.com/thundra-io/thundra-lambda-agent-go/config"
@@ -21,6 +22,7 @@ type Resource struct {
 	ResourceErrorCount  int      `json:"resourceErrorCount"`
 	ResourceDuration    int64    `json:"resourceDuration"`
 	ResourceMaxDuration int64    `json:"resourceMaxDuration"`
+	ResourceAvgDuration float64  `json:"resourceAvgDuration"`
 	ResourceErrors      []string `json:"resourceErrors"`
 	resourceErrorsMap   map[string]struct{}
 }
@@ -44,6 +46,7 @@ func (r *Resource) merge(rawSpan *tracer.RawSpan) {
 	}
 	r.ResourceCount++
 	r.ResourceDuration += rawSpan.Duration()
+	r.ResourceAvgDuration = math.Round(float64(r.ResourceDuration)/float64(r.ResourceCount)*100) / 100
 	if rawSpan.Duration() > r.ResourceMaxDuration {
 		r.ResourceMaxDuration = rawSpan.Duration()
 	}
@@ -87,6 +90,7 @@ func NewResource(rawSpan *tracer.RawSpan) (*Resource, error) {
 		ResourceErrorCount:  errorCount,
 		ResourceDuration:    rawSpan.Duration(),
 		ResourceMaxDuration: rawSpan.Duration(),
+		ResourceAvgDuration: float64(rawSpan.Duration()),
 		resourceErrorsMap:   resourceErrorsMap,
 	}
 	return &resource, nil
