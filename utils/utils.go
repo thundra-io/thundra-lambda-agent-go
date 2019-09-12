@@ -247,8 +247,8 @@ func Round(x float64) float64 {
 // GetXRayTraceInfo parses X-Ray trace information
 func GetXRayTraceInfo(ctx context.Context) (string, string) {
 	traceID, segmentID := "", ""
-	xrayTraceHeader := ctx.Value(constants.AwsXRayTraceContextKey).(string)
-	if len(xrayTraceHeader) > 0 {
+	xrayTraceHeader, ok := ctx.Value(constants.AwsXRayTraceContextKey).(string)
+	if ok && len(xrayTraceHeader) > 0 {
 		for _, traceHeaderPart := range strings.Split(xrayTraceHeader, ";") {
 			traceInfo := strings.Split(traceHeaderPart, "=")
 			if len(traceInfo) != 2 {
