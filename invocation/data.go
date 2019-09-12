@@ -80,8 +80,14 @@ func (ip *invocationPlugin) prepareTags(ctx context.Context) map[string]interfac
 		tags["error.kind"] = ip.data.errorType
 		tags["error.message"] = ip.data.errorMessage
 	}
-
 	arn := application.GetInvokedFunctionArn(ctx)
+	xrayTraceID, xraySegmentID := utils.GetXRayTraceInfo(ctx)
+	if len(xrayTraceID) > 0 {
+		tags[constants.AwsXRayTraceID] = xrayTraceID
+	}
+	if len(xraySegmentID) > 0 {
+		tags[constants.AwsXRaySegmentID] = xraySegmentID
+	}
 	tags[constants.AwsLambdaARN] = arn
 	tags[constants.AwsAccountNo] = application.GetAwsAccountNo(arn)
 	tags[constants.AwsLambdaInvocationColdStart] = ip.data.coldStart

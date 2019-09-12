@@ -11,6 +11,7 @@ import (
 	"os"
 	"reflect"
 	"strconv"
+	"strings"
 	"time"
 
 	opentracing "github.com/opentracing/opentracing-go"
@@ -241,4 +242,28 @@ func Round(x float64) float64 {
 		return t + math.Copysign(1, x)
 	}
 	return t
+}
+
+// GetXRayTraceInfo parses X-Ray trace information
+func GetXRayTraceInfo(ctx context.Context) (string, string) {
+	traceID, segmentID := "", ""
+	xrayTraceHeader, ok := ctx.Value(constants.AwsXRayTraceContextKey).(string)
+	if ok && len(xrayTraceHeader) > 0 {
+		for _, traceHeaderPart := range strings.Split(xrayTraceHeader, ";") {
+			traceInfo := strings.Split(traceHeaderPart, "=")
+			if len(traceInfo) != 2 {
+				continue
+			}
+			traceInfoKey, traceInfoVal := traceInfo[0], traceInfo[1]
+
+			switch traceInfoKey {
+			case "Root":
+				traceID = traceInfoVal
+			case "Parent":
+				segmentID = traceInfoVal
+			}
+		}
+	}
+
+	return traceID, segmentID
 }
