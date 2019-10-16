@@ -1,6 +1,8 @@
 package plugin
 
 import (
+	"context"
+
 	"github.com/thundra-io/thundra-lambda-agent-go/application"
 	"github.com/thundra-io/thundra-lambda-agent-go/config"
 	"github.com/thundra-io/thundra-lambda-agent-go/constants"
@@ -18,6 +20,7 @@ type BaseDataModel struct {
 	AgentVersion              *string                 `json:"agentVersion,omitempty"`
 	DataModelVersion          *string                 `json:"dataModelVersion,omitempty"`
 	ApplicationID             *string                 `json:"applicationId,omitempty"`
+	ApplicationInstanceID     *string                 `json:"applicationInstanceId,omitempty"`
 	ApplicationDomainName     *string                 `json:"applicationDomainName,omitempty"`
 	ApplicationClassName      *string                 `json:"applicationClassName,omitempty"`
 	ApplicationName           *string                 `json:"applicationName,omitempty"`
@@ -43,6 +46,10 @@ func PrepareCompositeData(baseDataModel BaseDataModel, allData []MonitoringDataW
 	}
 }
 
+func InitBaseData(ctx context.Context) {
+	application.ApplicationID = application.GetApplicationID(ctx)
+}
+
 func PrepareBaseData() BaseDataModel {
 	agentVersion := constants.AgentVersion
 	dataModelVersion := constants.DataModelVersion
@@ -52,6 +59,7 @@ func PrepareBaseData() BaseDataModel {
 		AgentVersion:              &agentVersion,
 		DataModelVersion:          &dataModelVersion,
 		ApplicationID:             &application.ApplicationID,
+		ApplicationInstanceID:     &application.ApplicationInstanceID,
 		ApplicationDomainName:     &application.ApplicationDomainName,
 		ApplicationClassName:      &application.ApplicationClassName,
 		ApplicationName:           &application.ApplicationName,

@@ -30,6 +30,7 @@ const AwsLambdaTriggerResourceName = "x-thundra-resource-name"
 
 const AwsLambdaFunctionMemorySize = "AWS_LAMBDA_FUNCTION_MEMORY_SIZE"
 const AwsLambdaRegion = "AWS_REGION"
+const AwsSAMLocal = "AWS_SAM_LOCAL"
 
 const AwsXRayTraceHeader = "_X_AMZN_TRACE_ID"
 const AwsXRayTraceContextKey = "x-amzn-trace-id"
