@@ -64,8 +64,8 @@ var CollectorUrl string
 func init() {
 	ThundraDisabled = boolFromEnv(constants.ThundraLambdaDisable, false)
 	TraceDisabled = boolFromEnv(constants.ThundraDisableTrace, false)
-	MetricDisabled = boolFromEnv(constants.ThundraDisableMetric, false)
-	LogDisabled = boolFromEnv(constants.ThundraDisableLog, false)
+	MetricDisabled = boolFromEnv(constants.ThundraDisableMetric, true)
+	LogDisabled = boolFromEnv(constants.ThundraDisableLog, true)
 	AwsIntegrationDisabled = boolFromEnv(constants.ThundraDisableAwsIntegration, false)
 	TraceRequestDisabled = boolFromEnv(constants.ThundraDisableTraceRequest, false)
 	TraceResponseDisabled = boolFromEnv(constants.ThundraDisableTraceResponse, false)
