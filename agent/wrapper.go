@@ -7,6 +7,7 @@ import (
 	"reflect"
 
 	"github.com/thundra-io/thundra-lambda-agent-go/config"
+	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
 	"github.com/thundra-io/thundra-lambda-agent-go/utils"
 )
 
@@ -69,6 +70,8 @@ func (a *Agent) Wrap(handler interface{}) interface{} {
 				return nil, nil
 			}
 		}
+
+		plugin.InitBaseData(ctx)
 
 		ctxAfterPreHooks := a.ExecutePreHooks(ctx, payload)
 
