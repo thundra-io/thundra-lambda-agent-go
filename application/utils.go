@@ -2,18 +2,15 @@ package application
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"strings"
 
-	"github.com/thundra-io/thundra-lambda-agent-go/config"
 	"github.com/thundra-io/thundra-lambda-agent-go/constants"
 
 	"github.com/aws/aws-lambda-go/lambdacontext"
 )
 
 var ApplicationName string
-var ApplicationInstanceID string
 var FunctionName string
 var ApplicationID string
 var ApplicationDomainName string
@@ -30,7 +27,7 @@ var ApplicationTags map[string]interface{}
 
 func init() {
 	ApplicationName = getApplicationName()
-	ApplicationInstanceID = getApplicationInstanceID()
+	ApplicationID = getAppID()
 	ApplicationDomainName = getApplicationDomainName()
 	ApplicationClassName = getApplicationClassName()
 	ApplicationVersion = getApplicationVersion()
@@ -75,27 +72,17 @@ func getFunctionName() string {
 	return lambdacontext.FunctionName
 }
 
-// getAppIDFromStreamName returns application id. AppId starts after ']' in logstreamname
-func GetApplicationID(ctx context.Context) string {
+// getAppID returns application id
+func getAppID() string {
 	v := os.Getenv(constants.ApplicationIDProp)
 	if v != "" {
 		return v
 	}
-
-	arn := GetInvokedFunctionArn(ctx)
-	region := getFunctionRegion()
-	accountNo := GetAwsAccountNo(arn)
-	if config.SAMLocalDebugging {
-		accountNo = "sam_local"
-	}
-	functionName := getFunctionName()
-
-	return fmt.Sprintf("aws:lambda:%s:%s:%s", region, accountNo, functionName)
+	return getAppIDFromStreamName(lambdacontext.LogStreamName)
 }
 
-// getApplicationInstanceID returns application id. AppId starts after ']' in logstreamname
-func getApplicationInstanceID() string {
-	logStreamName := getLogStreamName()
+// getAppIDFromStreamName returns application id. AppId starts after ']' in logstreamname
+func getAppIDFromStreamName(logStreamName string) string {
 	s := strings.Split(logStreamName, "]")
 	if len(s) > 1 {
 		return s[1]

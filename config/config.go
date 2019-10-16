@@ -37,7 +37,6 @@ var MaskSQSMessage bool
 var MaskLambdaPayload bool
 var MaskHTTPBody bool
 var MaskAthenaStatement bool
-var SAMLocalDebugging bool
 
 var TraceKinesisRequestEnabled bool
 var TraceFirehoseRequestEnabled bool
@@ -98,7 +97,6 @@ func init() {
 	SamplingTimeFrequency = intFromEnv(constants.ThundraAgentMetricTimeAwareSamplerTimeFreq, -1)
 	MaskSNSMessage = boolFromEnv(constants.ThundraMaskSNSMessage, false)
 	MaskSQSMessage = boolFromEnv(constants.ThundraMaskSQSMessage, false)
-	SAMLocalDebugging = boolFromEnv(constants.AwsSAMLocal, false)
 	MaskLambdaPayload = boolFromEnv(constants.ThundraMaskLambdaPayload, false)
 	MaskHTTPBody = boolFromEnv(constants.ThundraMaskHTTPBody, false)
 	HTTPIntegrationUrlPathDepth = intFromEnv(constants.ThundraAgentTraceIntegrationsHttpUrlDepth, 1)
