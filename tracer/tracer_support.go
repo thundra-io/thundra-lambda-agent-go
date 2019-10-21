@@ -67,6 +67,7 @@ func init() {
 	SpanListenerConstructorMap["ErrorInjectorSpanListener"] = NewErrorInjectorSpanListener
 	SpanListenerConstructorMap["LatencyInjectorSpanListener"] = NewLatencyInjectorSpanListener
 	SpanListenerConstructorMap["FilteringSpanListener"] = NewFilteringSpanListener
+	SpanListenerConstructorMap["TagInjectorSpanListener"] = NewTagInjectorSpanListener
 
 	ParseSpanListeners()
 }
