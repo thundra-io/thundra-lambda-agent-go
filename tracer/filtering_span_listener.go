@@ -33,42 +33,31 @@ func (f *FilteringSpanListener) PanicOnError() bool {
 
 // NewFilteringSpanListener creates and returns a new FilteringSpanListener from config
 func NewFilteringSpanListener(config map[string]interface{}) ThundraSpanListener {
+	filterer := &ThundraSpanFilterer{spanFilters: []SpanFilter{}}
+
 	listenerDef, ok := config["listener"].(map[string]interface{})
-	log.Println(listenerDef)
 	if !ok {
-		// TODO: Handle listener definition type error
+		log.Println("Listener configuration is not valid for FilteringSpanListener")
+		return nil
+	}
+
+	listenerName, ok := listenerDef["type"].(string)
+	listenerConstructor, ok := SpanListenerConstructorMap[listenerName]
+	if !ok {
+		log.Println("Given listener type is not valid for FilteringSpanListener")
 		return nil
 	}
 
 	listenerConfig, ok := listenerDef["config"].(map[string]interface{})
-	log.Println(listenerConfig)
-	if !ok {
-		// TODO: Handle listener config type
-	}
+	listener := listenerConstructor(listenerConfig)
 
-	all, ok := config["all"].(bool)
-	if !ok {
-		// TODO: Handle all value is not bool
+	if all, ok := config["all"].(bool); ok {
+		filterer.all = all
 	}
-
-	filterer := &ThundraSpanFilterer{spanFilters: []SpanFilter{}, all: all}
 
 	if filterConfigs, ok := config["filters"].([]interface{}); ok {
 		filterer.spanFilters = crateFiltersFromConfig(filterConfigs)
 	}
-
-	listenerName, ok := listenerDef["type"].(string)
-	log.Println(listenerName)
-	if !ok {
-		// TODO: Handle listener type name
-	}
-
-	listenerConstructor, ok := SpanListenerConstructorMap[listenerName]
-	if !ok {
-		// TODO: Handle listener type does not exist
-	}
-
-	listener := listenerConstructor(listenerConfig)
 
 	return &FilteringSpanListener{listener, filterer}
 }
@@ -78,15 +67,14 @@ func crateFiltersFromConfig(filterConfigs []interface{}) []SpanFilter {
 	for _, filterConfig := range filterConfigs {
 		if filterConfig, ok := filterConfig.(map[string]interface{}); ok {
 			if composite, ok := filterConfig["composite"].(bool); ok && composite {
-				all, ok := filterConfig["all"].(bool)
-				if !ok {
-					// TODO: Handle all value is not bool
-				}
-
 				cf := &CompositeSpanFilter{
 					spanFilters: []SpanFilter{},
-					all:         all,
+					all:         false,
 					composite:   true,
+				}
+
+				if all, ok := filterConfig["all"].(bool); ok {
+					cf.all = all
 				}
 
 				if compositeFilterConfigs, ok := filterConfig["filters"].([]interface{}); ok {

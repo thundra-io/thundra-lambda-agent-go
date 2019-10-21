@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"io/ioutil"
+	"log"
 	"os"
 	"strings"
 
@@ -46,29 +47,30 @@ func ParseSpanListeners() {
 			if !strings.HasPrefix(configStr, "{") {
 				configStr, err = decodeConfigStr(configStr)
 				if err != nil {
-					// TODO: Handle config decode error
+					log.Println("Couldn't parse given span listener configuration:", err)
+					continue
 				}
 			}
 
 			if err := json.Unmarshal([]byte(configStr), &config); err != nil {
-				// TODO: Handle json unmarshal error
+				log.Println("Given span listener configuration is not a valid JSON string:", err)
 				continue
 			}
 
 			listenerName, ok := config["type"].(string)
 			if !ok {
-				// TODO: Handle listener type is not string
+				log.Println("Given listener type is not a valid span listener")
 				continue
 			}
 
 			listenerConfig, ok := config["config"].(map[string]interface{})
 			if !ok {
-				// TODO: Handle config type is not correct
+				log.Println("No config given for the span listener")
 			}
 
 			listenerConstructor, ok := SpanListenerConstructorMap[listenerName]
 			if !ok {
-				// TODO: Handle listener type does not exist
+				log.Println("Given listener type is not a valid span listener")
 				continue
 			}
 
