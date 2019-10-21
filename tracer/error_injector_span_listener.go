@@ -1,8 +1,8 @@
 package tracer
 
 import (
+	"log"
 	"reflect"
-	"strconv"
 	"sync/atomic"
 
 	"github.com/pkg/errors"
@@ -79,30 +79,20 @@ func (e *ErrorInjectorSpanListener) injectError(span *spanImpl) {
 }
 
 // NewErrorInjectorSpanListener creates and returns a new ErrorInjectorSpanListener from config
-func NewErrorInjectorSpanListener(config map[string]string) ThundraSpanListener {
-
+func NewErrorInjectorSpanListener(config map[string]interface{}) ThundraSpanListener {
 	spanListener := &ErrorInjectorSpanListener{ErrorMessage: defaultErrorMessage, AddInfoTags: true, InjectCountFreq: 1}
 
-	if config["errorMessage"] != "" {
-		spanListener.ErrorMessage = config["errorMessage"]
+	if errorMessage, ok := config["errorMessage"].(string); ok {
+		spanListener.ErrorMessage = errorMessage
 	}
-	if config["injectOnFinish"] != "" {
-		injectOnFinish, err := strconv.ParseBool(config["injectOnFinish"])
-		if err == nil {
-			spanListener.InjectOnFinish = injectOnFinish
-		}
+	if injectOnFinish, ok := config["injectOnFinish"].(bool); ok {
+		spanListener.InjectOnFinish = injectOnFinish
 	}
-	if config["injectCountFreq"] != "" {
-		injectCountFreq, err := strconv.ParseInt(config["injectCountFreq"], 10, 64)
-		if err == nil {
-			spanListener.InjectCountFreq = injectCountFreq
-		}
+	if injectCountFreq, ok := config["injectCountFreq"].(int64); ok {
+		spanListener.InjectCountFreq = injectCountFreq
 	}
-	if config["addInfoTags"] != "" {
-		addInfoTags, err := strconv.ParseBool(config["addInfoTags"])
-		if err == nil {
-			spanListener.AddInfoTags = addInfoTags
-		}
+	if addInfoTags, ok := config["addInfoTags"].(bool); ok {
+		spanListener.AddInfoTags = addInfoTags
 	}
 	spanListener.ErrorType = errors.New(spanListener.ErrorMessage)
 

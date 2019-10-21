@@ -1,9 +1,6 @@
 package tracer
 
-import (
-	"log"
-	"strings"
-)
+import "log"
 
 type FilteringSpanListener struct {
 	Listener ThundraSpanListener
@@ -35,56 +32,48 @@ func (f *FilteringSpanListener) PanicOnError() bool {
 }
 
 // NewFilteringSpanListener creates and returns a new FilteringSpanListener from config
-func NewFilteringSpanListener(config map[string]string) ThundraSpanListener {
-	var listenerStr string
-
-	if config["listener"] != "" {
-		listenerStr = config["listener"]
+func NewFilteringSpanListener(config map[string]interface{}) ThundraSpanListener {
+	listenerDef, ok := config["listener"].(map[string]interface{})
+	log.Println(listenerDef)
+	if !ok {
+		// TODO: Handle listener definition type error
+		return nil
 	}
 
-	configPrefix := "config."
-	filterPrefix := "filter"
-	listenerConfig := make(map[string]string)
-	filterConfig := make(map[string]map[string]string)
+	listenerConfig, ok := listenerDef["config"].(map[string]interface{})
+	log.Println(listenerConfig)
+	if !ok {
+		// TODO: Handle listener config type
+		log.Println(listenerConfig)
+	}
 
-	for key, val := range config {
-		if strings.HasPrefix(key, configPrefix) {
+	all, ok := config["all"].(bool)
+	if !ok {
+		// TODO: Handle all value is not bool
+	}
 
-			listenerConfig[key[len(configPrefix):]] = val
+	filterer := &ThundraSpanFilterer{spanFilters: []SpanFilter{}, all: all}
 
-		} else if strings.HasPrefix(key, filterPrefix) {
-
-			firstDot := strings.Index(key, ".")
-			if firstDot == -1 {
-				continue
-			}
-			filterID := key[:firstDot]
-			filterArg := key[firstDot+1:]
-			if filterConfig[filterID] == nil {
-				filterConfig[filterID] = make(map[string]string, 0)
-			}
-			filterConfig[filterID][filterArg] = val
+	filterConfigs := config["filters"].([]interface{})
+	for _, filterConfig := range filterConfigs {
+		if filterConfig, ok := filterConfig.(map[string]interface{}); ok {
+			filterer.AddFilter(NewThundraSpanFilter(filterConfig))
 		}
 	}
 
-	var filters []SpanFilter
-	var filterer SpanFilterer
-	var listener ThundraSpanListener
-
-	for _, val := range filterConfig {
-		filters = append(filters, NewThundraSpanFilter(val))
+	listenerName, ok := listenerDef["type"].(string)
+	log.Println(listenerName)
+	if !ok {
+		// TODO: Handle listener type name
 	}
 
-	if len(filters) > 0 {
-		filterer = &ThundraSpanFilterer{filters}
+	listenerConstructor, ok := SpanListenerConstructorMap[listenerName]
+	if !ok {
+		// TODO: Handle listener type does not exist
+		log.Println(listenerConstructor)
 	}
 
-	if SpanListenerConstructorMap[listenerStr] == nil {
-		log.Println("No listener found with name:", listenerStr)
-	} else {
-		listenerConstructor := SpanListenerConstructorMap[listenerStr]
-		listener = listenerConstructor(listenerConfig)
-	}
+	listener := listenerConstructor(listenerConfig)
 
-	return &FilteringSpanListener{Listener: listener, Filterer: filterer}
+	return &FilteringSpanListener{listener, filterer}
 }
