@@ -60,8 +60,8 @@ func (l *LatencyInjectorSpanListener) addInfoTags(span *spanImpl, injectedDelay 
 func NewLatencyInjectorSpanListener(config map[string]interface{}) ThundraSpanListener {
 	spanListener := &LatencyInjectorSpanListener{Delay: defaultDelay, AddInfoTags: true}
 
-	if delay, ok := config["delay"].(int64); ok {
-		spanListener.Delay = delay
+	if delay, ok := config["delay"].(float64); ok {
+		spanListener.Delay = int64(delay)
 	}
 	if injectOnFinish, ok := config["injectOnFinish"].(bool); ok {
 		spanListener.InjectOnFinish = injectOnFinish

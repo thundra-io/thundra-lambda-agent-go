@@ -44,7 +44,6 @@ func NewFilteringSpanListener(config map[string]interface{}) ThundraSpanListener
 	log.Println(listenerConfig)
 	if !ok {
 		// TODO: Handle listener config type
-		log.Println(listenerConfig)
 	}
 
 	all, ok := config["all"].(bool)
@@ -67,7 +66,6 @@ func NewFilteringSpanListener(config map[string]interface{}) ThundraSpanListener
 	listenerConstructor, ok := SpanListenerConstructorMap[listenerName]
 	if !ok {
 		// TODO: Handle listener type does not exist
-		log.Println(listenerConstructor)
 	}
 
 	listener := listenerConstructor(listenerConfig)

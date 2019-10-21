@@ -87,8 +87,8 @@ func NewErrorInjectorSpanListener(config map[string]interface{}) ThundraSpanList
 	if injectOnFinish, ok := config["injectOnFinish"].(bool); ok {
 		spanListener.InjectOnFinish = injectOnFinish
 	}
-	if injectCountFreq, ok := config["injectCountFreq"].(int64); ok {
-		spanListener.InjectCountFreq = injectCountFreq
+	if injectCountFreq, ok := config["injectCountFreq"].(float64); ok {
+		spanListener.InjectCountFreq = int64(injectCountFreq)
 	}
 	if addInfoTags, ok := config["addInfoTags"].(bool); ok {
 		spanListener.AddInfoTags = addInfoTags

@@ -58,12 +58,22 @@ func TestFilters(t *testing.T) {
 }
 
 func TestTagsFromConfig(t *testing.T) {
-	config := map[string]string{
-		"listener":              "ErrorInjectorSpanListener",
-		"config.injectOnFinish": "true",
-		"filter1.className":     "AWS-SQS",
-		"filter1.domainName":    "Messaging",
-		"filter1.tag.test":      "3",
+	config := map[string]interface{}{
+		"listener": map[string]interface{}{
+			"type": "ErrorInjectorSpanListener",
+			"config": map[string]interface{}{
+				"injectOnFinish": true,
+			},
+		},
+		"filters": []interface{}{
+			map[string]interface{}{
+				"className":  "AWS-SQS",
+				"domainName": "Messaging",
+				"tags": map[string]interface{}{
+					"test": 3,
+				},
+			},
+		},
 	}
 
 	fsl := NewFilteringSpanListener(config).(*FilteringSpanListener)
@@ -87,15 +97,27 @@ func TestTagsFromConfig(t *testing.T) {
 }
 
 func TestNewFilteringListenerFromConfig(t *testing.T) {
-	config := map[string]string{
-		"listener":               "ErrorInjectorSpanListener",
-		"config.errorMessage":    "You have a very funny name!",
-		"config.injectOnFinish":  "true",
-		"config.injectCountFreq": "3",
-		"filter1.className":      "AWS-SQS",
-		"filter1.domainName":     "Messaging",
-		"filter2.className":      "HTTP",
-		"filter2.tag.http.host":  "foo.com",
+	config := map[string]interface{}{
+		"listener": map[string]interface{}{
+			"type": "ErrorInjectorSpanListener",
+			"config": map[string]interface{}{
+				"errorMessage":    "You have a very funny name!",
+				"injectOnFinish":  true,
+				"injectCountFreq": float64(3),
+			},
+		},
+		"filters": []interface{}{
+			map[string]interface{}{
+				"className":  "AWS-SQS",
+				"domainName": "Messaging",
+			},
+			map[string]interface{}{
+				"className": "HTTP",
+				"tags": map[string]interface{}{
+					"http.host": "foo.com",
+				},
+			},
+		},
 	}
 
 	fsl := NewFilteringSpanListener(config).(*FilteringSpanListener)
@@ -112,5 +134,4 @@ func TestNewFilteringListenerFromConfig(t *testing.T) {
 
 	assert.ElementsMatch(t, []string{"AWS-SQS", "HTTP"}, []string{f1.(*ThundraSpanFilter).ClassName, f2.(*ThundraSpanFilter).ClassName})
 	assert.ElementsMatch(t, []interface{}{"foo.com", nil}, []interface{}{f1.(*ThundraSpanFilter).Tags["http.host"], f2.(*ThundraSpanFilter).Tags["http.host"]})
-
 }
