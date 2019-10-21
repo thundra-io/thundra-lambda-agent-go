@@ -27,6 +27,24 @@ type ThundraSpanFilter struct {
 	Tags          ot.Tags
 }
 
+type CompositeSpanFilter struct {
+	spanFilters []SpanFilter
+	all         bool
+	composite   bool
+}
+
+func (f *CompositeSpanFilter) Accept(span *spanImpl) bool {
+	res := f.all
+	for _, sf := range f.spanFilters {
+		if f.all {
+			res = res && sf.Accept(span)
+		} else {
+			res = res || sf.Accept(span)
+		}
+	}
+	return res
+}
+
 func (t *ThundraSpanFilterer) Accept(span *spanImpl) bool {
 	res := t.all
 	for _, sf := range t.spanFilters {

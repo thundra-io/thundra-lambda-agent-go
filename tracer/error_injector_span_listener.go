@@ -1,7 +1,6 @@
 package tracer
 
 import (
-	"log"
 	"reflect"
 	"sync/atomic"
 

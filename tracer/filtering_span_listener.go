@@ -54,11 +54,8 @@ func NewFilteringSpanListener(config map[string]interface{}) ThundraSpanListener
 
 	filterer := &ThundraSpanFilterer{spanFilters: []SpanFilter{}, all: all}
 
-	filterConfigs := config["filters"].([]interface{})
-	for _, filterConfig := range filterConfigs {
-		if filterConfig, ok := filterConfig.(map[string]interface{}); ok {
-			filterer.AddFilter(NewThundraSpanFilter(filterConfig))
-		}
+	if filterConfigs, ok := config["filters"].([]interface{}); ok {
+		filterer.spanFilters = crateFiltersFromConfig(filterConfigs)
 	}
 
 	listenerName, ok := listenerDef["type"].(string)
@@ -76,4 +73,34 @@ func NewFilteringSpanListener(config map[string]interface{}) ThundraSpanListener
 	listener := listenerConstructor(listenerConfig)
 
 	return &FilteringSpanListener{listener, filterer}
+}
+
+func crateFiltersFromConfig(filterConfigs []interface{}) []SpanFilter {
+	filters := []SpanFilter{}
+	for _, filterConfig := range filterConfigs {
+		if filterConfig, ok := filterConfig.(map[string]interface{}); ok {
+			if composite, ok := filterConfig["composite"].(bool); ok && composite {
+				all, ok := filterConfig["all"].(bool)
+				if !ok {
+					// TODO: Handle all value is not bool
+				}
+
+				cf := &CompositeSpanFilter{
+					spanFilters: []SpanFilter{},
+					all:         all,
+					composite:   true,
+				}
+
+				if compositeFilterConfigs, ok := filterConfig["filters"].([]interface{}); ok {
+					cf.spanFilters = crateFiltersFromConfig(compositeFilterConfigs)
+				}
+
+				filters = append(filters, cf)
+			} else {
+				filters = append(filters, NewThundraSpanFilter(filterConfig))
+			}
+		}
+	}
+
+	return filters
 }
