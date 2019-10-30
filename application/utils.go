@@ -88,18 +88,28 @@ func GetApplicationID(ctx context.Context) string {
 
 	if len(FunctionRegion) > 0 {
 		region = FunctionRegion
-	} else {
+	} else if len(getFunctionRegion()) > 0 {
 		region = getFunctionRegion()
+	} else {
+		region = "local"
 	}
 
 	if len(FunctionName) > 0 {
 		functionName = FunctionName
-	} else {
+	} else if len(getFunctionName()) > 0 {
 		functionName = getFunctionName()
+	} else {
+		functionName = "lambda-app"
 	}
 
 	if config.SAMLocalDebugging {
 		accountNo = "sam_local"
+	} else if len(accountNo) == 0 {
+		if len(config.APIKey) > 0 {
+			accountNo = config.APIKey
+		} else {
+			accountNo = "guest"
+		}
 	}
 
 	return fmt.Sprintf("aws:lambda:%s:%s:%s", region, accountNo, functionName)
