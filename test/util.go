@@ -12,7 +12,7 @@ import (
 const (
 	ApplicationName       = "TestFunctionName"
 	FunctionName          = "TestFunctionName"
-	ApplicationID         = "aws:lambda:TestRegion::TestFunctionName"
+	ApplicationID         = "aws:lambda:TestRegion:guest:TestFunctionName"
 	LogStreamName         = "2018/01/01/[$LATEST]1234567890"
 	ApplicationInstanceID = "1234567890"
 	FunctionVersion       = "$Version"
