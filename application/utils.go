@@ -2,15 +2,18 @@ package application
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"strings"
 
+	"github.com/thundra-io/thundra-lambda-agent-go/config"
 	"github.com/thundra-io/thundra-lambda-agent-go/constants"
 
 	"github.com/aws/aws-lambda-go/lambdacontext"
 )
 
 var ApplicationName string
+var ApplicationInstanceID string
 var FunctionName string
 var ApplicationID string
 var ApplicationDomainName string
@@ -27,7 +30,7 @@ var ApplicationTags map[string]interface{}
 
 func init() {
 	ApplicationName = getApplicationName()
-	ApplicationID = getAppID()
+	ApplicationInstanceID = getApplicationInstanceID()
 	ApplicationDomainName = getApplicationDomainName()
 	ApplicationClassName = getApplicationClassName()
 	ApplicationVersion = getApplicationVersion()
@@ -72,17 +75,48 @@ func getFunctionName() string {
 	return lambdacontext.FunctionName
 }
 
-// getAppID returns application id
-func getAppID() string {
+func GetApplicationID(ctx context.Context) string {
 	v := os.Getenv(constants.ApplicationIDProp)
 	if v != "" {
 		return v
 	}
-	return getAppIDFromStreamName(lambdacontext.LogStreamName)
+
+	arn := GetInvokedFunctionArn(ctx)
+	accountNo := GetAwsAccountNo(arn)
+	region := ""
+	functionName := ""
+
+	if len(FunctionRegion) > 0 {
+		region = FunctionRegion
+	} else if len(getFunctionRegion()) > 0 {
+		region = getFunctionRegion()
+	} else {
+		region = "local"
+	}
+
+	if len(FunctionName) > 0 {
+		functionName = FunctionName
+	} else if len(getFunctionName()) > 0 {
+		functionName = getFunctionName()
+	} else {
+		functionName = "lambda-app"
+	}
+
+	if config.SAMLocalDebugging {
+		accountNo = "sam_local"
+	} else if len(accountNo) == 0 {
+		if len(config.APIKey) > 0 {
+			accountNo = config.APIKey
+		} else {
+			accountNo = "guest"
+		}
+	}
+
+	return fmt.Sprintf("aws:lambda:%s:%s:%s", region, accountNo, functionName)
 }
 
-// getAppIDFromStreamName returns application id. AppId starts after ']' in logstreamname
-func getAppIDFromStreamName(logStreamName string) string {
+func getApplicationInstanceID() string {
+	logStreamName := getLogStreamName()
 	s := strings.Split(logStreamName, "]")
 	if len(s) > 1 {
 		return s[1]

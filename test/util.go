@@ -10,14 +10,16 @@ import (
 )
 
 const (
-	ApplicationName  = "TestFunctionName"
-	LogStreamName    = "2018/01/01/[$LATEST]1234567890"
-	AppID            = "1234567890"
-	FunctionVersion  = "$Version"
-	ApplicationStage = "TestStage"
-	Region           = "TestRegion"
-	MemoryLimit      = 512
-	LogGroupName     = "TestLogGroupName"
+	ApplicationName       = "TestFunctionName"
+	FunctionName          = "TestFunctionName"
+	ApplicationID         = "aws:lambda:TestRegion:guest:TestFunctionName"
+	LogStreamName         = "2018/01/01/[$LATEST]1234567890"
+	ApplicationInstanceID = "1234567890"
+	FunctionVersion       = "$Version"
+	ApplicationStage      = "TestStage"
+	Region                = "TestRegion"
+	MemoryLimit           = 512
+	LogGroupName          = "TestLogGroupName"
 )
 
 //MockReporter is used in tests for mock reporter
@@ -63,7 +65,9 @@ func NewMockReporter() *MockReporter {
 func PrepareEnvironment() {
 	lambdacontext.LogStreamName = LogStreamName
 	application.ApplicationName = ApplicationName
-	application.ApplicationID = AppID
+	application.FunctionName = FunctionName
+	application.ApplicationInstanceID = ApplicationInstanceID
+	application.ApplicationID = ApplicationID
 	application.ApplicationVersion = FunctionVersion
 	application.ApplicationStage = ApplicationStage
 	application.FunctionRegion = Region
@@ -74,7 +78,9 @@ func PrepareEnvironment() {
 
 func CleanEnvironment() {
 	application.ApplicationName = ""
+	application.FunctionName = ""
 	application.ApplicationID = ""
+	application.ApplicationInstanceID = ""
 	application.ApplicationVersion = ""
 	application.ApplicationStage = ""
 	application.FunctionRegion = ""
