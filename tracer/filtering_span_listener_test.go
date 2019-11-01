@@ -23,14 +23,16 @@ func TestCreation(t *testing.T) {
 
 func TestFilters(t *testing.T) {
 
-	f1 := ThundraSpanFilter{DomainName: "testDomain", ClassName: "testClass"}
+	f1 := ThundraSpanFilter{DomainName: "testDomain"}
+	f2 := ThundraSpanFilter{ClassName: "testClass"}
 	filterer := ThundraSpanFilterer{}
 	filterer.AddFilter(&f1)
+	filterer.AddFilter(&f2)
 	listener := ErrorInjectorSpanListener{}
 	fsl := FilteringSpanListener{Listener: &listener, Filterer: &filterer}
 
 	span := &spanImpl{}
-	span.raw.DomainName = "test"
+	span.raw.DomainName = "testDomain"
 	errorOccured := false
 	func() {
 		defer func() {
@@ -44,7 +46,8 @@ func TestFilters(t *testing.T) {
 	assert.True(t, errorOccured)
 
 	errorOccured = false
-	span.raw.DomainName = "test2"
+	filterer.all = true
+	span.raw.ClassName = "testClass_2"
 	func() {
 		defer func() {
 			if recover() != nil {
@@ -149,14 +152,14 @@ func TestNewFilteringListenerFromConfigWithCompositeFilter(t *testing.T) {
 		"filters": []interface{}{
 			map[string]interface{}{
 				"composite": true,
-				"all": true,
+				"all":       true,
 				"filters": []interface{}{
 					map[string]interface{}{
 						"className":  "AWS-SQS",
 						"domainName": "Messaging",
 					},
 					map[string]interface{}{
-						"composite":  true,
+						"composite": true,
 						"filters": []interface{}{
 							map[string]interface{}{
 								"className": "HTTP",
@@ -185,18 +188,18 @@ func TestNewFilteringListenerFromConfigWithCompositeFilter(t *testing.T) {
 	assert.True(t, f1.composite)
 	assert.True(t, f1.all)
 	assert.Equal(t, 2, len(f1.spanFilters))
-	
+
 	f2 := f1.spanFilters[0].(*ThundraSpanFilter)
 	f3 := f1.spanFilters[1].(*CompositeSpanFilter)
 	f4 := f1.spanFilters[1].(*CompositeSpanFilter).spanFilters[0].(*ThundraSpanFilter)
 
 	assert.Equal(t, "AWS-SQS", f2.ClassName)
 	assert.Equal(t, "Messaging", f2.DomainName)
-	
+
 	assert.False(t, f3.all)
 	assert.True(t, f3.composite)
 	assert.Equal(t, 1, len(f3.spanFilters))
 
 	assert.Equal(t, "HTTP", f4.ClassName)
-	assert.EqualValues(t, map[string]interface{}{"http.host": "foo.com" }, f4.Tags)
+	assert.EqualValues(t, map[string]interface{}{"http.host": "foo.com"}, f4.Tags)
 }
