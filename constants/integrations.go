@@ -2,6 +2,11 @@ package constants
 
 const AWSServiceRequest = "AWSServiceRequest"
 
+var SecurityTags = map[string]string{
+	"BLOCKED":  "security.blocked",
+	"VIOLATED": "security.violated",
+}
+
 var HTTPTags = map[string]string{
 	"METHOD":       "http.method",
 	"URL":          "http.url",
