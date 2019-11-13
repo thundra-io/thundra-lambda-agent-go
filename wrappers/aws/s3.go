@@ -41,7 +41,7 @@ func (i *s3Integration) beforeCall(r *request.Request, span *tracer.RawSpan) {
 	span.DomainName = constants.DomainNames["STORAGE"]
 
 	operationName := r.Operation.Name
-	operationType := constants.S3RequestTypes[operationName]
+	operationType := getOperationType(operationName, constants.ClassNames["S3"])
 
 	s3Info := i.getS3Info(r)
 

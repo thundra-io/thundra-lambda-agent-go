@@ -17,61 +17,6 @@ var HTTPTags = map[string]string{
 	"BODY":         "http.body",
 }
 
-var DynamoDBRequestTypes = map[string]string{
-	"BatchGetItem":      "READ",
-	"BatchWriteItem":    "WRITE",
-	"CreateTable":       "WRITE",
-	"CreateGlobalTable": "WRITE",
-	"DeleteItem":        "DELETE",
-	"DeleteTable":       "DELETE",
-	"GetItem":           "READ",
-	"PutItem":           "WRITE",
-	"Query":             "READ",
-	"Scan":              "READ",
-	"UpdateItem":        "WRITE",
-}
-
-var SQSRequestTypes = map[string]string{
-	"ReceiveMessage":     "READ",
-	"SendMessage":        "WRITE",
-	"SendMessageBatch":   "WRITE",
-	"DeleteMessage":      "DELETE",
-	"DeleteMessageBatch": "DELETE",
-}
-
-var SNSRequestTypes = map[string]string{
-	"Publish": "WRITE",
-}
-
-var KinesisRequestTypes = map[string]string{
-	"GetRecords": "READ",
-	"PutRecords": "WRITE",
-	"PutRecord":  "WRITE",
-}
-
-var FirehoseRequestTypes = map[string]string{
-	"PutRecordBatch": "WRITE",
-	"PutRecord":      "WRITE",
-}
-
-var S3RequestTypes = map[string]string{
-	"DeleteBucket":  "DELETE",
-	"CreateBucket":  "WRITE",
-	"copyObject":    "WRITE",
-	"DeleteObject":  "DELETE",
-	"deleteObjects": "DELETE",
-	"GetObject":     "READ",
-	"GetObjectAcl":  "READ",
-	"ListBucket":    "READ",
-	"PutObject":     "WRITE",
-	"PutObjectAcl":  "WRITE",
-}
-
-var LambdaRequestTypes = map[string]string{
-	"InvokeAsync": "CALL",
-	"Invoke":      "CALL",
-}
-
 var SpanTags = map[string]string{
 	"OPERATION_TYPE":          "operation.type",
 	"TRIGGER_DOMAIN_NAME":     "trigger.domainName",
@@ -146,28 +91,6 @@ var AwsLambdaTags = map[string]string{
 	"FUNCTION_QUALIFIER": "aws.lambda.qualifier",
 	"INVOCATION_TYPE":    "aws.lambda.invocation.type",
 	"INVOCATION_PAYLOAD": "aws.lambda.invocation.payload",
-}
-
-var AwsAthenaOperationTypes = map[string]string{
-	"BatchGetNamedQuery":     "READ",
-	"BatchGetQueryExecution": "READ",
-	"CreateNamedQuery":       "WRITE",
-	"CreateWorkGroup":        "WRITE",
-	"DeleteNamedQuery":       "DELETE",
-	"DeleteWorkGroup":        "DELETE",
-	"GetNamedQuery":          "READ",
-	"GetQueryExecution":      "READ",
-	"GetQueryResults":        "READ",
-	"GetWorkGroup":           "READ",
-	"ListNamedQueries":       "READ",
-	"ListQueryExecutions":    "READ",
-	"ListTagsForResource":    "READ",
-	"ListWorkGroups":         "READ",
-	"StartQueryExecution":    "EXECUTE",
-	"StopQueryExecution":     "EXECUTE",
-	"TagResource":            "WRITE",
-	"UntagResource":          "DELETE",
-	"UpdateWorkGroup":        "WRITE",
 }
 
 var RedisCommandTypes = map[string]string{
