@@ -5,11 +5,11 @@ import (
 	"net/http"
 	"testing"
 
+	elasticv6 "github.com/olivere/elastic"
 	"github.com/stretchr/testify/assert"
 	"github.com/thundra-io/thundra-lambda-agent-go/config"
 	"github.com/thundra-io/thundra-lambda-agent-go/constants"
 	"github.com/thundra-io/thundra-lambda-agent-go/trace"
-	elasticv6 "gopkg.in/olivere/elastic.v6"
 )
 
 func getClient() *elasticv6.Client {
