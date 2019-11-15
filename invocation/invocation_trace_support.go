@@ -63,10 +63,12 @@ func (r *Resource) merge(rawSpan *tracer.RawSpan) {
 		}
 	}
 
-	if rawSpan.GetTag(constants.SecurityTags["BLOCKED"]).(bool) {
+	if rawSpan.GetTag(constants.SecurityTags["BLOCKED"]) != nil &&
+		rawSpan.GetTag(constants.SecurityTags["BLOCKED"]).(bool) {
 		r.ResourceBlockedCount++
 	}
-	if rawSpan.GetTag(constants.SecurityTags["VIOLATED"]).(bool) {
+	if rawSpan.GetTag(constants.SecurityTags["VIOLATED"]) != nil &&
+		rawSpan.GetTag(constants.SecurityTags["VIOLATED"]).(bool) {
 		r.ResourceViolatedCount++
 	}
 }
@@ -94,12 +96,14 @@ func NewResource(rawSpan *tracer.RawSpan) (*Resource, error) {
 	}
 
 	var blockedCount int
-	if blockedCount = 0; rawSpan.GetTag(constants.SecurityTags["BLOCKED"]).(bool) {
+	if blockedCount = 0; rawSpan.GetTag(constants.SecurityTags["BLOCKED"]) != nil &&
+		rawSpan.GetTag(constants.SecurityTags["BLOCKED"]).(bool) {
 		blockedCount = 1
 	}
 
 	var violatedCount int
-	if violatedCount = 0; rawSpan.GetTag(constants.SecurityTags["VIOLATED"]).(bool) {
+	if violatedCount = 0; rawSpan.GetTag(constants.SecurityTags["VIOLATED"]) != nil &&
+		rawSpan.GetTag(constants.SecurityTags["VIOLATED"]).(bool) {
 		violatedCount = 1
 	}
 
