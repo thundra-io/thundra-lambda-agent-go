@@ -20,6 +20,7 @@ var awsOperationTypesExclusions = map[string]map[string]string{
 		"GetObjectTagging":                 "READ",
 		"GetObject":                        "READ",
 		"GetObjectAcl":                     "READ",
+		"SelectObjectContent":              "READ",
 		"DeleteObjectTagging":              "TAGGING",
 		"DeleteObjectVersionTagging":       "TAGGING",
 		"PutBucketTagging":                 "TAGGING",
