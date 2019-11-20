@@ -153,6 +153,16 @@ func getResources(rootSpanID string) []Resource {
 				resources[resourceID] = resource
 			}
 		}
+
+		if s.GetTag(constants.SecurityTags["BLOCKED"]) != nil &&
+			s.GetTag(constants.SecurityTags["BLOCKED"]).(bool) {
+			SetAgentTag(constants.SecurityTags["BLOCKED"], true)
+		}
+
+		if s.GetTag(constants.SecurityTags["VIOLATED"]) != nil &&
+			s.GetTag(constants.SecurityTags["VIOLATED"]).(bool) {
+			SetAgentTag(constants.SecurityTags["VIOLATED"], true)
+		}
 	}
 
 	values := make([]Resource, 0, len(resources))
