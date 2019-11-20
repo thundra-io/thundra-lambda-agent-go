@@ -173,7 +173,7 @@ func TestBlackListSpan(t *testing.T) {
 	s1.SetTag("topology.vertex", true)
 	s1.SetTag(constants.SpanTags["OPERATION_TYPE"], "POST")
 
-	s2 := tracer.StartSpan("foo", ext.ClassName("HTTP"), ext.OperationType("POST"))
+	s2 := tracer.StartSpan("bar", ext.ClassName("HTTP"), ext.OperationType("POST"))
 	s2.SetTag("http.host", "host2.com")
 	s2.SetTag("topology.vertex", true)
 	s2.SetTag(constants.SpanTags["OPERATION_TYPE"], "POST")
