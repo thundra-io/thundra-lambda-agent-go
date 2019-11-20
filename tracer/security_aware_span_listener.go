@@ -1,9 +1,9 @@
 package tracer
 
 import (
+	"encoding/json"
 	"errors"
-	"reflect"
-
+	"fmt"
 	"github.com/thundra-io/thundra-lambda-agent-go/constants"
 	"github.com/thundra-io/thundra-lambda-agent-go/utils"
 )
@@ -64,48 +64,71 @@ func (s *SecurityAwareSpanListener) isExternalOperation(span *spanImpl) bool {
 }
 
 type Operation struct {
-	className string
-	tags      map[string]interface{}
+	ClassName string              `json:"className"`
+	Tags      map[string][]string `json:"tags"`
 }
 
 func (o *Operation) matches(span *spanImpl) bool {
 	var matched = true
 
-	if o.className != "" {
-		matched = o.className == span.raw.ClassName
+	if o.ClassName == "" {
+		matched = o.ClassName == "*" || o.ClassName == span.raw.ClassName
 	}
 
-	if matched && len(o.tags) > 0 {
-		for key, value := range o.tags {
+	if matched && len(o.Tags) > 0 {
+		for key, value := range o.Tags {
 			if span.raw.GetTag(key) != nil {
-
-				rt := reflect.TypeOf(value)
-				if rt.Kind() == reflect.Slice || rt.Kind() == reflect.Array {
-					switch value.(type) {
-					case []string:
-						matched = utils.StringContains(value.([]string), span.raw.GetTag(key).(string))
-						break
-					case []int64:
-						matched = utils.Int64Contains(value.([]int64), span.raw.GetTag(key).(int64))
-						break
-					case []float64:
-						matched = utils.Float64Contains(value.([]float64), span.raw.GetTag(key).(float64))
-						break
-					case []interface{}:
-						matched = utils.Contains(value.([]interface{}), span.raw.GetTag(key))
-						break
-					default:
-						panic("unexpected value type")
-
-					}
-				} else if (rt.Kind() != reflect.Slice || rt.Kind() != reflect.Array) &&
-					span.raw.GetTag(key) != value {
-					matched = false
-					break
+				if utils.StringContains(value, "*") {
+					continue
 				}
+				matched = utils.StringContains(value, span.raw.GetTag(key).(string))
 			}
 		}
 	}
 
 	return matched
+}
+
+func NewSecurityAwareSpanListener(config map[string]interface{}) ThundraSpanListener {
+	spanListener := &SecurityAwareSpanListener{}
+
+	if block, ok := config["block"].(bool); ok {
+		spanListener.block = block
+	}
+
+	if whitelist, ok := config["whitelist"].([]interface{}); ok {
+		var wl []Operation
+		for _, value := range whitelist {
+			op := mapToOperation(value)
+			wl = append(wl, op)
+		}
+
+		spanListener.whitelist = wl
+	}
+
+	if blacklist, ok := config["blacklist"].([]interface{}); ok {
+		var bl []Operation
+		for _, value := range blacklist {
+			op := mapToOperation(value)
+			bl = append(bl, op)
+		}
+		spanListener.blacklist = bl
+	}
+
+	return spanListener
+}
+
+func mapToOperation(opMap interface{}) Operation {
+	jsonBody, err := json.Marshal(opMap)
+	if err != nil {
+		// do error check
+		fmt.Println(err)
+	}
+	fmt.Println(string(jsonBody))
+	op := Operation{}
+	if err := json.Unmarshal(jsonBody, &op); err != nil {
+		fmt.Println(err)
+	}
+
+	return op
 }

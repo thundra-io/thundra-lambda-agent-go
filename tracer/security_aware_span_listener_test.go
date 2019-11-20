@@ -1,8 +1,9 @@
 package tracer
 
 import (
-	"github.com/thundra-io/thundra-lambda-agent-go/constants"
 	"testing"
+
+	"github.com/thundra-io/thundra-lambda-agent-go/constants"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/thundra-io/thundra-lambda-agent-go/ext"
@@ -13,33 +14,33 @@ func TestConfig(t *testing.T) {
 		block: true,
 		whitelist: []Operation{
 			{
-				className: "HTTP",
-				tags: map[string]interface{}{
-					"http.host":      []string{"www.google.com", "www.google.com"},
-					"operation.type": []string{"GET"},
+				ClassName: "HTTP",
+				Tags: map[string][]string{
+					"http.host":      {"www.google.com", "www.google.com"},
+					"operation.type": {"GET"},
 				},
 			},
 			{
-				className: "AWS-DynamoDB",
-				tags: map[string]interface{}{
-					"aws.dynamodb.table.name": []string{"Users"},
-					"operation.type":          []string{"READ"},
+				ClassName: "AWS-DynamoDB",
+				Tags: map[string][]string{
+					"aws.dynamodb.table.name": {"Users"},
+					"operation.type":          {"READ"},
 				},
 			},
 		},
 		blacklist: []Operation{
 			{
-				className: "HTTP",
-				tags: map[string]interface{}{
-					"http.host":      []string{"www.foo.com", "www.foo.com"},
-					"operation.type": []string{"POST"},
+				ClassName: "HTTP",
+				Tags: map[string][]string{
+					"http.host":      {"www.foo.com", "www.foo.com"},
+					"operation.type": {"POST"},
 				},
 			},
 			{
-				className: "AWS-SNS",
-				tags: map[string]interface{}{
-					"aws.sns.topic.name": []string{"foo-topic"},
-					"operation.type":     []string{"WRITE"},
+				ClassName: "AWS-SNS",
+				Tags: map[string][]string{
+					"aws.sns.topic.name": {"foo-topic"},
+					"operation.type":     {"WRITE"},
 				},
 			},
 		},
@@ -49,15 +50,13 @@ func TestConfig(t *testing.T) {
 	assert.Equal(t, 2, len(sasl.whitelist))
 	assert.Equal(t, 2, len(sasl.blacklist))
 
-	assert.Equal(t, "HTTP", sasl.whitelist[0].className)
-	assert.Equal(t, []string{"www.google.com", "www.google.com"}, sasl.whitelist[0].tags["http.host"])
-	assert.Equal(t, []string{"GET"}, sasl.whitelist[0].tags["operation.type"])
-	assert.Equal(t, "www.google.com", sasl.whitelist[0].tags["http.host"].([]string)[0])
+	assert.Equal(t, "HTTP", sasl.whitelist[0].ClassName)
+	assert.Equal(t, []string{"www.google.com", "www.google.com"}, sasl.whitelist[0].Tags["http.host"])
+	assert.Equal(t, []string{"GET"}, sasl.whitelist[0].Tags["operation.type"])
 
-	assert.Equal(t, "AWS-SNS", sasl.blacklist[1].className)
-	assert.Equal(t, []string{"foo-topic"}, sasl.blacklist[1].tags["aws.sns.topic.name"])
-	assert.Equal(t, []string{"WRITE"}, sasl.blacklist[1].tags["operation.type"])
-	assert.Equal(t, "foo-topic", sasl.blacklist[1].tags["aws.sns.topic.name"].([]string)[0])
+	assert.Equal(t, "AWS-SNS", sasl.blacklist[1].ClassName)
+	assert.Equal(t, []string{"foo-topic"}, sasl.blacklist[1].Tags["aws.sns.topic.name"])
+	assert.Equal(t, []string{"WRITE"}, sasl.blacklist[1].Tags["operation.type"])
 }
 
 func TestWhiteListSpan(t *testing.T) {
@@ -65,15 +64,15 @@ func TestWhiteListSpan(t *testing.T) {
 		block: true,
 		whitelist: []Operation{
 			{
-				className: "HTTP",
-				tags: map[string]interface{}{
+				ClassName: "HTTP",
+				Tags: map[string][]string{
 					"http.host":      []string{"www.google.com", "www.facebook.com"},
 					"operation.type": []string{"GET"},
 				},
 			},
 			{
-				className: "AWS-DynamoDB",
-				tags: map[string]interface{}{
+				ClassName: "AWS-DynamoDB",
+				Tags: map[string][]string{
 					"aws.dynamodb.table.name": []string{"Users"},
 					"operation.type":          []string{"READ"},
 				},
@@ -130,8 +129,9 @@ func TestWhiteListSpan(t *testing.T) {
 	}()
 
 	s5 := tracer.StartSpan("foo", ext.ClassName("HTTP"), ext.OperationType("POST"))
-	s5.SetTag("http.host", "www.google.com")
 	s5.SetTag("topology.vertex", true)
+	s5.SetTag("http.host", "www.google.com")
+	s4.SetTag(constants.SpanTags["OPERATION_TYPE"], "POST")
 
 	var errorPanicked5 error
 	func() {
@@ -143,4 +143,131 @@ func TestWhiteListSpan(t *testing.T) {
 		}()
 		sasl.OnSpanStarted(s5.(*spanImpl))
 	}()
+}
+
+func TestBlackListSpan(t *testing.T) {
+	sasl := SecurityAwareSpanListener{
+		block: true,
+		blacklist: []Operation{
+			{
+				ClassName: "HTTP",
+				Tags: map[string][]string{
+					"http.host":      []string{"host1.com", "host2.com"},
+					"operation.type": []string{"GET"},
+				},
+			},
+			{
+				ClassName: "AWS-DynamoDB",
+				Tags: map[string][]string{
+					"aws.dynamodb.table.name": []string{"users"},
+					"operation.type":          []string{"READ"},
+				},
+			},
+		},
+	}
+
+	tracer, _ := newTracerAndRecorder()
+
+	s1 := tracer.StartSpan("foo", ext.ClassName("HTTP"), ext.OperationType("POST"))
+	s1.SetTag("http.host", "host1.com")
+	s1.SetTag("topology.vertex", true)
+	s1.SetTag(constants.SpanTags["OPERATION_TYPE"], "POST")
+
+	s2 := tracer.StartSpan("foo", ext.ClassName("HTTP"), ext.OperationType("POST"))
+	s2.SetTag("http.host", "host2.com")
+	s2.SetTag("topology.vertex", true)
+	s2.SetTag(constants.SpanTags["OPERATION_TYPE"], "POST")
+
+	sasl.OnSpanStarted(s1.(*spanImpl))
+	sasl.OnSpanStarted(s2.(*spanImpl))
+
+	assert.Equal(t, nil, s1.(*spanImpl).raw.GetTag(constants.SecurityTags["BLOCKED"]))
+	assert.Equal(t, nil, s1.(*spanImpl).raw.GetTag(constants.SecurityTags["VIOLATED"]))
+	assert.Equal(t, nil, s2.(*spanImpl).raw.GetTag(constants.SecurityTags["BLOCKED"]))
+	assert.Equal(t, nil, s2.(*spanImpl).raw.GetTag(constants.SecurityTags["VIOLATED"]))
+
+	s3 := tracer.StartSpan("foo", ext.ClassName("HTTP"), ext.OperationType("GET"))
+	s3.SetTag("http.host", "host1.com")
+	s3.SetTag("topology.vertex", true)
+	s3.SetTag(constants.SpanTags["OPERATION_TYPE"], "GET")
+
+	var errorPanicked3 error
+	func() {
+		defer func() {
+			errorPanicked3 = recover().(error)
+			assert.Equal(t, "Operation was blocked due to security configuration", errorPanicked3.Error())
+			assert.Equal(t, true, s3.(*spanImpl).raw.GetTag(constants.SecurityTags["BLOCKED"]))
+			assert.Equal(t, true, s3.(*spanImpl).raw.GetTag(constants.SecurityTags["VIOLATED"]))
+		}()
+		sasl.OnSpanStarted(s3.(*spanImpl))
+	}()
+
+	s4 := tracer.StartSpan("foo", ext.ClassName("AWS-DynamoDB"), ext.OperationType("READ"))
+	s4.SetTag("topology.vertex", true)
+	s4.SetTag("aws.dynamodb.table.name", "users")
+	s4.SetTag(constants.SpanTags["OPERATION_TYPE"], "READ")
+
+	var errorPanicked4 error
+	func() {
+		defer func() {
+			errorPanicked4 = recover().(error)
+			assert.Equal(t, "Operation was blocked due to security configuration", errorPanicked4.Error())
+			assert.Equal(t, true, s4.(*spanImpl).raw.GetTag(constants.SecurityTags["BLOCKED"]))
+			assert.Equal(t, true, s4.(*spanImpl).raw.GetTag(constants.SecurityTags["VIOLATED"]))
+		}()
+		sasl.OnSpanStarted(s4.(*spanImpl))
+	}()
+
+	s5 := tracer.StartSpan("foo", ext.ClassName("AWS-DynamoDB"), ext.OperationType("WRITE"))
+	s5.SetTag("topology.vertex", true)
+	s5.SetTag("aws.dynamodb.table.name", "users")
+	s5.SetTag(constants.SpanTags["OPERATION_TYPE"], "WRITE")
+
+	assert.Equal(t, nil, s1.(*spanImpl).raw.GetTag(constants.SecurityTags["BLOCKED"]))
+	assert.Equal(t, nil, s1.(*spanImpl).raw.GetTag(constants.SecurityTags["VIOLATED"]))
+}
+
+func TestViolateBlacklistSpan(t *testing.T) {
+	sasl := SecurityAwareSpanListener{
+		block: false,
+		blacklist: []Operation{
+			{
+				ClassName: "HTTP",
+				Tags: map[string][]string{
+					"http.host":      {"host1.com", "host2.com"},
+					"operation.type": {"GET"},
+				},
+			},
+			{
+				ClassName: "AWS-DynamoDB",
+				Tags: map[string][]string{
+					"aws.dynamodb.table.name": {"users"},
+					"operation.type":          {"READ"},
+				},
+			},
+		},
+	}
+
+	tracer, _ := newTracerAndRecorder()
+
+	s1 := tracer.StartSpan("foo", ext.ClassName("HTTP"), ext.OperationType("GET"))
+	s1.SetTag("http.host", "host1.com")
+	s1.SetTag("topology.vertex", true)
+	s1.SetTag(constants.SpanTags["OPERATION_TYPE"], "GET")
+
+	sasl.OnSpanStarted(s1.(*spanImpl))
+
+	assert.Equal(t, nil, s1.(*spanImpl).raw.GetTag(constants.SecurityTags["BLOCKED"]))
+	assert.Equal(t, true, s1.(*spanImpl).raw.GetTag(constants.SecurityTags["VIOLATED"]))
+
+	s2 := tracer.StartSpan("foo", ext.ClassName("AWS-DynamoDB"), ext.OperationType("READ"))
+	s2.SetTag("topology.vertex", true)
+	s2.SetTag("aws.dynamodb.table.name", "users")
+	s2.SetTag(constants.SpanTags["OPERATION_TYPE"], "READ")
+
+	sasl.OnSpanStarted(s2.(*spanImpl))
+
+	assert.Equal(t, nil, s2.(*spanImpl).raw.GetTag(constants.SecurityTags["BLOCKED"]))
+	assert.Equal(t, true, s2.(*spanImpl).raw.GetTag(constants.SecurityTags["VIOLATED"]))
+
 }
