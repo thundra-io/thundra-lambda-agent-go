@@ -71,7 +71,7 @@ type Operation struct {
 func (o *Operation) matches(span *spanImpl) bool {
 	var matched = true
 
-	if o.ClassName == "" {
+	if o.ClassName != "" {
 		matched = o.ClassName == "*" || o.ClassName == span.raw.ClassName
 	}
 
