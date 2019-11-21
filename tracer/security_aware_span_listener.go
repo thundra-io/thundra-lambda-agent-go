@@ -81,7 +81,10 @@ func (o *Operation) matches(span *spanImpl) bool {
 				if utils.StringContains(value, "*") {
 					continue
 				}
-				matched = utils.StringContains(value, span.raw.GetTag(key).(string))
+				if !utils.StringContains(value, span.raw.GetTag(key).(string)) {
+					matched = false
+					break
+				}
 			}
 		}
 	}
@@ -121,13 +124,14 @@ func NewSecurityAwareSpanListener(config map[string]interface{}) ThundraSpanList
 func mapToOperation(opMap interface{}) Operation {
 	jsonBody, err := json.Marshal(opMap)
 	if err != nil {
-		// do error check
 		fmt.Println(err)
+		return Operation{}
 	}
 	fmt.Println(string(jsonBody))
 	op := Operation{}
 	if err := json.Unmarshal(jsonBody, &op); err != nil {
 		fmt.Println(err)
+		return op
 	}
 
 	return op
