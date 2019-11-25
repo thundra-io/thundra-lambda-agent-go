@@ -1,6 +1,7 @@
 package tracer
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/thundra-io/thundra-lambda-agent-go/constants"
@@ -270,4 +271,35 @@ func TestViolateBlacklistSpan(t *testing.T) {
 	assert.Equal(t, nil, s2.(*spanImpl).raw.GetTag(constants.SecurityTags["BLOCKED"]))
 	assert.Equal(t, true, s2.(*spanImpl).raw.GetTag(constants.SecurityTags["VIOLATED"]))
 
+}
+
+func TestWihtOperationName(t *testing.T) {
+	sasl := SecurityAwareSpanListener{
+		block: false,
+		blacklist: []Operation{
+			{
+				ClassName:     "ELASTICSEARCH",
+				OperationName: "testOpName",
+				Tags: map[string][]string{
+					"http.host":      {"host1.com", "host2.com"},
+					"operation.type": {"READ"},
+				},
+			},
+		},
+	}
+
+	tracer, _ := newTracerAndRecorder()
+
+	s1 := tracer.StartSpan("foo", ext.ClassName("ELASTICSEARCH"), ext.OperationType("READ"))
+	s1.SetOperationName("testOpName")
+	s1.SetTag("http.host", "host1.com")
+	s1.SetTag("topology.vertex", true)
+	s1.SetTag(constants.SpanTags["OPERATION_TYPE"], "READ")
+
+	sasl.OnSpanStarted(s1.(*spanImpl))
+
+	fmt.Println(s1)
+
+	assert.Equal(t, nil, s1.(*spanImpl).raw.GetTag(constants.SecurityTags["BLOCKED"]))
+	assert.Equal(t, true, s1.(*spanImpl).raw.GetTag(constants.SecurityTags["VIOLATED"]))
 }
