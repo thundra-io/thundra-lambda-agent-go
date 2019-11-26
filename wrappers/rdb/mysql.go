@@ -14,12 +14,23 @@ import (
 
 type mysqlIntegration struct{}
 
-func (i *mysqlIntegration) getOperationName(query string) string {
+func (i *mysqlIntegration) getOperationName(dsn string) string {
+	dbName := ""
+
+	cfg, err := mysql.ParseDSN(dsn)
+	if err == nil {
+		dbName = cfg.DBName
+	}
+	return dbName
+}
+
+func (i *mysqlIntegration) getDbQueryOperation(query string) string {
 	querySplit := strings.Split(query, " ")
 	operation := ""
 	if len(querySplit) > 0 {
 		operation = querySplit[0]
 	}
+
 	return operation
 }
 
@@ -27,7 +38,7 @@ func (i *mysqlIntegration) beforeCall(query string, span *tracer.RawSpan, dsn st
 	span.ClassName = constants.ClassNames["MYSQL"]
 	span.DomainName = constants.DomainNames["DB"]
 
-	operation := i.getOperationName(query)
+	operation := i.getDbQueryOperation(query)
 
 	dbName := ""
 	host := ""

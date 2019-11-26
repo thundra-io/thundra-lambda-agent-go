@@ -36,7 +36,7 @@ type StmtWrapper struct {
 type rdbIntegration interface {
 	beforeCall(query string, span *tracer.RawSpan, dsn string)
 	afterCall(query string, span *tracer.RawSpan, dsn string)
-	getOperationName(query string) string
+	getOperationName(dsn string) string
 }
 
 var emptyCtx = context.Background()
@@ -119,7 +119,7 @@ func (c *ConnWrapper) BeginTx(ctx context.Context, opts driver.TxOptions) (tx dr
 func (c *ConnWrapper) Exec(query string, args []driver.Value) (res driver.Result, err error) {
 	span, _ := opentracing.StartSpanFromContext(
 		emptyCtx,
-		c.integration.getOperationName(query),
+		c.integration.getOperationName(c.dsn),
 	)
 
 	defer span.Finish()
@@ -147,7 +147,7 @@ func (c *ConnWrapper) Exec(query string, args []driver.Value) (res driver.Result
 func (c *ConnWrapper) ExecContext(ctx context.Context, query string, args []driver.NamedValue) (res driver.Result, err error) {
 	span, ctxWithSpan := opentracing.StartSpanFromContext(
 		ctx,
-		c.integration.getOperationName(query),
+		c.integration.getOperationName(c.dsn),
 	)
 
 	defer span.Finish()
@@ -196,7 +196,7 @@ func (c *ConnWrapper) Ping(ctx context.Context) (err error) {
 func (c *ConnWrapper) Query(query string, args []driver.Value) (rows driver.Rows, err error) {
 	span, _ := opentracing.StartSpanFromContext(
 		emptyCtx,
-		c.integration.getOperationName(query),
+		c.integration.getOperationName(c.dsn),
 	)
 
 	defer span.Finish()
@@ -224,7 +224,7 @@ func (c *ConnWrapper) Query(query string, args []driver.Value) (rows driver.Rows
 func (c *ConnWrapper) QueryContext(ctx context.Context, query string, args []driver.NamedValue) (rows driver.Rows, err error) {
 	span, ctxWithSpan := opentracing.StartSpanFromContext(
 		ctx,
-		c.integration.getOperationName(query),
+		c.integration.getOperationName(c.dsn),
 	)
 
 	defer span.Finish()
@@ -275,7 +275,7 @@ func (s StmtWrapper) NumInput() int {
 func (s StmtWrapper) Exec(args []driver.Value) (res driver.Result, err error) {
 	span, _ := opentracing.StartSpanFromContext(
 		s.ctx,
-		s.integration.getOperationName(s.query),
+		s.integration.getOperationName(s.dsn),
 	)
 
 	defer span.Finish()
@@ -300,7 +300,7 @@ func (s StmtWrapper) Exec(args []driver.Value) (res driver.Result, err error) {
 func (s StmtWrapper) ExecContext(ctx context.Context, args []driver.NamedValue) (res driver.Result, err error) {
 	span, ctxWithSpan := opentracing.StartSpanFromContext(
 		ctx,
-		s.integration.getOperationName(s.query),
+		s.integration.getOperationName(s.dsn),
 	)
 
 	defer span.Finish()
@@ -341,7 +341,7 @@ func (s StmtWrapper) ExecContext(ctx context.Context, args []driver.NamedValue) 
 func (s StmtWrapper) Query(args []driver.Value) (rows driver.Rows, err error) {
 	span, _ := opentracing.StartSpanFromContext(
 		s.ctx,
-		s.integration.getOperationName(s.query),
+		s.integration.getOperationName(s.dsn),
 	)
 
 	defer span.Finish()
@@ -365,7 +365,7 @@ func (s StmtWrapper) Query(args []driver.Value) (rows driver.Rows, err error) {
 func (s StmtWrapper) QueryContext(ctx context.Context, args []driver.NamedValue) (rows driver.Rows, err error) {
 	span, ctxWithSpan := opentracing.StartSpanFromContext(
 		ctx,
-		s.integration.getOperationName(s.query),
+		s.integration.getOperationName(s.dsn),
 	)
 
 	defer span.Finish()
