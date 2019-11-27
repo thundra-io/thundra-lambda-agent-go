@@ -2,6 +2,7 @@ package elastic
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/thundra-io/thundra-lambda-agent-go/utils"
 
@@ -24,6 +25,7 @@ func BeforeCall(span *tracer.RawSpan, req *http.Request) {
 		constants.SpanTags["OPERATION_TYPE"]:          method,
 		constants.EsTags["ES_HOSTS"]:                  []string{host},
 		constants.EsTags["ES_URI"]:                    req.URL.Path,
+		constants.EsTags["ES_NORMALIZED_URI"]:         GetNormalizedPath(req.URL.Path),
 		constants.EsTags["ES_METHOD"]:                 method,
 		constants.EsTags["ES_PARAMS"]:                 req.URL.Query().Encode(),
 		constants.DBTags["DB_TYPE"]:                   "elasticsearch",
@@ -43,4 +45,33 @@ func BeforeCall(span *tracer.RawSpan, req *http.Request) {
 
 func AfterCall(span *tracer.RawSpan, resp *http.Response) {
 
+}
+
+func GetNormalizedPath(path string) string {
+	depth := config.EsIntegrationUrlPathDepth
+	if depth <= 0 {
+		return ""
+	}
+
+	pathSlice := strings.Split(path, "/")
+
+	//filter empty string
+	n := 0
+	for _, x := range pathSlice {
+		if len(x) > 0 {
+			pathSlice[n] = x
+			n++
+		}
+	}
+	pathSlice = pathSlice[:n]
+
+	// check out of bounds
+	pathLength := len(pathSlice)
+	if depth > pathLength {
+		depth = pathLength
+	}
+
+	//slice till depth
+	pathSlice = pathSlice[:depth]
+	return "/" + strings.Join(pathSlice, "/")
 }

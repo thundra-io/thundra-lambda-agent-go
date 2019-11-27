@@ -37,11 +37,12 @@ var DBTags = map[string]string{
 }
 
 var EsTags = map[string]string{
-	"ES_URI":    "elasticsearch.uri",
-	"ES_METHOD": "elasticsearch.method",
-	"ES_PARAMS": "elasticsearch.params",
-	"ES_BODY":   "elasticsearch.body",
-	"ES_HOSTS":  "elasticsearch.hosts",
+	"ES_URI":            "elasticsearch.uri",
+	"ES_NORMALIZED_URI": "elasticsearch.normalized_uri",
+	"ES_METHOD":         "elasticsearch.method",
+	"ES_PARAMS":         "elasticsearch.params",
+	"ES_BODY":           "elasticsearch.body",
+	"ES_HOSTS":          "elasticsearch.hosts",
 }
 
 var AwsDynamoDBTags = map[string]string{
