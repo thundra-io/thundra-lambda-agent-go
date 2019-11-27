@@ -1,7 +1,6 @@
 package tracer
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/thundra-io/thundra-lambda-agent-go/constants"
@@ -164,6 +163,17 @@ func TestBlackListSpan(t *testing.T) {
 					"operation.type":          []string{"READ"},
 				},
 			},
+			{
+				ClassName: "ELASTICSEARCH",
+				Tags: map[string][]string{
+					"elasticsearch.normalized_uri": {
+						"/twitter",
+					},
+					"operation.type": {
+						"POST",
+					},
+				},
+			},
 		},
 	}
 
@@ -273,16 +283,19 @@ func TestViolateBlacklistSpan(t *testing.T) {
 
 }
 
-func TestWihtOperationName(t *testing.T) {
+func TestEsBlackList(t *testing.T) {
 	sasl := SecurityAwareSpanListener{
-		block: false,
+		block: true,
 		blacklist: []Operation{
 			{
-				ClassName:     "ELASTICSEARCH",
-				OperationName: "testOpName",
+				ClassName: "ELASTICSEARCH",
 				Tags: map[string][]string{
-					"http.host":      {"host1.com", "host2.com"},
-					"operation.type": {"READ"},
+					"elasticsearch.normalized_uri": {
+						"/twitter",
+					},
+					"operation.type": {
+						"POST",
+					},
 				},
 			},
 		},
@@ -290,16 +303,23 @@ func TestWihtOperationName(t *testing.T) {
 
 	tracer, _ := newTracerAndRecorder()
 
-	s1 := tracer.StartSpan("foo", ext.ClassName("ELASTICSEARCH"), ext.OperationType("READ"))
-	s1.SetOperationName("testOpName")
-	s1.SetTag("http.host", "host1.com")
+	s1 := tracer.StartSpan("foo", ext.ClassName("ELASTICSEARCH"), ext.OperationType("POST"))
+	s1.SetTag("elasticsearch.normalized_uri", "/twitter")
 	s1.SetTag("topology.vertex", true)
-	s1.SetTag(constants.SpanTags["OPERATION_TYPE"], "READ")
-
-	sasl.OnSpanStarted(s1.(*spanImpl))
-
-	fmt.Println(s1)
+	s1.SetTag(constants.SpanTags["OPERATION_TYPE"], "POST")
 
 	assert.Equal(t, nil, s1.(*spanImpl).raw.GetTag(constants.SecurityTags["BLOCKED"]))
-	assert.Equal(t, true, s1.(*spanImpl).raw.GetTag(constants.SecurityTags["VIOLATED"]))
+	assert.Equal(t, nil, s1.(*spanImpl).raw.GetTag(constants.SecurityTags["VIOLATED"]))
+
+	var errorPanicked error
+	func() {
+		defer func() {
+			errorPanicked = recover().(error)
+			assert.Equal(t, "Operation was blocked due to security configuration", errorPanicked.Error())
+			assert.Equal(t, true, s1.(*spanImpl).raw.GetTag(constants.SecurityTags["BLOCKED"]))
+			assert.Equal(t, true, s1.(*spanImpl).raw.GetTag(constants.SecurityTags["VIOLATED"]))
+		}()
+		sasl.OnSpanStarted(s1.(*spanImpl))
+	}()
+
 }
