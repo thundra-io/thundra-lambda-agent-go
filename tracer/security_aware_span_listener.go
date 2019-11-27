@@ -64,9 +64,8 @@ func (s *SecurityAwareSpanListener) isExternalOperation(span *spanImpl) bool {
 }
 
 type Operation struct {
-	ClassName     string              `json:"className"`
-	OperationName string              `json:"operationName"`
-	Tags          map[string][]string `json:"tags"`
+	ClassName string              `json:"className"`
+	Tags      map[string][]string `json:"tags"`
 }
 
 func (o *Operation) matches(span *spanImpl) bool {
@@ -74,10 +73,6 @@ func (o *Operation) matches(span *spanImpl) bool {
 
 	if o.ClassName != "" {
 		matched = o.ClassName == "*" || o.ClassName == span.raw.ClassName
-	}
-
-	if o.OperationName != "" {
-		matched = o.OperationName == "*" || o.OperationName == span.raw.OperationName
 	}
 
 	if matched && len(o.Tags) > 0 {
