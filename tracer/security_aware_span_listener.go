@@ -3,9 +3,9 @@ package tracer
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/thundra-io/thundra-lambda-agent-go/constants"
 	"github.com/thundra-io/thundra-lambda-agent-go/utils"
+	logger "log"
 )
 
 var defaultSecurityMessage = "Operation was blocked due to security configuration"
@@ -124,13 +124,13 @@ func NewSecurityAwareSpanListener(config map[string]interface{}) ThundraSpanList
 func mapToOperation(opMap interface{}) Operation {
 	jsonBody, err := json.Marshal(opMap)
 	if err != nil {
-		fmt.Println(err)
+		logger.Println("Error on marshal security operation:", err)
 		return Operation{}
 	}
-	fmt.Println(string(jsonBody))
+
 	op := Operation{}
 	if err := json.Unmarshal(jsonBody, &op); err != nil {
-		fmt.Println(err)
+		logger.Println("Error on marshal security operation:", err)
 		return op
 	}
 

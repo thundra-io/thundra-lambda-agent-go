@@ -323,3 +323,44 @@ func TestEsBlackList(t *testing.T) {
 	}()
 
 }
+
+func TestAPIGWBlackList(t *testing.T) {
+	sasl := SecurityAwareSpanListener{
+		block: true,
+		blacklist: []Operation{
+			{
+				ClassName: "HTTP",
+				Tags: map[string][]string{
+					"http.host": {
+						"34zsqapxkj.execute-api.eu-west-1.amazonaws.com",
+					},
+					"operation.type": {
+						"GET",
+					},
+				},
+			},
+		},
+	}
+
+	tracer, _ := newTracerAndRecorder()
+
+	s1 := tracer.StartSpan("foo", ext.ClassName("HTTP"), ext.OperationType("GET"))
+	s1.SetTag("http.host", "34zsqapxkj.execute-api.eu-west-1.amazonaws.com")
+	s1.SetTag("topology.vertex", true)
+	s1.SetTag(constants.SpanTags["OPERATION_TYPE"], "GET")
+
+	assert.Equal(t, nil, s1.(*spanImpl).raw.GetTag(constants.SecurityTags["BLOCKED"]))
+	assert.Equal(t, nil, s1.(*spanImpl).raw.GetTag(constants.SecurityTags["VIOLATED"]))
+
+	var errorPanicked error
+	func() {
+		defer func() {
+			errorPanicked = recover().(error)
+			assert.Equal(t, "Operation was blocked due to security configuration", errorPanicked.Error())
+			assert.Equal(t, true, s1.(*spanImpl).raw.GetTag(constants.SecurityTags["BLOCKED"]))
+			assert.Equal(t, true, s1.(*spanImpl).raw.GetTag(constants.SecurityTags["VIOLATED"]))
+		}()
+		sasl.OnSpanStarted(s1.(*spanImpl))
+	}()
+
+}
