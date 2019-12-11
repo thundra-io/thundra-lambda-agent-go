@@ -1,9 +1,9 @@
 package agent
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
-	"reflect"
 	"strconv"
 	"strings"
 	"time"
@@ -13,23 +13,21 @@ import (
 
 // checkAndHandleWarmupRequest is used to detect thundra-lambda-warmup requests.
 // If the incoming request is a warmup request thundra will return nil and stop execution.
-func checkAndHandleWarmupRequest(event interface{}, eventType reflect.Type) bool {
-	// Check if the event is an empty struct
-	if isZeroEvent(event, eventType) {
-		log.Println("Received warmup request as empty message. Handling with 100 milliseconds delay ...")
-		time.Sleep(time.Millisecond * 100)
-		return true
-	}
-
-	if eventType.Kind() == reflect.String {
-		// Check whether it is a warmup request
-		s := fmt.Sprint(event)
-		if strings.HasPrefix(s, "#warmup") {
-			delay := 100
+func checkAndHandleWarmupRequest(payload json.RawMessage) bool {
+	if json.Valid(payload) {
+		paylodStr := string(payload)
+		if strings.HasPrefix(paylodStr, `"#warmup`) {
+			paylodStr, err := strconv.Unquote(paylodStr)
+			if err != nil {
+				log.Println("Bad string format while warmup checking")
+				return false
+			}
+			paylodStr = strings.TrimLeft(paylodStr, " ")
 
 			// Warmup data has the following format "#warmup wait=200 k1=v1"
 			//Therefore we need to parse it to only have arguments in k=v format
-			sp := strings.SplitAfter(s, "#warmup")[1]
+			delay := 0
+			sp := strings.SplitAfter(paylodStr, "#warmup")[1]
 			args := strings.Fields(sp)
 			// Iterate over all warmup arguments
 			for _, a := range args {
@@ -53,21 +51,22 @@ func checkAndHandleWarmupRequest(event interface{}, eventType reflect.Type) bool
 			log.Println("Received warmup request as warmup message. Handling with ", delay, " milliseconds delay ...")
 			time.Sleep(time.Millisecond * time.Duration(delay))
 			return true
+
+		} else {
+			j := make(map[string]interface{})
+			err := json.Unmarshal(payload, &j)
+			if err != nil {
+				log.Println("Bad json format while warmup checking")
+				return false
+			}
+			fmt.Println("else case", j)
+			if len(j) == 0 {
+				log.Println("Received warmup request as empty message. Handling with 100 milliseconds delay ...")
+				time.Sleep(time.Millisecond * 100)
+				return true
+			}
 		}
-	}
 
-	return false
-}
-
-// isZeroEvent compares whether event is equals to the zero value for event's type.
-func isZeroEvent(event interface{}, eventType reflect.Type) bool {
-	zeroEvent := reflect.Zero(eventType)
-
-	// Use sprint to compare each individual field values of event with zero event
-	ev := fmt.Sprint(event)
-	ze := fmt.Sprint(zeroEvent)
-	if ev == ze {
-		return true
 	}
 	return false
 }
