@@ -15,9 +15,9 @@ import (
 // If the incoming request is a warmup request thundra will return nil and stop execution.
 func checkAndHandleWarmupRequest(payload json.RawMessage) bool {
 	if json.Valid(payload) {
-		paylodStr := string(payload)
-		if strings.HasPrefix(paylodStr, `"#warmup`) {
-			paylodStr, err := strconv.Unquote(paylodStr)
+		paylaodStr := string(payload)
+		if strings.HasPrefix(paylaodStr, `"#warmup`) {
+			paylodStr, err := strconv.Unquote(paylaodStr)
 			if err != nil {
 				log.Println("Bad string format while warmup checking")
 				return false
