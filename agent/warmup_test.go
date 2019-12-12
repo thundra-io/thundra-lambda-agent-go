@@ -7,13 +7,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestCheckAndHandleWarmupNonEmptyBodyPayload(t *testing.T) {
-	payload := json.RawMessage(`{"firstName":"John","lastName":"Dow","body":{"f":"a"}}`)
-	assert.False(t, checkAndHandleWarmupRequest(payload))
-}
-
-func TestCheckAndHandleWarmupEmptyBodyPayload(t *testing.T) {
-	payload := json.RawMessage(`{"firstName":"John","lastName":"Dow","body":{"f":"a"}}`)
+func TestCheckAndHandleWarmupNonEmptyPayload(t *testing.T) {
+	payload := json.RawMessage(`{"firstName":"John","lastName":"Dow"}}`)
 	assert.False(t, checkAndHandleWarmupRequest(payload))
 }
 
