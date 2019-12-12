@@ -63,6 +63,13 @@ func checkAndHandleWarmupRequest(payload json.RawMessage) bool {
 				log.Println("Received warmup request as empty message. Handling with 100 milliseconds delay ...")
 				time.Sleep(time.Millisecond * 100)
 				return true
+			} else if len(j) > 0 {
+				body := j["body"]
+				if body == nil {
+					log.Println("Received warmup request as empty message. Handling with 100 milliseconds delay ...")
+					time.Sleep(time.Millisecond * 100)
+					return true
+				}
 			}
 		}
 
