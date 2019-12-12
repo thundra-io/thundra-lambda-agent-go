@@ -2,7 +2,6 @@ package agent
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"strconv"
 	"strings"
@@ -17,17 +16,17 @@ func checkAndHandleWarmupRequest(payload json.RawMessage) bool {
 	if json.Valid(payload) {
 		paylaodStr := string(payload)
 		if strings.HasPrefix(paylaodStr, `"#warmup`) {
-			paylodStr, err := strconv.Unquote(paylaodStr)
+			paylaodStr, err := strconv.Unquote(paylaodStr)
 			if err != nil {
-				log.Println("Bad string format while warmup checking")
+				log.Println("Bad string format while checking warmup")
 				return false
 			}
-			paylodStr = strings.TrimLeft(paylodStr, " ")
+			paylaodStr = strings.TrimLeft(paylaodStr, " ")
 
 			// Warmup data has the following format "#warmup wait=200 k1=v1"
 			//Therefore we need to parse it to only have arguments in k=v format
 			delay := 0
-			sp := strings.SplitAfter(paylodStr, "#warmup")[1]
+			sp := strings.SplitAfter(paylaodStr, "#warmup")[1]
 			args := strings.Fields(sp)
 			// Iterate over all warmup arguments
 			for _, a := range args {
@@ -56,10 +55,10 @@ func checkAndHandleWarmupRequest(payload json.RawMessage) bool {
 			j := make(map[string]interface{})
 			err := json.Unmarshal(payload, &j)
 			if err != nil {
-				log.Println("Bad json format while warmup checking")
+				log.Println("Bad json format while checking warmup")
 				return false
 			}
-			fmt.Println("else case", j)
+
 			if len(j) == 0 {
 				log.Println("Received warmup request as empty message. Handling with 100 milliseconds delay ...")
 				time.Sleep(time.Millisecond * 100)

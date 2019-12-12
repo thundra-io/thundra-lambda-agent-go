@@ -1,40 +1,29 @@
 package agent
 
 import (
-	"reflect"
+	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
-func TestCheckAndHandleWarmupRequest(t *testing.T) {
-	type testStruct struct {
-		age  int
-		name string
-	}
-	structType := reflect.TypeOf(testStruct{})
-	assert.True(t, checkAndHandleWarmupRequest(testStruct{}, structType))
-	assert.False(t, checkAndHandleWarmupRequest(testStruct{age: 10, name: "Thundra"}, structType))
-
-	strType := reflect.TypeOf("")
-	assert.True(t, checkAndHandleWarmupRequest("", strType))
-	assert.True(t, checkAndHandleWarmupRequest("#warmup wait=100", strType))
-	assert.False(t, checkAndHandleWarmupRequest("notWarmup", strType))
-
+func TestCheckAndHandleWarmupNonEmptyPayload(t *testing.T) {
+	payload := json.RawMessage(`{"firstName":"John","lastName":"Dow"}`)
+	assert.False(t, checkAndHandleWarmupRequest(payload))
 }
 
-func TestIsZeroEvent(t *testing.T) {
+func TestCheckAndHandleWarmupWarmCommand(t *testing.T) {
+	payload := `#warmup wait=200`
 
-	strType := reflect.TypeOf("")
-	assert.False(t, isZeroEvent("NotZero", strType))
-	assert.True(t, isZeroEvent("", strType))
-
-	type testStruct struct {
-		age  int
-		name string
+	rawMessage, err := json.Marshal(payload)
+	if err != nil {
+		panic(err)
 	}
-	structType := reflect.TypeOf(testStruct{})
 
-	assert.False(t, isZeroEvent(testStruct{age: 10, name: "Thundra"}, structType))
-	assert.True(t, isZeroEvent(testStruct{}, structType))
+	assert.True(t, checkAndHandleWarmupRequest(rawMessage))
+}
+
+func TestCheckAndHandleWarmupRequestEmptyPayload(t *testing.T) {
+	payload := json.RawMessage(`{}`)
+	assert.True(t, checkAndHandleWarmupRequest(payload))
 }
