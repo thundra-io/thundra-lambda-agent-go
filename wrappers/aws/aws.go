@@ -78,8 +78,16 @@ func getOperationType(operationName string, className string) string {
 	}
 
 	for pattern := range awsOperationTypesPatterns {
-		if match, _ := regexp.MatchString(pattern, operationName); match {
-			return awsOperationTypesPatterns[pattern]
+		if r, ok := compiledTypes[pattern]; ok {
+			if r.MatchString(operationName) {
+				return awsOperationTypesPatterns[pattern]
+			}
+		} else {
+			r, _ := regexp.Compile(pattern)
+			compiledTypes[pattern] = *r
+			if r.MatchString(operationName) {
+				return awsOperationTypesPatterns[pattern]
+			}
 		}
 	}
 

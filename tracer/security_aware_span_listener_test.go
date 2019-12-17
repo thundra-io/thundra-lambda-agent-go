@@ -12,7 +12,7 @@ import (
 func TestConfig(t *testing.T) {
 	sasl := SecurityAwareSpanListener{
 		block: true,
-		whitelist: []Operation{
+		whitelist: &[]Operation{
 			{
 				ClassName: "HTTP",
 				Tags: map[string][]string{
@@ -28,7 +28,7 @@ func TestConfig(t *testing.T) {
 				},
 			},
 		},
-		blacklist: []Operation{
+		blacklist: &[]Operation{
 			{
 				ClassName: "HTTP",
 				Tags: map[string][]string{
@@ -47,22 +47,22 @@ func TestConfig(t *testing.T) {
 	}
 
 	assert.Equal(t, true, sasl.block)
-	assert.Equal(t, 2, len(sasl.whitelist))
-	assert.Equal(t, 2, len(sasl.blacklist))
+	assert.Equal(t, 2, len(*sasl.whitelist))
+	assert.Equal(t, 2, len(*sasl.blacklist))
 
-	assert.Equal(t, "HTTP", sasl.whitelist[0].ClassName)
-	assert.Equal(t, []string{"www.google.com", "www.google.com"}, sasl.whitelist[0].Tags["http.host"])
-	assert.Equal(t, []string{"GET"}, sasl.whitelist[0].Tags["operation.type"])
+	assert.Equal(t, "HTTP", (*sasl.whitelist)[0].ClassName)
+	assert.Equal(t, []string{"www.google.com", "www.google.com"}, (*sasl.whitelist)[0].Tags["http.host"])
+	assert.Equal(t, []string{"GET"}, (*sasl.whitelist)[0].Tags["operation.type"])
 
-	assert.Equal(t, "AWS-SNS", sasl.blacklist[1].ClassName)
-	assert.Equal(t, []string{"foo-topic"}, sasl.blacklist[1].Tags["aws.sns.topic.name"])
-	assert.Equal(t, []string{"WRITE"}, sasl.blacklist[1].Tags["operation.type"])
+	assert.Equal(t, "AWS-SNS", (*sasl.blacklist)[1].ClassName)
+	assert.Equal(t, []string{"foo-topic"}, (*sasl.blacklist)[1].Tags["aws.sns.topic.name"])
+	assert.Equal(t, []string{"WRITE"}, (*sasl.blacklist)[1].Tags["operation.type"])
 }
 
 func TestWhiteListSpan(t *testing.T) {
 	sasl := SecurityAwareSpanListener{
 		block: true,
-		whitelist: []Operation{
+		whitelist: &[]Operation{
 			{
 				ClassName: "HTTP",
 				Tags: map[string][]string{
@@ -148,7 +148,7 @@ func TestWhiteListSpan(t *testing.T) {
 func TestBlackListSpan(t *testing.T) {
 	sasl := SecurityAwareSpanListener{
 		block: true,
-		blacklist: []Operation{
+		blacklist: &[]Operation{
 			{
 				ClassName: "HTTP",
 				Tags: map[string][]string{
@@ -241,7 +241,7 @@ func TestBlackListSpan(t *testing.T) {
 func TestViolateBlacklistSpan(t *testing.T) {
 	sasl := SecurityAwareSpanListener{
 		block: false,
-		blacklist: []Operation{
+		blacklist: &[]Operation{
 			{
 				ClassName: "HTTP",
 				Tags: map[string][]string{
@@ -286,7 +286,7 @@ func TestViolateBlacklistSpan(t *testing.T) {
 func TestEsBlackList(t *testing.T) {
 	sasl := SecurityAwareSpanListener{
 		block: true,
-		blacklist: []Operation{
+		blacklist: &[]Operation{
 			{
 				ClassName: "ELASTICSEARCH",
 				Tags: map[string][]string{
@@ -327,7 +327,7 @@ func TestEsBlackList(t *testing.T) {
 func TestAPIGWBlackList(t *testing.T) {
 	sasl := SecurityAwareSpanListener{
 		block: true,
-		blacklist: []Operation{
+		blacklist: &[]Operation{
 			{
 				ClassName: "HTTP",
 				Tags: map[string][]string{
@@ -351,6 +351,32 @@ func TestAPIGWBlackList(t *testing.T) {
 
 	assert.Equal(t, nil, s1.(*spanImpl).raw.GetTag(constants.SecurityTags["BLOCKED"]))
 	assert.Equal(t, nil, s1.(*spanImpl).raw.GetTag(constants.SecurityTags["VIOLATED"]))
+
+	var errorPanicked error
+	func() {
+		defer func() {
+			errorPanicked = recover().(error)
+			assert.Equal(t, "Operation was blocked due to security configuration", errorPanicked.Error())
+			assert.Equal(t, true, s1.(*spanImpl).raw.GetTag(constants.SecurityTags["BLOCKED"]))
+			assert.Equal(t, true, s1.(*spanImpl).raw.GetTag(constants.SecurityTags["VIOLATED"]))
+		}()
+		sasl.OnSpanStarted(s1.(*spanImpl))
+	}()
+
+}
+
+func TestEmptyWhileList(t *testing.T) {
+	sasl := SecurityAwareSpanListener{
+		block:     true,
+		whitelist: &[]Operation{},
+	}
+
+	tracer, _ := newTracerAndRecorder()
+
+	s1 := tracer.StartSpan("foo", ext.ClassName("HTTP"), ext.OperationType("GET"))
+	s1.SetTag("http.host", "34zsqapxkj.execute-api.eu-west-1.amazonaws.com")
+	s1.SetTag("topology.vertex", true)
+	s1.SetTag(constants.SpanTags["OPERATION_TYPE"], "GET")
 
 	var errorPanicked error
 	func() {

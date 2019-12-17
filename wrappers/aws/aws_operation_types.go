@@ -1,5 +1,7 @@
 package thundraaws
 
+import "regexp"
+
 var awsOperationTypesExclusions = map[string]map[string]string{
 	"AWS-Lambda": {
 		"ListTags":          "READ",
@@ -160,3 +162,5 @@ var awsOperationTypesPatterns = map[string]string{
 	"^.*Tags$":       "TAGGING",
 	"^Set.*$":        "WRITE",
 }
+
+var compiledTypes = map[string]regexp.Regexp{}

@@ -12,8 +12,8 @@ var defaultSecurityMessage = "Operation was blocked due to security configuratio
 
 type SecurityAwareSpanListener struct {
 	block     bool
-	whitelist []Operation
-	blacklist []Operation
+	whitelist *[]Operation
+	blacklist *[]Operation
 }
 
 func (s *SecurityAwareSpanListener) OnSpanStarted(span *spanImpl) {
@@ -21,15 +21,17 @@ func (s *SecurityAwareSpanListener) OnSpanStarted(span *spanImpl) {
 		return
 	}
 
-	for _, op := range s.blacklist {
-		if op.matches(span) {
-			s.handleSecurityIssue(span)
-			return
+	if s.blacklist != nil {
+		for _, op := range *s.blacklist {
+			if op.matches(span) {
+				s.handleSecurityIssue(span)
+				return
+			}
 		}
 	}
 
-	if len(s.whitelist) > 0 {
-		for _, op := range s.whitelist {
+	if s.whitelist != nil {
+		for _, op := range *s.whitelist {
 			if op.matches(span) {
 				return
 			}
@@ -106,7 +108,7 @@ func NewSecurityAwareSpanListener(config map[string]interface{}) ThundraSpanList
 			wl = append(wl, op)
 		}
 
-		spanListener.whitelist = wl
+		spanListener.whitelist = &wl
 	}
 
 	if blacklist, ok := config["blacklist"].([]interface{}); ok {
@@ -115,7 +117,7 @@ func NewSecurityAwareSpanListener(config map[string]interface{}) ThundraSpanList
 			op := mapToOperation(value)
 			bl = append(bl, op)
 		}
-		spanListener.blacklist = bl
+		spanListener.blacklist = &bl
 	}
 
 	return spanListener
