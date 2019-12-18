@@ -15,16 +15,18 @@ var incomingTraceLinks = make([]string, 0)
 
 // Resource type stores information about resources in spans
 type Resource struct {
-	ResourceType        string   `json:"resourceType"`
-	ResourceName        string   `json:"resourceName"`
-	ResourceOperation   string   `json:"resourceOperation"`
-	ResourceCount       int      `json:"resourceCount"`
-	ResourceErrorCount  int      `json:"resourceErrorCount"`
-	ResourceDuration    int64    `json:"resourceDuration"`
-	ResourceMaxDuration int64    `json:"resourceMaxDuration"`
-	ResourceAvgDuration float64  `json:"resourceAvgDuration"`
-	ResourceErrors      []string `json:"resourceErrors"`
-	resourceErrorsMap   map[string]struct{}
+	ResourceType          string   `json:"resourceType"`
+	ResourceName          string   `json:"resourceName"`
+	ResourceOperation     string   `json:"resourceOperation"`
+	ResourceCount         int      `json:"resourceCount"`
+	ResourceErrorCount    int      `json:"resourceErrorCount"`
+	ResourceDuration      int64    `json:"resourceDuration"`
+	ResourceMaxDuration   int64    `json:"resourceMaxDuration"`
+	ResourceAvgDuration   float64  `json:"resourceAvgDuration"`
+	ResourceBlockedCount  int      `json:"resourceBlockedCount"`
+	ResourceViolatedCount int      `json:"resourceViolatedCount"`
+	ResourceErrors        []string `json:"resourceErrors"`
+	resourceErrorsMap     map[string]struct{}
 }
 
 func (r *Resource) accept(rawSpan *tracer.RawSpan) bool {
@@ -47,9 +49,11 @@ func (r *Resource) merge(rawSpan *tracer.RawSpan) {
 	r.ResourceCount++
 	r.ResourceDuration += rawSpan.Duration()
 	r.ResourceAvgDuration = utils.Round(float64(r.ResourceDuration)/float64(r.ResourceCount)*100) / 100
+
 	if rawSpan.Duration() > r.ResourceMaxDuration {
 		r.ResourceMaxDuration = rawSpan.Duration()
 	}
+
 	erroneous, ok := rawSpan.GetTag(constants.AwsError).(bool)
 	if ok && erroneous {
 		r.ResourceErrorCount++
@@ -57,6 +61,15 @@ func (r *Resource) merge(rawSpan *tracer.RawSpan) {
 		if ok {
 			r.resourceErrorsMap[errKind] = void
 		}
+	}
+
+	if rawSpan.GetTag(constants.SecurityTags["BLOCKED"]) != nil &&
+		rawSpan.GetTag(constants.SecurityTags["BLOCKED"]).(bool) {
+		r.ResourceBlockedCount++
+	}
+	if rawSpan.GetTag(constants.SecurityTags["VIOLATED"]) != nil &&
+		rawSpan.GetTag(constants.SecurityTags["VIOLATED"]).(bool) {
+		r.ResourceViolatedCount++
 	}
 }
 
@@ -82,16 +95,30 @@ func NewResource(rawSpan *tracer.RawSpan) (*Resource, error) {
 		}
 	}
 
+	var blockedCount int
+	if blockedCount = 0; rawSpan.GetTag(constants.SecurityTags["BLOCKED"]) != nil &&
+		rawSpan.GetTag(constants.SecurityTags["BLOCKED"]).(bool) {
+		blockedCount = 1
+	}
+
+	var violatedCount int
+	if violatedCount = 0; rawSpan.GetTag(constants.SecurityTags["VIOLATED"]) != nil &&
+		rawSpan.GetTag(constants.SecurityTags["VIOLATED"]).(bool) {
+		violatedCount = 1
+	}
+
 	resource := Resource{
-		ResourceType:        rawSpan.ClassName,
-		ResourceName:        rawSpan.OperationName,
-		ResourceOperation:   operationType,
-		ResourceCount:       1,
-		ResourceErrorCount:  errorCount,
-		ResourceDuration:    rawSpan.Duration(),
-		ResourceMaxDuration: rawSpan.Duration(),
-		ResourceAvgDuration: float64(rawSpan.Duration()),
-		resourceErrorsMap:   resourceErrorsMap,
+		ResourceType:          rawSpan.ClassName,
+		ResourceName:          rawSpan.OperationName,
+		ResourceOperation:     operationType,
+		ResourceCount:         1,
+		ResourceErrorCount:    errorCount,
+		ResourceDuration:      rawSpan.Duration(),
+		ResourceMaxDuration:   rawSpan.Duration(),
+		ResourceAvgDuration:   float64(rawSpan.Duration()),
+		ResourceBlockedCount:  blockedCount,
+		ResourceViolatedCount: violatedCount,
+		resourceErrorsMap:     resourceErrorsMap,
 	}
 	return &resource, nil
 }
@@ -125,6 +152,16 @@ func getResources(rootSpanID string) []Resource {
 			if err == nil {
 				resources[resourceID] = resource
 			}
+		}
+
+		if s.GetTag(constants.SecurityTags["BLOCKED"]) != nil &&
+			s.GetTag(constants.SecurityTags["BLOCKED"]).(bool) {
+			SetAgentTag(constants.SecurityTags["BLOCKED"], true)
+		}
+
+		if s.GetTag(constants.SecurityTags["VIOLATED"]) != nil &&
+			s.GetTag(constants.SecurityTags["VIOLATED"]).(bool) {
+			SetAgentTag(constants.SecurityTags["VIOLATED"], true)
 		}
 	}
 

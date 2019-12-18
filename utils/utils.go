@@ -267,3 +267,39 @@ func GetXRayTraceInfo(ctx context.Context) (string, string) {
 
 	return traceID, segmentID
 }
+
+func Contains(a []interface{}, x interface{}) bool {
+	for _, n := range a {
+		if x == n {
+			return true
+		}
+	}
+	return false
+}
+
+func StringContains(a []string, x string) bool {
+	for _, n := range a {
+		if x == n {
+			return true
+		}
+	}
+	return false
+}
+
+func Int64Contains(a []int64, x int64) bool {
+	for _, n := range a {
+		if x == n {
+			return true
+		}
+	}
+	return false
+}
+
+func Float64Contains(a []float64, x float64) bool {
+	for _, n := range a {
+		if x == n {
+			return true
+		}
+	}
+	return false
+}

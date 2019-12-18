@@ -1,9 +1,6 @@
 package tracer
 
-import (
-	"log"
-	"strings"
-)
+import "log"
 
 type FilteringSpanListener struct {
 	Listener ThundraSpanListener
@@ -35,56 +32,61 @@ func (f *FilteringSpanListener) PanicOnError() bool {
 }
 
 // NewFilteringSpanListener creates and returns a new FilteringSpanListener from config
-func NewFilteringSpanListener(config map[string]string) ThundraSpanListener {
-	var listenerStr string
+func NewFilteringSpanListener(config map[string]interface{}) ThundraSpanListener {
+	filterer := &ThundraSpanFilterer{spanFilters: []SpanFilter{}}
 
-	if config["listener"] != "" {
-		listenerStr = config["listener"]
+	listenerDef, ok := config["listener"].(map[string]interface{})
+	if !ok {
+		log.Println("Listener configuration is not valid for FilteringSpanListener")
+		return nil
 	}
 
-	configPrefix := "config."
-	filterPrefix := "filter"
-	listenerConfig := make(map[string]string)
-	filterConfig := make(map[string]map[string]string)
+	listenerName, ok := listenerDef["type"].(string)
+	listenerConstructor, ok := SpanListenerConstructorMap[listenerName]
+	if !ok {
+		log.Println("Given listener type is not valid for FilteringSpanListener")
+		return nil
+	}
 
-	for key, val := range config {
-		if strings.HasPrefix(key, configPrefix) {
+	listenerConfig, ok := listenerDef["config"].(map[string]interface{})
+	listener := listenerConstructor(listenerConfig)
 
-			listenerConfig[key[len(configPrefix):]] = val
+	if all, ok := config["all"].(bool); ok {
+		filterer.all = all
+	}
 
-		} else if strings.HasPrefix(key, filterPrefix) {
+	if filterConfigs, ok := config["filters"].([]interface{}); ok {
+		filterer.spanFilters = crateFiltersFromConfig(filterConfigs)
+	}
 
-			firstDot := strings.Index(key, ".")
-			if firstDot == -1 {
-				continue
+	return &FilteringSpanListener{listener, filterer}
+}
+
+func crateFiltersFromConfig(filterConfigs []interface{}) []SpanFilter {
+	filters := []SpanFilter{}
+	for _, filterConfig := range filterConfigs {
+		if filterConfig, ok := filterConfig.(map[string]interface{}); ok {
+			if composite, ok := filterConfig["composite"].(bool); ok && composite {
+				cf := &CompositeSpanFilter{
+					spanFilters: []SpanFilter{},
+					all:         false,
+					composite:   true,
+				}
+
+				if all, ok := filterConfig["all"].(bool); ok {
+					cf.all = all
+				}
+
+				if compositeFilterConfigs, ok := filterConfig["filters"].([]interface{}); ok {
+					cf.spanFilters = crateFiltersFromConfig(compositeFilterConfigs)
+				}
+
+				filters = append(filters, cf)
+			} else {
+				filters = append(filters, NewThundraSpanFilter(filterConfig))
 			}
-			filterID := key[:firstDot]
-			filterArg := key[firstDot+1:]
-			if filterConfig[filterID] == nil {
-				filterConfig[filterID] = make(map[string]string, 0)
-			}
-			filterConfig[filterID][filterArg] = val
 		}
 	}
 
-	var filters []SpanFilter
-	var filterer SpanFilterer
-	var listener ThundraSpanListener
-
-	for _, val := range filterConfig {
-		filters = append(filters, NewThundraSpanFilter(val))
-	}
-
-	if len(filters) > 0 {
-		filterer = &ThundraSpanFilterer{filters}
-	}
-
-	if SpanListenerConstructorMap[listenerStr] == nil {
-		log.Println("No listener found with name:", listenerStr)
-	} else {
-		listenerConstructor := SpanListenerConstructorMap[listenerStr]
-		listener = listenerConstructor(listenerConfig)
-	}
-
-	return &FilteringSpanListener{Listener: listener, Filterer: filterer}
+	return filters
 }

@@ -53,7 +53,8 @@ func (i *dynamodbIntegration) beforeCall(r *request.Request, span *tracer.RawSpa
 	span.DomainName = constants.DomainNames["DB"]
 
 	operationName := r.Operation.Name
-	operationType := constants.DynamoDBRequestTypes[operationName]
+	operationType := getOperationType(operationName, constants.ClassNames["DYNAMODB"])
+
 	endpoint := r.ClientInfo.Endpoint
 	endpointParts := strings.SplitN(endpoint, "://", 2)
 	if len(endpointParts) > 1 {

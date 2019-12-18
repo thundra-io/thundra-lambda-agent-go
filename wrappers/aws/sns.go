@@ -69,7 +69,7 @@ func (i *snsIntegration) beforeCall(r *request.Request, span *tracer.RawSpan) {
 	span.DomainName = constants.DomainNames["MESSAGING"]
 
 	operationName := r.Operation.Name
-	operationType := constants.SNSRequestTypes[operationName]
+	operationType := getOperationType(operationName, constants.ClassNames["SNS"])
 
 	tags := map[string]interface{}{
 		constants.AwsSNSTags["TOPIC_NAME"]:            i.getTopicName(r),

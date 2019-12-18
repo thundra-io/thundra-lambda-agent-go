@@ -2,9 +2,6 @@ package thundraelastic
 
 import (
 	"net/http"
-	"strings"
-
-	"github.com/thundra-io/thundra-lambda-agent-go/config"
 
 	"github.com/opentracing/opentracing-go"
 	"github.com/thundra-io/thundra-lambda-agent-go/tracer"
@@ -25,37 +22,8 @@ func Wrap(c *http.Client) *http.Client {
 	return c
 }
 
-func getNormalizedPath(path string) string {
-	depth := config.EsIntegrationUrlPathDepth
-	if depth <= 0 {
-		return ""
-	}
-
-	pathSlice := strings.Split(path, "/")
-
-	//filter empty string
-	n := 0
-	for _, x := range pathSlice {
-		if len(x) > 0 {
-			pathSlice[n] = x
-			n++
-		}
-	}
-	pathSlice = pathSlice[:n]
-
-	// check out of bounds
-	pathLength := len(pathSlice)
-	if depth > pathLength {
-		depth = pathLength
-	}
-
-	//slice till depth
-	pathSlice = pathSlice[:depth]
-	return "/" + strings.Join(pathSlice, "/")
-}
-
 func (t *roundTripperWrapper) RoundTrip(req *http.Request) (resp *http.Response, err error) {
-	normalizedPath := getNormalizedPath(req.URL.Path)
+	normalizedPath := elastic.GetNormalizedPath(req.URL.Path)
 	span, _ := opentracing.StartSpanFromContext(
 		req.Context(),
 		normalizedPath,

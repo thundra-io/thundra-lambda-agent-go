@@ -5,6 +5,8 @@ import (
 	"github.com/thundra-io/thundra-lambda-agent-go/config"
 	"github.com/thundra-io/thundra-lambda-agent-go/tracer"
 	"github.com/thundra-io/thundra-lambda-agent-go/utils"
+	"regexp"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -65,4 +67,29 @@ func completeHandler(r *request.Request) {
 		utils.SetSpanError(span, r.Error)
 	}
 	span.Finish()
+}
+
+func getOperationType(operationName string, className string) string {
+	operationName = strings.Title(operationName)
+	if class, ok := awsOperationTypesExclusions[className]; ok {
+		if exclusion, ok := class[operationName]; ok {
+			return exclusion
+		}
+	}
+
+	for pattern := range awsOperationTypesPatterns {
+		if r, ok := compiledTypes[pattern]; ok {
+			if r.MatchString(operationName) {
+				return awsOperationTypesPatterns[pattern]
+			}
+		} else {
+			r, _ := regexp.Compile(pattern)
+			compiledTypes[pattern] = *r
+			if r.MatchString(operationName) {
+				return awsOperationTypesPatterns[pattern]
+			}
+		}
+	}
+
+	return ""
 }

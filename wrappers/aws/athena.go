@@ -104,7 +104,7 @@ func (i *athenaIntegration) beforeCall(r *request.Request, span *tracer.RawSpan)
 	span.DomainName = constants.DomainNames["DB"]
 
 	operationName := r.Operation.Name
-	operationType := constants.AwsAthenaOperationTypes[operationName]
+	operationType := getOperationType(operationName, constants.ClassNames["ATHENA"])
 
 	tags := map[string]interface{}{
 		constants.SpanTags["OPERATION_TYPE"]:          operationType,

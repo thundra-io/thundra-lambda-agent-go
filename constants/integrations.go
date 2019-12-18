@@ -2,6 +2,11 @@ package constants
 
 const AWSServiceRequest = "AWSServiceRequest"
 
+var SecurityTags = map[string]string{
+	"BLOCKED":  "security.blocked",
+	"VIOLATED": "security.violated",
+}
+
 var HTTPTags = map[string]string{
 	"METHOD":       "http.method",
 	"URL":          "http.url",
@@ -10,61 +15,6 @@ var HTTPTags = map[string]string{
 	"STATUS":       "http.status_code",
 	"QUERY_PARAMS": "http.query_params",
 	"BODY":         "http.body",
-}
-
-var DynamoDBRequestTypes = map[string]string{
-	"BatchGetItem":      "READ",
-	"BatchWriteItem":    "WRITE",
-	"CreateTable":       "WRITE",
-	"CreateGlobalTable": "WRITE",
-	"DeleteItem":        "DELETE",
-	"DeleteTable":       "DELETE",
-	"GetItem":           "READ",
-	"PutItem":           "WRITE",
-	"Query":             "READ",
-	"Scan":              "READ",
-	"UpdateItem":        "WRITE",
-}
-
-var SQSRequestTypes = map[string]string{
-	"ReceiveMessage":     "READ",
-	"SendMessage":        "WRITE",
-	"SendMessageBatch":   "WRITE",
-	"DeleteMessage":      "DELETE",
-	"DeleteMessageBatch": "DELETE",
-}
-
-var SNSRequestTypes = map[string]string{
-	"Publish": "WRITE",
-}
-
-var KinesisRequestTypes = map[string]string{
-	"GetRecords": "READ",
-	"PutRecords": "WRITE",
-	"PutRecord":  "WRITE",
-}
-
-var FirehoseRequestTypes = map[string]string{
-	"PutRecordBatch": "WRITE",
-	"PutRecord":      "WRITE",
-}
-
-var S3RequestTypes = map[string]string{
-	"DeleteBucket":  "DELETE",
-	"CreateBucket":  "WRITE",
-	"copyObject":    "WRITE",
-	"DeleteObject":  "DELETE",
-	"deleteObjects": "DELETE",
-	"GetObject":     "READ",
-	"GetObjectAcl":  "READ",
-	"ListBucket":    "READ",
-	"PutObject":     "WRITE",
-	"PutObjectAcl":  "WRITE",
-}
-
-var LambdaRequestTypes = map[string]string{
-	"InvokeAsync": "CALL",
-	"Invoke":      "CALL",
 }
 
 var SpanTags = map[string]string{
@@ -87,11 +37,12 @@ var DBTags = map[string]string{
 }
 
 var EsTags = map[string]string{
-	"ES_URI":    "elasticsearch.uri",
-	"ES_METHOD": "elasticsearch.method",
-	"ES_PARAMS": "elasticsearch.params",
-	"ES_BODY":   "elasticsearch.body",
-	"ES_HOSTS":  "elasticsearch.hosts",
+	"ES_URI":            "elasticsearch.uri",
+	"ES_NORMALIZED_URI": "elasticsearch.normalized_uri",
+	"ES_METHOD":         "elasticsearch.method",
+	"ES_PARAMS":         "elasticsearch.params",
+	"ES_BODY":           "elasticsearch.body",
+	"ES_HOSTS":          "elasticsearch.hosts",
 }
 
 var AwsDynamoDBTags = map[string]string{
@@ -141,28 +92,6 @@ var AwsLambdaTags = map[string]string{
 	"FUNCTION_QUALIFIER": "aws.lambda.qualifier",
 	"INVOCATION_TYPE":    "aws.lambda.invocation.type",
 	"INVOCATION_PAYLOAD": "aws.lambda.invocation.payload",
-}
-
-var AwsAthenaOperationTypes = map[string]string{
-	"BatchGetNamedQuery":     "READ",
-	"BatchGetQueryExecution": "READ",
-	"CreateNamedQuery":       "WRITE",
-	"CreateWorkGroup":        "WRITE",
-	"DeleteNamedQuery":       "DELETE",
-	"DeleteWorkGroup":        "DELETE",
-	"GetNamedQuery":          "READ",
-	"GetQueryExecution":      "READ",
-	"GetQueryResults":        "READ",
-	"GetWorkGroup":           "READ",
-	"ListNamedQueries":       "READ",
-	"ListQueryExecutions":    "READ",
-	"ListTagsForResource":    "READ",
-	"ListWorkGroups":         "READ",
-	"StartQueryExecution":    "EXECUTE",
-	"StopQueryExecution":     "EXECUTE",
-	"TagResource":            "WRITE",
-	"UntagResource":          "DELETE",
-	"UpdateWorkGroup":        "WRITE",
 }
 
 var RedisCommandTypes = map[string]string{

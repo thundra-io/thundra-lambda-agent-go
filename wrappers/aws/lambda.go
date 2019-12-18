@@ -68,7 +68,7 @@ func (i *lambdaIntegration) beforeCall(r *request.Request, span *tracer.RawSpan)
 	span.DomainName = constants.DomainNames["API"]
 
 	operationName := r.Operation.Name
-	operationType := constants.LambdaRequestTypes[operationName]
+	operationType := getOperationType(operationName, constants.ClassNames["LAMBDA"])
 
 	lambdaInfo := i.getLambdaInfo(r)
 
