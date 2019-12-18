@@ -16,12 +16,28 @@ import (
 
 type postgresqlIntegration struct{}
 
-func (i *postgresqlIntegration) getOperationName(query string) string {
+func (i *postgresqlIntegration) getOperationName(dsn string) string {
+	dbName := ""
+
+	u, err := nurl.Parse(dsn)
+	if err != nil {
+		return dbName
+	}
+
+	if u.Path != "" {
+		dbName = u.Path[1:]
+	}
+
+	return dbName
+}
+
+func (i *postgresqlIntegration) getDbQueryOperation(query string) string {
 	querySplit := strings.Split(query, " ")
 	operation := ""
 	if len(querySplit) > 0 {
 		operation = querySplit[0]
 	}
+
 	return operation
 }
 
@@ -29,7 +45,7 @@ func (i *postgresqlIntegration) beforeCall(query string, span *tracer.RawSpan, d
 	span.ClassName = constants.ClassNames["POSTGRESQL"]
 	span.DomainName = constants.DomainNames["DB"]
 
-	operation := i.getOperationName(query)
+	operation := i.getDbQueryOperation(query)
 
 	dbName := ""
 	host := ""

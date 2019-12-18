@@ -2,7 +2,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: circleci/golang:1.9
+      - image: circleci/golang:1.10
 
       - image: postgres:latest
         environment:
@@ -39,6 +39,14 @@ jobs:
             git clone --branch v6.15.3
             https://github.com/go-redis/redis
             wrappers/redis/go-redis/vendor/github.com/go-redis/redis
+
+
+      - run:
+          name: Vendor olivere v6.2.26
+          command: >
+            git clone --branch v6.2.26
+            https://github.com/olivere/elastic
+            wrappers/elastic/olivere/vendor/github.com/olivere/elastic
 
       - run: go get -v -t ./...
 

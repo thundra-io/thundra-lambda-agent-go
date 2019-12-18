@@ -65,7 +65,7 @@ func (i *sqsIntegration) beforeCall(r *request.Request, span *tracer.RawSpan) {
 	span.DomainName = constants.DomainNames["MESSAGING"]
 
 	operationName := r.Operation.Name
-	operationType := constants.SQSRequestTypes[operationName]
+	operationType := getOperationType(operationName, constants.ClassNames["SQS"])
 
 	tags := map[string]interface{}{
 		constants.AwsSQSTags["QUEUE_NAME"]:            i.getQueueName(r),

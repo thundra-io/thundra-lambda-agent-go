@@ -7,11 +7,11 @@ import (
 )
 
 func TestNewLatencyInjectorFromConfig(t *testing.T) {
-	config := map[string]string{
-		"delay":          "370",
-		"injectOnFinish": "true",
-		"randomizeDelay": "true",
-		"addInfoTags":    "false",
+	config := map[string]interface{}{
+		"delay":          float64(370),
+		"injectOnFinish": true,
+		"randomizeDelay": true,
+		"addInfoTags":    false,
 	}
 
 	lsl := NewLatencyInjectorSpanListener(config).(*LatencyInjectorSpanListener)
@@ -24,8 +24,8 @@ func TestNewLatencyInjectorFromConfig(t *testing.T) {
 }
 
 func TestNewLatencyInjectorFromConfigWithTypeErrors(t *testing.T) {
-	config := map[string]string{
-		"injectOnFinish": "37",
+	config := map[string]interface{}{
+		"injectOnFinish": 37,
 		"delay":          "foo",
 	}
 

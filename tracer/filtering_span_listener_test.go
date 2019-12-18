@@ -23,14 +23,16 @@ func TestCreation(t *testing.T) {
 
 func TestFilters(t *testing.T) {
 
-	f1 := ThundraSpanFilter{DomainName: "test"}
+	f1 := ThundraSpanFilter{DomainName: "testDomain"}
+	f2 := ThundraSpanFilter{ClassName: "testClass"}
 	filterer := ThundraSpanFilterer{}
 	filterer.AddFilter(&f1)
+	filterer.AddFilter(&f2)
 	listener := ErrorInjectorSpanListener{}
 	fsl := FilteringSpanListener{Listener: &listener, Filterer: &filterer}
 
 	span := &spanImpl{}
-	span.raw.DomainName = "test"
+	span.raw.DomainName = "testDomain"
 	errorOccured := false
 	func() {
 		defer func() {
@@ -44,7 +46,8 @@ func TestFilters(t *testing.T) {
 	assert.True(t, errorOccured)
 
 	errorOccured = false
-	span.raw.DomainName = "test2"
+	filterer.all = true
+	span.raw.ClassName = "testClass_2"
 	func() {
 		defer func() {
 			if recover() != nil {
@@ -58,12 +61,22 @@ func TestFilters(t *testing.T) {
 }
 
 func TestTagsFromConfig(t *testing.T) {
-	config := map[string]string{
-		"listener":              "ErrorInjectorSpanListener",
-		"config.injectOnFinish": "true",
-		"filter1.className":     "AWS-SQS",
-		"filter1.domainName":    "Messaging",
-		"filter1.tag.test":      "3",
+	config := map[string]interface{}{
+		"listener": map[string]interface{}{
+			"type": "ErrorInjectorSpanListener",
+			"config": map[string]interface{}{
+				"injectOnFinish": true,
+			},
+		},
+		"filters": []interface{}{
+			map[string]interface{}{
+				"className":  "AWS-SQS",
+				"domainName": "Messaging",
+				"tags": map[string]interface{}{
+					"test": 3,
+				},
+			},
+		},
 	}
 
 	fsl := NewFilteringSpanListener(config).(*FilteringSpanListener)
@@ -87,15 +100,27 @@ func TestTagsFromConfig(t *testing.T) {
 }
 
 func TestNewFilteringListenerFromConfig(t *testing.T) {
-	config := map[string]string{
-		"listener":               "ErrorInjectorSpanListener",
-		"config.errorMessage":    "You have a very funny name!",
-		"config.injectOnFinish":  "true",
-		"config.injectCountFreq": "3",
-		"filter1.className":      "AWS-SQS",
-		"filter1.domainName":     "Messaging",
-		"filter2.className":      "HTTP",
-		"filter2.tag.http.host":  "foo.com",
+	config := map[string]interface{}{
+		"listener": map[string]interface{}{
+			"type": "ErrorInjectorSpanListener",
+			"config": map[string]interface{}{
+				"errorMessage":    "You have a very funny name!",
+				"injectOnFinish":  true,
+				"injectCountFreq": float64(3),
+			},
+		},
+		"filters": []interface{}{
+			map[string]interface{}{
+				"className":  "AWS-SQS",
+				"domainName": "Messaging",
+			},
+			map[string]interface{}{
+				"className": "HTTP",
+				"tags": map[string]interface{}{
+					"http.host": "foo.com",
+				},
+			},
+		},
 	}
 
 	fsl := NewFilteringSpanListener(config).(*FilteringSpanListener)
@@ -112,5 +137,69 @@ func TestNewFilteringListenerFromConfig(t *testing.T) {
 
 	assert.ElementsMatch(t, []string{"AWS-SQS", "HTTP"}, []string{f1.(*ThundraSpanFilter).ClassName, f2.(*ThundraSpanFilter).ClassName})
 	assert.ElementsMatch(t, []interface{}{"foo.com", nil}, []interface{}{f1.(*ThundraSpanFilter).Tags["http.host"], f2.(*ThundraSpanFilter).Tags["http.host"]})
+}
 
+func TestNewFilteringListenerFromConfigWithCompositeFilter(t *testing.T) {
+	config := map[string]interface{}{
+		"listener": map[string]interface{}{
+			"type": "ErrorInjectorSpanListener",
+			"config": map[string]interface{}{
+				"errorMessage":    "You have a very funny name!",
+				"injectOnFinish":  true,
+				"injectCountFreq": float64(3),
+			},
+		},
+		"filters": []interface{}{
+			map[string]interface{}{
+				"composite": true,
+				"all":       true,
+				"filters": []interface{}{
+					map[string]interface{}{
+						"className":  "AWS-SQS",
+						"domainName": "Messaging",
+					},
+					map[string]interface{}{
+						"composite": true,
+						"filters": []interface{}{
+							map[string]interface{}{
+								"className": "HTTP",
+								"tags": map[string]interface{}{
+									"http.host": "foo.com",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	fsl := NewFilteringSpanListener(config).(*FilteringSpanListener)
+
+	assert.Equal(t, reflect.TypeOf(&ErrorInjectorSpanListener{}), reflect.TypeOf(fsl.Listener))
+	assert.Equal(t, "You have a very funny name!", fsl.Listener.(*ErrorInjectorSpanListener).ErrorMessage)
+	assert.Equal(t, true, fsl.Listener.(*ErrorInjectorSpanListener).InjectOnFinish)
+	assert.Equal(t, int64(3), fsl.Listener.(*ErrorInjectorSpanListener).InjectCountFreq)
+
+	assert.Equal(t, 1, len(fsl.Filterer.(*ThundraSpanFilterer).spanFilters))
+
+	f1 := fsl.Filterer.(*ThundraSpanFilterer).spanFilters[0].(*CompositeSpanFilter)
+
+	assert.True(t, f1.composite)
+	assert.True(t, f1.all)
+	assert.Equal(t, 2, len(f1.spanFilters))
+
+	f2 := f1.spanFilters[0].(*ThundraSpanFilter)
+	f3 := f1.spanFilters[1].(*CompositeSpanFilter)
+	f4 := f1.spanFilters[1].(*CompositeSpanFilter).spanFilters[0].(*ThundraSpanFilter)
+
+	assert.Equal(t, "AWS-SQS", f2.ClassName)
+	assert.Equal(t, "Messaging", f2.DomainName)
+
+	assert.False(t, f3.all)
+	assert.True(t, f3.composite)
+	assert.Equal(t, 1, len(f3.spanFilters))
+
+	assert.Equal(t, "HTTP", f4.ClassName)
+	assert.EqualValues(t, map[string]interface{}{"http.host": "foo.com"}, f4.Tags)
 }

@@ -47,7 +47,7 @@ func (i *firehoseIntegration) beforeCall(r *request.Request, span *tracer.RawSpa
 	span.DomainName = constants.DomainNames["STREAM"]
 
 	operationName := r.Operation.Name
-	operationType := constants.FirehoseRequestTypes[operationName]
+	operationType := getOperationType(operationName, constants.ClassNames["FIREHOSE"])
 
 	tags := map[string]interface{}{
 		constants.AwsFirehoseTags["STREAM_NAME"]:      i.getDeliveryStreamName(r),

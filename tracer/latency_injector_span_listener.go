@@ -2,7 +2,6 @@ package tracer
 
 import (
 	"math/rand"
-	"strconv"
 	"time"
 
 	"github.com/thundra-io/thundra-lambda-agent-go/constants"
@@ -58,34 +57,20 @@ func (l *LatencyInjectorSpanListener) addInfoTags(span *spanImpl, injectedDelay 
 }
 
 // NewLatencyInjectorSpanListener creates and returns a new LatencyInjectorSpanListener from config
-func NewLatencyInjectorSpanListener(config map[string]string) ThundraSpanListener {
+func NewLatencyInjectorSpanListener(config map[string]interface{}) ThundraSpanListener {
 	spanListener := &LatencyInjectorSpanListener{Delay: defaultDelay, AddInfoTags: true}
 
-	if config["injectOnFinish"] != "" {
-		injectOnFinish, err := strconv.ParseBool(config["injectOnFinish"])
-		if err == nil {
-			spanListener.InjectOnFinish = injectOnFinish
-		}
-
+	if delay, ok := config["delay"].(float64); ok {
+		spanListener.Delay = int64(delay)
 	}
-	if config["delay"] != "" {
-		delay, err := strconv.ParseInt(config["delay"], 10, 64)
-		if err == nil {
-			spanListener.Delay = delay
-		}
+	if injectOnFinish, ok := config["injectOnFinish"].(bool); ok {
+		spanListener.InjectOnFinish = injectOnFinish
 	}
-	if config["addInfoTags"] != "" {
-		addInfoTags, err := strconv.ParseBool(config["addInfoTags"])
-		if err == nil {
-			spanListener.AddInfoTags = addInfoTags
-		}
-
+	if randomizeDelay, ok := config["randomizeDelay"].(bool); ok {
+		spanListener.RandomizeDelay = randomizeDelay
 	}
-	if config["randomizeDelay"] != "" {
-		randomizeDelay, err := strconv.ParseBool(config["randomizeDelay"])
-		if err == nil {
-			spanListener.RandomizeDelay = randomizeDelay
-		}
+	if addInfoTags, ok := config["addInfoTags"].(bool); ok {
+		spanListener.AddInfoTags = addInfoTags
 	}
 
 	return spanListener

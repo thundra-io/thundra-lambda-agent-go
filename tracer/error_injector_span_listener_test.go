@@ -55,25 +55,25 @@ func TestError(t *testing.T) {
 }
 
 func TestNewListenerFromConfig(t *testing.T) {
-	config := map[string]string{
-		"errorMessage":    "\"You have a very funny name!\"",
-		"injectOnFinish":  "true",
-		"injectCountFreq": "7",
-		"addInfoTags":     "false",
+	config := map[string]interface{}{
+		"errorMessage":    "You have a very funny name!",
+		"injectOnFinish":  true,
+		"injectCountFreq": float64(7),
+		"addInfoTags":     false,
 		"foo":             "bar",
 	}
 
 	esl := NewErrorInjectorSpanListener(config).(*ErrorInjectorSpanListener)
 
-	assert.Equal(t, "\"You have a very funny name!\"", esl.ErrorMessage)
+	assert.Equal(t, "You have a very funny name!", esl.ErrorMessage)
 	assert.Equal(t, int64(7), esl.InjectCountFreq)
 	assert.Equal(t, true, esl.InjectOnFinish)
 	assert.Equal(t, false, esl.AddInfoTags)
 }
 
 func TestNewListenerFromConfigWithTypeErrors(t *testing.T) {
-	config := map[string]string{
-		"injectOnFinish":  "37",
+	config := map[string]interface{}{
+		"injectOnFinish":  37,
 		"injectCountFreq": "message",
 	}
 

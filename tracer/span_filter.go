@@ -2,7 +2,6 @@ package tracer
 
 import (
 	"fmt"
-	"strings"
 
 	ot "github.com/opentracing/opentracing-go"
 )
@@ -17,22 +16,45 @@ type SpanFilterer interface {
 
 type ThundraSpanFilterer struct {
 	spanFilters []SpanFilter
+	all         bool
 }
 
 type ThundraSpanFilter struct {
 	DomainName    string
 	ClassName     string
 	OperationName string
+	Reverse       bool
 	Tags          ot.Tags
 }
 
-func (t *ThundraSpanFilterer) Accept(span *spanImpl) bool {
-	for _, sf := range t.spanFilters {
-		if sf.Accept(span) {
-			return true
+type CompositeSpanFilter struct {
+	spanFilters []SpanFilter
+	all         bool
+	composite   bool
+}
+
+func (f *CompositeSpanFilter) Accept(span *spanImpl) bool {
+	res := f.all
+	for _, sf := range f.spanFilters {
+		if f.all {
+			res = res && sf.Accept(span)
+		} else {
+			res = res || sf.Accept(span)
 		}
 	}
-	return false
+	return res
+}
+
+func (t *ThundraSpanFilterer) Accept(span *spanImpl) bool {
+	res := t.all
+	for _, sf := range t.spanFilters {
+		if t.all {
+			res = res && sf.Accept(span)
+		} else {
+			res = res || sf.Accept(span)
+		}
+	}
+	return res
 }
 
 func (t *ThundraSpanFilterer) AddFilter(sf SpanFilter) {
@@ -69,32 +91,33 @@ func (t *ThundraSpanFilter) Accept(span *spanImpl) bool {
 			}
 		}
 	}
+
+	if t.Reverse {
+		return !accepted
+	}
+
 	return accepted
 }
 
 // NewThundraSpanFilter creates and returns a new ThundraSpanFilter from config
-func NewThundraSpanFilter(config map[string]string) *ThundraSpanFilter {
-
+func NewThundraSpanFilter(config map[string]interface{}) *ThundraSpanFilter {
 	spanFilter := ThundraSpanFilter{}
 
-	if config["domainName"] != "" {
-		spanFilter.DomainName = config["domainName"]
+	if domainName, ok := config["domainName"].(string); ok {
+		spanFilter.DomainName = domainName
 	}
-	if config["className"] != "" {
-		spanFilter.ClassName = config["className"]
+	if className, ok := config["className"].(string); ok {
+		spanFilter.ClassName = className
 	}
-	if config["operationName"] != "" {
-		spanFilter.OperationName = config["operationName"]
+	if operationName, ok := config["operationName"].(string); ok {
+		spanFilter.OperationName = operationName
 	}
-
-	tagPrefix := "tag."
-	tags := make(map[string]interface{})
-	for k, v := range config {
-		if strings.HasPrefix(k, tagPrefix) {
-			tags[k[len(tagPrefix):]] = v
-		}
+	if reverse, ok := config["reverse"].(bool); ok {
+		spanFilter.Reverse = reverse
 	}
-	spanFilter.Tags = tags
+	if tags, ok := config["tags"].(map[string]interface{}); ok {
+		spanFilter.Tags = tags
+	}
 
 	return &spanFilter
 }

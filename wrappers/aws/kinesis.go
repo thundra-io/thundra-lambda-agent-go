@@ -43,7 +43,7 @@ func (i *kinesisIntegration) beforeCall(r *request.Request, span *tracer.RawSpan
 	span.DomainName = constants.DomainNames["STREAM"]
 
 	operationName := r.Operation.Name
-	operationType := constants.KinesisRequestTypes[operationName]
+	operationType := getOperationType(operationName, constants.ClassNames["KINESIS"])
 
 	tags := map[string]interface{}{
 		constants.AwsKinesisTags["STREAM_NAME"]:       i.getStreamName(r),
