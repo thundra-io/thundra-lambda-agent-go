@@ -198,6 +198,8 @@ func getNearestCollector() string {
 		return "api.thundra.io"
 	} else if strings.HasPrefix(region, "us-east-") || strings.HasPrefix(region, "sa-") || strings.HasPrefix(region, "ca-") {
 		return "api-us-east-1.thundra.io"
+	} else if region == "eu-west-1" {
+		return "api-eu-west-1.thundra.io"
 	} else if strings.HasPrefix(region, "eu-") {
 		return "api-eu-west-2.thundra.io"
 	} else if strings.HasPrefix(region, "ap-") {
