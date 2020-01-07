@@ -43,9 +43,13 @@ func TestGetNearestCollector(t *testing.T) {
 	collector = getNearestCollector()
 	assert.Equal(t, "api-us-east-1.thundra.io", collector)
 
-	AwsLambdaRegion = "eu-west-1"
+	AwsLambdaRegion = "eu-west-2"
 	collector = getNearestCollector()
 	assert.Equal(t, "api-eu-west-2.thundra.io", collector)
+
+	AwsLambdaRegion = "eu-west-1"
+	collector = getNearestCollector()
+	assert.Equal(t, "api-eu-west-1.thundra.io", collector)
 
 	AwsLambdaRegion = "ap-"
 	collector = getNearestCollector()
