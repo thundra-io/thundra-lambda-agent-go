@@ -49,6 +49,10 @@ func (a *Agent) Wrap(handler interface{}) interface{} {
 			}
 		}()
 
+		if a.WarmUp && checkAndHandleWarmupRequest(payload) {
+			return nil, nil
+		}
+
 		// Timeout handler
 		go a.CatchTimeout(ctx, payload)
 
@@ -65,10 +69,6 @@ func (a *Agent) Wrap(handler interface{}) interface{} {
 
 			elem = newEvent.Elem()
 			ctx = utils.SetEventTypeToContext(ctx, newEventType)
-
-			if a.WarmUp && checkAndHandleWarmupRequest(elem, newEventType) {
-				return nil, nil
-			}
 		}
 
 		plugin.InitBaseData(ctx)
