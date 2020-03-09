@@ -3,6 +3,7 @@ package thundrahttp
 import (
 	"bytes"
 	"context"
+	"github.com/thundra-io/thundra-lambda-agent-go/invocation"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -266,5 +267,6 @@ func afterCall(span *tracer.RawSpan, resp *http.Response) {
 			span.Tags[constants.AwsErrorKind] = "HttpError"
 			span.Tags[constants.AwsErrorMessage] = resp.Status
 		}
+		invocation.SetTag(constants.HTTPTags["STATUS"], resp.StatusCode)
 	}
 }
