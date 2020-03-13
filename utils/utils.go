@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"math"
@@ -87,6 +88,23 @@ func MarshalJSON(av AttributeValue) ([]byte, error) {
 	}
 	buff.WriteString(`}`)
 	return buff.Bytes(), err
+}
+
+func GetStatusCode(responseInterface *interface{}) (int, error) {
+
+	type responseStruct struct {
+		StatusCode *int `json:"statusCode"`
+	}
+
+	encodedResponse, err := json.Marshal(*responseInterface)
+	if err == nil {
+		rs := responseStruct{}
+		err := json.Unmarshal(encodedResponse, &rs)
+		if err == nil && rs.StatusCode != nil {
+			return *rs.StatusCode, nil
+		}
+	}
+	return -1, errors.New("Response is not valid")
 }
 
 // AttributeValuetoStr returns string representation of an attribute value

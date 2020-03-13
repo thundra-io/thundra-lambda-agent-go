@@ -86,6 +86,16 @@ func (ip *invocationPlugin) AfterExecution(ctx context.Context, request json.Raw
 
 	data := ip.prepareData(ctx)
 
+	if response != nil {
+		responseInterface, ok := (response).(*interface{})
+		if ok {
+			statusCode, err := utils.GetStatusCode(responseInterface)
+			if err == nil {
+				SetTag(constants.HTTPTags["STATUS"], statusCode)
+			}
+		}
+	}
+
 	ip.Reset()
 
 	return []plugin.MonitoringDataWrapper{plugin.WrapMonitoringData(data, "Invocation")}, ctx
