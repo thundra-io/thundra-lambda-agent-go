@@ -22,10 +22,7 @@ type sesParams struct {
 	Source string
 	Destination []string
 	Subject sesData
-	Body struct{
-		Text sesData
-		Html sesData
-	}
+	Body sesBody
 	Template string
 	TemplateArn string
 	TemplateData string

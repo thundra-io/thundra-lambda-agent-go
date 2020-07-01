@@ -258,7 +258,7 @@ func getSessionWithSESSendEmailResponse() *session.Session {
 		Region:     aws.String("us-west-2"),
 		MaxRetries: aws.Int(0),
 	})
-	mockSESData := &ses.SendEmailOutput{MessageId: "test-mail-uuid-12345"}
+	mockSESData := &ses.SendEmailOutput{MessageId: aws.String("test-mail-uuid-12345")}
 	sess = Wrap(sess)
 	sess.Handlers.Complete.PushFront(func(r *request.Request) {
 		r.Data = &mockSESData
@@ -1581,23 +1581,23 @@ func TestSESSendEmailNotMasked(t *testing.T) {
 	sesc := ses.New(sess)
 
 	input := &ses.SendEmailInput{
-		Source: "demo@thundra.io",
+		Source: aws.String("demo@thundra.io"),
 		Destination: &ses.Destination{
-			ToAddresses: &[]string{"test@thundra.io"},
+			ToAddresses: []*string{aws.String("test@thundra.io")},
 		},
 		Message: &ses.Message{
 			Subject: &ses.Content{
-				Data: "subject-test",
-				Charset: "UTF-8",
+				Data: aws.String("subject-test"),
+				Charset: aws.String("UTF-8"),
 			},
 			Body: &ses.Body{
 				Html: &ses.Content{
-					Data: "html-test",
-					Charset: "UTF-8",
+					Data: aws.String("html-test"),
+					Charset: aws.String("UTF-8"),
 				},
 				Text: &ses.Content{
-					Data: "test",
-					Charset: "UTF-8",
+					Data: aws.String("test"),
+					Charset: aws.String("UTF-8"),
 				},
 			},
 		},
@@ -1613,10 +1613,10 @@ func TestSESSendEmailNotMasked(t *testing.T) {
 	assert.Equal(t, "WRITE", span.Tags[constants.SpanTags["OPERATION_TYPE"]])
 	assert.Equal(t, "SendEmail", span.Tags[constants.AwsSDKTags["REQUEST_NAME"]])
 	assert.Equal(t, "demo@thundra.io", span.Tags[constants.AwsSESTags["SOURCE"]])
-	assert.Equal(t, "test@thundra.io", []string(span.Tags[constants.AwsSESTags["DESTINATION"]])[0])
-	assert.Equal(t, "subject-test", ses.Content(span.Tags[constants.AwsSESTags["SUBJECT"]]).Data)
-	assert.Equal(t, "html-test", ses.Body(span.Tags[constants.AwsSESTags["BODY"]]).Html.Data)
-	assert.Equal(t, "test", ses.Body(span.Tags[constants.AwsSESTags["BODY"]]).Text.Data)
+	assert.Equal(t, "test@thundra.io", span.Tags[constants.AwsSESTags["DESTINATION"]].([]string)[0])
+	assert.Equal(t, "subject-test", span.Tags[constants.AwsSESTags["SUBJECT"]].(sesData).Data)
+	assert.Equal(t, "html-test", span.Tags[constants.AwsSESTags["BODY"]].(sesBody).Html.Data)
+	assert.Equal(t, "test", span.Tags[constants.AwsSESTags["BODY"]].(sesBody).Text.Data)
 
 	// Clear tracer
 	tp.Reset()
