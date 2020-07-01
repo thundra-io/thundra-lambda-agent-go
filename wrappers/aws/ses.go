@@ -1,9 +1,9 @@
 package thundraaws
 
 import (
-	// "encoding/json"
-	"fmt"
+	"encoding/json"
 	"github.com/thundra-io/thundra-lambda-agent-go/application"
+	"github.com/thundra-io/thundra-lambda-agent-go/config"
 	"github.com/thundra-io/thundra-lambda-agent-go/constants"
 	"github.com/thundra-io/thundra-lambda-agent-go/tracer"
 	"github.com/aws/aws-sdk-go/aws/request"
@@ -18,7 +18,10 @@ type sesParams struct {
 	Source string
 	Destination []string
 	Subject sesData
-	Body sesData
+	Body struct{
+		Text sesData
+		Html sesData
+	}
 	Template string
 	TemplateArn string
 	TemplateData string
@@ -53,12 +56,43 @@ type sesSendTemplatedEmailParams struct {
 
 func (i *sesIntegration) getSesInfo(r *request.Request) *sesParams {
 	fields := &sesParams{}
-	print(r)
+	operationName := i.getOperationName(r)
+	if operationName == "SendEmail" {
+		params := &sesSendEmailParams{}
+		m, err := json.Marshal(r.Params)
+		if err != nil { return &sesParams{} }
+		if err = json.Unmarshal(m, &params); err != nil { return &sesParams{} }
+		fields.Source = params.Source
+		fields.Destination = params.Destination.ToAddresses
+		fields.Subject = params.Message.Subject
+		fields.Body = params.Message.Body
+	} else if operationName == "SendRawEmail" {
+		params := &sesSendRawEmailParams{}
+		m, err := json.Marshal(r.Params)
+		if err != nil { return &sesParams{} }
+		if err = json.Unmarshal(m, &params); err != nil { return &sesParams{} }
+		fields.Source = params.Source
+		fields.Destination = params.Destinations
+	} else if operationName == "SendTemplatedEmail" {
+		params := &sesSendTemplatedEmailParams{}
+		m, err := json.Marshal(r.Params)
+		if err != nil { return &sesParams{} }
+		if err = json.Unmarshal(m, &params); err != nil { return &sesParams{} }
+		fields.Source = params.Source
+		fields.Destination = params.Destination.ToAddresses
+		fields.Template = params.Template
+		fields.TemplateArn = params.TemplateArn
+		fields.TemplateData = params.TemplateData
+	}
 	return fields
 }
 
 func (i *sesIntegration) getOperationName(r *request.Request) string {
-	return constants.AWSServiceRequest
+	if r.Operation.Name != "" {
+		return r.Operation.Name
+	} else {
+		return constants.AWSServiceRequest
+	}
 }
 
 func (i *sesIntegration) beforeCall(r *request.Request, span *tracer.RawSpan) {
@@ -67,6 +101,8 @@ func (i *sesIntegration) beforeCall(r *request.Request, span *tracer.RawSpan) {
 
 	operationName := r.Operation.Name
 	operationType := getOperationType(operationName, constants.ClassNames["SES"])
+
+	sesInfo := i.getSesInfo(r)
 
 	tags := map[string]interface{}{
 		constants.SpanTags["OPERATION_TYPE"]:          operationType,
@@ -77,6 +113,25 @@ func (i *sesIntegration) beforeCall(r *request.Request, span *tracer.RawSpan) {
 		constants.SpanTags["TRIGGER_CLASS_NAME"]:      constants.AwsLambdaApplicationClass,
 	}
 
+	if operationName == "SendEmail" && !config.MaskSESMail {
+		if sesInfo.Subject.Data != "" { tags[constants.AwsSESTags["SUBJECT"]] = sesInfo.Subject }
+		if sesInfo.Body.Text.Data != "" || sesInfo.Body.Html.Data != "" {
+			tags[constants.AwsSESTags["BODY"]] = sesInfo.Body
+		}
+	}
+
+	if operationName == "SendTemplatedEmail" {
+		if sesInfo.Template != "" { tags[constants.AwsSESTags["TEMPLATE_NAME"]] = sesInfo.Template }
+		if sesInfo.TemplateArn != "" { tags[constants.AwsSESTags["TEMPLATE_ARN"]] = sesInfo.TemplateArn }
+		if sesInfo.TemplateData != "" && !config.MaskSESMail {
+			tags[constants.AwsSESTags["TEMPLATE_DATA"]] = sesInfo.TemplateData
+		}
+	}
+
+	if sesInfo.Source != "" { tags[constants.AwsSESTags["SOURCE"]] = sesInfo.Source }
+	if len(sesInfo.Destination) > 0 && !config.MaskSESDestination {
+		tags[constants.AwsSESTags["DESTINATION"]] = sesInfo.Destination
+	}
 
 	span.Tags = tags
 }
@@ -86,6 +141,5 @@ func (i *sesIntegration) afterCall(r *request.Request, span *tracer.RawSpan) {
 }
 
 func init() {
-	fmt.Print("SES integration init");
 	integrations["SES"] = &sesIntegration{}
 }
