@@ -2,17 +2,21 @@ package thundraaws
 
 import (
 	"encoding/json"
+	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/thundra-io/thundra-lambda-agent-go/application"
 	"github.com/thundra-io/thundra-lambda-agent-go/config"
 	"github.com/thundra-io/thundra-lambda-agent-go/constants"
 	"github.com/thundra-io/thundra-lambda-agent-go/tracer"
-	"github.com/aws/aws-sdk-go/aws/request"
 )
 
 type sesIntegration struct{}
 type sesData struct {
 	Data string
 	Charset string
+}
+type sesBody struct {
+	Text sesData
+	Html sesData
 }
 type sesParams struct {
 	Source string
@@ -32,10 +36,7 @@ type sesSendEmailParams struct {
 		ToAddresses []string
 	}
 	Message struct{
-		Body struct{
-			Text sesData
-			Html sesData
-		}
+		Body sesBody
 		Subject sesData
 	}
 }
@@ -97,7 +98,7 @@ func (i *sesIntegration) getOperationName(r *request.Request) string {
 
 func (i *sesIntegration) beforeCall(r *request.Request, span *tracer.RawSpan) {
 	span.ClassName = constants.ClassNames["SES"]
-	span.DomainName = constants.DomainNames["STORAGE"]
+	span.DomainName = constants.DomainNames["MESSAGING"]
 
 	operationName := r.Operation.Name
 	operationType := getOperationType(operationName, constants.ClassNames["SES"])

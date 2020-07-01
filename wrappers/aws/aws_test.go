@@ -18,6 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/kinesis"
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/ses"
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/stretchr/testify/assert"
@@ -249,6 +250,21 @@ func getBase64EncodedClientContextWithMockParam() string {
 	}
 	ccByte, _ := json.Marshal(cc)
 	return base64.StdEncoding.EncodeToString(ccByte)
+}
+
+func getSessionWithSESSendEmailResponse() *session.Session {
+	var sess = session.New(&aws.Config{
+		HTTPClient: testClient,
+		Region:     aws.String("us-west-2"),
+		MaxRetries: aws.Int(0),
+	})
+	mockSESData := &ses.SendEmailOutput{MessageId: "test-mail-uuid-12345"}
+	sess = Wrap(sess)
+	sess.Handlers.Complete.PushFront(func(r *request.Request) {
+		r.Data = &mockSESData
+	})
+
+	return sess
 }
 
 func TestDynamoDBPutItem(t *testing.T) {
@@ -1553,4 +1569,56 @@ func TestNonTracedService(t *testing.T) {
 	assert.Equal(t, "GetDashboard", span.Tags[constants.AwsSDKTags["REQUEST_NAME"]])
 
 	tp.Reset()
+}
+
+func TestSESSendEmailNotMasked(t *testing.T) {
+	config.MaskSESMail = false
+	// Initilize trace plugin to set GlobalTracer of opentracing
+	tp := trace.New()
+
+	// Create a session and wrap it
+	sess := getSessionWithSESSendEmailResponse()
+	sesc := ses.New(sess)
+
+	input := &ses.SendEmailInput{
+		Source: "demo@thundra.io",
+		Destination: &ses.Destination{
+			ToAddresses: &[]string{"test@thundra.io"},
+		},
+		Message: &ses.Message{
+			Subject: &ses.Content{
+				Data: "subject-test",
+				Charset: "UTF-8",
+			},
+			Body: &ses.Body{
+				Html: &ses.Content{
+					Data: "html-test",
+					Charset: "UTF-8",
+				},
+				Text: &ses.Content{
+					Data: "test",
+					Charset: "UTF-8",
+				},
+			},
+		},
+	}
+	sesc.SendEmail(input)
+
+	// Get the span created for dynamo call
+	span := tp.Recorder.GetSpans()[0]
+
+	// Test related fields
+	assert.Equal(t, constants.ClassNames["SES"], span.ClassName)
+	assert.Equal(t, constants.DomainNames["MESSAGING"], span.DomainName)
+	assert.Equal(t, "WRITE", span.Tags[constants.SpanTags["OPERATION_TYPE"]])
+	assert.Equal(t, "SendEmail", span.Tags[constants.AwsSDKTags["REQUEST_NAME"]])
+	assert.Equal(t, "demo@thundra.io", span.Tags[constants.AwsSESTags["SOURCE"]])
+	assert.Equal(t, "test@thundra.io", []string(span.Tags[constants.AwsSESTags["DESTINATION"]])[0])
+	assert.Equal(t, "subject-test", ses.Content(span.Tags[constants.AwsSESTags["SUBJECT"]]).Data)
+	assert.Equal(t, "html-test", ses.Body(span.Tags[constants.AwsSESTags["BODY"]]).Html.Data)
+	assert.Equal(t, "test", ses.Body(span.Tags[constants.AwsSESTags["BODY"]]).Text.Data)
+
+	// Clear tracer
+	tp.Reset()
+	config.MaskSESMail = true
 }
