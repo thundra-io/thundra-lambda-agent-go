@@ -54,8 +54,8 @@ type sesSendTemplatedEmailParams struct {
 
 func (i *sesIntegration) getSesInfo(r *request.Request) *sesParams {
 	fields := &sesParams{}
-	operationName := i.getOperationName(r)
-	if operationName == "SendEmail" {
+	switch operationName := i.getOperationName(r); operationName {
+	case "SendEmail":
 		params := &sesSendEmailParams{}
 		m, err := json.Marshal(r.Params)
 		if err != nil { return &sesParams{} }
@@ -64,14 +64,14 @@ func (i *sesIntegration) getSesInfo(r *request.Request) *sesParams {
 		fields.Destination = params.Destination.ToAddresses
 		fields.Subject = params.Message.Subject
 		fields.Body = params.Message.Body
-	} else if operationName == "SendRawEmail" {
+	case "SendRawEmail":
 		params := &sesSendRawEmailParams{}
 		m, err := json.Marshal(r.Params)
 		if err != nil { return &sesParams{} }
 		if err = json.Unmarshal(m, &params); err != nil { return &sesParams{} }
 		fields.Source = params.Source
 		fields.Destination = params.Destinations
-	} else if operationName == "SendTemplatedEmail" {
+	case "SendTemplatedEmail":
 		params := &sesSendTemplatedEmailParams{}
 		m, err := json.Marshal(r.Params)
 		if err != nil { return &sesParams{} }

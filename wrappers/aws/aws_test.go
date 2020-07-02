@@ -1604,7 +1604,7 @@ func TestSESSendEmailNotMasked(t *testing.T) {
 	}
 	sesc.SendEmail(input)
 
-	// Get the span created for dynamo call
+	// Get the span created for SES call
 	span := tp.Recorder.GetSpans()[0]
 
 	// Test related fields
@@ -1643,7 +1643,7 @@ func TestSESSendTemplatedEmail(t *testing.T) {
 	}
 	sesc.SendTemplatedEmail(input)
 
-	// Get the span created for dynamo call
+	// Get the span created for SES call
 	span := tp.Recorder.GetSpans()[0]
 
 	// Test related fields
@@ -1680,7 +1680,7 @@ func TestSESSendRawEmail(t *testing.T) {
 	}
 	sesc.SendRawEmail(input)
 
-	// Get the span created for dynamo call
+	// Get the span created for SES call
 	span := tp.Recorder.GetSpans()[0]
 
 	// Test related fields
