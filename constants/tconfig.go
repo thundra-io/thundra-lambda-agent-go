@@ -82,3 +82,6 @@ const ThundraMaskHTTPBody = "thundra_agent_lambda_trace_integrations_aws_http_bo
 
 const ThundraAgentTraceIntegrationsHttpUrlDepth = "thundra_agent_lambda_trace_integrations_http_url_depth"
 const ThundraAgentTraceIntegrationsEsUrlDepth = "thundra_agent_lambda_trace_integrations_elasticsearch_path_depth"
+
+const ThundraMaskSESMail = "thundra_agent_lambda_trace_integrations_aws_ses_mail_mask"
+const ThundraMaskSESDestination = "thundra_agent_lambda_trace_integrations_aws_ses_mail_destination_mask"

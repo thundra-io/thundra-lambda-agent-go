@@ -18,6 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/kinesis"
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/ses"
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/stretchr/testify/assert"
@@ -249,6 +250,21 @@ func getBase64EncodedClientContextWithMockParam() string {
 	}
 	ccByte, _ := json.Marshal(cc)
 	return base64.StdEncoding.EncodeToString(ccByte)
+}
+
+func getSessionWithSESSendEmailResponse() *session.Session {
+	var sess = session.New(&aws.Config{
+		HTTPClient: testClient,
+		Region:     aws.String("us-west-2"),
+		MaxRetries: aws.Int(0),
+	})
+	mockSESData := &ses.SendEmailOutput{MessageId: aws.String("test-mail-uuid-12345")}
+	sess = Wrap(sess)
+	sess.Handlers.Complete.PushFront(func(r *request.Request) {
+		r.Data = &mockSESData
+	})
+
+	return sess
 }
 
 func TestDynamoDBPutItem(t *testing.T) {
@@ -1553,4 +1569,129 @@ func TestNonTracedService(t *testing.T) {
 	assert.Equal(t, "GetDashboard", span.Tags[constants.AwsSDKTags["REQUEST_NAME"]])
 
 	tp.Reset()
+}
+
+func TestSESSendEmailNotMasked(t *testing.T) {
+	config.MaskSESMail = false
+	// Initilize trace plugin to set GlobalTracer of opentracing
+	tp := trace.New()
+
+	// Create a session and wrap it
+	sess := getSessionWithSESSendEmailResponse()
+	sesc := ses.New(sess)
+
+	input := &ses.SendEmailInput{
+		Source: aws.String("demo@thundra.io"),
+		Destination: &ses.Destination{
+			ToAddresses: []*string{aws.String("test@thundra.io")},
+		},
+		Message: &ses.Message{
+			Subject: &ses.Content{
+				Data: aws.String("subject-test"),
+				Charset: aws.String("UTF-8"),
+			},
+			Body: &ses.Body{
+				Html: &ses.Content{
+					Data: aws.String("html-test"),
+					Charset: aws.String("UTF-8"),
+				},
+				Text: &ses.Content{
+					Data: aws.String("test"),
+					Charset: aws.String("UTF-8"),
+				},
+			},
+		},
+	}
+	sesc.SendEmail(input)
+
+	// Get the span created for SES call
+	span := tp.Recorder.GetSpans()[0]
+
+	// Test related fields
+	assert.Equal(t, constants.ClassNames["SES"], span.ClassName)
+	assert.Equal(t, constants.DomainNames["MESSAGING"], span.DomainName)
+	assert.Equal(t, "WRITE", span.Tags[constants.SpanTags["OPERATION_TYPE"]])
+	assert.Equal(t, "SendEmail", span.Tags[constants.AwsSDKTags["REQUEST_NAME"]])
+	assert.Equal(t, "demo@thundra.io", span.Tags[constants.AwsSESTags["SOURCE"]])
+	assert.Equal(t, "test@thundra.io", span.Tags[constants.AwsSESTags["DESTINATION"]].([]string)[0])
+	assert.Equal(t, "subject-test", span.Tags[constants.AwsSESTags["SUBJECT"]].(sesData).Data)
+	assert.Equal(t, "html-test", span.Tags[constants.AwsSESTags["BODY"]].(sesBody).Html.Data)
+	assert.Equal(t, "test", span.Tags[constants.AwsSESTags["BODY"]].(sesBody).Text.Data)
+
+	// Clear tracer
+	tp.Reset()
+	config.MaskSESMail = true
+}
+
+func TestSESSendTemplatedEmail(t *testing.T) {
+	config.MaskSESMail = false
+	// Initilize trace plugin to set GlobalTracer of opentracing
+	tp := trace.New()
+
+	// Create a session and wrap it
+	sess := getSessionWithSESSendEmailResponse()
+	sesc := ses.New(sess)
+
+	input := &ses.SendTemplatedEmailInput{
+		Source: aws.String("demo@thundra.io"),
+		Destination: &ses.Destination{
+			ToAddresses: []*string{aws.String("test@thundra.io")},
+		},
+		Template: aws.String("test-template-name"),
+		TemplateArn: aws.String("arn:test"),
+		TemplateData: aws.String("{\"test\": \"test\"}"),
+	}
+	sesc.SendTemplatedEmail(input)
+
+	// Get the span created for SES call
+	span := tp.Recorder.GetSpans()[0]
+
+	// Test related fields
+	assert.Equal(t, constants.ClassNames["SES"], span.ClassName)
+	assert.Equal(t, constants.DomainNames["MESSAGING"], span.DomainName)
+	assert.Equal(t, "WRITE", span.Tags[constants.SpanTags["OPERATION_TYPE"]])
+	assert.Equal(t, "SendTemplatedEmail", span.Tags[constants.AwsSDKTags["REQUEST_NAME"]])
+	assert.Equal(t, "demo@thundra.io", span.Tags[constants.AwsSESTags["SOURCE"]])
+	assert.Equal(t, "test@thundra.io", span.Tags[constants.AwsSESTags["DESTINATION"]].([]string)[0])
+	assert.Equal(t, "test-template-name", span.Tags[constants.AwsSESTags["TEMPLATE_NAME"]])
+	assert.Equal(t, "arn:test", span.Tags[constants.AwsSESTags["TEMPLATE_ARN"]])
+	assert.Equal(t, "{\"test\": \"test\"}", span.Tags[constants.AwsSESTags["TEMPLATE_DATA"]])
+
+	// Clear tracer
+	tp.Reset()
+	config.MaskSESMail = true
+}
+
+func TestSESSendRawEmail(t *testing.T) {
+	config.MaskSESMail = false
+	// Initilize trace plugin to set GlobalTracer of opentracing
+	tp := trace.New()
+
+	// Create a session and wrap it
+	sess := getSessionWithSESSendEmailResponse()
+	sesc := ses.New(sess)
+
+	input := &ses.SendRawEmailInput{
+		Source: aws.String("demo@thundra.io"),
+		Destinations: []*string{aws.String("test@thundra.io")},
+		RawMessage: &ses.RawMessage{
+			Data: []byte{},
+		},
+	}
+	sesc.SendRawEmail(input)
+
+	// Get the span created for SES call
+	span := tp.Recorder.GetSpans()[0]
+
+	// Test related fields
+	assert.Equal(t, constants.ClassNames["SES"], span.ClassName)
+	assert.Equal(t, constants.DomainNames["MESSAGING"], span.DomainName)
+	assert.Equal(t, "WRITE", span.Tags[constants.SpanTags["OPERATION_TYPE"]])
+	assert.Equal(t, "SendRawEmail", span.Tags[constants.AwsSDKTags["REQUEST_NAME"]])
+	assert.Equal(t, "demo@thundra.io", span.Tags[constants.AwsSESTags["SOURCE"]])
+	assert.Equal(t, "test@thundra.io", span.Tags[constants.AwsSESTags["DESTINATION"]].([]string)[0])
+
+	// Clear tracer
+	tp.Reset()
+	config.MaskSESMail = true
 }

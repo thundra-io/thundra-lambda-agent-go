@@ -87,6 +87,16 @@ var AwsAthenaTags = map[string]string{
 	"RESPONSE_NAMED_QUERY_IDS":     "aws.athena.response.namedQuery.ids",
 }
 
+var AwsSESTags = map[string]string{
+	"SUBJECT":          "aws.ses.mail.subject",
+	"BODY":             "aws.ses.mail.body",
+	"TEMPLATE_NAME":    "aws.ses.mail.template.name",
+	"TEMPLATE_ARN":     "aws.ses.mail.template.arn",
+	"TEMPLATE_DATA":    "aws.ses.mail.template.data",
+	"SOURCE":           "aws.ses.mail.source",
+	"DESTINATION":      "aws.ses.mail.destination",
+}
+
 var AwsLambdaTags = map[string]string{
 	"FUNCTION_NAME":      "aws.lambda.name",
 	"FUNCTION_QUALIFIER": "aws.lambda.qualifier",
@@ -269,6 +279,7 @@ var ClassNames = map[string]string{
 	"SCHEDULE":      "AWS-CloudWatch-Schedule",
 	"MONGODB":       "MONGODB",
 	"ATHENA":        "AWS-Athena",
+	"SES":           "AWS-SES",
 }
 
 var MongoDBTags = map[string]string{

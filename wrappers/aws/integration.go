@@ -11,4 +11,4 @@ type integration interface {
 	getOperationName(r *request.Request) string
 }
 
-var integrations = make(map[string]integration, 8)
+var integrations = make(map[string]integration, 9)
