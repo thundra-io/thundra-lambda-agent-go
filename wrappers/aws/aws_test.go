@@ -1584,6 +1584,7 @@ func TestSESSendEmailNotMasked(t *testing.T) {
 		Source: aws.String("demo@thundra.io"),
 		Destination: &ses.Destination{
 			ToAddresses: []*string{aws.String("test@thundra.io")},
+			CcAddresses: []*string{aws.String("test-cc@thundra.io")},
 		},
 		Message: &ses.Message{
 			Subject: &ses.Content{
@@ -1613,7 +1614,8 @@ func TestSESSendEmailNotMasked(t *testing.T) {
 	assert.Equal(t, "WRITE", span.Tags[constants.SpanTags["OPERATION_TYPE"]])
 	assert.Equal(t, "SendEmail", span.Tags[constants.AwsSDKTags["REQUEST_NAME"]])
 	assert.Equal(t, "demo@thundra.io", span.Tags[constants.AwsSESTags["SOURCE"]])
-	assert.Equal(t, "test@thundra.io", span.Tags[constants.AwsSESTags["DESTINATION"]].([]string)[0])
+	assert.Equal(t, "test@thundra.io", span.Tags[constants.AwsSESTags["DESTINATION"]].(sesDestination).ToAddresses[0])
+	assert.Equal(t, "test-cc@thundra.io", span.Tags[constants.AwsSESTags["DESTINATION"]].(sesDestination).CcAddresses[0])
 	assert.Equal(t, "subject-test", span.Tags[constants.AwsSESTags["SUBJECT"]].(sesData).Data)
 	assert.Equal(t, "html-test", span.Tags[constants.AwsSESTags["BODY"]].(sesBody).Html.Data)
 	assert.Equal(t, "test", span.Tags[constants.AwsSESTags["BODY"]].(sesBody).Text.Data)
@@ -1652,7 +1654,7 @@ func TestSESSendTemplatedEmail(t *testing.T) {
 	assert.Equal(t, "WRITE", span.Tags[constants.SpanTags["OPERATION_TYPE"]])
 	assert.Equal(t, "SendTemplatedEmail", span.Tags[constants.AwsSDKTags["REQUEST_NAME"]])
 	assert.Equal(t, "demo@thundra.io", span.Tags[constants.AwsSESTags["SOURCE"]])
-	assert.Equal(t, "test@thundra.io", span.Tags[constants.AwsSESTags["DESTINATION"]].([]string)[0])
+	assert.Equal(t, "test@thundra.io", span.Tags[constants.AwsSESTags["DESTINATION"]].(sesDestination).ToAddresses[0])
 	assert.Equal(t, "test-template-name", span.Tags[constants.AwsSESTags["TEMPLATE_NAME"]])
 	assert.Equal(t, "arn:test", span.Tags[constants.AwsSESTags["TEMPLATE_ARN"]])
 	assert.Equal(t, "{\"test\": \"test\"}", span.Tags[constants.AwsSESTags["TEMPLATE_DATA"]])

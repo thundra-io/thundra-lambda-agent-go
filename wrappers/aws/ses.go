@@ -18,9 +18,15 @@ type sesBody struct {
 	Text sesData
 	Html sesData
 }
+type sesDestination struct {
+	ToAddresses []string
+	CcAddresses []string
+	BccAddresses []string
+}
+
 type sesParams struct {
 	Source string
-	Destination []string
+	Destination interface{}
 	Subject sesData
 	Body sesBody
 	Template string
@@ -29,9 +35,7 @@ type sesParams struct {
 }
 type sesSendEmailParams struct {
 	Source string
-	Destination struct{
-		ToAddresses []string
-	}
+	Destination sesDestination
 	Message struct{
 		Body sesBody
 		Subject sesData
@@ -44,9 +48,7 @@ type sesSendRawEmailParams struct {
 }
 type sesSendTemplatedEmailParams struct {
 	Source string
-	Destination struct{
-		ToAddresses []string
-	}
+	Destination sesDestination
 	Template string
 	TemplateArn string
 	TemplateData string
@@ -61,7 +63,7 @@ func (i *sesIntegration) getSesInfo(r *request.Request) *sesParams {
 		if err != nil { return &sesParams{} }
 		if err = json.Unmarshal(m, &params); err != nil { return &sesParams{} }
 		fields.Source = params.Source
-		fields.Destination = params.Destination.ToAddresses
+		fields.Destination = params.Destination
 		fields.Subject = params.Message.Subject
 		fields.Body = params.Message.Body
 	case "SendRawEmail":
@@ -77,7 +79,7 @@ func (i *sesIntegration) getSesInfo(r *request.Request) *sesParams {
 		if err != nil { return &sesParams{} }
 		if err = json.Unmarshal(m, &params); err != nil { return &sesParams{} }
 		fields.Source = params.Source
-		fields.Destination = params.Destination.ToAddresses
+		fields.Destination = params.Destination
 		fields.Template = params.Template
 		fields.TemplateArn = params.TemplateArn
 		fields.TemplateData = params.TemplateData
@@ -127,8 +129,10 @@ func (i *sesIntegration) beforeCall(r *request.Request, span *tracer.RawSpan) {
 	}
 
 	if sesInfo.Source != "" { tags[constants.AwsSESTags["SOURCE"]] = sesInfo.Source }
-	if len(sesInfo.Destination) > 0 && !config.MaskSESDestination {
-		tags[constants.AwsSESTags["DESTINATION"]] = sesInfo.Destination
+	if !config.MaskSESDestination {
+		if _, isArr := sesInfo.Destination.([]string); (isArr && len(sesInfo.Destination.([]string)) > 0) || !isArr {
+			tags[constants.AwsSESTags["DESTINATION"]] = sesInfo.Destination
+		}
 	}
 
 	span.Tags = tags
