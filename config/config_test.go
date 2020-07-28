@@ -34,7 +34,7 @@ func TestGetDefaultTimeoutMargin(t *testing.T) {
 	assert.Equal(t, 1500, timeoutMargin)
 }
 
-func TestGetNearestCollector(t *testing.T) {
+func TestGetDefaultCollector(t *testing.T) {
 	regions := []string{
 		"us-west-2", "us-west-1",
 		"us-east-2", "us-east-1",
