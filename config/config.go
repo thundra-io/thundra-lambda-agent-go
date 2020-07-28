@@ -113,7 +113,7 @@ func init() {
 	TimeoutMargin = time.Duration(intFromEnv(constants.ThundraLambdaTimeoutMargin,
 		getDefaultTimeoutMargin())) * time.Millisecond
 
-	CollectorUrl = "https://" + getNearestCollector() + "/v1"
+	CollectorUrl = "https://" + getDefaultCollector() + "/v1"
 }
 
 func boolFromEnv(key string, defaultValue bool) bool {
@@ -196,20 +196,13 @@ func getDefaultTimeoutMargin() int {
 	return timeoutMargin
 }
 
-func getNearestCollector() string {
+func getDefaultCollector() string {
 	region := AwsLambdaRegion
+	endpoint := "collector.thundra.io"
 
-	if strings.HasPrefix(region, "us-west-") {
-		return "api.thundra.io"
-	} else if strings.HasPrefix(region, "us-east-") || strings.HasPrefix(region, "sa-") || strings.HasPrefix(region, "ca-") {
-		return "api-us-east-1.thundra.io"
-	} else if region == "eu-west-1" {
-		return "api-eu-west-1.thundra.io"
-	} else if strings.HasPrefix(region, "eu-") {
-		return "api-eu-west-2.thundra.io"
-	} else if strings.HasPrefix(region, "ap-") {
-		return "api-ap-northeast-1.thundra.io"
+	if region != "" {
+		return region + "." + endpoint
 	}
 
-	return "api.thundra.io"
+	return endpoint
 }
