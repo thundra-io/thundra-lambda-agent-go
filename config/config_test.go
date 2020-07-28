@@ -34,24 +34,27 @@ func TestGetDefaultTimeoutMargin(t *testing.T) {
 	assert.Equal(t, 1500, timeoutMargin)
 }
 
-func TestGetNearestCollector(t *testing.T) {
-	AwsLambdaRegion = "us-west-1"
-	collector := getNearestCollector()
-	assert.Equal(t, "api.thundra.io", collector)
+func TestGetDefaultCollector(t *testing.T) {
+	regions := []string{
+		"us-west-2", "us-west-1",
+		"us-east-2", "us-east-1",
+		"ca-central-1", "sa-east-1",
+		"eu-central-1", "eu-west-1",
+		"eu-west-2", "eu-west-3",
+		"eu-north-1", "eu-south-1",
+		"ap-south-1", "ap-northeast-1",
+		"ap-northeast-2", "ap-southeast-1",
+		"ap-southeast-2", "ap-east-1",
+		"af-south-1", "me-south-1",
+	}
 
-	AwsLambdaRegion = "us-east-1"
-	collector = getNearestCollector()
-	assert.Equal(t, "api-us-east-1.thundra.io", collector)
+	for _, region := range regions {
+		AwsLambdaRegion = region
+		collector := getDefaultCollector()
+		assert.Equal(t, region+".collector.thundra.io", collector)
+	}
 
-	AwsLambdaRegion = "eu-west-2"
-	collector = getNearestCollector()
-	assert.Equal(t, "api-eu-west-2.thundra.io", collector)
-
-	AwsLambdaRegion = "eu-west-1"
-	collector = getNearestCollector()
-	assert.Equal(t, "api-eu-west-1.thundra.io", collector)
-
-	AwsLambdaRegion = "ap-"
-	collector = getNearestCollector()
-	assert.Equal(t, "api-ap-northeast-1.thundra.io", collector)
+	AwsLambdaRegion = ""
+	collector := getDefaultCollector()
+	assert.Equal(t, "collector.thundra.io", collector)
 }
