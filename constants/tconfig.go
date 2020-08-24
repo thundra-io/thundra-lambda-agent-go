@@ -29,7 +29,7 @@ const CompositeMonitoringDataPath = "/composite-monitoring-data"
 const ThundraAPIKey = "thundra_apiKey"
 const ThundraLambdaReportCloudwatchEnable = "thundra_agent_lambda_report_cloudwatch_enable"
 const ThundraLambdaReportRestBaseURL = "thundra_agent_lambda_report_rest_baseUrl"
-const ThundraLambdaWarmupWarmupAware = "thundra_agent_lambda_warmup_warmupAware"
+const ThundraLambdaWarmupWarmupAware = "thundra_lambda_warmup_warmupAware"
 const ThundraLambdaTimeoutMargin = "thundra_agent_lambda_timeout_margin"
 const ThundraTrustAllCertificates = "thundra_agent_lambda_report_rest_trustAllCertificates"
 

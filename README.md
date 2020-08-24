@@ -37,14 +37,14 @@ Later just build and deploy your executable to AWS as regular. Test your functio
 | thundra_agent_lambda_timeout_margin      |  number|     200       |
 | thundra_agent_lambda_report_rest_baseUrl | string |https://api.thundra.io/v1|
 | thundra_agent_lambda_trace_disable       | bool   |false|
-| thundra_agent_lambda_metric_disable      | bool |false|
-| thundra_agent_lambda_log_disable         | bool |false|
+| thundra_agent_lambda_metric_disable      | bool   |false|
+| thundra_agent_lambda_log_disable         | bool   |false|
 | thundra_log_logLevel                     | string |TRACE|
 | thundra_agent_lambda_trace_request_skip  |  bool  |     false     |
 | thundra_agent_lambda_trace_response_skip |  bool  |     false     |
 | thundra_agent_lambda_report_rest_trustAllCertificates |  bool  |     false     |
 | thundra_agent_lambda_debug_enable        |  bool  |     false     |
-| thundra_agent_lambda_warmup_warmupAware  | bool |  false  |
+| thundra_lambda_warmup_warmupAware        | bool |  false  |
 
 
 ### Async Monitoring
@@ -57,7 +57,7 @@ You can cut down cold starts easily by deploying our lambda function [`thundra-l
 Our agent handles warmup requests automatically so you don't need to make any code changes.
 
 You just need to deploy `thundra-lambda-warmup` once, then you can enable warming up for your lambda by 
-* setting its environment variable `thundra_agent_lambda_warmup_warmupAware` **true** OR
+* setting its environment variable `thundra_lambda_warmup_warmupAware` **true** OR
 * adding its name to `thundra-lambda-warmup`'s environment variable `thundra_lambda_warmup_function`.
 
 Check out [this part](https://thundra.readme.io/docs/how-to-warmup) in our docs for more information.
