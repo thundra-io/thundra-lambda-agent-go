@@ -3,11 +3,11 @@ package metric
 import (
 	"runtime"
 
-	uuid "github.com/satori/go.uuid"
+	uuid "github.com/google/uuid"
 )
 
 func prepareGoRoutineMetricsData(mp *metricPlugin, base metricDataModel) metricDataModel {
-	base.ID = uuid.NewV4().String()
+	base.ID = uuid.New().String()
 	base.MetricName = goroutineMetric
 	base.Metrics = map[string]interface{}{
 		// NumGoroutine is the number of goroutines on execution

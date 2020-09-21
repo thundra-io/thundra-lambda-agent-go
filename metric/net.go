@@ -3,14 +3,14 @@ package metric
 import (
 	"log"
 
-	uuid "github.com/satori/go.uuid"
+	uuid "github.com/google/uuid"
 	"github.com/shirou/gopsutil/net"
 )
 
 const all = 0
 
 func prepareNetMetricsData(mp *metricPlugin, base metricDataModel) metricDataModel {
-	base.ID = uuid.NewV4().String()
+	base.ID = uuid.New().String()
 	base.MetricName = netMetric
 	nf := takeNetFrame(mp)
 	base.Metrics = map[string]interface{}{

@@ -36,10 +36,6 @@ ignored = [
 ]
 
 [[constraint]]
-  name = "github.com/satori/go.uuid"
-  version = "1.2.0"
-
-[[constraint]]
   name = "github.com/shirou/gopsutil"
   version = "2.18.3"
 
@@ -54,3 +50,7 @@ ignored = [
 [prune]
   go-tests = true
   unused-packages = true
+
+[[constraint]]
+  name = "github.com/google/uuid"
+  version = "1.1.2"

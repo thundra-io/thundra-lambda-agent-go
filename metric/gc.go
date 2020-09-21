@@ -3,11 +3,11 @@ package metric
 import (
 	"runtime"
 
-	uuid "github.com/satori/go.uuid"
+	uuid "github.com/google/uuid"
 )
 
 func prepareGCMetricsData(mp *metricPlugin, memStats *runtime.MemStats, base metricDataModel) metricDataModel {
-	base.ID = uuid.NewV4().String()
+	base.ID = uuid.New().String()
 	base.MetricName = gcMetric
 	base.Metrics = map[string]interface{}{
 		// PauseTotalNs is the cumulative nanoseconds in GC

@@ -15,8 +15,8 @@ import (
 	"strings"
 	"time"
 
+	uuid "github.com/google/uuid"
 	opentracing "github.com/opentracing/opentracing-go"
-	uuid "github.com/satori/go.uuid"
 	"github.com/shirou/gopsutil/process"
 	"github.com/thundra-io/thundra-lambda-agent-go/constants"
 )
@@ -137,7 +137,7 @@ func MsToTime(t int64) time.Time {
 
 // GenerateNewID generates new uuid.
 func GenerateNewID() string {
-	return uuid.NewV4().String()
+	return uuid.New().String()
 }
 
 // GetThisProcess returns process info about this process.
