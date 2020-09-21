@@ -120,7 +120,8 @@ func (tr *tracePlugin) AfterExecution(ctx context.Context, request json.RawMessa
 	// Disable request data sending for cloudwatchlog, firehose and kinesis if not
 	// enabled by configuration because requests can get too big for these
 	enableRequestData := true
-	if (plugin.TriggerClassName == constants.ClassNames["KINESIS"] && !config.TraceKinesisRequestEnabled) ||
+	if (config.TraceRequestDisabled) ||
+		(plugin.TriggerClassName == constants.ClassNames["KINESIS"] && !config.TraceKinesisRequestEnabled) ||
 		(plugin.TriggerClassName == constants.ClassNames["FIREHOSE"] && !config.TraceFirehoseRequestEnabled) ||
 		(plugin.TriggerClassName == constants.ClassNames["CLOUDWATCHLOG"] && !config.TraceCloudwatchlogRequestEnabled) {
 		enableRequestData = false
@@ -149,8 +150,15 @@ func (tr *tracePlugin) AfterExecution(ctx context.Context, request json.RawMessa
 		}
 	}
 
-	// TODO: Serialize response properly
-	tr.RootSpan.SetTag(constants.AwsLambdaInvocationResponse, response)
+	enableResponseData := true
+	if config.TraceResponseDisabled {
+		enableResponseData = false
+	}
+
+	if enableResponseData {
+		// TODO: Serialize response properly
+		tr.RootSpan.SetTag(constants.AwsLambdaInvocationResponse, response)
+	}
 
 	if err != nil {
 		errMessage := utils.GetErrorMessage(err)
