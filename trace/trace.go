@@ -150,12 +150,7 @@ func (tr *tracePlugin) AfterExecution(ctx context.Context, request json.RawMessa
 		}
 	}
 
-	enableResponseData := true
-	if config.TraceResponseDisabled {
-		enableResponseData = false
-	}
-
-	if enableResponseData {
+	if !config.TraceResponseDisabled {
 		// TODO: Serialize response properly
 		tr.RootSpan.SetTag(constants.AwsLambdaInvocationResponse, response)
 	}
