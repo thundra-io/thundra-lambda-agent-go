@@ -30,21 +30,21 @@ Later just build and deploy your executable to AWS as regular. Test your functio
 
 #### Environment variables
 
-| Name                                     | Type   | Default Value |
-|:-----------------------------------------|:------:|:-------------:|
-| thundra_applicationProfile               | string |    default    |
-| thundra_agent_lambda_disable             |  bool  |     false     |
-| thundra_agent_lambda_timeout_margin      |  number|     200       |
-| thundra_agent_lambda_report_rest_baseUrl | string |https://api.thundra.io/v1|
-| thundra_agent_lambda_trace_disable       | bool   |false|
-| thundra_agent_lambda_metric_disable      | bool |false|
-| thundra_agent_lambda_log_disable         | bool |false|
-| thundra_log_logLevel                     | string |TRACE|
-| thundra_agent_lambda_trace_request_skip  |  bool  |     false     |
-| thundra_agent_lambda_trace_response_skip |  bool  |     false     |
-| thundra_agent_lambda_report_rest_trustAllCertificates |  bool  |     false     |
-| thundra_agent_lambda_debug_enable        |  bool  |     false     |
-| thundra_agent_lambda_warmup_warmupAware  | bool |  false  |
+| Name                                                  |   Type     |    Default Value                |
+|:------------------------------------------------------|:----------:|:-------------------------------:|
+| thundra_applicationProfile                            |   string   |    default                      |
+| thundra_agent_lambda_disable                          |   bool     |    false                        |
+| thundra_agent_lambda_timeout_margin                   |   number   |    200                          |
+| thundra_agent_lambda_report_rest_baseUrl              |   string   |    https://api.thundra.io/v1    |
+| thundra_agent_lambda_trace_disable                    |   bool     |    false                        |
+| thundra_agent_lambda_metric_disable                   |   bool     |    false                        |
+| thundra_agent_lambda_log_disable                      |   bool     |    false                        |
+| thundra_log_logLevel                                  |   string   |    TRACE                        |
+| thundra_agent_lambda_trace_request_skip               |   bool     |    false                        |
+| thundra_agent_lambda_trace_response_skip              |   bool     |    false                        |
+| thundra_agent_lambda_report_rest_trustAllCertificates |   bool     |    false                        |
+| thundra_agent_lambda_debug_enable                     |   bool     |    false                        |
+| thundra_agent_lambda_warmup_warmupAware               |   bool     |    false                        |
 
 
 ### Async Monitoring
