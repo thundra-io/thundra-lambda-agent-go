@@ -54,18 +54,6 @@
 
 
 [[projects]]
-  digest = "1:4a9bb4eb20ea80c9ed85eafb55560ea86f63de055942f32bdc3ac50914a0cdd6"
-  name = "github.com/olivere/elastic"
-  packages = [
-    ".",
-    "config",
-    "uritemplates",
-  ]
-  pruneopts = "UT"
-  revision = "88f72d0b7fff685d7ef9a014b3cf9f7916ec3718"
-  version = "v6.2.35"
-
-[[projects]]
   digest = "1:cf31692c14422fa27c83a05292eb5cbe0fb2775972e8f1f8446a71549bd8980b"
   name = "github.com/pkg/errors"
   packages = ["."]
