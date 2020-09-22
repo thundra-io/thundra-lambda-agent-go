@@ -52,26 +52,6 @@
   revision = "0e4e31197428a347842d152773b4cace4645ca25"
   version = "v1.1.2"
 
-[[projects]]
-  digest = "1:e0b019ee3a64ce51eeb7e0097a372305ac8caf338e50adf8e4bf3b7ce928e132"
-  name = "github.com/josharian/intern"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "8e6ff32b3e7c0b018c43953085fe2ac330fe9acd"
-  version = "v1.0.0"
-
-[[projects]]
-  digest = "1:5d9e883e1964e9587344e202b3f61530a2c90f4673f5d28f33ffca8236c6c82d"
-  name = "github.com/mailru/easyjson"
-  packages = [
-    ".",
-    "buffer",
-    "jlexer",
-    "jwriter",
-  ]
-  pruneopts = "UT"
-  revision = "8ab5ff9cd8e4e432e8b79f6c47d324a31dd803cf"
-  version = "v0.7.6"
 
 [[projects]]
   digest = "1:4a9bb4eb20ea80c9ed85eafb55560ea86f63de055942f32bdc3ac50914a0cdd6"
@@ -244,7 +224,6 @@
   analyzer-version = 1
   input-imports = [
     "github.com/google/uuid",
-    "github.com/olivere/elastic",
     "github.com/pkg/errors",
     "github.com/shirou/gopsutil/net",
     "github.com/shirou/gopsutil/process",
