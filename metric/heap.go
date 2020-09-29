@@ -4,11 +4,11 @@ import (
 	"log"
 	"runtime"
 
-	uuid "github.com/satori/go.uuid"
+	uuid "github.com/google/uuid"
 )
 
 func prepareHeapMetricsData(metric *metricPlugin, memStats *runtime.MemStats, base metricDataModel) metricDataModel {
-	base.ID = uuid.NewV4().String()
+	base.ID = uuid.New().String()
 	base.MetricName = heapMetric
 
 	memPercent, err := proc.MemoryPercent()

@@ -3,11 +3,11 @@ package metric
 import (
 	"math"
 
-	uuid "github.com/satori/go.uuid"
+	uuid "github.com/google/uuid"
 )
 
 func prepareCPUMetricsData(mp *metricPlugin, base metricDataModel) metricDataModel {
-	base.ID = uuid.NewV4().String()
+	base.ID = uuid.New().String()
 	base.MetricName = cpuMetric
 	base.Metrics = map[string]interface{}{
 		appCPULoad: mp.data.appCPULoad,

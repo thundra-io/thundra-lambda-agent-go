@@ -2,7 +2,9 @@ version: 2
 jobs:
   build:
     docker:
-      - image: circleci/golang:1.10
+      - image: circleci/golang:1.11
+        environment:
+          - GO111MODULE=on
 
       - image: postgres:latest
         environment:
@@ -48,6 +50,5 @@ jobs:
             https://github.com/olivere/elastic
             wrappers/elastic/olivere/vendor/github.com/olivere/elastic
 
-      - run: go get -v -t ./...
 
       - run: go test -v ./...

@@ -3,12 +3,12 @@ package metric
 import (
 	"log"
 
-	uuid "github.com/satori/go.uuid"
+	uuid "github.com/google/uuid"
 	"github.com/shirou/gopsutil/process"
 )
 
 func prepareDiskMetricsData(mp *metricPlugin, base metricDataModel) metricDataModel {
-	base.ID = uuid.NewV4().String()
+	base.ID = uuid.New().String()
 	base.MetricName = diskMetric
 	df := takeDiskFrame(mp)
 	base.Metrics = map[string]interface{}{
