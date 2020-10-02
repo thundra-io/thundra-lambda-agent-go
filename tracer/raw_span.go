@@ -3,9 +3,9 @@ package tracer
 import (
 	"strings"
 
-	"github.com/thundra-io/thundra-lambda-agent-go/utils"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/utils"
 
-	"github.com/thundra-io/thundra-lambda-agent-go/ext"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/ext"
 
 	ot "github.com/opentracing/opentracing-go"
 )

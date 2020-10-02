@@ -5,12 +5,12 @@ import (
 	"encoding/json"
 	"runtime"
 
-	"github.com/thundra-io/thundra-lambda-agent-go/config"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/config"
 
 	"github.com/shirou/gopsutil/net"
 	"github.com/shirou/gopsutil/process"
-	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
-	"github.com/thundra-io/thundra-lambda-agent-go/utils"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/plugin"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/utils"
 )
 
 var proc *process.Process

@@ -6,11 +6,11 @@ import (
 	"sync"
 
 	opentracing "github.com/opentracing/opentracing-go"
-	"github.com/thundra-io/thundra-lambda-agent-go/application"
-	"github.com/thundra-io/thundra-lambda-agent-go/config"
-	"github.com/thundra-io/thundra-lambda-agent-go/constants"
-	"github.com/thundra-io/thundra-lambda-agent-go/tracer"
-	"github.com/thundra-io/thundra-lambda-agent-go/utils"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/application"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/config"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/constants"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/tracer"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/utils"
 	"go.mongodb.org/mongo-driver/event"
 )
 
@@ -41,7 +41,7 @@ func (c *commandMonitor) started(ctx context.Context, event *event.CommandStarte
 	c.Lock()
 	c.spans[spanKey{event.ConnectionID, event.RequestID}] = span
 	c.Unlock()
-	
+
 	beforeCall(rawSpan, event)
 	tracer.OnSpanStarted(span)
 }

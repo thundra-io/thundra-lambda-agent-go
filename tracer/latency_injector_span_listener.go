@@ -4,7 +4,7 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/thundra-io/thundra-lambda-agent-go/constants"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/constants"
 )
 
 var defaultDelay int64 = 100

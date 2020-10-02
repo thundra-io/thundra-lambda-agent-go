@@ -5,8 +5,8 @@ import (
 
 	"github.com/aws/aws-lambda-go/lambdacontext"
 	"github.com/stretchr/testify/mock"
-	"github.com/thundra-io/thundra-lambda-agent-go/application"
-	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/application"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/plugin"
 )
 
 const (

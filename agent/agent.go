@@ -8,10 +8,10 @@ import (
 	"sort"
 	"time"
 
-	"github.com/thundra-io/thundra-lambda-agent-go/config"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/config"
 
-	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
-	"github.com/thundra-io/thundra-lambda-agent-go/utils"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/plugin"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/utils"
 )
 
 // Agent is thundra agent implementation

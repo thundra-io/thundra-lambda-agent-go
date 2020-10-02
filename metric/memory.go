@@ -4,7 +4,7 @@ import (
 	"log"
 
 	uuid "github.com/google/uuid"
-	"github.com/thundra-io/thundra-lambda-agent-go/application"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/application"
 )
 
 const miBToB = 1024 * 1024

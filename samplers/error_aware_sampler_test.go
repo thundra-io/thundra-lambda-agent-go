@@ -5,7 +5,7 @@ import (
 
 	ot "github.com/opentracing/opentracing-go"
 	"github.com/stretchr/testify/assert"
-	"github.com/thundra-io/thundra-lambda-agent-go/tracer"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/tracer"
 )
 
 func TestErrorAwareSample(t *testing.T) {

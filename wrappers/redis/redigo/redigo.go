@@ -7,9 +7,9 @@ import (
 
 	"github.com/gomodule/redigo/redis"
 	opentracing "github.com/opentracing/opentracing-go"
-	"github.com/thundra-io/thundra-lambda-agent-go/tracer"
-	"github.com/thundra-io/thundra-lambda-agent-go/utils"
-	tredis "github.com/thundra-io/thundra-lambda-agent-go/wrappers/redis"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/tracer"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/utils"
+	tredis "github.com/thundra-io/thundra-lambda-agent-go/v2/wrappers/redis"
 )
 
 type connWrapper struct {

@@ -7,15 +7,15 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/thundra-io/thundra-lambda-agent-go/config"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/config"
 
-	"github.com/thundra-io/thundra-lambda-agent-go/tracer"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/tracer"
 
 	opentracing "github.com/opentracing/opentracing-go"
-	"github.com/thundra-io/thundra-lambda-agent-go/constants"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/constants"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/thundra-io/thundra-lambda-agent-go/trace"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/trace"
 )
 
 type RoundTripFunc func(req *http.Request) (*http.Response, error)

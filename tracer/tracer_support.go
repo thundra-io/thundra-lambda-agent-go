@@ -10,7 +10,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/thundra-io/thundra-lambda-agent-go/constants"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/constants"
 )
 
 var spanListeners = make([]ThundraSpanListener, 0)

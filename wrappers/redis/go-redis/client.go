@@ -8,12 +8,12 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/thundra-io/thundra-lambda-agent-go/tracer"
-	"github.com/thundra-io/thundra-lambda-agent-go/utils"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/tracer"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/utils"
 
 	"github.com/go-redis/redis"
 	opentracing "github.com/opentracing/opentracing-go"
-	tredis "github.com/thundra-io/thundra-lambda-agent-go/wrappers/redis"
+	tredis "github.com/thundra-io/thundra-lambda-agent-go/v2/wrappers/redis"
 )
 
 // ClientWrapper wraps the *redis.Client to trace redis calls

@@ -1,6 +1,6 @@
 package log
 
-import "github.com/thundra-io/thundra-lambda-agent-go/samplers"
+import "github.com/thundra-io/thundra-lambda-agent-go/v2/samplers"
 
 var _sampler samplers.Sampler
 

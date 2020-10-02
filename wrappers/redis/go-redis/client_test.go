@@ -7,10 +7,10 @@ import (
 	"github.com/go-redis/redis"
 	ot "github.com/opentracing/opentracing-go"
 	"github.com/stretchr/testify/assert"
-	"github.com/thundra-io/thundra-lambda-agent-go/application"
-	"github.com/thundra-io/thundra-lambda-agent-go/constants"
-	"github.com/thundra-io/thundra-lambda-agent-go/trace"
-	"github.com/thundra-io/thundra-lambda-agent-go/tracer"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/application"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/constants"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/trace"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/tracer"
 )
 
 func TestWithWrongURL(t *testing.T) {
