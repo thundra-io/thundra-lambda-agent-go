@@ -17,7 +17,7 @@ package main
 
 import (
 	"github.com/aws/aws-lambda-go/lambda"
-	// thundra import here
+	// thundra go agent import here
 )
 
 // Your lambda handler
