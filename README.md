@@ -13,7 +13,7 @@ package main
 
 import (
 	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/thundra-io/thundra-lambda-agent-go/thundra"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/thundra"
 )
 
 // Your lambda handler
