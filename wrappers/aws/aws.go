@@ -2,9 +2,9 @@ package thundraaws
 
 import (
 	opentracing "github.com/opentracing/opentracing-go"
-	"github.com/thundra-io/thundra-lambda-agent-go/config"
-	"github.com/thundra-io/thundra-lambda-agent-go/tracer"
-	"github.com/thundra-io/thundra-lambda-agent-go/utils"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/config"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/tracer"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/utils"
 	"regexp"
 	"strings"
 
@@ -18,14 +18,14 @@ func Wrap(s *session.Session) *session.Session {
 	if !config.AwsIntegrationDisabled && s != nil {
 		s.Handlers.Validate.PushFrontNamed(
 			request.NamedHandler{
-				Name: "github.com/thundra-io/thundra-lambda-agent-go/wrappers/aws/aws.go/validateHandler",
+				Name: "github.com/thundra-io/thundra-lambda-agent-go/v2/wrappers/aws/aws.go/validateHandler",
 				Fn:   validateHandler,
 			},
 		)
 
 		s.Handlers.Complete.PushFrontNamed(
 			request.NamedHandler{
-				Name: "github.com/thundra-io/thundra-lambda-agent-go/wrappers/aws/aws.go/completeHandler",
+				Name: "github.com/thundra-io/thundra-lambda-agent-go/v2/wrappers/aws/aws.go/completeHandler",
 				Fn:   completeHandler,
 			},
 		)

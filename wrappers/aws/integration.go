@@ -2,7 +2,7 @@ package thundraaws
 
 import (
 	"github.com/aws/aws-sdk-go/aws/request"
-	"github.com/thundra-io/thundra-lambda-agent-go/tracer"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/tracer"
 )
 
 type integration interface {

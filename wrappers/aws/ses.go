@@ -3,15 +3,15 @@ package thundraaws
 import (
 	"encoding/json"
 	"github.com/aws/aws-sdk-go/aws/request"
-	"github.com/thundra-io/thundra-lambda-agent-go/application"
-	"github.com/thundra-io/thundra-lambda-agent-go/config"
-	"github.com/thundra-io/thundra-lambda-agent-go/constants"
-	"github.com/thundra-io/thundra-lambda-agent-go/tracer"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/application"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/config"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/constants"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/tracer"
 )
 
 type sesIntegration struct{}
 type sesData struct {
-	Data string
+	Data    string
 	Charset string
 }
 type sesBody struct {
@@ -19,38 +19,38 @@ type sesBody struct {
 	Html sesData
 }
 type sesDestination struct {
-	ToAddresses []string
-	CcAddresses []string
+	ToAddresses  []string
+	CcAddresses  []string
 	BccAddresses []string
 }
 
 type sesParams struct {
-	Source string
-	Destination interface{}
-	Subject sesData
-	Body sesBody
-	Template string
-	TemplateArn string
+	Source       string
+	Destination  interface{}
+	Subject      sesData
+	Body         sesBody
+	Template     string
+	TemplateArn  string
 	TemplateData string
 }
 type sesSendEmailParams struct {
-	Source string
+	Source      string
 	Destination sesDestination
-	Message struct{
-		Body sesBody
+	Message     struct {
+		Body    sesBody
 		Subject sesData
 	}
 }
 type sesSendRawEmailParams struct {
-	Source string
+	Source       string
 	Destinations []string
-	RawMessage sesData
+	RawMessage   sesData
 }
 type sesSendTemplatedEmailParams struct {
-	Source string
-	Destination sesDestination
-	Template string
-	TemplateArn string
+	Source       string
+	Destination  sesDestination
+	Template     string
+	TemplateArn  string
 	TemplateData string
 }
 
@@ -60,8 +60,12 @@ func (i *sesIntegration) getSesInfo(r *request.Request) *sesParams {
 	case "SendEmail":
 		params := &sesSendEmailParams{}
 		m, err := json.Marshal(r.Params)
-		if err != nil { return &sesParams{} }
-		if err = json.Unmarshal(m, &params); err != nil { return &sesParams{} }
+		if err != nil {
+			return &sesParams{}
+		}
+		if err = json.Unmarshal(m, &params); err != nil {
+			return &sesParams{}
+		}
 		fields.Source = params.Source
 		fields.Destination = params.Destination
 		fields.Subject = params.Message.Subject
@@ -69,15 +73,23 @@ func (i *sesIntegration) getSesInfo(r *request.Request) *sesParams {
 	case "SendRawEmail":
 		params := &sesSendRawEmailParams{}
 		m, err := json.Marshal(r.Params)
-		if err != nil { return &sesParams{} }
-		if err = json.Unmarshal(m, &params); err != nil { return &sesParams{} }
+		if err != nil {
+			return &sesParams{}
+		}
+		if err = json.Unmarshal(m, &params); err != nil {
+			return &sesParams{}
+		}
 		fields.Source = params.Source
 		fields.Destination = params.Destinations
 	case "SendTemplatedEmail":
 		params := &sesSendTemplatedEmailParams{}
 		m, err := json.Marshal(r.Params)
-		if err != nil { return &sesParams{} }
-		if err = json.Unmarshal(m, &params); err != nil { return &sesParams{} }
+		if err != nil {
+			return &sesParams{}
+		}
+		if err = json.Unmarshal(m, &params); err != nil {
+			return &sesParams{}
+		}
 		fields.Source = params.Source
 		fields.Destination = params.Destination
 		fields.Template = params.Template
@@ -114,21 +126,29 @@ func (i *sesIntegration) beforeCall(r *request.Request, span *tracer.RawSpan) {
 	}
 
 	if operationName == "SendEmail" && !config.MaskSESMail {
-		if sesInfo.Subject.Data != "" { tags[constants.AwsSESTags["SUBJECT"]] = sesInfo.Subject }
+		if sesInfo.Subject.Data != "" {
+			tags[constants.AwsSESTags["SUBJECT"]] = sesInfo.Subject
+		}
 		if sesInfo.Body.Text.Data != "" || sesInfo.Body.Html.Data != "" {
 			tags[constants.AwsSESTags["BODY"]] = sesInfo.Body
 		}
 	}
 
 	if operationName == "SendTemplatedEmail" {
-		if sesInfo.Template != "" { tags[constants.AwsSESTags["TEMPLATE_NAME"]] = sesInfo.Template }
-		if sesInfo.TemplateArn != "" { tags[constants.AwsSESTags["TEMPLATE_ARN"]] = sesInfo.TemplateArn }
+		if sesInfo.Template != "" {
+			tags[constants.AwsSESTags["TEMPLATE_NAME"]] = sesInfo.Template
+		}
+		if sesInfo.TemplateArn != "" {
+			tags[constants.AwsSESTags["TEMPLATE_ARN"]] = sesInfo.TemplateArn
+		}
 		if sesInfo.TemplateData != "" && !config.MaskSESMail {
 			tags[constants.AwsSESTags["TEMPLATE_DATA"]] = sesInfo.TemplateData
 		}
 	}
 
-	if sesInfo.Source != "" { tags[constants.AwsSESTags["SOURCE"]] = sesInfo.Source }
+	if sesInfo.Source != "" {
+		tags[constants.AwsSESTags["SOURCE"]] = sesInfo.Source
+	}
 	if !config.MaskSESDestination {
 		if _, isArr := sesInfo.Destination.([]string); (isArr && len(sesInfo.Destination.([]string)) > 0) || !isArr {
 			tags[constants.AwsSESTags["DESTINATION"]] = sesInfo.Destination

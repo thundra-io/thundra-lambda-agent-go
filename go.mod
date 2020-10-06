@@ -1,4 +1,4 @@
-module github.com/thundra-io/thundra-lambda-agent-go
+module github.com/thundra-io/thundra-lambda-agent-go/v2
 
 require (
 	github.com/StackExchange/wmi v0.0.0-20190523213315-cbe66965904d // indirect

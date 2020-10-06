@@ -6,10 +6,10 @@ import (
 	"log"
 	"runtime"
 
-	"github.com/thundra-io/thundra-lambda-agent-go/config"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/config"
 
-	"github.com/thundra-io/thundra-lambda-agent-go/tracer"
-	"github.com/thundra-io/thundra-lambda-agent-go/utils"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/tracer"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/utils"
 
 	ot "github.com/opentracing/opentracing-go"
 )

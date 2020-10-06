@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/thundra-io/thundra-lambda-agent-go/utils"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/utils"
 )
 
 const (

@@ -4,9 +4,9 @@ import (
 	"net/http"
 
 	"github.com/opentracing/opentracing-go"
-	"github.com/thundra-io/thundra-lambda-agent-go/tracer"
-	"github.com/thundra-io/thundra-lambda-agent-go/utils"
-	"github.com/thundra-io/thundra-lambda-agent-go/wrappers/elastic"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/tracer"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/utils"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/wrappers/elastic"
 )
 
 type roundTripperWrapper struct {

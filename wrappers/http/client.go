@@ -8,14 +8,14 @@ import (
 	"net/http"
 	gourl "net/url"
 
-	"github.com/thundra-io/thundra-lambda-agent-go/config"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/config"
 
-	"github.com/thundra-io/thundra-lambda-agent-go/application"
-	"github.com/thundra-io/thundra-lambda-agent-go/tracer"
-	"github.com/thundra-io/thundra-lambda-agent-go/utils"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/application"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/tracer"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/utils"
 
 	opentracing "github.com/opentracing/opentracing-go"
-	"github.com/thundra-io/thundra-lambda-agent-go/constants"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/constants"
 )
 
 var emptyCtx = context.Background()

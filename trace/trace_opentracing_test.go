@@ -11,8 +11,8 @@ import (
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"github.com/thundra-io/thundra-lambda-agent-go/agent"
-	"github.com/thundra-io/thundra-lambda-agent-go/test"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/agent"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/test"
 )
 
 const (

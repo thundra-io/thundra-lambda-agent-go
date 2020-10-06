@@ -4,8 +4,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/thundra-io/thundra-lambda-agent-go/config"
-	"github.com/thundra-io/thundra-lambda-agent-go/constants"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/config"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/constants"
 )
 
 type timeAwareSampler struct {

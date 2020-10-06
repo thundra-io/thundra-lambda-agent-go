@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/thundra-io/thundra-lambda-agent-go/constants"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/constants"
 )
 
 func parseApplicationTags() {

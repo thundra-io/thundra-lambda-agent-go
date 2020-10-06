@@ -3,11 +3,11 @@ package thundra
 import (
 	"log"
 
-	"github.com/thundra-io/thundra-lambda-agent-go/agent"
-	ip "github.com/thundra-io/thundra-lambda-agent-go/invocation"
-	lp "github.com/thundra-io/thundra-lambda-agent-go/log"
-	mp "github.com/thundra-io/thundra-lambda-agent-go/metric"
-	tp "github.com/thundra-io/thundra-lambda-agent-go/trace"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/agent"
+	ip "github.com/thundra-io/thundra-lambda-agent-go/v2/invocation"
+	lp "github.com/thundra-io/thundra-lambda-agent-go/v2/log"
+	mp "github.com/thundra-io/thundra-lambda-agent-go/v2/metric"
+	tp "github.com/thundra-io/thundra-lambda-agent-go/v2/trace"
 )
 
 var agentInstance *agent.Agent

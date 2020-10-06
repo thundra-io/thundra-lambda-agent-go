@@ -7,8 +7,8 @@ import (
 	"reflect"
 
 	opentracing "github.com/opentracing/opentracing-go"
-	"github.com/thundra-io/thundra-lambda-agent-go/tracer"
-	"github.com/thundra-io/thundra-lambda-agent-go/utils"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/tracer"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/utils"
 )
 
 // DriverWrapper wraps sql driver.Driver

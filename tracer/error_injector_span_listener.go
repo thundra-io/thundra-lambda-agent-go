@@ -5,8 +5,8 @@ import (
 	"sync/atomic"
 
 	"github.com/pkg/errors"
-	"github.com/thundra-io/thundra-lambda-agent-go/constants"
-	"github.com/thundra-io/thundra-lambda-agent-go/utils"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/constants"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/utils"
 )
 
 var defaultErrorMessage = "Error injected by Thundra!"

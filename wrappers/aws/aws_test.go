@@ -22,10 +22,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/stretchr/testify/assert"
-	"github.com/thundra-io/thundra-lambda-agent-go/application"
-	"github.com/thundra-io/thundra-lambda-agent-go/config"
-	"github.com/thundra-io/thundra-lambda-agent-go/constants"
-	"github.com/thundra-io/thundra-lambda-agent-go/trace"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/application"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/config"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/constants"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/trace"
 
 	"github.com/aws/aws-sdk-go/aws/session"
 )
@@ -1588,16 +1588,16 @@ func TestSESSendEmailNotMasked(t *testing.T) {
 		},
 		Message: &ses.Message{
 			Subject: &ses.Content{
-				Data: aws.String("subject-test"),
+				Data:    aws.String("subject-test"),
 				Charset: aws.String("UTF-8"),
 			},
 			Body: &ses.Body{
 				Html: &ses.Content{
-					Data: aws.String("html-test"),
+					Data:    aws.String("html-test"),
 					Charset: aws.String("UTF-8"),
 				},
 				Text: &ses.Content{
-					Data: aws.String("test"),
+					Data:    aws.String("test"),
 					Charset: aws.String("UTF-8"),
 				},
 			},
@@ -1639,8 +1639,8 @@ func TestSESSendTemplatedEmail(t *testing.T) {
 		Destination: &ses.Destination{
 			ToAddresses: []*string{aws.String("test@thundra.io")},
 		},
-		Template: aws.String("test-template-name"),
-		TemplateArn: aws.String("arn:test"),
+		Template:     aws.String("test-template-name"),
+		TemplateArn:  aws.String("arn:test"),
 		TemplateData: aws.String("{\"test\": \"test\"}"),
 	}
 	sesc.SendTemplatedEmail(input)
@@ -1674,7 +1674,7 @@ func TestSESSendRawEmail(t *testing.T) {
 	sesc := ses.New(sess)
 
 	input := &ses.SendRawEmailInput{
-		Source: aws.String("demo@thundra.io"),
+		Source:       aws.String("demo@thundra.io"),
 		Destinations: []*string{aws.String("test@thundra.io")},
 		RawMessage: &ses.RawMessage{
 			Data: []byte{},

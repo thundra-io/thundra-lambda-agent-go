@@ -6,10 +6,10 @@ import (
 
 	"github.com/go-sql-driver/mysql"
 
-	"github.com/thundra-io/thundra-lambda-agent-go/application"
-	"github.com/thundra-io/thundra-lambda-agent-go/config"
-	"github.com/thundra-io/thundra-lambda-agent-go/constants"
-	"github.com/thundra-io/thundra-lambda-agent-go/tracer"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/application"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/config"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/constants"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/tracer"
 )
 
 type mysqlIntegration struct{}

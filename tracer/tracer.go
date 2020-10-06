@@ -3,10 +3,10 @@ package tracer
 import (
 	ot "github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
-	"github.com/thundra-io/thundra-lambda-agent-go/constants"
-	"github.com/thundra-io/thundra-lambda-agent-go/ext"
-	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
-	"github.com/thundra-io/thundra-lambda-agent-go/utils"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/constants"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/ext"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/plugin"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/utils"
 )
 
 // New creates and returns a standard Tracer which defers completed Spans to
@@ -104,4 +104,3 @@ func (t *tracerImpl) AddSpanListener(listener ThundraSpanListener) {
 func (t *tracerImpl) GetSpanListeners() []ThundraSpanListener {
 	return GetSpanListeners()
 }
-

@@ -18,7 +18,7 @@ import (
 	uuid "github.com/google/uuid"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/shirou/gopsutil/process"
-	"github.com/thundra-io/thundra-lambda-agent-go/constants"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/constants"
 )
 
 type key struct{}

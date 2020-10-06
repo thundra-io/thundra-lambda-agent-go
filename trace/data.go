@@ -4,10 +4,10 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/thundra-io/thundra-lambda-agent-go/application"
-	"github.com/thundra-io/thundra-lambda-agent-go/tracer"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/application"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/tracer"
 
-	"github.com/thundra-io/thundra-lambda-agent-go/plugin"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/plugin"
 )
 
 type traceDataModel struct {

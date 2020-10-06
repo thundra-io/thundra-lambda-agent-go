@@ -1,7 +1,7 @@
 package samplers
 
 import (
-	"github.com/thundra-io/thundra-lambda-agent-go/tracer"
+	"github.com/thundra-io/thundra-lambda-agent-go/v2/tracer"
 )
 
 type errorAwareSampler struct {
