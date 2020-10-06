@@ -7,13 +7,17 @@ Check out [Thundra docs](https://docs.thundra.io/docs) for more information.
 ### Usage
 
 In order to trace your lambda usages with Thundra all you need to do is wrap your function.
+```go
+import "github.com/thundra-io/thundra-lambda-agent-go/v2/thundra"	// with go modules enabled (GO111MODULE=on or outside GOPATH) for version >= v2.3.1
+import "github.com/thundra-io/thundra-lambda-agent-go/thundra"         // with go modules disabled
+```
 
 ```go
 package main
 
 import (
 	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/thundra-io/thundra-lambda-agent-go/v2/thundra"
+	// thundra import here
 )
 
 // Your lambda handler
