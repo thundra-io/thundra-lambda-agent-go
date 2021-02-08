@@ -2,7 +2,7 @@
 
 Trace your AWS lambda functions with async monitoring by [Thundra](https://www.thundra.io/)!
 
-Check out [Thundra docs](https://docs.thundra.io/docs) for more information.
+Check out [Thundra docs](https://apm.docs.thundra.io) for more information.
 
 ### Usage
 
