@@ -1,0 +1,23 @@
+name: Thundra CI Check
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: "1.11"
+      - name: Start Docker Images
+        run: docker-compose up -d --quiet-pull --no-recreate
+      - name: Run Tests
+        run: go test -v ./...
