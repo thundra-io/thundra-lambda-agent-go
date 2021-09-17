@@ -167,7 +167,7 @@ func main() {
 }
 ```
 
-### RDB SDK
+### Mysql SDK
 
 ```go
 package main
@@ -208,6 +208,53 @@ func handler(ctx context.Context) {
 func main() {
 	lambda.Start(thundra.Wrap(handler))
 }
+```
+
+### PostgreSQL SDK
+
+```go
+package main
+
+import (
+	"context"
+	"database/sql"
+
+	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/lib/pq"
+	"github.com/thundra-io/thundra-lambda-agent-go/thundra"
+	thundrardb "github.com/thundra-io/thundra-lambda-agent-go/wrappers/rdb"
+)
+
+func handler(ctx context.Context) {
+	// Register wrapped driver for tracing
+	// Note that driver name registered should be different than "postgres"
+	// as it is already registered on init method of this package
+	// otherwise it panics.
+	sql.Register("thundra-postgres", thundrardb.Wrap(&pq.Driver{}))
+
+	// Get the database handle with registered driver name
+	db, err := sql.Open("thundra-postgres", "postgres://user:userpass@docker.for.mac.localhost:5432/db?sslmode=disable")
+
+	_, err = db.Exec("CREATE table IF NOT EXISTS test(id int, type text)")
+
+	if err != nil {
+		// Just for example purpose. You should use proper error handling instead of panic
+		panic(err.Error())
+	}
+	defer db.Close()
+
+	// Perform a query
+	rows, err := db.Query("SELECT * FROM test")
+	if err != nil {
+		thundra.Logger.Error(err)
+	}
+	defer rows.Close()
+}
+
+func main() {
+	lambda.Start(thundra.Wrap(handler))
+}
+
 ```
 
 ### Redis SDK
