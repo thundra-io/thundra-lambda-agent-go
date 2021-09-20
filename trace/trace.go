@@ -180,8 +180,8 @@ func (tr *tracePlugin) AfterExecution(ctx context.Context, request json.RawMessa
 
 	// Prepare report data
 	var traceArr []plugin.MonitoringDataWrapper
-	td := tr.prepareTraceDataModel(ctx, request, response)
-	traceArr = append(traceArr, plugin.WrapMonitoringData(td, traceType))
+	// td := tr.prepareTraceDataModel(ctx, request, response)
+	// traceArr = append(traceArr, plugin.WrapMonitoringData(td, traceType))
 
 	spanList := tr.Recorder.GetSpans()
 
