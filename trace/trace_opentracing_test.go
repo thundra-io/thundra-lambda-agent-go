@@ -87,16 +87,8 @@ func TestSpanTransformation(t *testing.T) {
 			f := lambdaFunction(h)
 			f(context.TODO(), []byte(testCase.input))
 
-			//Monitor Data
-			msg := r.MessageQueue[0]
 
-			// Trace Data
-			_, ok := msg.Data.(traceDataModel)
-			if !ok {
-				log.Println("Can not convert to trace data")
-			}
-
-			msg = r.MessageQueue[2]
+			msg := r.MessageQueue[1]
 			// Root Span Data
 			rsd, ok := msg.Data.(spanDataModel)
 			if !ok {
@@ -111,8 +103,8 @@ func TestSpanTransformation(t *testing.T) {
 			assert.Equal(t, "tagValue", tags["tagKey"])
 
 			if i == 1 {
-				f1Msg := r.MessageQueue[3]
-				f2Msg := r.MessageQueue[4]
+				f1Msg := r.MessageQueue[2]
+				f2Msg := r.MessageQueue[3]
 				// Child span data
 				f1Span, ok := f1Msg.Data.(spanDataModel)
 				if !ok {
