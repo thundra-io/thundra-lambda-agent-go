@@ -122,6 +122,7 @@ func (r *reporterImpl) sendHTTPReq() {
 
 	if config.DebugEnabled {
 		log.Println("Sending HTTP request to Thundra collector: " + targetURL)
+		log.Println("============================ remove trace branch")
 	}
 
 	batchSize := config.ReportRestCompositeBatchSize

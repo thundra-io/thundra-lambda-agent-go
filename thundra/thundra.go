@@ -32,7 +32,6 @@ func Wrap(handler interface{}) interface{} {
 		return handler
 	}
 
-	log.Println("============================ remove trace branch")
 	return agentInstance.Wrap(handler)
 }
 
