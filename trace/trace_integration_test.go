@@ -122,21 +122,21 @@ func TestTrace(t *testing.T) {
 			invocationEndTime := utils.GetTimestamp()
 
 			//Monitor Data
-			msg, err := getWrappedTraceData(r.MessageQueue)
+			msg, err := getRootSpanData(r.MessageQueue)
 			if err != nil {
 				log.Println(err)
 				return
 			}
-			assert.Equal(t, traceType, msg.Type)
+			assert.Equal(t, spanType, msg.Type)
 			assert.Equal(t, constants.DataModelVersion, msg.DataModelVersion)
 
 			//Trace Data
-			td, ok := msg.Data.(traceDataModel)
+			td, ok := msg.Data.(spanDataModel)
 			if !ok {
 				log.Println("Can not convert to trace data")
 			}
 			assert.NotNil(t, td.ID)
-			assert.Equal(t, traceType, td.Type)
+			assert.Equal(t, spanType, td.Type)
 			assert.Equal(t, constants.AgentVersion, *td.AgentVersion)
 			assert.Equal(t, constants.DataModelVersion, *td.DataModelVersion)
 			assert.Equal(t, test.ApplicationID, *td.ApplicationID)
@@ -149,9 +149,6 @@ func TestTrace(t *testing.T) {
 			assert.Equal(t, application.ApplicationRuntime, *td.ApplicationRuntime)
 			assert.Equal(t, application.ApplicationRuntimeVersion, *td.ApplicationRuntimeVersion)
 			assert.NotNil(t, *td.ApplicationTags)
-
-			assert.NotNil(t, td.RootSpanID)
-
 			assert.True(t, invocationStartTime <= td.StartTimestamp)
 			assert.True(t, td.StartTimestamp < td.FinishTimestamp)
 			assert.True(t, td.FinishTimestamp <= invocationEndTime)
@@ -222,21 +219,21 @@ func TestPanic(t *testing.T) {
 					invocationEndTime := utils.GetTimestamp()
 
 					//Monitor Data
-					msg, err := getWrappedTraceData(r.MessageQueue)
+					msg, err := getRootSpanData(r.MessageQueue)
 					if err != nil {
 						log.Println(err)
 						return
 					}
-					assert.Equal(t, traceType, msg.Type)
+					assert.Equal(t, spanType, msg.Type)
 					assert.Equal(t, constants.DataModelVersion, msg.DataModelVersion)
 
 					//Trace Data
-					td, ok := msg.Data.(traceDataModel)
+					td, ok := msg.Data.(spanDataModel)
 					if !ok {
 						log.Println("Can not convert to trace data")
 					}
 					assert.NotNil(t, td.ID)
-					assert.Equal(t, traceType, td.Type)
+					assert.Equal(t, spanType, td.Type)
 					assert.Equal(t, constants.AgentVersion, *td.AgentVersion)
 					assert.Equal(t, constants.DataModelVersion, *td.DataModelVersion)
 					assert.Equal(t, test.ApplicationID, *td.ApplicationID)
@@ -249,9 +246,6 @@ func TestPanic(t *testing.T) {
 					assert.Equal(t, application.ApplicationRuntime, *td.ApplicationRuntime)
 					assert.Equal(t, application.ApplicationRuntimeVersion, *td.ApplicationRuntimeVersion)
 					assert.NotNil(t, *td.ApplicationTags)
-
-					assert.NotNil(t, td.RootSpanID)
-
 					assert.True(t, invocationStartTime <= td.StartTimestamp)
 					assert.True(t, td.StartTimestamp < td.FinishTimestamp)
 					assert.True(t, td.FinishTimestamp <= invocationEndTime)
@@ -321,15 +315,6 @@ func TestTimeout(t *testing.T) {
 		assert.Equal(t, true, rsd.Tags[constants.AwsLambdaInvocationTimeout])
 	})
 
-}
-
-func getWrappedTraceData(monitoringDataWrappers []plugin.MonitoringDataWrapper) (*plugin.MonitoringDataWrapper, error) {
-	for _, m := range monitoringDataWrappers {
-		if m.Type == traceType {
-			return &m, nil
-		}
-	}
-	return nil, errors.New("trace Data Wrapper is not found")
 }
 
 func getRootSpanData(monitoringDataWrappers []plugin.MonitoringDataWrapper) (*plugin.MonitoringDataWrapper, error) {

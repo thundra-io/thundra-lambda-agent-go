@@ -178,11 +178,6 @@ func (tr *tracePlugin) AfterExecution(ctx context.Context, request json.RawMessa
 
 	tr.Data.Timeout = utils.IsTimeout(err)
 
-	// Prepare report data
-	var traceArr []plugin.MonitoringDataWrapper
-	td := tr.prepareTraceDataModel(ctx, request, response)
-	traceArr = append(traceArr, plugin.WrapMonitoringData(td, traceType))
-
 	spanList := tr.Recorder.GetSpans()
 
 	sampled := true
@@ -190,6 +185,8 @@ func (tr *tracePlugin) AfterExecution(ctx context.Context, request json.RawMessa
 	if len(spanList) > 0 && sampler != nil {
 		sampled = sampler.IsSampled(spanList[0])
 	}
+	// Prepare report data
+	var traceArr []plugin.MonitoringDataWrapper
 	if sampled {
 		for _, s := range spanList {
 			sd := tr.prepareSpanDataModel(ctx, s)
