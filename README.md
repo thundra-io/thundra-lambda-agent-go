@@ -1,4 +1,4 @@
-# Lambda Go Agent [![OpenTracing Badge](https://img.shields.io/badge/OpenTracing-enabled-blue.svg)](http://opentracing.io) [![CircleCI](https://circleci.com/gh/thundra-io/thundra-lambda-agent-go.svg?style=svg)](https://circleci.com/gh/thundra-io/thundra-lambda-agent-go/) [![Go Report Card](https://goreportcard.com/badge/github.com/thundra-io/thundra-lambda-agent-go)](https://goreportcard.com/report/github.com/thundra-io/thundra-lambda-agent-go)
+# Lambda Go Agent [![OpenTracing Badge](https://img.shields.io/badge/OpenTracing-enabled-blue.svg)](http://opentracing.io) [![Thundra CI Check](https://github.com/thundra-io/thundra-lambda-agent-go/actions/workflows/build.yml/badge.svg)](https://github.com/thundra-io/thundra-lambda-agent-go/actions/workflows/build.yml) [![Go Report Card](https://goreportcard.com/badge/github.com/thundra-io/thundra-lambda-agent-go)](https://goreportcard.com/report/github.com/thundra-io/thundra-lambda-agent-go)
 
 Trace your AWS lambda functions with async monitoring by [Thundra](https://www.thundra.io/)!
 
@@ -60,7 +60,7 @@ You can cut down cold starts easily by deploying our lambda function [`thundra-l
 
 Our agent handles warmup requests automatically so you don't need to make any code changes.
 
-You just need to deploy `thundra-lambda-warmup` once, then you can enable warming up for your lambda by 
+You just need to deploy `thundra-lambda-warmup` once, then you can enable warming up for your lambda by
 * setting its environment variable `thundra_agent_lambda_warmup_warmupAware` **true** OR
 * adding its name to `thundra-lambda-warmup`'s environment variable `thundra_lambda_warmup_function`.
 
@@ -70,7 +70,7 @@ Check out [this part](https://thundra.readme.io/docs/how-to-warmup) in our docs 
 
 ### AWS SDK
 
-Thundra's Go agent provides you with the capability to trace AWS SDK by wrapping the session object that AWS SDK provides. 
+Thundra's Go agent provides you with the capability to trace AWS SDK by wrapping the session object that AWS SDK provides.
 You can easily start using it by simply wrapping your session objects as shown in the following code:
 
 ```go
@@ -91,7 +91,7 @@ func handler() (string, error) {
 	sess, _ := session.NewSession(&aws.Config{
 		Region: aws.String("us-west-2")},
 	)
-	
+
 	// Wrap it using the thundraaws.Wrap method
 	sess = thundraaws.Wrap(sess)
 
@@ -422,7 +422,7 @@ func handler() {
 	if err != nil {
 		// Handle error
 		panic(err)
-	}	
+	}
 
 }
 
