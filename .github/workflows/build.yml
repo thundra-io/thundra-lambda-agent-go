@@ -1,4 +1,4 @@
-name: Thundra CI Check
+name: CI Check
 
 on:
   push:
