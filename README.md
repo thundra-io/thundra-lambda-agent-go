@@ -7,6 +7,7 @@ Check out [Thundra docs](https://apm.docs.thundra.io) for more information.
 ### Usage
 
 In order to trace your lambda usages with Thundra all you need to do is wrap your function.
+
 ```go
 import "github.com/thundra-io/thundra-lambda-agent-go/v2/thundra"	// with go modules enabled (GO111MODULE=on or outside GOPATH) for version >= v2.3.1
 import "github.com/thundra-io/thundra-lambda-agent-go/thundra"         // with go modules disabled
@@ -30,39 +31,41 @@ func main() {
 	lambda.Start(thundra.Wrap(handler))
 }
 ```
+
 Later just build and deploy your executable to AWS as regular. Test your function on lambda console and visit [Thundra](https://console.thundra.io/) to observe your function metrics.
 
 #### Environment variables
 
-| Name                                                  |   Type     |    Default Value                |
-|:------------------------------------------------------|:----------:|:-------------------------------:|
-| thundra_applicationProfile                            |   string   |    default                      |
-| thundra_agent_lambda_disable                          |   bool     |    false                        |
-| thundra_agent_lambda_timeout_margin                   |   number   |    200                          |
-| thundra_agent_lambda_report_rest_baseUrl              |   string   |    https://api.thundra.io/v1    |
-| thundra_agent_lambda_trace_disable                    |   bool     |    false                        |
-| thundra_agent_lambda_metric_disable                   |   bool     |    false                        |
-| thundra_agent_lambda_log_disable                      |   bool     |    false                        |
-| thundra_log_logLevel                                  |   string   |    TRACE                        |
-| thundra_agent_lambda_trace_request_skip               |   bool     |    false                        |
-| thundra_agent_lambda_trace_response_skip              |   bool     |    false                        |
-| thundra_agent_lambda_report_rest_trustAllCertificates |   bool     |    false                        |
-| thundra_agent_lambda_debug_enable                     |   bool     |    false                        |
-| thundra_agent_lambda_warmup_warmupAware               |   bool     |    false                        |
-
+| Name                                                  |  Type  |       Default Value       |
+| :---------------------------------------------------- | :----: | :-----------------------: |
+| thundra_applicationProfile                            | string |          default          |
+| thundra_agent_lambda_disable                          |  bool  |           false           |
+| thundra_agent_lambda_timeout_margin                   | number |            200            |
+| thundra_agent_lambda_report_rest_baseUrl              | string | https://api.thundra.io/v1 |
+| thundra_agent_lambda_trace_disable                    |  bool  |           false           |
+| thundra_agent_lambda_metric_disable                   |  bool  |           false           |
+| thundra_agent_lambda_log_disable                      |  bool  |           false           |
+| thundra_log_logLevel                                  | string |           TRACE           |
+| thundra_agent_lambda_trace_request_skip               |  bool  |           false           |
+| thundra_agent_lambda_trace_response_skip              |  bool  |           false           |
+| thundra_agent_lambda_report_rest_trustAllCertificates |  bool  |           false           |
+| thundra_agent_lambda_debug_enable                     |  bool  |           false           |
+| thundra_agent_lambda_warmup_warmupAware               |  bool  |           false           |
 
 ### Async Monitoring
 
 Check out our [docs](https://docs.thundra.io/docs/how-to-setup-async-monitoring) to see how to configure Thundra and async monitoring to visualize your functions in [Thundra](https://www.thundra.io/).
 
 ## Warmup Support
+
 You can cut down cold starts easily by deploying our lambda function [`thundra-lambda-warmup`](https://github.com/thundra-io/thundra-lambda-warmup).
 
 Our agent handles warmup requests automatically so you don't need to make any code changes.
 
 You just need to deploy `thundra-lambda-warmup` once, then you can enable warming up for your lambda by
-* setting its environment variable `thundra_agent_lambda_warmup_warmupAware` **true** OR
-* adding its name to `thundra-lambda-warmup`'s environment variable `thundra_lambda_warmup_function`.
+
+- setting its environment variable `thundra_agent_lambda_warmup_warmupAware` **true** OR
+- adding its name to `thundra-lambda-warmup`'s environment variable `thundra_lambda_warmup_function`.
 
 Check out [this part](https://thundra.readme.io/docs/how-to-warmup) in our docs for more information.
 
@@ -430,3 +433,49 @@ func main() {
 	lambda.Start(thundra.Wrap(handler))
 }
 ```
+
+# Setting up local development environment
+
+1. Clone Go sample lambda app to your local
+
+```sh
+git clone https://github.com/thundra-io/thundra-go-lambda-sample-app.git
+
+# cd into sample app
+
+cd thundra-go-lambda-sample-app
+```
+
+2. Inside of sample app root directory, clone Thundra Go agent. The sample app has configured the way that it will ignore local Thundra Go agent for git and local version changes of Thundra agent will be effective.
+
+```sh
+git clone https://github.com/thundra-io/thundra-lambda-agent-go.git
+```
+
+3. In serverless.yml in project root directory, **uncomment** thundra_apiKey and **put your Thundra api key value**, which you can get from apm.thundra.io
+
+Current serverless.yml
+
+```yml
+#thundra_apiKey: <your_thundra_ApiKey>
+```
+
+Should look something like this
+
+```yml
+thundra_apiKey: <your_project_key_from_thundra>
+```
+
+4. Configure your sls
+
+```sh
+sls
+```
+
+5. Deploy your lambda to AWS. Thundra Go lambda agent's codebase, which is going to used for sending instrumentation data to apm.thundra.io, will be your own copy at your local.
+
+```sh
+sls deploy
+```
+
+6. Trigger the lambda endpoint and monitor your sample app in apm.thundra.io !
