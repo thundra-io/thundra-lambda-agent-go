@@ -14,4 +14,6 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/shirou/gopsutil v2.20.8+incompatible
 	github.com/stretchr/testify v1.6.1
+	github.com/apex/gateway v1.1.2
+	github.com/apex/gateway/v2 v2.0.0
 )
